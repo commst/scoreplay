@@ -786,7 +786,7 @@ function findTempoMarks(glyphs) {
     if (eq) {
       const unit = { 113: [1, 4], 101: [1, 8], 104: [1, 2] }[g.code];
       const ru = { q: [1, 4], e: [1, 8], h: [1, 2] }[eq[1]];
-      const sym = u => u[1] === 8 ? '♪' : u[1] === 2 ? '𝅗𝅥' : '♩';
+      const sym = u => u[1] === 8 ? '♪' : u[1] === 2 ? '2분' : '♩';
       marks.push({ x: g.ox, y: g.oy, unit, dotted, bpm: null, eq: { left: unit[0] / unit[1] * (dotted ? 1.5 : 1), right: ru[0] / ru[1] * (eq[2] ? 1.5 : 1) },
         text: `${sym(unit)}${dotted ? '.' : ''}=${sym(ru)}${eq[2] ? '.' : ''}` });
       continue;
@@ -794,7 +794,7 @@ function findTempoMarks(glyphs) {
     if (!m) continue;
     const lo = +m[1], hi = m[2] ? +m[2] : lo;
     const unit = { 113: [1, 4], 101: [1, 8], 104: [1, 2] }[g.code];
-    marks.push({ x: g.ox, y: g.oy, unit, dotted, bpm: Math.round((lo + hi) / 2), text: `${dotted ? '♩.' : '♩'}=${m[1]}${m[2] ? '-' + m[2] : ''}`.replace('♩', unit[1] === 8 ? '♪' : unit[1] === 2 ? '𝅗𝅥' : '♩') });
+    marks.push({ x: g.ox, y: g.oy, unit, dotted, bpm: Math.round((lo + hi) / 2), text: `${dotted ? '♩.' : '♩'}=${m[1]}${m[2] ? '-' + m[2] : ''}`.replace('♩', unit[1] === 8 ? '♪' : unit[1] === 2 ? '2분' : '♩') });
   }
   // Maestro 작은 음표(q)로 표기된 템포: 숫자를 읽을 수 없는 경우가 많다
   for (const g of glyphs) {
@@ -1385,9 +1385,9 @@ export function parseScore(pages, opts = {}) {
   // 코다: To Coda 글자가 없으면 코다 기호 두 개 중 앞은 To Coda, 뒤는 코다 시작
   codaSigns.sort((a, b) => a.mi - b.mi);
   if (!measures.some(m => m.toCoda) && codaSigns.length >= 2) {
-    const c = codaSigns.shift(); measures[c.mi].toCoda = true; addLabel(measures[c.mi], 'To 𝄌');
+    const c = codaSigns.shift(); measures[c.mi].toCoda = true; addLabel(measures[c.mi], 'To Coda');
   }
-  for (const c of codaSigns) if (!measures[c.mi].toCoda && !measures[c.mi].codaStart) { measures[c.mi].codaStart = true; addLabel(measures[c.mi], '𝄌'); }
+  for (const c of codaSigns) if (!measures[c.mi].toCoda && !measures[c.mi].codaStart) { measures[c.mi].codaStart = true; addLabel(measures[c.mi], 'Coda'); }
 
   return { measures, systemNumbers, scanned, maestroCount, marks };
 
@@ -1438,7 +1438,7 @@ export function parseScore(pages, opts = {}) {
     // 세뇨, 코다 기호
     for (const g of sg) {
       if (!sameSys(staffOf(g.oy)) || g.oy > tTop) continue;
-      if (g.code === SEGNO) { const m = mAt(cx(g) + 3); m.segno = true; addLabel(m, '𝄋'); }
+      if (g.code === SEGNO) { const m = mAt(cx(g) + 3); m.segno = true; addLabel(m, 'Segno'); }
       if (CODA_CODES.has(g.code)) codaSigns.push({ mi: posAt(cx(g) + 3).mi });
     }
 
@@ -1483,7 +1483,7 @@ export function parseScore(pages, opts = {}) {
       let hit = true;
       if (/(^|[^A-Za-z])D\.\s?S\.?|^D\.?S\.?$|달\s*세뇨/.test(t)) { const m = mAt(r.x1 - 2); m.ds = true; addLabel(m, 'D.S.'); }
       else if (/(^|[^A-Za-z])D\.\s?C\.?|^D\.?C\.?$|다\s*카\s*포/.test(t)) { const m = mAt(r.x1 - 2); m.dc = true; addLabel(m, 'D.C.'); }
-      else if (/to\s*coda|코다로/i.test(t)) { const m = mAt(r.x1 - 2); m.toCoda = true; addLabel(m, 'To 𝄌'); }
+      else if (/to\s*coda|코다로/i.test(t)) { const m = mAt(r.x1 - 2); m.toCoda = true; addLabel(m, 'To Coda'); }
       else if (/^coda$|^코다$/i.test(t)) codaSigns.push({ mi: posAt(r.x0 + 2).mi });
       else if (/^fine\.?$|^피네$/i.test(t)) { const m = mAt(r.x1 - 2); m.fine = true; addLabel(m, 'Fine'); }
       else if (/^(a tempo|tempo i\b|tempo primo)|(원래|처음)\s*빠르기/i.test(t)) { marks.push({ type: 'atempo', a: at(r.x0 + 2) }); addLabel(mAt(r.x0), 'a tempo'); }

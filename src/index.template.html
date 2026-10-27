@@ -347,6 +347,8 @@ button { cursor: pointer; }
   --accent: #93a4f0; --accent-ink: #10141c; --accent-soft: #232b45;
   --chae: #f08a76; --buk: #8fb3f2; --now: #4a3f22; --warn: #f0b45f; --warn-bg: #352a19; color-scheme: dark; }
 body { background: var(--paper); line-height: 1.6; padding-bottom: 96px; }
+/* 한글은 낱말 중간에서 줄을 바꾸지 않는다(휴대폰 좁은 화면에서 '처리됩니/다'처럼 끊기던 것). 긴 파일 이름 등은 넘치면 끊는다 */
+body { word-break: keep-all; overflow-wrap: break-word; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .wrap { max-width: 1240px; gap: 28px; }
 
@@ -620,7 +622,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
               <span class="eg">1마디 ♩.=84, 9마디 ♩=145 → 1~8마디는 ♩.=84, 9마디부터는 ♩=145</span></dd>
             <dt>기준 음표</dt>
             <dd>한 박으로 세는 음표입니다. 악보의 빠르기 표시(♩= 또는 ♩.=)에 적힌 음표와 같게 고르면 됩니다.
-              <b>♩ 4분</b>은 4분음표, <b>♩. 점4분</b>은 점4분음표(8분음표 3개 길이), <b>♪ 8분</b>은 8분음표, <b>𝅗𝅥 2분</b>은 2분음표입니다.
+              <b>♩ 4분</b>은 4분음표, <b>♩. 점4분</b>은 점4분음표(8분음표 3개 길이), <b>♪ 8분</b>은 8분음표, <b>2분</b>은 2분음표입니다.
               12/8, 6/8처럼 8분음표 셋을 한 박으로 세는 장단(굿거리, 자진모리 등)은 보통 점4분입니다.</dd>
             <dt>BPM (숫자)</dt>
             <dd>1분 동안 기준 음표를 몇 번 치는 빠르기인지입니다.
@@ -794,7 +796,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd>위 줄은 윗성부, 아래 줄은 아랫성부입니다. 점 하나가 한 번 치는 자리이고, 왼쪽이 마디 처음입니다.
               <b>큰 점</b>은 악센트, 앞의 <b>작은 점</b>은 꾸밈음, <b>가로 막대</b>는 롤입니다.</dd>
             <dt>마디 위 표시</dt>
-            <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. 𝄆 𝄇는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
+            <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. ‖: :‖는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
             <dt>음 수정 (✎)</dt>
             <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
               고친 내용은 이 기기에 바로 저장되어 같은 악보 PDF를 다시 올리면 자동으로 적용되고, 고친 마디는 번호 옆에 ✎가 붙습니다. 음마다 [↺ 되돌리기], 마디마다 [이 마디 모두 되돌리기], 악보 전체는 [수정 모두 되돌리기]로 되돌리고, 방금 한 수정은 Ctrl+Z로 취소합니다.
@@ -890,7 +892,7 @@ function autoOct(key) {
 }
 function bankOf(inst) { return INSTRUMENTS[inst] && INSTRUMENTS[inst].bank; }
 function prefetchBanks() { for (const v of Object.values(currentMelodic())) { const b = bankOf(v.inst); if (b) loadBank(b); } }
-const UNIT_LABEL = { q: '♩ 4분', dq: '♩. 점4분', e: '♪ 8분', h: '𝅗𝅥 2분' };
+const UNIT_LABEL = { q: '♩ 4분', dq: '♩. 점4분', e: '♪ 8분', h: '2분' };
 const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
@@ -1043,7 +1045,7 @@ function barTipContent(b) {
   chip((b.timesig || []).join('/') || '?/?');
   const row = [...state.tempoRows].filter(r => r.start <= b.number).sort((a, c) => c.start - a.start)[0];
   chip(row && row.bpm > 0 ? `${(UNIT_LABEL[row.unit] || '♩').split(' ')[0]}=${row.bpm}` : '빠르기 입력 필요');
-  if (b.repeatStart) chip('𝄆 반복 시작', 'mark'); if (b.repeatEnd) chip('반복 끝 𝄇', 'mark');
+  if (b.repeatStart) chip('‖: 반복 시작', 'mark'); if (b.repeatEnd) chip('반복 끝 :‖', 'mark');
   for (const l of new Set(b.labels || [])) chip(l, 'mark');
   if (b.events.some(e => e.edited)) chip('✎ 고침', 'edit');
   if (b.warnings && b.warnings.length) chip('⚠ 확인 필요', 'warn');
@@ -1412,7 +1414,7 @@ function renderBars() {
     el.className = 'b'; el.dataset.n = b.number; el.setAttribute('role', 'button'); el.tabIndex = 0; el.setAttribute('aria-label', `${b.number}마디부터 재생`);
     if (b.warnings.length) { el.classList.add('warn'); el.title = b.warnings.join(' / '); }
     const h = document.createElement('div'); h.className = 'h';
-    const n = document.createElement('span'); n.className = 'n num'; n.textContent = (b.repeatStart ? '𝄆 ' : '') + b.number + (b.repeatEnd ? ' 𝄇' : '');
+    const n = document.createElement('span'); n.className = 'n num'; n.textContent = (b.repeatStart ? '‖: ' : '') + b.number + (b.repeatEnd ? ' :‖' : '');
     const ts = document.createElement('span'); ts.className = 'ts num'; ts.textContent = b.timesigChange ? `${b.timesig[0]}/${b.timesig[1]}` : '';
     h.append(n, ts); el.appendChild(h);
     for (const v of ['R', 'L']) {
