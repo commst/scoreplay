@@ -569,11 +569,12 @@ export function assignLines(pages) {
           let k = L.labels[i] ? lines.findIndex(l => l.name && (l.name.startsWith(L.labels[i]) || L.labels[i].startsWith(l.name))) : -1;
           if (k < next) k = -1;
           if (k < 0) { k = lines.findIndex((l, j) => j >= next && l.clef === L.clefs[i] && l.oneLine === !!L.staves[i].oneLine); }
-          if (k < 0) k = Math.min(next, lines.length - 1);
+          if (k < 0) k = next < lines.length ? next : -1;
+          if (k < 0) { L.lineOf[i] = null; continue; }   // 남은 줄이 없으면(첫 단에 없던 악기, 예: 끝에만 나오는 Bell) 이 오선은 버린다. 마지막 줄에 겹쳐 붙이면 그 줄 마디가 늘어난다
           L.lineOf[i] = k; next = k + 1;
         }
       }
-      for (const i of g) { const ln = lines[L.lineOf[i]]; ln.count++; if (!ln.first) ln.first = { page: pi, top: L.staves[i].top, bottom: L.staves[i].bottom, x0: L.staves[i].x0, x1: L.staves[i].x1 }; if (!ln.name && L.labels[i]) ln.name = L.labels[i];
+      for (const i of g) { if (L.lineOf[i] == null) continue; const ln = lines[L.lineOf[i]]; ln.count++; if (!ln.first) ln.first = { page: pi, top: L.staves[i].top, bottom: L.staves[i].bottom, x0: L.staves[i].x0, x1: L.staves[i].x1 }; if (!ln.name && L.labels[i]) ln.name = L.labels[i];
         if (g.length === lines.length && L.labels[i]) { const v = ln.votes || (ln.votes = {}); v[L.labels[i]] = (v[L.labels[i]] || 0) + 1; } }
     }
   });
@@ -1518,6 +1519,12 @@ export function resolveBars(measures, systemNumbers = []) {
     if (printed && printed > num && printed - num < 40 && out.length) {
       out[out.length - 1].warnings.push(`마디선이 보이지 않아 ${out[out.length - 1].number}~${printed - 1}마디를 한 마디로 읽음`);
       num = printed;
+    } else if (printed && printed > num && !out.length && printed < 2000) {
+      num = printed;   // 총보에서 처음 몇 단 동안 숨겨진 악기: 처음 보이는 단의 인쇄 번호부터
+    } else if (printed && printed > num && out.length) {
+      // 총보에서 쉬는 동안 이 악기 오선을 숨긴 경우: 인쇄된 번호가 크게 뛴다. 뒤 단 번호도 계속 커지면 믿고 맞춘다
+      const later = [...printedAt.entries()].filter(([k]) => k > mi).sort((a, b) => a[0] - b[0])[0];
+      if (!later || later[1] > printed) num = printed;
     }
     let barLen = tsLen;
     let thisTs = ts, tsNote = '';
@@ -1714,6 +1721,7 @@ export function defaultTempoRows(bars) {
     const seenMk = new Set();
     for (const mk of b.tempoMarks) {
       if (seenMk.has(mk.text)) continue;   // 총보에서 여러 오선 묶음 위에 같은 표시가 거듭 찍힌 것
+      if (mk.bpm == null && !mk.eq && rows.length && rows[rows.length - 1].start === b.number && rows[rows.length - 1].bpm) continue;   // 같은 마디에서 숫자를 읽은 표시가 있으면 못 읽은 표시('♩=?')는 버린다
       seenMk.add(mk.text);
       const unit = mk.dotted ? 'dq' : ({ '1/4': 'q', '1/8': 'e', '1/2': 'h' }[mk.unit.join('/')] || 'q');
       if (rows.length && rows[rows.length - 1].start === b.number) rows.pop();
