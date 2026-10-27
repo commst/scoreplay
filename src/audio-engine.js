@@ -71,7 +71,7 @@ export function makeSounds() {
   return S;
 }
 
-const GAIN = { '궁': 1.15, '북': 1.12, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
+const GAIN = { '궁': 1.15, '북': 1.15, '북짧게': 1.1, '바라': 0.72, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -224,7 +224,15 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   const buf = new Float32Array(n);
   const vary = {};
   let lastTa = -9, flip = 0;
-  for (const [t, key, g, , extra] of hits) {
+  // 북·바라는 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
+  const fam = k => k === '북' || k === '북짧게' ? 'b' : k === '바라' ? 'r' : null;
+  const nextSame = new Float64Array(hits.length).fill(Infinity);
+  { const ord = hits.map((_, i) => i).sort((a, b) => hits[a][0] - hits[b][0]), last = {};
+    for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1]); if (!f) continue;
+      if (last[f] != null && last[f] - hits[i][0] > 0.02) nextSame[i] = last[f];   // 동시에 친 두 성부는 그대로 둔다
+      if (last[f] == null || last[f] - hits[i][0] > 0.02) last[f] = hits[i][0]; } }
+  for (let hi = 0; hi < hits.length; hi++) {
+    const [t, key, g, , extra] = hits[hi];
     if (extra && extra.roll) { addRoll(buf, S, key, t, extra.roll, g * (GAIN[key] || 1), vary, custom); continue; }
     let k = key, gg = g;
     if (extra && extra.grace) {
@@ -247,8 +255,15 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
     if (!s) continue;
     const i0 = Math.round(t * SR);
     if (i0 < 0) continue;
-    const m = Math.min(s.length, n - i0);
+    let m = Math.min(s.length, n - i0);
     const gain = gg * (GAIN[key] || 1);
+    const nx = nextSame[hi];
+    if (nx < Infinity) {
+      const keep = Math.round(((nx - t) + 0.06) * SR), fade = Math.round(0.06 * SR);
+      if (keep < m) { m = keep; const f0 = m - fade;
+        for (let i = 0; i < m; i++) buf[i0 + i] += s[i] * gain * (i < f0 ? 1 : (m - i) / fade);
+        continue; }
+    }
     for (let i = 0; i < m; i++) buf[i0 + i] += s[i] * gain;
   }
   if (extra) extra(buf);   // 선율 악기 음 더하기
@@ -331,7 +346,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   }
   let seed = (i0 * 2654435761) >>> 0;
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-  const rate = key === '궁' || key === '북' ? 18 : 24;     // 북편·북은 조금 느리게
+  const rate = key === '궁' || key === '북' || key === '북짧게' ? 18 : 24;     // 북편·북은 조금 느리게
   let tt = 0, k = 0;
   // 한 타 소리: 고음을 살짝 깎은 복사본 (첫 타는 원래 소리)
   const soft = new Float32Array(Math.min(base.length, Math.round(0.25 * SR)));
