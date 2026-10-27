@@ -246,7 +246,10 @@ button { cursor: pointer; }
 .bt-nc.perc.R { --lc: var(--chae); } .bt-nc.perc.L { --lc: var(--buk); }
 .bt-nc.edited { outline: 2px solid var(--accent); }
 .bt-warn { margin-top: 8px; padding: 7px 9px; border-radius: 8px; background: var(--warn-bg); color: var(--ink); font-size: 11.5px; line-height: 1.45; }
-.bt-foot { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.bt-foot { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.bt-play { border: 0; border-radius: 999px; padding: 7px 14px; background: var(--accent); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.bt-play:hover { filter: brightness(1.08); }
+.bt-play:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .lane.R i { background: var(--chae); } .lane.L i { background: var(--buk); }
 .lane i.acc { width: 8px; height: 8px; margin-left: -4px; top: 2px; }
@@ -1076,15 +1079,27 @@ function barTipContent(b) {
     tip.append(sec);
   }
   if (b.warnings && b.warnings.length) tip.append(tipNode('div', 'bt-warn', '⚠ ' + b.warnings.slice(0, 3).join(' · ') + (b.warnings.length > 3 ? ` 외 ${b.warnings.length - 3}건` : '')));
-  tip.append(tipNode('div', 'bt-foot', '누르면 이 마디부터 재생 · ✎ 수정으로 음정·길이 고치기'));
+  const foot = tipNode('div', 'bt-foot');
+  const pb = tipNode('button', 'bt-play', `▶ ${b.number}마디부터 재생`); pb.type = 'button';
+  pb.setAttribute('aria-label', `${b.number}마디부터 재생`);
+  pb.addEventListener('click', ev => { ev.stopPropagation(); closeBarTipNow(); playFromBar(b.number); });
+  foot.append(pb, tipNode('span', '', '✎ 수정으로 음정·길이 고치기'));
+  tip.append(foot);
   return tip;
 }
 let barTipSwitchTimer = 0;
 // 마디에 마우스가 들어올 때: 팝업이 떠 있으면 팝업으로 가는 길에 다른 마디를 스칠 수 있으므로 잠깐 기다렸다가 바꾼다
 function enterBar(b, el) {
+  if (Date.now() < barTipQuietUntil) return;
   clearTimeout(barTipSwitchTimer);
   if (barTipEl && !barTipEl.hidden && barTipAnchor && barTipAnchor !== el) barTipSwitchTimer = setTimeout(() => showBarTip(b, el), 250);
   else showBarTip(b, el);
+}
+// 팝업의 재생 버튼: 바로 닫고, 재생이 마디 지도를 움직이는 동안 잠깐 다시 뜨지 않게
+let barTipQuietUntil = 0;
+function closeBarTipNow() {
+  clearTimeout(barTipHideTimer); clearTimeout(barTipSwitchTimer); barTipQuietUntil = Date.now() + 1500;
+  if (barTipEl) { barTipEl.classList.remove('show'); barTipEl.hidden = true; } barTipAnchor = null;
 }
 function leaveBar() { clearTimeout(barTipSwitchTimer); hideBarTip(); }
 function showBarTip(b, el) {
