@@ -1726,6 +1726,11 @@ export async function loadScore(pdfjs, data, onPage) {
     const y = g[0].oy; let s = ''; for (const x of g.filter(x => Math.abs(x.oy - y) < 2)) if (!s.endsWith(x.uni)) s += x.uni; return s;
   })();
   const musicCount = pages.reduce((a, p) => a + p.glyphs.filter(isMaestro).length, 0);
+  // 글꼴 탓에 첫 글자만 남은 악기 이름(예: Ghostscript로 만든 Finale PDF의 '소', '피', '거')을 채운다
+  const ONE = { '소': '소금', '피': '피리', '거': '거문고', '해': '해금', '가': '가야금', '양': '양금', '아': '아쟁', '태': '태평소' };
+  const named = new Set(lines.map(l => l.name));
+  lines.forEach(l => { if (l.name && ONE[l.name] && !named.has(ONE[l.name])) l.name = ONE[l.name];
+    else if (l.name === '대') l.name = named.has('대금') ? '대아쟁' : '대금'; });
   lines.forEach(l => { l.label = l.name || `${l.id + 1}번째 줄`; });
   // 같은 이름이 이어진 두 줄 = 한 악기의 윗줄·아랫줄
   lines.forEach((l, i) => { const n = lines[i + 1]; if (n && l.name && n.name === l.name && !(lines[i - 1] && lines[i - 1].name === l.name)) { l.label = l.name + ' (윗줄)'; n.label = n.name + ' (아랫줄)'; } });
