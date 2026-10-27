@@ -497,6 +497,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .extra-head .file span { color: var(--muted); font-size: 13px; }
 .extra.disabled .btn { opacity: .5; pointer-events: none; }
 .tempo-alert { outline: 2px solid #d8a400; outline-offset: 2px; }
+.setbox { margin-top: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); display: grid; gap: 10px; }
+.setbox-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.setbox h3 { margin: 0; font-size: 15px; }
+.setbox .hint { margin: 0; }
+.set-state { font-size: 12.5px; color: var(--muted); }
+.set-state.ok { color: #2f7a4f; }
+.set-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.set-row .chk { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
 
 </style>
 
@@ -548,6 +556,24 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     </section>
     </div>
     <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 파일은 여러 개를 한꺼번에 고를 수 있고(총보 칸에 여러 개를 고르면 줄이 가장 많은 것을 총보로, 나머지는 더한 악보로 씁니다), 목록의 ✕로 뺄 수 있습니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
+    <section class="setbox" id="setBox" aria-labelledby="setTitle" hidden>
+      <div class="setbox-head">
+        <h3 id="setTitle">이 악보의 설정</h3>
+        <span class="set-state" id="setState" aria-live="polite"></span>
+      </div>
+      <p class="hint">템포 표, 연습 속도, 줄마다 켜기·끄기·악기 소리·음량·옥타브, 연주 범위·카운트인 같은 재생 옵션, 음원 저장 옵션을 이 악보에 묶어 이 브라우저에 저장합니다. 음정·길이 수정은 따로 늘 자동 저장됩니다.</p>
+      <div class="set-row">
+        <label class="chk"><input type="checkbox" id="setAutoSave" checked>바꿀 때마다 자동 저장</label>
+        <label class="chk"><input type="checkbox" id="setAutoLoad" checked>악보를 열면 저장한 설정 자동으로 불러오기</label>
+      </div>
+      <div class="set-row">
+        <button class="btn" id="setSaveNow" type="button">지금 저장</button>
+        <button class="btn" id="setLoadNow" type="button">저장한 설정 불러오기</button>
+        <button class="btn" id="setExport" type="button">설정 파일로 내보내기</button>
+        <label class="btn" for="setImport">설정 파일 가져오기</label><input type="file" id="setImport" accept="application/json,.json" hidden>
+        <button class="x" id="setClear" type="button">저장한 설정 지우기</button>
+      </div>
+    </section>
   </section>
   <div class="msg" id="msg" hidden></div>
   <div class="msg" id="bootMsg" role="alert">이 화면에서는 프로그램이 실행되지 않습니다. 파일 앱·메일·메신저의 미리보기에서는 버튼이 동작하지 않으니, Safari나 Chrome 같은 브라우저에서 합주연습기 링크로 열어 주세요.</div>
@@ -564,6 +590,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <dd>줄마다 악기 소리를 고르고 음량 막대로 크기를 맞춥니다. 장구는 작게 깔고 내 악기는 크게 하는 식입니다. 선율 줄의 <b>옥타브</b>는 악보보다 한두 옥타브 높이거나 낮춰 낼 때 씁니다(대금·소금처럼 악보와 실제 소리 높이가 다른 악기).</dd>
       <dt>4. 템포 · 재생</dt>
       <dd>악보의 빠르기 표시를 찾아 템포 구간을 미리 채웁니다. 템포를 못 읽은 구간은 노란 칸으로 표시되고, BPM 숫자를 넣기 전에는 재생·저장되지 않습니다. 연습 속도, 연주 범위, 카운트인, 메트로놈, 쉬는 마디 박 짚기를 정하고 재생하거나 MP3·WAV로 저장합니다. 템포 표시, 도돌이표, D.S.·코다는 단 맨 위에만 적혀 있어도 고른 모든 줄에 함께 적용됩니다.</dd>
+      <dt>설정 저장 · 불러오기</dt>
+      <dd>템포 표, 연습 속도, 줄마다 켜기·끄기·악기 소리·음량·옥타브, 재생·음원 저장 옵션은 바꿀 때마다 그 악보에 묶여 이 브라우저에 자동 저장되고, 같은 악보를 다시 열면 자동으로 불러옵니다(파일 이름이 달라도 내용이 같으면 같은 악보). <b>이 악보의 설정</b> 칸에서 자동 저장·자동 불러오기를 끄거나, 직접 저장·불러오기, 파일로 내보내 다른 기기로 옮길 수 있습니다.</dd>
       <dt>알아 둘 점</dt>
       <dd>가야금·거문고·대금·소금·피리·태평소·해금·아쟁·피아노와 장구·꽹과리·징·바라와 심벌·하이햇·베이스드럼은 녹음한 소리를 씁니다(양금·북·북 테는 합성음, 북은 녹음도 고를 수 있음). 긴 음에는 녹음한 농현·요성을 넣을 수 있고(줄마다 켜고 끄기), 추성·퇴성 같은 시김새는 악보 기호를 읽지 못해 나오지 않습니다. 음높이는 음자리표·조표·임시표로 읽습니다. 소리가 악보와 다르게 들리는 마디가 있으면 마디 번호를 알려 주세요.</dd>
     </dl>
@@ -1869,6 +1897,154 @@ $('saveBtn').addEventListener('click', async () => {
   } finally { btn.disabled = false; updateSaveFormatUI(); }
 });
 
+// ---------- 이 악보의 설정 저장·불러오기 ----------
+// 악보 PDF 내용으로 만든 지문(fp)마다 이 브라우저(localStorage)에 저장한다. 파트보 묶음은 파트보 지문들을 모아 하나의 열쇠로
+const SET_KEY = 'hapju-settings:', PREF_KEY = 'hapju-prefs';
+const prefs = (() => { const d = { autoSave: true, autoLoad: true }; try { return { ...d, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') }; } catch (e) { return d; } })();
+function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) {} }
+let setRestoring = false, setTimer = 0;
+function settingsKey() {
+  const sc = state.score; if (!sc) return null;
+  if (sc.isComposite) return state.parts.length ? 'parts:' + state.parts.map(x => x.sc.fp).sort().join('+') : null;
+  return sc.fp || null;
+}
+// 줄을 가리키는 열쇠: 더한 악보·파트보는 그 PDF 지문으로(올릴 때마다 바뀌는 번호가 아니라)
+function stableKey(l) { return l.sourceScore ? l.sourceScore.fp + ':' + (l.sourceLineId == null ? 'p' : l.sourceLineId) : 'main:' + cfgKey(l.id); }
+const CFG_FIELDS = ['role', 'inst', 'oct', 'octUser', 'vol', 'R', 'L', 'nong'];
+function readSettings(key) { if (!key) return null; try { const t = localStorage.getItem(SET_KEY + key); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+function collectSettings() {
+  const lines = {};
+  for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; if (!c) continue; const o = { name: l.label || '' }; for (const f of CFG_FIELDS) if (c[f] !== undefined) o[f] = c[f]; lines[stableKey(l)] = o; }
+  return { format: 'hapju-settings', v: 1, title: state.title || '', file: state.fileName || '', saved: new Date().toISOString(), lastBar: lastBar(),
+    lines, tempoRows: state.tempoRows.map(r => ({ ...r })), speed: +$('speed').value, ritF: $('ritF').value, accF: $('accF').value,
+    play: { ...playOpts(), loop: $('optLoop').checked, rest: $('optRest').value }, save: { ...saveOpts(), linked: saveLinked, format: $('saveFormat').value },
+    order: state.manualOrder ? $('orderText').value : null,
+    extras: (state.extras || []).map(x => ({ name: x.file.name, fp: x.sc.fp })) };
+}
+const fmtTime = iso => { try { const d = new Date(iso); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; } catch (e) { return ''; } };
+function setState(t, ok) { const el = $('setState'); el.textContent = t || ''; el.classList.toggle('ok', !!ok); }
+function writeSettings(manual) {
+  const key = settingsKey(); if (!key) return false;
+  const S = collectSettings();
+  try { localStorage.setItem(SET_KEY + key, JSON.stringify(S)); }
+  catch (e) { setState('이 브라우저에는 저장하지 못했습니다(사생활 보호 모드 등). [설정 파일로 내보내기]로 보관해 주세요.'); return false; }
+  setState(`${manual ? '저장했습니다' : '자동 저장됨'} · ${fmtTime(S.saved)}`, true);
+  return true;
+}
+function scheduleAutoSave() {
+  if (!prefs.autoSave || setRestoring || !settingsKey()) return;
+  clearTimeout(setTimer); setTimer = setTimeout(() => writeSettings(false), 700);
+}
+// 줄 설정 입히기 (only: 이 열쇠들만)
+function applyLineSettings(S, only) {
+  let n = 0;
+  if (!S || !S.lines) return n;
+  for (const l of state.lineList) {
+    const k = stableKey(l); if (only && !only.has(k)) continue;
+    const o = S.lines[k], c = state.lineCfg[cfgKey(l.id)]; if (!o || !c) continue;
+    for (const f of CFG_FIELDS) if (o[f] !== undefined) c[f] = o[f];
+    if (c.role === 'melody' && !c.pitched) c.role = 'perc';
+    if (c.role === 'melody') ensureInst(c);
+    n++;
+  }
+  syncLineIds();
+  return n;
+}
+function applyRestSettings(S) {
+  const LB = lastBar();
+  if (Array.isArray(S.tempoRows) && S.tempoRows.length) {
+    const rows = S.tempoRows.filter(r => r.start >= 1 && r.start <= LB).map(r => ({ ...r }));
+    if (rows.length && rows.some(r => r.start === 1)) state.tempoRows = rows;
+  }
+  if (S.speed) { $('speed').value = S.speed; $('speedVal').textContent = $('speed').value + '%'; }
+  if (S.ritF) $('ritF').value = S.ritF; if (S.accF) $('accF').value = S.accF;
+  const P = S.play || {};
+  if (P.from) $('from').value = P.from; if (P.to) $('to').value = Math.min(P.to, LB);
+  const ck = (id, v) => { if (typeof v === 'boolean') $(id).checked = v; };
+  ck('optRepeat', P.repeats); ck('optCount', P.countIn); ck('optMetro', P.metronome); ck('optDyn', P.dyn); ck('optLoop', P.loop);
+  if (P.restCount) $('optRest').value = P.restCount;
+  clampRange(); audio.loop = $('optLoop').checked;
+  state.manualOrder = null;
+  if (S.order) { const r = parseOrderText(S.order, state.bars); if (!r.error) state.manualOrder = r.order; }
+  const V = S.save || {};
+  if (V.format) $('saveFormat').value = V.format;
+  saveLinked = V.linked !== false;
+  if (saveLinked) syncSaveFromPlay();
+  else {
+    if (V.from) $('sFrom').value = V.from; if (V.to) $('sTo').value = V.to; if (V.speed) $('sSpeed').value = V.speed;
+    ck('sRepeat', V.repeats); ck('sCount', V.countIn); ck('sMetro', V.metronome); ck('sDyn', V.dyn); if (V.restCount) $('sRest').value = V.restCount;
+    saveSummary();
+  }
+  updateSaveFormatUI();
+  propagateEq(); changed(); renderTempo(); renderBars(); refreshOrder(); updateOut();
+}
+function restoreSettings(S, how) {
+  if (!S) return false;
+  setRestoring = true;
+  try {
+    applyLineSettings(S); renderLineList(); applySelection(); applyRestSettings(S);
+  } finally { setRestoring = false; }
+  const miss = S.extras && S.extras.filter(x => !(state.extras || []).some(e => e.sc.fp === x.fp)).map(x => x.name);
+  setState(`${how} · ${fmtTime(S.saved)}에 저장한 설정` + (miss && miss.length ? ` (더한 악보 ${miss.join(', ')}는 다시 올려 주세요)` : ''), true);
+  return true;
+}
+// 악보를 연 뒤 부른다: 저장한 설정이 있으면 자동으로 불러오고, 없으면 안내만
+function afterScoreLoaded() {
+  const key = settingsKey();
+  $('setBox').hidden = !key;
+  if (!key) return;
+  const S = readSettings(key);
+  if (S && prefs.autoLoad) restoreSettings(S, '불러옴');
+  else setState(S ? `${fmtTime(S.saved)}에 저장한 설정이 있습니다. [저장한 설정 불러오기]로 쓸 수 있습니다.` : '아직 저장한 설정이 없습니다.' + (prefs.autoSave ? ' 설정을 바꾸면 자동으로 저장됩니다.' : ''));
+}
+// 사용자가 무엇이든 바꾸면 자동 저장 예약 (파일 고르기·설정 칸 자체는 빼고)
+for (const t of ['change', 'input', 'click']) document.addEventListener(t, ev => {
+  const el = ev.target; if (!el || !el.closest) return;
+  if (el.closest('#setBox') || (el.type === 'file') || el.closest('.drop') || el.closest('#extraBox') || el.closest('.flist')) return;
+  if (t === 'click' && !el.closest('button, .seg, .b-edit, .bar-tip, .ed')) return;
+  scheduleAutoSave();
+}, true);
+$('setAutoSave').checked = prefs.autoSave; $('setAutoLoad').checked = prefs.autoLoad;
+$('setAutoSave').addEventListener('change', () => { prefs.autoSave = $('setAutoSave').checked; savePrefs(); if (prefs.autoSave) writeSettings(false); });
+$('setAutoLoad').addEventListener('change', () => { prefs.autoLoad = $('setAutoLoad').checked; savePrefs(); });
+$('setSaveNow').addEventListener('click', () => writeSettings(true));
+$('setLoadNow').addEventListener('click', () => { const S = readSettings(settingsKey()); if (!S) { setState('이 악보로 저장한 설정이 없습니다.'); return; } stop(); restoreSettings(S, '불러옴'); });
+$('setClear').addEventListener('click', () => {
+  const key = settingsKey(); if (!key) return;
+  if (!confirm('이 악보로 저장한 설정을 지울까요? 지금 화면의 설정은 그대로 남습니다. (음정·길이 수정은 지우지 않습니다)')) return;
+  try { localStorage.removeItem(SET_KEY + key); } catch (e) {}
+  clearTimeout(setTimer); setState('저장한 설정을 지웠습니다.' + (prefs.autoSave ? ' 다시 바꾸면 자동 저장됩니다.' : ''));
+});
+// 파일로 내보내기: 설정 + 이 악보들의 음정·길이 수정을 함께 (다른 기기로 옮길 때)
+$('setExport').addEventListener('click', () => {
+  if (!settingsKey()) return;
+  const S = collectSettings();
+  S.edits = loadedSources().map(sc => ({ fp: sc.fp, file: sc.fileName || '', title: sc.title || '', lines: (editsFor(sc.fp) || { lines: {} }).lines })).filter(x => countEdits(x));
+  S.key = settingsKey();
+  const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = `${(state.title || '악보').replace(/[\\/:*?"<>|]/g, '_')}_설정.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setState('설정 파일을 내보냈습니다' + (S.edits.length ? ' (음정·길이 수정 포함)' : ''), true);
+});
+$('setImport').addEventListener('change', async ev => {
+  const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
+  let S; try { S = JSON.parse(await f.text()); } catch (e) { setState('설정 파일을 읽지 못했습니다.'); return; }
+  if (!S || S.format !== 'hapju-settings') { setState('합주연습기에서 내보낸 설정 파일이 아닙니다.'); return; }
+  if (S.key && S.key !== settingsKey() && !confirm(`이 설정은 다른 악보 파일(${S.file || S.title || '이름 없음'})에서 만든 것입니다. 지금 악보에 적용할까요? 줄이 맞지 않는 곳은 건너뜁니다.`)) return;
+  stop();
+  let editN = 0;
+  for (const s2 of S.edits || []) {
+    const tgt = loadedSources().find(x => x.fp === s2.fp); if (!tgt) continue;
+    const E = editsFor(tgt.fp);
+    for (const [lk, L] of Object.entries(s2.lines || {})) { const D = E.lines[lk] || (E.lines[lk] = {}); for (const [bi, B] of Object.entries(L)) D[bi] = { ...(D[bi] || {}), ...B }; }
+    saveEdits(tgt); editN++;
+  }
+  if (editN) { state.lineRes = {}; }
+  restoreSettings(S, '파일에서 불러옴');
+  if (writeSettings(false)) setState('설정 파일을 불러와 이 악보 설정으로 저장했습니다' + (editN ? ' (음정·길이 수정 포함)' : ''), true);
+});
+
 // ---------- PDF 읽기 ----------
 function showMsg(t) { $('msg').hidden = !t; $('msg').textContent = t || ''; }
 // PDF 한 개를 읽는다 (총보·파트보·더한 악보 공통)
@@ -1900,7 +2076,7 @@ function resetEmpty(text) {
   $('fileName').textContent = text || '총보를 아직 올리지 않았습니다.';
   $('fileInfo').textContent = '총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
-  showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder();
+  showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
 }
 function fileRow(text, sub, onRemove, what) {
   const li = document.createElement('li');
@@ -1986,6 +2162,7 @@ async function loadFullPdf(files) {
     syncLineIds();
     renderFileLists(); renderLineList();
     applySelection(true);
+    afterScoreLoaded();
   } catch (e) {
     console.error(e);
     $('fileInfo').textContent = '읽지 못했습니다.';
@@ -2005,10 +2182,13 @@ async function loadExtraPdfs(files) {
       if (!sc.maestroCount) showMsg(`${file.name}: 악보 기호를 찾지 못했습니다(스캔한 PDF일 수 있음). 목록에서 빼 주세요.`);
       state.extras.push({ file, sc, uid: ++uidSeq, label: (sc.partName || '').trim() || stemOf(file) });
     }
+    const before = new Set(Object.keys(state.lineCfg));
     state.lineList = fullLineList();
     cfgNewLines(state.lineList.filter(l => l.sourceScore), true);
+    // 저장한 설정에 이 악보 줄의 설정이 있으면 새로 붙은 줄에만 입힌다
+    if (prefs.autoLoad) applyLineSettings(readSettings(settingsKey()), new Set(state.lineList.filter(l => !before.has(cfgKey(l.id))).map(stableKey)));
     syncLineIds(); state.manualOrder = null;
-    renderFileLists(); renderLineList(); applySelection();
+    renderFileLists(); renderLineList(); applySelection(); scheduleAutoSave();
   } catch (e) {
     console.error(e); renderFileLists(); showMsg(`${e && e.message ? e.message : '더한 악보를 읽지 못했습니다.'}`);
   }
@@ -2017,7 +2197,7 @@ function removeExtra(uid) {
   stop();
   state.extras = state.extras.filter(x => x.uid !== uid);
   state.lineList = fullLineList(); syncLineIds();
-  renderFileLists(); renderLineList(); applySelection();
+  renderFileLists(); renderLineList(); applySelection(); scheduleAutoSave();
 }
 function lineLabel(id) { const item = state.lineList.find(l => cfgKey(l.id) === cfgKey(id)); if (item) return item.label || item.sourceScore?.partName || item.sourceScore?.title || ''; if (id == null) return state.score?.partName || ''; const l = state.score?.lines?.[id]; return l ? l.label : ''; }
 
@@ -2295,6 +2475,7 @@ function rebuildParts() {
   $('partsFileName').textContent = `${state.parts.length}개 파트보 등록됨`;
   $('partsFileInfo').textContent = '파트보는 파일별로 분석한 뒤 마디 번호를 기준으로 합쳐 재생합니다. 더 올리면 목록에 이어 붙습니다.';
   renderFileLists(); renderLineList(); applySelection(true);
+  afterScoreLoaded();
 }
 
 // ---------- 시작: 예시 장단 ----------
