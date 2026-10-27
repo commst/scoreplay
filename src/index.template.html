@@ -1,6 +1,6 @@
-<title>국악 합주 연습기</title>
+<title>합주연습기</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
 /* 레이아웃: 위 = 악보 올리기, 아래 = 왼쪽 설정 열 + 오른쪽 연주·마디 지도 (좁으면 한 열) */
 :root {
@@ -315,197 +315,186 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 
-/* ===== Visual refresh: styling only; preserve markup, IDs, and event logic ===== */
+/* ===== 디자인 2: 정간(井間) — 쪽빛·연지·송화, 평평한 면, 단계 번호 ===== */
 :root {
-  --r: 15px;
-  --paper: #f4f6f8;
-  --card: #ffffff;
-  --ink: #202a38;
-  --muted: #687589;
-  --line: #dce3ec;
-  --accent: #4659a8;
-  --accent-ink: #ffffff;
-  --chae: #d45e45;
-  --buk: #3c66a5;
-  --warn: #a96516;
-  --warn-bg: #fff3df;
-  --now: #fff0c7;
+  --paper: #edf0f4; --card: #ffffff; --ink: #19202e; --muted: #5d697b; --line: #d6dce5; --line-2: #c3cbd7;
+  --accent: #283c8e; --accent-ink: #ffffff; --accent-soft: #e6e9f6;
+  --chae: #c2453a; --buk: #2c5da8; --now: #fbe7a1; --warn: #9a5d0c; --warn-bg: #fbf0dc;
+  --font-num: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --r: 14px; --r-s: 8px;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #121722;
-    --card: #1a2230;
-    --ink: #e9eef7;
-    --muted: #a4b0c3;
-    --line: #303c50;
-    --accent: #9aa9ff;
-    --accent-ink: #141a2a;
-    --chae: #ff927a;
-    --buk: #8fb8ff;
-    --warn: #f0b45f;
-    --warn-bg: #392d1d;
-    --now: #3a3425;
-  }
-}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #10141c; --card: #181e29; --ink: #e8ecf3; --muted: #9aa6b8; --line: #2a3344; --line-2: #3a4458;
+  --accent: #93a4f0; --accent-ink: #10141c; --accent-soft: #232b45;
+  --chae: #f08a76; --buk: #8fb3f2; --now: #4a3f22; --warn: #f0b45f; --warn-bg: #352a19; color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --paper: #121722;
-  --card: #1a2230;
-  --ink: #e9eef7;
-  --muted: #a4b0c3;
-  --line: #303c50;
-  --accent: #9aa9ff;
-  --accent-ink: #141a2a;
-  --chae: #ff927a;
-  --buk: #8fb8ff;
-  --warn: #f0b45f;
-  --warn-bg: #392d1d;
-  --now: #3a3425;
+  --paper: #10141c; --card: #181e29; --ink: #e8ecf3; --muted: #9aa6b8; --line: #2a3344; --line-2: #3a4458;
+  --accent: #93a4f0; --accent-ink: #10141c; --accent-soft: #232b45;
+  --chae: #f08a76; --buk: #8fb3f2; --now: #4a3f22; --warn: #f0b45f; --warn-bg: #352a19; color-scheme: dark; }
+body { background: var(--paper); line-height: 1.6; padding-bottom: 96px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1240px; gap: 28px; }
+
+/* 머리: 큰 제목 + 굿거리 장단 정간 */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 40px; align-items: end; padding: 18px 0 22px; border-bottom: 2px solid var(--ink); }
+.hero h1 { font: 700 clamp(40px, 7vw, 68px)/1 var(--font-display); letter-spacing: -0.03em; margin: 0; }
+.hero .lede { margin: 14px 0 0; max-width: 58ch; font-size: 15px; color: var(--muted); }
+.jeonggan { display: grid; grid-template-columns: repeat(3, 40px); grid-auto-rows: 40px; border: 2px solid var(--ink); }
+.jeonggan .jg { position: relative; border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+.jeonggan .jg:nth-child(3n) { border-right: 0; }
+.jeonggan .jg:nth-last-child(-n+3) { border-bottom: 0; }
+.jeonggan .jg:nth-child(3n+1) { border-top: 0; }
+.jeonggan .jg:nth-child(3n+1):not(:first-child) { box-shadow: 0 -2px 0 var(--ink) inset; }
+.jeonggan .jg::before, .jeonggan .jg::after { content: ""; position: absolute; border-radius: 50%; }
+.jg.dung::before { inset: 8px; background: var(--chae); box-shadow: 0 0 0 4px color-mix(in srgb, var(--buk) 85%, transparent); }
+.jg.kung::before { inset: 10px; background: var(--buk); }
+.jg.gi::before { width: 6px; height: 6px; left: 6px; top: 8px; background: var(--chae); opacity: .7; }
+.jg.gi::after { inset: 11px 8px 9px 13px; background: var(--chae); }
+.jg.roll::before { left: 6px; right: 6px; top: 13px; height: 8px; border-radius: 4px; background: repeating-linear-gradient(90deg, var(--chae) 0 3px, transparent 3px 5px); }
+@media (max-width: 640px) {
+  .hero { grid-template-columns: 1fr; padding-top: 6px; }
+  .jeonggan { grid-template-columns: repeat(12, 1fr); grid-auto-rows: 26px; width: 100%; }
+  .jeonggan .jg { border-bottom: 0; border-right: 1px solid var(--line-2) !important; box-shadow: none !important; }
+  .jeonggan .jg:nth-child(3n):not(:last-child) { border-right: 2px solid var(--ink) !important; }
+  .jeonggan .jg:last-child { border-right: 0 !important; }
+  .jg.dung::before { inset: 6px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--buk) 85%, transparent); }
+  .jg.kung::before { inset: 7px; } .jg.gi::after { inset: 8px 5px 7px 10px; } .jg.gi::before { left: 3px; top: 6px; width: 5px; height: 5px; }
+  .jg.roll::before { left: 4px; right: 4px; top: 9px; }
 }
-html { scroll-behavior: smooth; }
-body {
-  background:
-    radial-gradient(ellipse at 8% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 34rem),
-    var(--paper);
-  line-height: 1.6;
-}
-.wrap { max-width: 1320px; gap: 22px; }
-header {
-  position: relative;
-  overflow: hidden;
-  padding: clamp(22px, 4vw, 38px);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: linear-gradient(135deg, var(--card), color-mix(in srgb, var(--accent) 5%, var(--card)));
-  box-shadow: 0 10px 32px color-mix(in srgb, var(--ink) 5%, transparent);
-}
-header::after {
-  content: "♫";
-  position: absolute;
-  right: 26px;
-  top: -25px;
-  font: 180px/1 var(--font-display);
-  color: color-mix(in srgb, var(--accent) 7%, transparent);
-  pointer-events: none;
-}
-header h1 { position: relative; z-index: 1; font-size: clamp(30px, 4vw, 42px); letter-spacing: -.035em; }
-.lede { position: relative; z-index: 1; max-width: 75ch; margin-top: 12px; font-size: 15px; }
-.guide { position: relative; z-index: 1; gap: 10px; margin-top: 22px; }
-.guide li { padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: color-mix(in srgb, var(--card) 84%, transparent); font-size: 13px; }
-.guide li::before { width: 24px; height: 24px; border-radius: 8px; font-size: 12px; line-height: 24px; text-align: center; }
-.drop { border-style: solid; border-width: 1px; border-radius: 16px; padding: 18px 20px; box-shadow: 0 5px 18px color-mix(in srgb, var(--ink) 4%, transparent); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
-.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--card)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent); }
-.drop .file strong { font-size: 15px; margin-bottom: 2px; }
-.btn { min-height: 38px; border-radius: 10px; padding: 9px 14px; font-weight: 600; box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 4%, transparent); transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease; }
-.btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 48%, var(--line)); box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 8%, transparent); transform: translateY(-1px); }
-.btn.primary { box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 22%, transparent); }
-.msg { border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--line)); border-left: 4px solid var(--warn); border-radius: 12px; }
-.main { grid-template-columns: minmax(0, 370px) minmax(0, 1fr); gap: 22px; }
-.side { gap: 18px; }
-.panel { border-radius: 17px; padding: 20px; gap: 16px; box-shadow: 0 6px 22px color-mix(in srgb, var(--ink) 4%, transparent); }
-.panel > h2, .panel > .row > h2 { display: flex; align-items: center; gap: 9px; color: var(--ink); font-size: 13px; letter-spacing: .035em; }
-.panel > h2::before, .panel > .row > h2::before { content: ""; display: inline-block; width: 4px; height: 17px; border-radius: 8px; background: var(--accent); }
-.tempo th { padding-bottom: 9px; }
-.tempo td { padding: 5px 3px; }
-.tempo input, .tempo select, .field input, .field select, .range input, .order-row input, .lcard select {
-  border-radius: 9px; min-height: 36px; border-color: var(--line); transition: border-color .15s ease, box-shadow .15s ease;
-}
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-.x { min-width: 30px; min-height: 30px; }
+
+/* 단계 머리 */
+.step-h { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--ink); font: 700 21px/1.25 var(--font-display); letter-spacing: -0.01em; }
+.step-h .sn { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border: 2px solid var(--ink); font: 700 15px/1 var(--font-body); background: var(--card); }
+.panel > h2:not(.step-h), .panel > .row > h2:not(.step-h) { font: 700 14px/1.3 var(--font-body); color: var(--ink); letter-spacing: 0; }
+
+/* 면: 평평하게, 한 단계 = 한 면 */
+.panel { border-radius: var(--r); padding: 20px; gap: 16px; border: 1px solid var(--line); background: var(--card); box-shadow: none; }
+.side { gap: 16px; }
+.main { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+.help { border-top: 1px dashed var(--line); }
+.help.panel { border-top: 1px solid var(--line); padding: 12px 20px; }
+.help > summary { color: var(--accent); font-weight: 600; min-height: 28px; }
+.help .eg { border-radius: var(--r-s); border: 1px solid var(--line); }
+
+/* 1단계: 악보 올리기 */
+.step { display: grid; gap: 14px; }
+.uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .uploads { grid-template-columns: 1fr; } }
+.up { display: grid; gap: 8px; align-content: start; }
+.up h3 { margin: 0; font: 600 13.5px/1.3 var(--font-body); color: var(--muted); }
+.drop { border: 1.5px dashed var(--line-2); border-radius: var(--r); background: var(--card); padding: 18px; gap: 12px 16px; box-shadow: none; transition: border-color .15s, background .15s; }
+.drop.over { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+.drop .file strong { font-size: 15px; }
+.up-note { margin: 0; }
+
+/* 단추·입력 */
+.btn { min-height: 38px; border-radius: var(--r-s); padding: 8px 14px; font-weight: 600; background: var(--card); border: 1px solid var(--line-2); box-shadow: none; transition: border-color .15s, background .15s; }
+.btn:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 88%, var(--ink)); }
+.tempo input, .tempo select, .field input, .field select, .range input, .order-row input, .lcard select, .opts select.mini, .save-format-row select {
+  border-radius: var(--r-s); min-height: 36px; border: 1px solid var(--line-2); background: var(--card); }
+input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .speed input, .lcard .vol input { accent-color: var(--accent); }
-.play { width: 60px; height: 60px; box-shadow: 0 7px 18px color-mix(in srgb, var(--accent) 24%, transparent); transition: transform .16s ease, box-shadow .16s ease; }
-.play:hover { transform: scale(1.04); box-shadow: 0 9px 22px color-mix(in srgb, var(--accent) 32%, transparent); }
-.bar-track { height: 8px; border-radius: 999px; }
-.bar-track i { border-radius: inherit; }
-.opts { gap: 10px 16px; }
-.opts label { padding: 5px 8px; border-radius: 8px; background: color-mix(in srgb, var(--paper) 72%, transparent); }
-.range { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--paper) 72%, transparent); }
-.bar-actions { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--paper) 72%, transparent); }
-.summary { gap: 8px; }
-.summary > * { padding: 5px 9px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 6%, var(--paper)); }
-.bars { gap: 9px; }
-.b { border-radius: 11px; padding: 8px 9px 9px; background: var(--card); box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 3%, transparent); transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease; }
-.b:hover { border-color: var(--accent); box-shadow: 0 5px 13px color-mix(in srgb, var(--ink) 8%, transparent); transform: translateY(-2px); }
-.b.warn { box-shadow: inset 3px 0 0 var(--warn); }
-.b.now { background: var(--now); border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
-.b .h { margin-bottom: 3px; }
-.lane { height: 15px; margin-top: 4px; }
-.lane i { width: 7px; height: 7px; }
-.b .tag { margin-top: 4px; }
-.bar-view-settings { border-radius: 12px; padding: 11px 12px; background: color-mix(in srgb, var(--accent) 4%, var(--paper)); }
-.bar-view-label { color: var(--ink); font-size: 13px; }
-.bar-view-btn { min-height: 38px; border-radius: 9px; padding: 8px 13px; font-weight: 550; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
-.bar-view-btn:hover { border-color: var(--accent); }
-.bar-view-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 3px 9px color-mix(in srgb, var(--accent) 18%, transparent); }
-.bar-tip { border-radius: 17px; padding: 17px; box-shadow: 0 18px 48px #0003; backdrop-filter: blur(16px); }
-.bar-tip .tip-stat { border: 1px solid var(--line); border-radius: 11px; padding: 10px; }
-.bar-tip .tip-event { border-radius: 6px; }
-.lrow, .lcard { border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
-.lrow:hover, .lcard:hover { border-color: color-mix(in srgb, var(--accent) 48%, var(--line)); }
-.lcard { padding: 13px; gap: 10px; }
-.lcard.melody { box-shadow: inset 3px 0 0 var(--chae); }
-.lcard.perc { box-shadow: inset 3px 0 0 var(--buk); }
-.lcard canvas, .lrow canvas { border: 1px solid #e2e7ef; }
-.seg { border-radius: 10px; }
-.seg button { min-height: 42px; }
-.seg button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent); }
-.help { border-top-style: solid; border-color: color-mix(in srgb, var(--line) 75%, transparent); }
-.help > summary { min-height: 30px; padding: 3px 0; font-weight: 600; }
-.help > summary:hover { color: var(--ink); }
-.help .eg { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
-.tempo-explain { border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; }
-.pill { border-radius: 7px; padding: 3px 8px; }
-@media (max-width: 860px) {
-  .main { grid-template-columns: minmax(0, 1fr); }
-  body { padding-top: 14px; }
-  .main { gap: 16px; }
-  .panel { padding: 16px; }
-}
+
+/* 2단계: 줄 카드 */
+.linelist { gap: 12px; align-items: start; }
+.lcard { align-content: start; }
+.lcard { border-radius: 12px; background: var(--card); border: 1px solid var(--line); box-shadow: none; padding: 14px; gap: 10px; }
+.lcard.melody { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: inset 4px 0 0 var(--accent); }
+.lcard.perc { border-color: color-mix(in srgb, var(--chae) 40%, var(--line)); box-shadow: inset 4px 0 0 var(--chae); }
+.lcard canvas { border: 1px solid var(--line); border-radius: 6px; }
+.seg { border-radius: var(--r-s); border: 1px solid var(--line-2); overflow: hidden; }
+.seg button { min-height: 40px; border: 0; background: var(--card); font-weight: 600; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); box-shadow: none; }
+.lcard.melody .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.lcard.perc .seg button[aria-pressed="true"] { background: var(--chae); color: #fff; }
+
+/* 4단계: 연주 */
+.transport { gap: 14px 18px; }
+.play { width: 64px; height: 64px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 6px var(--accent-soft); transition: transform .12s; }
+.play:hover { transform: scale(1.04); }
+.pos .now { font-size: 16px; }
+.pos .now b { font-size: 20px; }
+.bar-track { height: 8px; border-radius: 4px; background: var(--line); }
+.bar-track i { background: var(--accent); border-radius: inherit; }
+.opts { gap: 8px; }
+.opts label { padding: 6px 10px; border-radius: var(--r-s); border: 1px solid var(--line); background: var(--paper); }
+.range { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--paper); }
+.save-format-row { border-radius: var(--r-s); background: var(--paper); }
+.bar-actions { margin: 0; padding: 10px 12px; border-radius: var(--r-s); background: var(--paper); }
+.summary > * { padding: 4px 9px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); }
+.bar-view-settings { border-radius: var(--r-s); background: var(--paper); }
+.bar-view-btn { border-radius: var(--r-s); min-height: 36px; font-weight: 600; }
+.bar-view-btn[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); box-shadow: none; }
+
+/* 마디 지도: 칸 = 정간 한 칸처럼 각지게, 지금 마디는 송화색 */
+.bars { gap: 8px; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+.b { border-radius: 6px; padding: 7px 8px 8px; background: var(--card); border: 1px solid var(--line); box-shadow: none; transition: border-color .12s, background .12s; }
+.b:hover { border-color: var(--ink); transform: none; box-shadow: none; }
+.b .h .n { font: 700 13px/1.2 var(--font-body); font-variant-numeric: tabular-nums; }
+.b.now { background: var(--now); border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.b.warn { box-shadow: inset 3px 0 0 var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+.b.out { opacity: .35; }
+.lane { height: 14px; margin-top: 4px; }
+.lane.R { border-bottom: 1px dashed var(--line); }
+.lane i { width: 7px; height: 7px; top: 3px; }
+@media (max-width: 520px) { .bars { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; } }
+
+/* 미리보기·수정 창 */
+.bar-tip { border-radius: var(--r); padding: 16px; box-shadow: 0 16px 40px #0003; }
+.edit-dlg { border-radius: var(--r); }
+
+/* 아래 작은 연주 막대 */
+#mini { position: fixed; z-index: 900; left: 50%; bottom: max(12px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
+  display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 999px; background: var(--ink); color: var(--card); box-shadow: 0 10px 30px #0004; }
+#mini[hidden] { display: none !important; }
+.mini-play { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--card); color: var(--ink); display: grid; place-items: center; }
+.mini-play svg { width: 18px; height: 18px; fill: currentColor; }
+.mini-pos { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.mini-now { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-now .pill { background: transparent; border-color: color-mix(in srgb, var(--card) 40%, transparent); color: inherit; }
+.mini-now span[style] { color: inherit !important; opacity: .75; }
+.mini-track { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--card) 25%, transparent); overflow: hidden; }
+.mini-track i { display: block; height: 100%; width: 0; background: var(--now); }
+.mini-up { flex: none; border: 1px solid color-mix(in srgb, var(--card) 35%, transparent); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; }
+
 @media (max-width: 520px) {
-  .wrap { gap: 14px; }
-  header { padding: 21px 17px; border-radius: 17px; }
-  header::after { right: 6px; top: -8px; font-size: 110px; }
-  .guide { grid-template-columns: 1fr; gap: 7px; margin-top: 17px; }
-  .guide li { padding: 8px 10px; }
-  .drop { padding: 14px; gap: 12px; }
-  .drop .file { flex-basis: 100%; }
-  .drop label.btn { width: 100%; }
-  .panel { border-radius: 14px; padding: 14px; }
-  .bars { grid-template-columns: repeat(auto-fill, minmax(102px, 1fr)); }
-  .bar-view-settings { gap: 8px; }
+  .panel { padding: 16px; border-radius: 12px; }
+  .step-h { font-size: 19px; }
+  .drop { padding: 14px; } .drop label.btn { width: 100%; } .drop .file { flex-basis: 100%; }
 }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { transition: none !important; animation: none !important; }
-}
+@media (prefers-reduced-motion: reduce) { .play, .b, .btn, .drop { transition: none; } .play:hover { transform: none; } }
 
 </style>
 
 <div class="wrap">
-  <header>
-    <h1>국악 합주 연습기</h1>
-    <p class="lede">국악관현악 총보 PDF를 올리고 가야금·대금·해금 같은 선율 줄과 장구·북 같은 타악 줄을 골라 함께 들어 봅니다. 장구 장단에 맞춰 내 악기 가락을 들어 보거나, 내 줄만 빼고 반주처럼 틀어 놓고 연습할 수 있습니다. 장구·꽹과리 같은 타악 파트보 하나만 올리면 녹음한 장구 소리로 장단 연습기처럼 씁니다. 악보 파일은 이 브라우저 안에서만 처리되고 어디에도 올라가지 않습니다.</p>
-    <ol class="guide">
-      <li><span><b>악보 PDF 올리기</b> · Finale·Sibelius·MuseScore 2·Encore에서 저장한 PDF. 총보 하나, 또는 파트보 여러 개(장구 파트보 하나만도 됩니다).</span></li>
-      <li><span><b>줄마다 역할 정하기</b> · 선율로 연주 / 타악 반주 / 끄기. 소리·음량도 줄마다.</span></li>
-      <li><span><b>템포·범위·속도</b> · 노란 칸은 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
-      <li><span><b>재생 또는 MP3·WAV 저장</b> · 휴대폰에서 그대로 틀어 놓고 연습.</span></li>
-    </ol>
+  <header class="hero">
+    <div class="hero-text">
+      <h1>합주연습기</h1>
+      <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 늘봄에서 녹음한 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
+    </div>
+    <div class="jeonggan" aria-hidden="true" title="굿거리 장단"><i class="jg dung"></i><i class="jg "></i><i class="jg gi"></i><i class="jg kung"></i><i class="jg "></i><i class="jg roll"></i><i class="jg kung"></i><i class="jg "></i><i class="jg gi"></i><i class="jg kung"></i><i class="jg "></i><i class="jg roll"></i></div>
   </header>
 
-  <section class="panel" aria-labelledby="fullUploadTitle">
-    <h2 id="fullUploadTitle">총보 업로드</h2>
+  <section class="step" aria-labelledby="stepLoad">
+    <h2 class="step-h" id="stepLoad"><span class="sn">1</span>악보 올리기</h2>
+    <div class="uploads">
+    <section class="up" aria-labelledby="fullUploadTitle">
+    <h3 id="fullUploadTitle">총보 하나</h3>
     <section class="drop" id="drop">
       <div class="file">
         <strong id="fileName">예시 장단 (직접 만든 8마디)</strong>
         <span id="fileInfo">총보 PDF 한 개를 이 상자에 끌어다 놓거나 버튼으로 고르세요.</span>
       </div>
-      <label class="btn primary" for="pdfInput">총보 업로드</label>
+      <label class="btn primary" for="pdfInput">총보 고르기</label>
       <input type="file" id="pdfInput" accept="application/pdf,.pdf" hidden>
     </section>
-  </section>
-  <section class="panel" aria-labelledby="partsUploadTitle">
-    <h2 id="partsUploadTitle">파트보 업로드</h2>
-    <p class="hint">악기별 파트보를 여러 개 추가할 수 있습니다. 파트보를 불러오면 총보는 초기화되고, 총보를 불러오면 파트보 목록은 초기화됩니다.</p>
+    </section>
+    <section class="up" aria-labelledby="partsUploadTitle">
+    <h3 id="partsUploadTitle">파트보 여러 개</h3>
     <section class="drop" id="partsDrop">
       <div class="file">
         <strong id="partsFileName">파트보를 아직 추가하지 않았습니다.</strong>
@@ -515,6 +504,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
       <input type="file" id="partsInput" accept="application/pdf,.pdf" multiple hidden>
     </section>
     <div id="partsFileList" class="warnlist" aria-live="polite"></div>
+    </section>
+    </div>
+    <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
   </section>
   <div class="msg" id="msg" hidden></div>
   <details class="help panel" id="fullHelp">
@@ -537,7 +529,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 
   <section class="panel" id="linesPanel" hidden aria-labelledby="tLines">
     <div class="row" style="justify-content:space-between">
-      <h2 id="tLines">줄 고르기 · 역할 · 소리 · 음량</h2>
+      <h2 class="step-h" id="tLines"><span class="sn">2</span>줄 고르기</h2>
       <span class="hint" id="linesCount"></span>
     </div>
     <div class="row" id="lineFilters">
@@ -569,7 +561,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   <div class="main">
     <div class="side">
       <section class="panel" aria-labelledby="tTempo">
-        <h2 id="tTempo">템포 구간</h2>
+        <h2 class="step-h" id="tTempo"><span class="sn">3</span>빠르기</h2>
         <table class="tempo">
           <thead><tr><th style="width:22%">시작 마디</th><th>끝</th><th style="width:26%">기준</th><th style="width:22%">BPM</th><th></th></tr></thead>
           <tbody id="tempoBody"></tbody>
@@ -638,7 +630,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 
     <div class="side">
       <section class="panel" aria-labelledby="tPlay">
-        <h2 id="tPlay">연주</h2>
+        <h2 class="step-h" id="tPlay"><span class="sn">4</span>연주</h2>
         <div class="transport">
           <button class="play" id="playBtn" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
           <div class="pos">
@@ -758,6 +750,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   </div>
 </div>
 
+<div class="mini" id="mini" hidden>
+  <button class="mini-play" id="miniPlay" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="miniIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
+  <div class="mini-pos"><div class="mini-now" id="miniNow"><b>정지</b></div><div class="mini-track"><i id="miniFill"></i></div></div>
+  <button class="mini-up" id="miniUp" type="button" aria-label="연주 칸으로">연주 칸</button>
+</div>
 <script type="module">
 import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs';
@@ -1522,7 +1519,17 @@ async function buildAudio(onProgress) {
   state.dirty = false;
 }
 
-function setPlayIcon(p) { $('playIcon').innerHTML = p ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M7 4.5v15l13-7.5z"/>'; $('playBtn').setAttribute('aria-label', p ? '정지' : '재생'); }
+function setPlayIcon(p) {
+  const d = p ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M7 4.5v15l13-7.5z"/>';
+  $('playIcon').innerHTML = d; $('miniIcon').innerHTML = d;
+  $('playBtn').setAttribute('aria-label', p ? '정지' : '재생'); $('miniPlay').setAttribute('aria-label', p ? '정지' : '재생');
+}
+// 아래 작은 연주 막대: 연주 칸이 화면 밖에 있을 때만 보인다 (휴대폰에서 마디 지도를 보며 재생·정지)
+$('miniPlay').addEventListener('click', () => $('playBtn').click());
+$('miniUp').addEventListener('click', () => $('tPlay').scrollIntoView({ block: 'start', behavior: 'smooth' }));
+new MutationObserver(() => { $('miniNow').innerHTML = $('nowText').innerHTML; }).observe($('nowText'), { childList: true, subtree: true, characterData: true });
+new MutationObserver(() => { $('miniFill').style.width = $('trackFill').style.width; }).observe($('trackFill'), { attributes: true, attributeFilter: ['style'] });
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { for (const e of es) $('mini').hidden = e.isIntersecting || !document.querySelector('#bars .b'); }).observe(document.querySelector('.transport'));
 function fmt(s) { s = Math.max(0, s); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`; }
 
 // 아이폰: 버튼을 누른 그 순간에 소리 요소를 한 번 깨워 둬야 나중에 재생된다 (무음 스위치와 상관없이 들림)
