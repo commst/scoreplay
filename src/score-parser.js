@@ -498,7 +498,9 @@ export function pageLayout(pg) {
   // 왼쪽 글자는 세로로 가장 가까운 오선에 붙인다 (괄호로 묶은 악기 이름은 오선 사이에 있기도 함)
   // 쪽 맨 위의 큰 파트 이름(예: "타악")은 빼고, 줄 옆 작은 악기 이름만
   const clefsTmp = st => { const g = pg.glyphs.filter(g => isMusicFont(g.font) && g.ox >= st.x0 - 2 && g.ox < st.x0 + 18 && g.oy > st.top - 10 && g.oy < st.bottom + 10).sort((a, b) => a.ox - b.ox)[0]; return g && (g.code === 38 || g.code === 63 || g.code === 66) ? 'p' : 'x'; };
-  const leftGlyphs = pg.glyphs.filter(g => !isMusicFont(g.font) && g.x1 <= Math.min(...staves.map(s => s.x0)) + 1 && !isDigit(g.code) && g.code > 32 && g.size < 14);
+  const leftAll = pg.glyphs.filter(g => !isMusicFont(g.font) && g.x1 <= Math.min(...staves.map(s => s.x0)) + 1 && g.code > 32 && g.size < 14);
+  // 숫자는 마디 번호일 수 있어 빼되, 글자 바로 뒤에 붙은 숫자('가야금2', '해금 1')는 이름의 일부로 남긴다
+  const leftGlyphs = leftAll.filter(g => !isDigit(g.code) || leftAll.some(o => !isDigit(o.code) && Math.abs(o.oy - g.oy) < 1.5 && g.x0 - o.x1 > -1 && g.x0 - o.x1 < Math.max(3, g.size * 0.4)));
   const nearestStaff = y => { let b = -1, bd = 26; staves.forEach((st, i) => { const d = Math.max(0, st.top - y, y - st.bottom - 4); if (d < bd) { bd = d; b = i; } }); return b; };
   const labels = staves.map((st, i) => {
     const gs = leftGlyphs.filter(g => nearestStaff(g.oy) === i).sort((a, b) => a.ox - b.ox);
@@ -571,9 +573,19 @@ export function assignLines(pages) {
           L.lineOf[i] = k; next = k + 1;
         }
       }
-      for (const i of g) { const ln = lines[L.lineOf[i]]; ln.count++; if (!ln.first) ln.first = { page: pi, top: L.staves[i].top, bottom: L.staves[i].bottom, x0: L.staves[i].x0, x1: L.staves[i].x1 }; if (!ln.name && L.labels[i]) ln.name = L.labels[i]; }
+      for (const i of g) { const ln = lines[L.lineOf[i]]; ln.count++; if (!ln.first) ln.first = { page: pi, top: L.staves[i].top, bottom: L.staves[i].bottom, x0: L.staves[i].x0, x1: L.staves[i].x1 }; if (!ln.name && L.labels[i]) ln.name = L.labels[i];
+        if (g.length === lines.length && L.labels[i]) { const v = ln.votes || (ln.votes = {}); v[L.labels[i]] = (v[L.labels[i]] || 0) + 1; } }
     }
   });
+  // 첫 쪽에서 읽은 이름이 다른 줄 이름과 겹치고(옆 악기 이름을 잘못 붙임) 다른 쪽들은 다른 이름으로 읽었으면 그 이름으로
+  const names0 = lines.map(l => l.name);
+  lines.forEach((l, k) => {
+    const v = l.votes; if (!v) return;
+    const best = Object.entries(v).sort((a, b) => b[1] - a[1])[0][0];
+    const dup = names0.some((n, j) => Math.abs(j - k) > 1 && n === names0[k]);   // 바로 옆 줄과 같은 이름은 두 줄 악기라 괜찮다
+    if (best !== l.name && (dup || !l.name) && v[best] > (v[l.name] || 0)) l.name = best;
+  });
+  lines.forEach(l => { delete l.votes; });
   return { layouts, lines };
 }
 
@@ -630,7 +642,8 @@ function findTempoMarks(glyphs) {
   for (const g of glyphs) {
     if (!MUSIC_FONT.test(g.font) || ![113, 101, 104].includes(g.code)) continue;
     if (marks.some(mk => Math.abs(mk.y - g.oy) < 3 && Math.abs(mk.x - g.ox) < 30)) continue;
-    const dotted = glyphs.some(h => MUSIC_FONT.test(h.font) && (h.code === 107 || h.code === 46) && Math.abs(h.oy - g.oy) < 3 && h.ox > g.ox && h.ox - g.x1 < 5);
+    // 점: 악보 글꼴의 점, 또는 바로 붙여 쓴 일반 글꼴 '.'(Sibelius가 '♩.=48'의 점을 글자 글꼴로 찍기도 함)
+    const dotted = glyphs.some(h => (h.code === 107 || h.code === 46) && Math.abs(h.oy - g.oy) < 3 && h.ox > g.ox && (MUSIC_FONT.test(h.font) ? h.ox - g.x1 < 5 : h.x0 - g.x1 < 2.5));
     const right = glyphs.filter(h => h !== g && Math.abs(h.oy - g.oy) < 4 && h.ox > g.ox && h.ox - g.x1 < 70).sort((a, b) => a.ox - b.ox);
     let txt = '', last = g.x1 + 4;
     for (const h of right) { if (h.x0 - last > 9) break; txt += MUSIC_FONT.test(h.font) && OPT_CHAR[h.code] ? OPT_CHAR[h.code] : String.fromCodePoint(h.code); last = h.x1; }
@@ -893,7 +906,7 @@ export function parseScore(pages, opts = {}) {
         if (forceDots == null) dots.forEach((dg, i) => {
           if (usedDots.has(i) || reserved.has(i)) return;
           if (g.x1 + 0.3 <= dg.x0 && dg.x0 <= g.x1 + 6 + nd * 4 && Math.abs(dg.oy - g.oy) < (isRest ? 8 : dotTol(g))
-            && (isRest || !pitchedStaff || !heads.some(h => h !== g && Math.abs(cx(h) - cx(g)) < 1.5 && Math.abs(h.oy - dg.oy) < Math.abs(g.oy - dg.oy) - 0.1))   // 화음: 점은 높이가 가장 가까운 머리의 것
+            && (isRest || !heads.some(h => h !== g && Math.abs(cx(h) - cx(g)) < 1.5 && Math.abs(h.oy - dg.oy) < Math.abs(g.oy - dg.oy) - 0.1))   // 화음(타악의 위·아래 성부 포함): 점은 높이가 가장 가까운 머리의 것
             && (isRest || !pitchedStaff || !heads.some(h => h !== g && h.x0 > g.x1 - 0.5 && Math.abs((dg.x0 + dg.x1) / 2 - (h.x0 + h.x1) / 2) < (h.x1 - h.x0) * 0.2 && Math.abs(dg.oy - h.oy) > staffSp * 0.6 && Math.abs(dg.oy - h.oy) < staffSp * 1.8))   // 다른 머리 한가운데 위·아래 점 = 스타카토
             && !bars.some(b => b[0] > g.x1 - 0.5 && b[0] < dg.x0 + 0.5)) { usedDots.add(i); nd++; }
         });
@@ -1025,7 +1038,7 @@ export function parseScore(pages, opts = {}) {
       const staffStart = measures.length;
       for (let i = 0; i < regions.length; i++) {
         const [a, b] = regions[i];
-        const isBeam = r => beamList.some(bm => bm.x0 - 2 <= r.x0 && r.x1 <= bm.x1 + 2 && Math.abs(bm.yAt((r.x0 + r.x1) / 2) - (r.y0 + r.y1) / 2) < 3);
+        const isBeam = r => beamList.some(bm => bm.x0 - 2 <= r.x0 && r.x1 <= bm.x1 + 2 && Math.abs(bm.yAt((r.x0 + r.x1) / 2) - (r.y0 + r.y1) / 2) < 3) && notes.filter(n => !n.rest && n.x >= r.x0 - 4 && n.x <= r.x1 + 4).length >= 2;   // 빔 아래에는 음표가 있다 (여러 마디 쉼표 막대에는 없음)
         // 마디 안의 굵은 가로 막대(여러 마디 쉼표)로 마디를 나눈다. 가운데 줄 높이에 놓인 빔(16분음표 묶음 등)은 제외
         const r = [...rects, ...thickH].find(r => a <= r.x0 && r.x1 <= b && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3 && !isBeam(r));
         if (r && notes.some(n => n.x > r.x1 + 3 && n.x < b)) { regions.splice(i, 1, [a, r.x1 + 2], [r.x1 + 2, b]); leftDouble.splice(i + 1, 0, false); i++; }
@@ -1532,7 +1545,8 @@ export function resolveBars(measures, systemNumbers = []) {
           const nxt = measures.slice(mi + 1).find(x => x.kind === 'normal' && x.notes.length);
           const nextAgrees = nxt && !nxt.timesig && Object.values(voiceSums(nxt)).some(([p, q]) => p.eq(L) || q.eq(L));
           // 악보에 박자표가 적혀 있으면 두 성부가 모두 같고 다음 마디도 같을 때만 바꾼다
-          const adopt = tsExplicit ? (strong && nextAgrees) : ((strong && (L.gt(tsLen) || nextAgrees)) || (L.gt(tsLen) && nextAgrees));
+          // 박자표가 적힌 악보에서 짧아지는 쪽은 바꾸지 않는다: 짧아진 박자라면 박자표가 적혀 있었을 것이고, 대개 쉼표를 못 읽은 것
+          const adopt = tsExplicit ? (strong && nextAgrees && L.gt(tsLen)) : ((strong && (L.gt(tsLen) || nextAgrees)) || (L.gt(tsLen) && nextAgrees));
           if (!m.timesig && adopt) { tsLen = L; ts = lenToSig(L); inferredTs = true; thisTs = ts; tsNote = 'infer'; }
           else if (strong) { thisTs = lenToSig(L); }
           else if (!strong) { m.warnings.push('음표 길이가 박자보다 김 → 마디를 늘려 읽음'); }

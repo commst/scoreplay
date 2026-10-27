@@ -37,7 +37,10 @@ export function guessInstrument(name = '') {
   if (/피리/.test(name)) return 'piri';
   if (/해금/.test(name)) return 'haegeum';
   if (/아쟁/.test(name)) return 'ajaeng';
-  if (/piano|피아노/i.test(name)) return 'piano';
+  if (/piano|피아노|pno|syn|신디|keyboard|건반/i.test(name)) return 'piano';   // 신디사이저·건반 줄은 피아노 소리로
+  // 녹음이 없는 악기는 가장 비슷한 소리로: 생황(리드 화음 악기) → 피리, 콘트라베이스·첼로(활로 켜는 낮은 현) → 아쟁
+  if (/생황/.test(name)) return 'piri';
+  if (/contra\s*bass|^cb\.?$|콘트라베이스|베이스|cello|vc\.?$|첼로/i.test(name)) return 'ajaeng';
   return null; // 악기명을 확실히 알아내지 못하면 임의로 가야금 소리를 지정하지 않는다.
 }
 
