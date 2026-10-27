@@ -71,7 +71,7 @@ export function makeSounds() {
   return S;
 }
 
-const GAIN = { '궁': 1.15, '북': 1.15, '북짧게': 1.1, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
+const GAIN = { '궁': 1.15, '북': 1.12, '북녹음': 1.15, '북짧게': 1.1, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -225,7 +225,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   const vary = {};
   let lastTa = -9, flip = 0;
   // 북·바라·심벌·베이스드럼은 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
-  const fam = k => k === '북' || k === '북짧게' ? 'b' : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : null;
+  const fam = k => k === '북녹음' || k === '북짧게' ? 'b' : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : null;
   const nextSame = new Float64Array(hits.length).fill(Infinity);
   { const ord = hits.map((_, i) => i).sort((a, b) => hits[a][0] - hits[b][0]), last = {};
     for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1]); if (!f) continue;
@@ -374,7 +374,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   }
   let seed = (i0 * 2654435761) >>> 0;
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-  const rate = key === '궁' || key === '북' || key === '북짧게' ? 18 : 24;     // 북편·북은 조금 느리게
+  const rate = key === '궁' || key === '북' || key === '북녹음' || key === '북짧게' ? 18 : 24;     // 북편·북은 조금 느리게
   let tt = 0, k = 0;
   // 한 타 소리: 고음을 살짝 깎은 복사본 (첫 타는 원래 소리)
   const soft = new Float32Array(Math.min(base.length, Math.round(0.25 * SR)));
