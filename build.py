@@ -1,4 +1,4 @@
-# ScoreSori(합주연습기) 빌드: src/ + banks/ → dist/
+# 합주연습기 빌드: src/ + banks/ → dist/
 #   dist/index.html        한 파일 배포판 (악기 녹음까지 모두 포함, 이 파일 하나만 올리면 됨)
 #   dist/split/index.html  가벼운 배포판 (banks/ 폴더와 함께 올림, 고른 악기 녹음만 받아 옴)
 import re, json, base64, os, glob, shutil

@@ -1,8 +1,8 @@
 {
-  "name": "score-sori",
+  "name": "hapju",
   "private": true,
   "type": "module",
-  "description": "국악 합주 연습기 (ScoreSori): 악보 PDF를 읽어 국악기 소리로 재생",
+  "description": "합주연습기: 악보 PDF를 읽어 국악기 소리로 재생",
   "scripts": { "build": "python3 build.py" },
   "devDependencies": { "pdfjs-dist": "4.10.38" }
 }
