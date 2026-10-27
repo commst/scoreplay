@@ -815,7 +815,8 @@ export function parseScore(pages, opts = {}) {
       const touchesHead = v => !(Math.abs(v[1] - st.top) < 0.15 && Math.abs(v[2] - st.bottom) < 0.15) && stemHeads.some(g => g.x0 - 0.8 <= v[0] && v[0] <= g.x1 + 0.8 && (Math.abs(g.oy - v[1]) < 2.5 || Math.abs(g.oy - v[2]) < 2.5));
       const isBar = v => !v[4] && !touchesHead(v) && (Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6)
         || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20 && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && v[2] >= o.bottom - 1.5));
-      const bars = vls.filter(isBar).sort((a, b) => a[0] - b[0]);
+      // 같은 자리에 두 번 그린 마디선(한컴 PDF 등)은 하나로: 겹세로줄로 잘못 읽어 마디마다 '구간 시작'이 되던 문제
+      const bars = vls.filter(isBar).sort((a, b) => a[0] - b[0]).filter((v, i, arr) => !(i > 0 && Math.abs(v[0] - arr[i - 1][0]) < 0.5 && Math.abs((v[3] || 0) - (arr[i - 1][3] || 0)) < 0.3));
       const groups = [];
       for (const v of bars) {
         const lg = groups[groups.length - 1];
