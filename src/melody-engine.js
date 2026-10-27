@@ -21,7 +21,8 @@ export const INSTRUMENTS = {
   haegeum_syn: { name: '해금 (합성음)', kind: 'bow', harm: null, breath: 0.07, atk: 0.07, vib: [6, 28], formant: [[900, 300, 1.8], [2200, 600, 1.2]] },
   ajaeng: { name: '아쟁 (녹음)', kind: 'bow', bank: 'ajaeng', harm: null, breath: 0.12, atk: 0.09, vib: [5, 20], formant: [[500, 250, 1.6], [1500, 500, 1.0]] },
   ajaeng_syn: { name: '아쟁 (합성음)', kind: 'bow', harm: null, breath: 0.12, atk: 0.09, vib: [5, 20], formant: [[500, 250, 1.6], [1500, 500, 1.0]] },
-  piano: { name: '피아노', kind: 'piano' },
+  piano: { name: '피아노 (녹음)', kind: 'piano', bank: 'piano' },
+  piano_syn: { name: '피아노 (합성음)', kind: 'piano' },
 };
 
 // 줄 이름으로 악기 짐작
@@ -202,6 +203,34 @@ function pickClip(bank, midi, dur, opt) {
   return { c, trem, rate: Math.pow(2, (midi - c.m) / 12) };
 }
 
+// 피아노: 녹음은 건반을 누르고 있던 0.5초쯤만 있다. 더 긴 음은 녹음 뒷부분을 겹쳐 이어 붙이고
+// 실제 피아노처럼 점점 작아지게 만든다 (낮은 음일수록 오래 울림). 높이는 4점 보간으로 바꾼다
+function rmsOf(a, i0, i1) { let e = 0; for (let i = i0; i < i1; i++) e += a[i] * a[i]; return Math.sqrt(e / Math.max(1, i1 - i0)); }
+function pianoStream(src, rate, n, midi) {
+  const need = Math.ceil(n * rate) + 4;
+  if (src.length >= need) return readAt(src, rate, n);
+  const xf = Math.round(0.05 * SR), Ls = Math.max(xf * 2, src.length - Math.round(0.03 * SR));
+  const a = Math.min(Math.round(0.16 * SR), Ls - xf * 3), G = Math.max(xf * 2, Math.min(Ls - a, Math.round(0.2 * SR)));
+  const ext = new Float32Array(need + G);
+  ext.set(src.subarray(0, Ls));
+  const lvl = rmsOf(src, Ls - Math.round(0.03 * SR), Ls) || 1e-6;
+  const tau = Math.min(4, Math.max(0.5, 1.3 * Math.pow(2, (60 - midi) / 18))) * rate;   // 녹음 시간 기준 (나중에 rate배로 읽으므로)
+  let w = Ls - xf, seed = Math.round(midi * 7919) >>> 0;
+  while (w < need) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const s0 = a + Math.floor((seed / 4294967296) * Math.max(1, Ls - a - G));
+    const k = lvl / (rmsOf(src, s0, s0 + G) || 1e-6);
+    for (let i = 0; i < G && w + i < ext.length; i++) {
+      const t = (w + i - Ls) / SR, dec = Math.exp(-Math.max(0, t) / tau);
+      const fin = i < xf ? Math.sin(Math.PI / 2 * i / xf) : 1, fout = i >= G - xf ? Math.sin(Math.PI / 2 * (G - i) / xf) : 1;
+      const v = src[s0 + i] * k * dec * fin * fout;
+      if (i < xf) ext[w + i] = ext[w + i] * Math.cos(Math.PI / 2 * i / xf) + v; else ext[w + i] = v;
+    }
+    w += G - xf;
+  }
+  return readAt(ext, rate, n);
+}
+
 // 녹음 소리를 음 높이에 맞춰 늘인 '원본 줄기'를 음(악기·높이·종류)마다 한 번만 만들어 두고,
 // 음표마다 앞부분을 잘라 끝맺음만 입혀 바로 더한다 (음표마다 다시 계산하지 않아 총보 전체도 빠름)
 const RAW = new Map(); let rawSize = 0;
@@ -211,7 +240,8 @@ function rawStream(ins, c, rate, trem, need) {
   let r = RAW.get(key);
   if (r && r.y.length >= need) { RAW.delete(key); RAW.set(key, r); return r; }   // 최근 쓴 것으로
   let y;
-  if (ins.kind === 'pluck' && !trem) y = readAt(c.y, rate, Math.floor((c.y.length - 3) / rate));
+  if (ins.kind === 'piano') y = pianoStream(c.y, rate, Math.max(need, r ? Math.ceil(r.y.length * 1.5) : need), c.m + 12 * Math.log2(rate));
+  else if (ins.kind === 'pluck' && !trem) y = readAt(c.y, rate, Math.floor((c.y.length - 3) / rate));
   else { const n = Math.max(need, r ? Math.ceil(r.y.length * 1.5) : need); y = readAt(extend(c.y, Math.ceil(n * rate) + 4), rate, n); }
   // 앞에서부터의 최댓값을 256표본 단위로 적어 둔다 → 음표마다 그 길이 안의 최댓값으로 크기를 맞춘다 (예전 방식과 같은 크기)
   const B = 256, pre = new Float32Array(Math.ceil(y.length / B)); let mx = 0;
@@ -225,7 +255,7 @@ function rawStream(ins, c, rate, trem, need) {
 function addSampled(buf, ins, bank, midi, dur, gain, t, opt) {
   const { c, trem, rate } = pickClip(bank, midi, dur, opt);
   const sus = ins.kind !== 'pluck' || trem;
-  const rel = Math.round((sus ? (trem ? 0.12 : 0.1) : 0.25) * SR);
+  const rel = Math.round((sus ? (trem ? 0.12 : ins.kind === 'piano' ? 0.16 : 0.1) : 0.25) * SR);   // 피아노: 건반을 떼면 댐퍼가 0.16초쯤에 소리를 멈춘다
   const want = sus ? Math.round(Math.max(0.12, dur) * SR) + rel : Math.round((dur + ins.ring * 0.6 + 0.25) * SR);
   const r = rawStream(ins, c, rate, trem, want);
   const n = Math.min(want, r.y.length), y = r.y;
@@ -245,7 +275,11 @@ function addSampled(buf, ins, bank, midi, dur, gain, t, opt) {
 function sampled(ins, bank, midi, dur, vel, opt) {
   const { c, trem, rate } = pickClip(bank, midi, dur, opt);
   let y;
-  if (ins.kind !== 'pluck') {
+  if (ins.kind === 'piano') {
+    const rel = Math.round(0.16 * SR), n = Math.round(Math.max(0.12, dur) * SR) + rel;
+    y = pianoStream(c.y, rate, n, midi);
+    for (let i = 0; i < rel; i++) y[n - rel + i] *= 1 - i / rel;
+  } else if (ins.kind !== 'pluck') {
     // 부는·켜는 악기: 녹음 가운데를 이어 붙여 음 길이만큼, 끝은 활을 떼듯 짧게 줄인다
     const rel = Math.round(0.1 * SR), n = Math.round(Math.max(0.12, dur) * SR) + rel;
     y = readAt(extend(c.y, Math.ceil(n * rate) + 4), rate, n);
