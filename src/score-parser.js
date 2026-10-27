@@ -28,6 +28,14 @@ const DOT = 46, FLAG_UP = 106, FLAG_DN = 74, FLAG16_UP = 114, FLAG16_DN = 82;
 const ACCENT = 62, MEAS_REPEAT = 212, TWO_BAR_REPEAT = 199, COMMON_TIME = 99;
 const FERMATA = 85, TRILL_EXT = 126, TREMOLO3 = 190;
 const isDigit = c => c >= 48 && c <= 57;
+// SMuFL·MScore 글꼴의 글자 자리(U+E000~) → Maestro 코드 (tools/gen_outline_templates.py의 MAP과 같은 대응, MuseScore 2.0.3 글꼴에서 뽑음)
+const MSCORE_PUA = new Map([[48, 48], [49, 49], [50, 50], [51, 51], [52, 52], [53, 53], [54, 54], [55, 55], [56, 56], [57, 57], [102, 102], [109, 109], [112, 112], [114, 114], [115, 115], [122, 122], [57498, 99], [57499, 67], [57600, 183], [57601, 238], [57606, 183], [57607, 206], [57609, 228], [57610, 197], [57611, 168], [57612, 168], [57614, 35], [57619, 110], [57620, 98], [57626, 186], [57628, 220], [57639, 46], [57642, 119], [57643, 119], [57644, 250], [57645, 207], [57648, 207], [57652, 207], [57656, 207], [57657, 119], [57658, 250], [57659, 207], [57660, 207], [57688, 85], [57689, 85], [57719, 37], [57720, 222], [57744, 106], [57745, 114], [57746, 114], [57748, 74], [57751, 82], [57752, 82], [57754, 66], [57756, 63], [57758, 38], [57760, 214], [57815, 38], [57816, 38], [57819, 63], [58528, 62], [58529, 62], [58530, 46], [58531, 46]]);
+const SMUFL_PUA = new Map([[57415, 37], [57416, 222], [57424, 38], [57426, 38], [57427, 38], [57436, 66], [57442, 63], [57444, 63], [57449, 214], [57450, 214], [57472, 48], [57473, 49], [57474, 50], [57475, 51], [57476, 52], [57477, 53], [57478, 54], [57479, 55], [57480, 56], [57481, 57], [57482, 99], [57483, 67], [57504, 119], [57506, 119], [57507, 250], [57508, 207], [57511, 119], [57512, 250], [57513, 207], [57523, 207], [57534, 207], [57563, 207], [57601, 207], [57831, 46], [57890, 190], [57920, 106], [57921, 74], [57922, 114], [57923, 82], [57924, 114], [57925, 82], [57952, 98], [57953, 110], [57954, 35], [57955, 220], [57956, 186], [58528, 62], [58529, 62], [58530, 46], [58531, 46], [58560, 85], [58561, 85], [58594, 183], [58595, 183], [58596, 238], [58597, 206], [58598, 228], [58599, 197], [58600, 168], [58601, 168], [58624, 212], [58625, 199], [58656, 112], [58657, 109], [58658, 102], [58659, 114], [58660, 115], [58661, 122]]);
+// Adobe Symbol 글꼴의 글자 자리 (유니코드 → 코드)
+const SYMBOL_UNI = new Map([...'ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ'].map((ch, i) => [ch.codePointAt(0), 0x41 + i])
+  .concat([...'αβχδεφγηιϕκλμνοπθρστυϖωξψζ'].map((ch, i) => [ch.codePointAt(0), 0x61 + i]))
+  .concat([[0x2212, 0x2D], [0xB5, 0x6D], [0x2022, 0xB7], [0x2260, 0xB9], [0x2261, 0xBA], [0x2217, 0x2A], [0x2245, 0x40], [0x22A5, 0x5E], [0x223C, 0x7E], [0x2032, 0xA2], [0x2264, 0xA3], [0x221E, 0xA5], [0x2265, 0xB3], [0x221D, 0xB5], [0x2202, 0xB6]]));
+
 
 // 셈여림 (Maestro 글꼴, MacRoman 코드). mf=F, mp=P 는 달빛항해에서 확인, 나머지는 Maestro 배치표 기준 추정
 const DYN_COMPOSITE = { 70: 'mf', 80: 'mp', 185: 'pp', 184: 'ppp', 196: 'ff', 236: 'fff', 167: 'sfz' };
@@ -289,12 +297,31 @@ export async function extractPages(doc, OPS, onPage) {
     // 이름이 감춰진 악보 글꼴(예: TTE18A08A0t00)은 글자 구성으로 알아낸다: 음표 머리 œ, 쉼표 Œ ‰, 타악기 음자리표 ÷ 등
     const MUSIC_MARK = new Set([0x153, 0x152, 0x2030, 0xF7, 0x2211, 0x2d9]);
     const cnt = {};
-    for (const g of glyphs) if (!isMusicFont(g.font) && MUSIC_MARK.has(g.raw)) cnt[g.font] = (cnt[g.font] || 0) + 1;
+    // 윈도 기호 글꼴 자리(U+F020~F0FF, 예: Microsoft Print to PDF로 만든 Finale 악보의 'CIDFont+F1')도 같은 방법으로
+    const PUA_MARK = new Set([207, 206, 183, 228, 250, 214]);
+    for (const g of glyphs) if (!isMusicFont(g.font) && (MUSIC_MARK.has(g.raw) || (g.raw >= 0xF020 && g.raw <= 0xF0FF && PUA_MARK.has(g.raw - 0xF000)))) cnt[g.font] = (cnt[g.font] || 0) + 1;
     for (const [f, c] of Object.entries(cnt)) if (c >= 5) {
       for (const g of glyphs) if (g.font === f) {
         const mac = UNI_TO_MAC.get(g.raw);
-        g.code = mac != null ? mac : (g.raw < 128 ? g.raw : g.code);
+        g.code = g.raw >= 0xF020 && g.raw <= 0xF0FF ? g.raw - 0xF000 : mac != null ? mac : (g.raw < 128 ? g.raw : g.code);
         g.font = f + ' (MusicFont)';
+      }
+    }
+    // MuseScore 2.1+(MScore 글꼴)·SMuFL 글꼴(Bravura, Leland, Emmentaler 등: MuseScore 3·4, Dorico)로 찍은 기호를 Maestro 코드로
+    for (const g of glyphs) {
+      const tab = /MScore(?!Text)/i.test(g.font) ? MSCORE_PUA : /Bravura|Leland|Petaluma|Gootville|Emmentaler|Edwin|Leipzig|Sebastian|Finale ?(Maestro|Broadway|Ash|Jazz|Legacy)/i.test(g.font) && !/Text/i.test(g.font) ? SMUFL_PUA : null;
+      if (!tab) continue;
+      const c = tab.get(g.raw);
+      if (c != null) g.code = c; else if (g.raw >= 0xE000 && g.raw <= 0xF8FF) g.code = 0;
+      if (!/\(MusicFont\)/.test(g.font)) g.font += ' (MusicFont)';
+    }
+    // Maestro를 CID 글꼴로 넣은 PDF(PDF-XChange 등): 일부 글자의 유니코드가 Symbol 글꼴 배치의 그리스 문자로 나오고,
+    // 그 자리가 실제 글자보다 하나 앞이다 (α→b 내림표, ι→j·Ι→J 꼬리, ϖ→w 온음표, −→. 점, µ→n 제자리표)
+    {
+      const byFont = {};
+      for (const g of glyphs) if (/Maestro/i.test(g.font) && g.raw >= 0x391 && g.raw <= 0x3D6 && g.raw !== 0x3C0 && g.raw !== 0x3A9) byFont[g.font] = (byFont[g.font] || 0) + 1;   // π·Ω는 보통 Maestro(MacRoman)에도 있는 글자
+      for (const [f, c] of Object.entries(byFont)) if (c >= 3) {
+        for (const g of glyphs) if (g.font === f) { const sc = SYMBOL_UNI.get(g.raw); if (sc != null) g.code = sc + 1; else if (g.raw > 32 && g.raw < 127) g.code = g.raw + 1; }   // ASCII 자리 글자도 하나씩 밀려 있다 (% → & 높은음자리표, > → ? 낮은음자리표, 숫자)
       }
     }
     // 굵게 보이려고 같은 글자를 살짝 어긋나게 여러 번 찍은 경우(가짜 굵은 글씨) 하나만 남긴다
@@ -410,9 +437,16 @@ function findStaves(drawings) {
   // 가로선: 같은 높이에서 맞닿아 이어지는 선(마디마다 끊어 그린 오선, MuseScore 등)은 하나로 잇는다
   const segs = [];
   for (const d of drawings) {
-    if (d.type !== 's' || d.items.length !== 1 || d.items[0].op !== 'l' || (d.width || 0) > 1.5) continue;
-    const r = d.rect;
-    if (r.height < 0.1 && r.width > 10) segs.push([r.y0, r.x0, r.x1]);
+    if (d.type !== 's' || (d.width || 0) > 1.5) continue;
+    if (d.items.length === 1 && d.items[0].op === 'l') {
+      const r = d.rect;
+      if (r.height < 0.1 && r.width > 10) segs.push([r.y0, r.x0, r.x1]);
+    } else if (d.items.length === 5 && d.items.every(it => it.op === 'l' && Math.abs(it.p[1] - it.q[1]) < 0.1 && Math.abs(it.q[0] - it.p[0]) > 10)
+      && d.items.every(it => Math.abs(Math.min(it.p[0], it.q[0]) - Math.min(d.items[0].p[0], d.items[0].q[0])) < 0.5)
+      && (() => { const ys = d.items.map(it => it.p[1]).sort((a, b) => a - b), g = ys.slice(1).map((y, i) => y - ys[i]); return g.every(v => Math.abs(v - g[0]) < 0.3 && v > 2); })()) {
+      // 한 번에 다섯 줄을 그린 오선 토막(MuseScore 2.1 등)
+      for (const it of d.items) segs.push([it.p[1], Math.min(it.p[0], it.q[0]), Math.max(it.p[0], it.q[0])]);
+    }
   }
   segs.sort((a, b) => Math.round(a[0] * 10) - Math.round(b[0] * 10) || a[1] - b[1]);
   const hl = [];
@@ -489,6 +523,27 @@ export function pageLayout(pg) {
     staves.forEach((st, i) => { if (r.y0 <= st.top + 3 && r.y1 >= st.bottom - 3 && r.x1 <= st.x0 + 3 && r.x1 >= st.x0 - 15) cov.push(i); });
     for (let k = 1; k < cov.length; k++) parent[find(cov[k])] = find(cov[0]);
   }
+  // 한 단이 마디선이 끊겨 두 묶음으로 갈린 경우(관악 묶음과 나머지 사이에 마디선이 이어지지 않음): 바로 붙어 있고
+  // 마디선 위치가 같으면 한 단으로 합친다
+  {
+    const pre = new Map(); staves.forEach((st, i) => { const r = find(i); if (!pre.has(r)) pre.set(r, []); pre.get(r).push(i); });
+    const gs = [...pre.values()].map(g => g.sort((a, b) => staves[a].top - staves[b].top)).sort((a, b) => staves[a[0]].top - staves[b[0]].top);
+    const inner = gs.flatMap(g => g.slice(1).map((i, k) => staves[i].top - staves[g[k]].bottom)).sort((a, b) => a - b);
+    const typ = inner.length ? inner[inner.length >> 1] : 0;
+    const bx = i => vls.filter(v => v[1] <= staves[i].top + 1.5 && v[2] >= staves[i].bottom - 1.5 && v[0] > staves[i].x0 + 5).map(v => v[0]);
+    for (let k = 0; k + 1 < gs.length; k++) {
+      const a = gs[k], b = gs[k + 1], A = staves[a[a.length - 1]], B = staves[b[0]];
+      if (!typ || B.top - A.bottom > typ * 2.2 || Math.abs(A.x0 - B.x0) > 2 || Math.abs(A.x1 - B.x1) > 2) continue;
+      // 총보의 한 단이면 두 묶음 모두 오선마다 다른 악기 이름이 붙어 있다 (파트보의 이어진 단은 이름이 없거나 같다)
+      const lab = i => pg.glyphs.filter(g => !isMusicFont(g.font) && g.code > 32 && g.x1 <= staves[i].x0 + 1 && g.oy > staves[i].top - 6 && g.oy < staves[i].bottom + 6).sort((p, q) => p.ox - q.ox).map(g => g.uni || '').join('');
+      const la = a.map(lab), lb = b.map(lab);
+      if (la.filter(Boolean).length < a.length * 0.6 || lb.filter(Boolean).length < b.length * 0.6 || lb.some(t => t && la.includes(t))) continue;
+      const xa = bx(a[a.length - 1]), xb = bx(b[0]);
+      if (xa.length < 2 || xb.length < 2) continue;
+      const hit = xa.filter(x => xb.some(y => Math.abs(x - y) < 1.5)).length;
+      if (hit >= Math.max(2, 0.8 * Math.min(xa.length, xb.length))) parent[find(b[0])] = find(a[0]);   // 단 사이 간격이 오선 사이 간격과 같을 때만
+    }
+  }
   const groups = new Map();
   staves.forEach((st, i) => { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(i); });
   const systems = [...groups.values()].map(g => g.sort((a, b) => staves[a].top - staves[b].top)).sort((a, b) => staves[a[0]].top - staves[b[0]].top);
@@ -526,6 +581,18 @@ export function pageLayout(pg) {
     let raw = parts.map(p => p[0]).join(''), t = parts.length > 1 && !vertical ? parts.map(p => p[1]).join(' / ') : parts.map(p => p[1].replace(/\s+/g, '')).join('');
     // 일부 PDF(Finale Type3 한글 글꼴)는 둘째 글자 이후를 모두 '소'로 잘못 알려 준다 → 알려진 악기 이름으로 교정
     const MISLABEL = { '소소': '소금', '대소': '대금', '태소': '태평소', '태태소': '태평소', '해소': '해금', '양소': '양금', '가소': '가야금', '가가소': '가야금' };
+    // Finale+Ghostscript의 Type3 한글 글꼴: 글자가 모두 같은 자리에 찍히고 둘째 글자부터 엉뚱한 글자로 나온다.
+    // 이름 끝(오른쪽 맞춤된 공백)까지의 폭으로 글자 수를 세어, 첫 글자 + 글자 수로 악기 이름을 정한다
+    if (gs.length && gs.length <= 4 && parts.length === 1) {
+      const xs = gs.map(g => g.ox), sz = gs[0].size, span = Math.max(...xs) - Math.min(...xs);
+      const sp = pg.glyphs.find(g => g.code === 32 && Math.abs(g.oy - gs[0].oy) < 1 && g.ox > Math.max(...xs) && g.ox - Math.min(...xs) < sz * 5);
+      if (span < sz * 0.4 && sp) {
+        const n = Math.round((sp.ox - Math.min(...xs)) / sz), c0 = [...t][0];
+        const BY = { 2: { '소': '소금', '대': '대금', '피': '피리', '해': '해금', '양': '양금', '장': '장구', '북': '북', '징': '징', '쇠': '쇠', '생': '생황' },
+          3: { '태': '태평소', '소': '소아쟁', '대': '대아쟁', '가': '가야금', '거': '거문고', '꽹': '꽹과리', '모': '모듬북', '저': '저해금', '피': '피아노', '타': '타악기' } };
+        if (BY[n] && BY[n][c0]) return BY[n][c0];
+      }
+    }
     return MISLABEL[t] || MISLABEL[raw.replace(/(.)\1+/g, '$1')] || t;
   });
   // 두 오선을 묶은 악기(25현 가야금, 양금 등)는 이름이 두 오선 사이에 하나만 있다 → 이름 없는 옆 오선에도 붙인다
@@ -814,7 +881,9 @@ export function parseScore(pages, opts = {}) {
       const stemHeads = sg.filter(g => g.code === HEAD_FILLED || g.code === HEAD_HALF);
       const touchesHead = v => !(Math.abs(v[1] - st.top) < 0.15 && Math.abs(v[2] - st.bottom) < 0.15) && stemHeads.some(g => g.x0 - 0.8 <= v[0] && v[0] <= g.x1 + 0.8 && (Math.abs(g.oy - v[1]) < 2.5 || Math.abs(g.oy - v[2]) < 2.5));
       const isBar = v => !v[4] && !touchesHead(v) && (Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6)
-        || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20 && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && v[2] >= o.bottom - 1.5));
+        || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20 && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && (v[2] >= o.bottom - 1.5
+          // 큰보표 마디선을 토막으로 나눠 그린 경우(위 오선~아래 오선 가운데, 아래 오선 부분 따로)
+          || (v[2] >= o.top - 0.5 && vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && w[2] >= o.bottom - 1.5)))));
       // 같은 자리에 두 번 그린 마디선(한컴 PDF 등)은 하나로: 겹세로줄로 잘못 읽어 마디마다 '구간 시작'이 되던 문제
       const bars = vls.filter(isBar).sort((a, b) => a[0] - b[0]).filter((v, i, arr) => !(i > 0 && Math.abs(v[0] - arr[i - 1][0]) < 0.5 && Math.abs((v[3] || 0) - (arr[i - 1][3] || 0)) < 0.3));
       const groups = [];
@@ -1784,6 +1853,8 @@ export async function loadScore(pdfjs, data, onPage) {
   lines.forEach(l => { l.label = l.name || `${l.id + 1}번째 줄`; });
   // 같은 이름이 이어진 두 줄 = 한 악기의 윗줄·아랫줄
   lines.forEach((l, i) => { const n = lines[i + 1]; if (n && l.name && n.name === l.name && !(lines[i - 1] && lines[i - 1].name === l.name)) { l.label = l.name + ' (윗줄)'; n.label = n.name + ' (아랫줄)'; } });
+  // 이름 없는 오선이 이름 있는 선율 오선 바로 아래에 붙어 있으면 같은 악기의 아랫줄 (큰보표에 이름을 하나만 쓴 경우: '가야금1' 등)
+  lines.forEach((l, i) => { const p = lines[i - 1]; if (!l.name && p && p.name && !/\(윗줄\)|\(아랫줄\)/.test(p.label) && l.clef === 'pitched' && p.clef === 'pitched') { p.label = p.name + ' (윗줄)'; l.label = p.name + ' (아랫줄)'; } });
   return { doc, pages, layouts, lines: isFull ? lines : [], isFull, title, partName, numPages: doc.numPages, maestroCount: musicCount };
 }
 
