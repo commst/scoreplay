@@ -702,7 +702,9 @@ function pagePrep(pg, layout, pi) {
   const hs = maestro.filter(g => g.code === HEAD_FILLED || g.code === HEAD_HALF).map(g => g.size).sort((a, b) => a - b);
   const normSize = hs.length ? hs[Math.floor(hs.length * 0.75)] : 20;
   const smallSize = normSize * 0.75;
-  const tupletNums = glyphs.filter(g => g.font.includes('BoldItal') && (g.code === 51 || g.code === 57));
+  // 잇단음표 숫자: Finale은 굵은 기울임, Sibelius는 OpusText 글꼴의 작은 숫자 하나 (옆에 다른 글자가 붙어 있으면 템포 등 글자)
+  const lone = g => !glyphs.some(o => o !== g && Math.abs(o.oy - g.oy) < 1.5 && o.code > 32 && (Math.abs(o.x0 - g.x1) < 3 || Math.abs(g.x0 - o.x1) < 3));
+  const tupletNums = glyphs.filter(g => (g.code === 51 || g.code === 57) && (g.font.includes('BoldItal') || (/OpusText|Opus Text/.test(g.font) && g.size < normSize * 0.75 && lone(g))));
   const runs = textRuns(glyphs);
   const segs = strokeSegs(drawings);
   const italicNums = glyphs.filter(g => !MUSIC_FONT.test(g.font) && isDigit(g.code) && g.size < 14);
@@ -752,6 +754,26 @@ export function parseScore(pages, opts = {}) {
     if (!staves.length) { scanned++; return; }
 
     curPage = { sg: maestro, runs, segs, staffOf, sysOf, sysTop, smallSize };
+    // 큰 박자표 (Sibelius 등 '단 위에 크게' 쓰는 박자표): 오선 밖, 오선 높이보다 훨씬 큰 숫자를 위아래로 쌓은 것.
+    // 바로 아래 오선이 속한 단의 모든 오선에 적용한다
+    const bigTs = (() => {
+      const hs = staves.map(t => t.bottom - t.top).sort((a, b) => a - b), sh = hs[hs.length >> 1] || 0;
+      const inStaff = g => staves.some(t => t.top - 2 <= g.oy && g.oy <= t.bottom + 2);
+      const dg = glyphs.filter(g => isDigit(g.code) && g.size > sh * 1.3 && !inStaff(g)).sort((a, b) => a.ox - b.ox);
+      const runs2 = [];
+      for (const g of dg) { const r = runs2.find(r => { const p = r[r.length - 1]; return Math.abs(p.oy - g.oy) < 1 && g.ox - p.ox < g.size * 0.75 && g.ox > p.ox; }); if (r) r.push(g); else runs2.push([g]); }
+      const out = [];
+      for (const a of runs2) for (const b of runs2) {
+        if (a === b) continue;
+        const ax = (a[0].ox + a[a.length - 1].ox) / 2, bx = (b[0].ox + b[b.length - 1].ox) / 2, dy = b[0].oy - a[0].oy;
+        if (Math.abs(ax - bx) > a[0].size * 0.4 || dy < a[0].size * 0.3 || dy > a[0].size * 0.8) continue;
+        const below = staves.map((t, i) => [t, i]).filter(([t]) => t.top > b[0].oy - 2).sort((p, q) => p[0].top - q[0].top)[0];
+        if (!below || below[0].top - b[0].oy > a[0].size * 2) continue;
+        out.push({ x: Math.min(a[0].x0, b[0].x0), x1: Math.max(a[a.length - 1].x1, b[b.length - 1].x1), sys: sysOf(below[1]),
+          ts: [+a.map(g => g.code - 48).join(''), +b.map(g => g.code - 48).join('')] });
+      }
+      return out;
+    })();
     staves.forEach((st, si) => {
       if (lineSel != null && layout.lineOf[si] !== lineSel) return;
       // 총보가 아닌데 한 단에 오선이 여러 개면(선택 없이 읽을 때) 단의 첫 오선만
@@ -989,15 +1011,27 @@ export function parseScore(pages, opts = {}) {
         const clefs = sg.filter(g => [38, 63, 66].includes(g.code) && g.oy > st.top - sp * 3 && g.oy < st.bottom + sp * 3).map(g => {
           let base = g.code === 38 ? 30 : g.code === 63 ? 18 : 24;           // 높은음 E4, 낮은음 G2, 가온(알토) F3
           if (g.code === 66 && stepOf(g.oy) >= 6) base = 22;                 // 테너 음자리표(넷째 줄 C)
-          return { x: g.x0, base };
+          return { x: g.x0, x1: g.x1, base };
         }).sort((a, b) => a.x - b.x);
         // 임시표·조표 글자
         const ACC = { 98: -1, 35: 1, 110: 0, 186: -2, 220: 2 };
         const accs = sg.filter(g => g.code in ACC && g.size > smallSize * 0.9 && g.oy > st.top - sp * 4 && g.oy < st.bottom + sp * 4);
         const heads0 = notes.filter(n => !n.rest);
-        const attached = a => heads0.some(n => Math.abs(n.y - a.oy) < sp * 0.6 && n.x - a.x1 > -1 && n.x - a.x1 < sp * 4.5);
+        // 음자리표 바로 뒤에 이어 놓인 ♭·♯ 묶음은 조표 (첫 음표와 높이가 같아도 그 음의 임시표로 보지 않는다)
+        const keyRun = new Set();
+        for (const c of clefs) {
+          let edge = c.x1;
+          for (const a of accs.filter(a => a.x0 > c.x1 - 1 && ACC[a.code] !== 0).sort((p, q) => p.x0 - q.x0)) {
+            if (a.x0 - edge > sp * 2.2) break;
+            if (heads0.some(n => n.x < a.x0 && n.x > c.x1)) break;
+            keyRun.add(a); edge = a.x1;
+          }
+        }
+        const attached = a => !keyRun.has(a) && heads0.some(n => Math.abs(n.y - a.oy) < sp * 0.6 && n.x - a.x1 > -1 && n.x - a.x1 < sp * 4.5);
         // 음표에 붙지 않은 임시표 묶음 = 조표 (단 처음, 또는 조바꿈)
-        const keyAcc = accs.filter(a => !attached(a)).sort((a, b) => a.x0 - b.x0);
+        // 오선에서 멀리 떨어진 것(코드 이름 'E♭' 등의 ♭)은 조표가 아니다. 조표는 오선 위·바로 위아래에 놓인다
+        const accSz = Math.max(0, ...accs.filter(a => a.oy >= st.top - sp && a.oy <= st.bottom + sp).map(a => a.size));
+        const keyAcc = accs.filter(a => !attached(a) && a.oy >= st.top - sp * 1.6 && a.oy <= st.bottom + sp * 1.2 && a.size > accSz * 0.85).sort((a, b) => a.x0 - b.x0);
         const keyChanges = [];
         for (const a of keyAcc) {
           const last = keyChanges[keyChanges.length - 1];
@@ -1045,6 +1079,7 @@ export function parseScore(pages, opts = {}) {
           const den = near.filter(g => g.oy >= st.mid + 0.5).sort((a, b) => a.ox - b.ox);
           if (num.length && den.length) tsig = [+num.map(g => g.code - 48).join(''), +den.map(g => g.code - 48).join('')];
         } else if (cts.length) tsig = [4, 4];
+        if (!tsig) { const bt = bigTs.find(t => t.sys === sysOf(si) && inr((t.x + t.x1) / 2)); if (bt) tsig = bt.ts; }
         if (tsig) pendingTimesig = tsig;
         if (sg.some(g => g.code === MEAS_REPEAT && inr(cx(g)))) { m.kind = 'repeat1'; content = true; }
         let pendingTwoBarNext = false;
@@ -1626,8 +1661,19 @@ export function parseOrderText(text, bars) {
 export function defaultTempoRows(bars) {
   const rows = [];
   const unitFor = ts => (ts[1] === 8 && ts[0] % 3 === 0) ? 'dq' : ts[1] === 8 ? 'e' : ts[1] === 2 ? 'h' : 'q';
+  // '♩=♪'처럼 박자표를 바꾸며 빠르기를 바꾼 뒤, 표시 없이 원래 박자표로 돌아오면 원래 빠르기로 (악보에 되돌림 표시를 빠뜨린 경우)
+  let modFrom = null, prevTs = null;
   for (const b of bars) {
+    const tsKey = b.timesig ? b.timesig.join('/') : '';
+    if (modFrom && !b.tempoMarks.length && b.timesigChange && tsKey === modFrom.ts && rows[rows.length - 1] === modFrom.row) {
+      const base = modFrom.base;
+      rows.push({ start: b.number, unit: base.unit, bpm: base.bpm, auto: true, text: `${modFrom.ts} 복귀 (표시 없음)`, restoreOf: base.start });
+      modFrom = null;
+    }
+    const seenMk = new Set();
     for (const mk of b.tempoMarks) {
+      if (seenMk.has(mk.text)) continue;   // 총보에서 여러 오선 묶음 위에 같은 표시가 거듭 찍힌 것
+      seenMk.add(mk.text);
       const unit = mk.dotted ? 'dq' : ({ '1/4': 'q', '1/8': 'e', '1/2': 'h' }[mk.unit.join('/')] || 'q');
       if (rows.length && rows[rows.length - 1].start === b.number) rows.pop();
       let bpm = mk.bpm;
@@ -1641,10 +1687,17 @@ export function defaultTempoRows(bars) {
         if (!u) { u = 'q'; conv = mk.eq.left / (1 / 4); }
         if (prev && prev.bpm) bpm = Math.round(prev.bpm * UF[prev.unit] / mk.eq.right * conv);
         rows.push({ start: b.number, unit: u, bpm, auto: true, text: mk.text, eq: { left: UF[u], right: mk.eq.right / conv }, eqFrom: prev ? prev.start : null });
+        // 박자표도 함께 바뀐 경우만 '돌아옴'을 지켜본다. 앞 구간이 이미 바뀐 구간이면 그 앞의 원래 빠르기를 기준으로
+        // 이미 바꾼 구간에서 원래 박자표로 돌아오며 붙은 표시면 '돌아옴' 표시이므로 지켜볼 것이 없다
+        if (modFrom && tsKey === modFrom.ts) modFrom = null;
+        else if (b.timesigChange && prevTs && prevTs !== tsKey && prev) modFrom = { row: rows[rows.length - 1], ts: prevTs, base: prev };
+        else modFrom = null;
         continue;
       }
       rows.push({ start: b.number, unit, bpm, auto: true, text: mk.text });
+      modFrom = null;
     }
+    prevTs = tsKey;
   }
   if (!rows.length || rows[0].start !== 1) rows.unshift({ start: 1, unit: unitFor(bars[0].timesig), bpm: null, auto: false, text: '' });
   return rows;

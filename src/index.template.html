@@ -67,7 +67,11 @@ button { cursor: pointer; }
 .tempo input, .tempo select, .field input, .field select { width: 100%; padding: 6px 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
 .tempo input.need { border-color: var(--warn); background: var(--warn-bg); }
 .tempo .end { color: var(--muted); white-space: nowrap; }
-.tempo .src { display: block; font-size: 11.5px; color: var(--muted); }
+.tempo input.num { min-width: 3.9em; padding-left: 5px; padding-right: 3px; }
+.tempo select { min-width: 4.6em; }
+.tempo .src { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.tempo .eqflip { display: block; margin-top: 3px; padding: 1px 6px; border: 1px solid var(--line-2, var(--line)); border-radius: 999px; background: var(--card); color: var(--accent); font: 600 10.5px/1.4 var(--font-body); cursor: pointer; white-space: nowrap; }
+.tempo .eqflip:hover { background: var(--accent-soft, var(--paper)); }
 .x { border: 0; background: none; color: var(--muted); padding: 4px 6px; border-radius: 6px; }
 .x:hover { color: var(--ink); background: var(--paper); }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -850,7 +854,18 @@ const EXAMPLE_MARKS = { dyn: [{ kind: 'mark', p0: 0, level: 0.75 }, { kind: 'mar
 function propagateEq() {
   const UF = { q: 1 / 4, e: 1 / 8, h: 1 / 2, dq: 3 / 8 };
   const rows = [...state.tempoRows].sort((a, b) => a.start - b.start);
-  rows.forEach((r, i) => { if (r.eq && !r.manual && i > 0) { const p = rows[i - 1]; r.bpm = p.bpm > 0 ? Math.round(p.bpm * UF[p.unit] / r.eq.right) : null; } });
+  const UNIT_OF = { [1 / 4]: 'q', [3 / 8]: 'dq', [1 / 8]: 'e', [1 / 2]: 'h' };
+  rows.forEach((r, i) => {
+    // 표시 없이 원래 박자표로 돌아온 구간: 원래 구간의 빠르기를 그대로 따른다
+    if (r.restoreOf != null && !r.manual) { const base = rows.find(x => x.start === r.restoreOf); if (base) { r.unit = base.unit; r.bpm = base.bpm; } return; }
+    if (!r.eq || r.manual || i === 0) return;
+    const p = rows[i - 1];
+    // 보통은 '새 음표 = 앞 음표'(왼쪽이 새 빠르기)로 읽는다. 반대로 쓴 악보(왼쪽이 앞 빠르기)는 eqFlip
+    if (r.eqFlip) r.unit = UNIT_OF[r.eq.right] || r.unit;
+    else if (r.eqUnit) r.unit = r.eqUnit;
+    const ratio = r.eqFlip ? r.eq.right / r.eq.left : r.eq.left / r.eq.right;
+    r.bpm = p.bpm > 0 ? Math.round(p.bpm * UF[p.unit] * ratio / UF[r.unit]) : null;
+  });
 }
 function lastBar() { return state.bars.length ? state.bars[state.bars.length - 1].number : 1; }
 function renderTempo() {
@@ -868,6 +883,16 @@ function renderTempo() {
     sIn.value = r.start; if (i === 0) { sIn.disabled = true; }
     tr.querySelector('.end').textContent = end >= r.start ? `~${end}` : '—';
     if (r.text) { const s = document.createElement('span'); s.className = 'src'; s.textContent = '악보: ' + r.text; tr.cells[1].appendChild(s); }
+    if (r.eq && i > 0) {
+      // '♩=♪' 같은 표시는 악보마다 읽는 방향이 다르다: 왼쪽이 새 빠르기인지, 앞 빠르기인지
+      if (!r.eqUnit) r.eqUnit = r.unit;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'eqflip';
+      b.textContent = r.eqFlip ? '오른쪽이 새 박' : '왼쪽이 새 박';
+      b.title = '이 악보의 ♩=♪ 같은 표시를 모두 반대 방향으로 읽습니다 (악보마다 쓰는 방식이 달라서). 그 구간이 2배 빠르거나 느리게 들리면 눌러 보세요.';
+      b.setAttribute('aria-label', `${r.start}마디 ${r.text}: 읽는 방향 바꾸기 (지금 ${b.textContent})`);
+      b.addEventListener('click', () => { const v = !r.eqFlip; for (const x of state.tempoRows) if (x.eq) { x.eqFlip = v; x.manual = false; } propagateEq(); changed(); renderTempo(); });
+      tr.cells[1].appendChild(b);
+    }
     const sel = tr.querySelector('select'); sel.value = r.unit;
     const bIn = tr.querySelector(`#tb-${i}`); bIn.value = r.bpm ?? ''; bIn.classList.toggle('need', !(r.bpm > 0));
     sIn.addEventListener('change', () => { const v = Math.max(2, Math.min(lastBar(), +sIn.value || r.start)); r.start = v; r.text = ''; changed(); renderTempo(); });
@@ -1754,8 +1779,16 @@ function applySelection(first = false) {
     return { id, key: k, r: state.lineRes[k], sc: sourceScore };
   });
   for (const { key } of results) autoOct(key);
-  // 마디를 가장 많이 읽은 줄을 기준으로 (줄마다 한두 마디 덜 읽힐 수 있음)
-  const master = results.filter(x => x.r.bars.length && x.sc.maestroCount > 0).sort((a, b) => b.r.bars.length - a.r.bars.length || String(a.id).localeCompare(String(b.id), 'ko', { numeric: true }))[0];
+  // 기준 줄: 여러 줄이 함께 읽은 마디 수(가장 흔한 수)를 가진 줄 중 경고가 가장 적은 줄.
+  // 한 줄만 마디를 더 읽은 경우(잘못 읽어 마디가 늘어난 경우) 그 줄을 기준으로 삼지 않는다. 같으면 마디가 많은 줄
+  const master = (() => {
+    const ok = results.filter(x => x.r.bars.length && x.sc.maestroCount > 0);
+    const cnt = {}; for (const x of ok) cnt[x.r.bars.length] = (cnt[x.r.bars.length] || 0) + 1;
+    const top = Math.max(0, ...Object.values(cnt));
+    const modeN = Math.max(0, ...Object.keys(cnt).filter(n => cnt[n] === top).map(Number));
+    const warnN = x => x.r.bars.reduce((s, b) => s + (b.warnings.length ? 1 : 0), 0);
+    return ok.sort((a, b) => (top > 1 ? (b.r.bars.length === modeN) - (a.r.bars.length === modeN) : 0) || b.r.bars.length - a.r.bars.length || warnN(a) - warnN(b) || String(a.id).localeCompare(String(b.id), 'ko', { numeric: true }))[0];
+  })();
   if (!master) {
     $('fileInfo').textContent = ids.length ? '악보를 읽지 못했습니다.' : '들을 줄을 하나 이상 켜세요 (선율 또는 타악).';
     if (ids.length) showMsg(sc.maestroCount === 0
@@ -1776,6 +1809,14 @@ function applySelection(first = false) {
       if (r !== master.r) for (const l of (b.labels || [])) if (!bars[k].labels.includes(l)) bars[k].labels.push(l);
     });
   }
+  // 마디 길이는 줄들의 다수결: 기준 줄 한 곳이 잘못 늘려 읽었으면 다른 줄들이 읽은 길이로
+  const numMaps = multi ? results.map(({ r }) => new Map(r.bars.map(x => [x.number, x]))) : [];
+  if (multi) bars.forEach((b, k) => {
+    const votes = new Map();
+    for (const mp of numMaps) { const o = mp.get(b.number); if (o) { const key = o.barLen.v; const v = votes.get(key) || { n: 0, o }; v.n++; votes.set(key, v); } }
+    let best = null; for (const [len, v] of votes) if (!best || v.n > best.n || (v.n === best.n && len === b.barLen.v)) best = { len, ...v };
+    if (best && best.len !== b.barLen.v && best.n > (votes.get(b.barLen.v)?.n || 0)) { b.barLen = best.o.barLen; b.timesig = best.o.timesig; }
+  });
   for (const b of bars) if (b.events.length && (b.note === '쉼' || b.note === '롤 연장')) b.note = '';
   const prevBars = state.bars;
   state.bars = bars;
