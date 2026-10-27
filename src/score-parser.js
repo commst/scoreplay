@@ -507,14 +507,21 @@ export function pageLayout(pg) {
     // 원문자열을 먼저 보존하고, 확인된 해당 폰트의 대표 오매핑만 교정한다.
     // 굵게 보이려고 같은 글자를 바로 옆(1.2pt 안)에 한 번 더 찍은 것은 하나로 친다.
     // (글자만 같고 떨어져 있으면 다른 글자 — 아래 오매핑 교정을 위해 남긴다)
-    let raw = '', t = '', prev = null;
-    for (const g of gs) {
-      const c = g.uni || String.fromCodePoint(g.code);
-      raw += c;
-      if (!(prev && prev.c === c && Math.abs(g.ox - prev.ox) < 1.2 && Math.abs(g.oy - prev.oy) < 1)) t += c;
-      prev = { c, ox: g.ox, oy: g.oy };
-    }
-    raw = raw.replace(/\s+/g, ''); t = t.replace(/\s+/g, '').trim();
+    // 여러 줄로 쓴 이름(예: 'Cymbal' 아래 '꽹과리 징')은 줄마다 따로 읽어 ' / '로 잇는다.
+    // x 순서로만 이으면 두 줄의 글자가 섞인다('C꽹ym가b리징al'). 글자 하나씩 세로로 쓴 이름(장/구)은 그대로 붙인다
+    const rowsG = [];
+    for (const g of [...gs].sort((a, b) => a.oy - b.oy)) { const r = rowsG.find(r => Math.abs(r.y - g.oy) < Math.max(1.5, g.size * 0.3)); if (r) r.g.push(g); else rowsG.push({ y: g.oy, g: [g] }); }
+    const readRow = list => { let raw = '', t = '', prev = null;
+      for (const g of list.sort((a, b) => a.ox - b.ox)) {
+        const c = g.uni || String.fromCodePoint(g.code);
+        raw += c;
+        if (!(prev && prev.c === c && Math.abs(g.ox - prev.ox) < 1.2 && Math.abs(g.oy - prev.oy) < 1)) t += c;
+        prev = { c, ox: g.ox, oy: g.oy };
+      }
+      return [raw.replace(/\s+/g, ''), t.replace(/\s+/g, ' ').trim()]; };
+    const parts = rowsG.map(r => readRow(r.g)).filter(p => p[1]);
+    const vertical = parts.length > 1 && parts.every(p => [...p[1].replace(/\s/g, '')].length <= 1);
+    let raw = parts.map(p => p[0]).join(''), t = parts.length > 1 && !vertical ? parts.map(p => p[1]).join(' / ') : parts.map(p => p[1].replace(/\s+/g, '')).join('');
     // 일부 PDF(Finale Type3 한글 글꼴)는 둘째 글자 이후를 모두 '소'로 잘못 알려 준다 → 알려진 악기 이름으로 교정
     const MISLABEL = { '소소': '소금', '대소': '대금', '태소': '태평소', '태태소': '태평소', '해소': '해금', '양소': '양금', '가소': '가야금', '가가소': '가야금' };
     return MISLABEL[t] || MISLABEL[raw.replace(/(.)\1+/g, '$1')] || t;
@@ -951,9 +958,9 @@ export function parseScore(pages, opts = {}) {
         let br = brackets.find(b => b.x0 - 2 <= cx(t) && cx(t) <= b.x1 + 2 && Math.abs((b.y0 + b.y1) / 2 - cy(t)) < 8);
         if (!br) {
           // 괄호가 숫자 양쪽으로 끊겨 그려진 경우: 숫자 왼쪽에서 끝나는 가로선 + 오른쪽에서 시작하는 가로선
-          const hz = segs.filter(q => Math.abs(q.y1 - q.y0) < 0.3 && q.x1 - q.x0 > 2 && Math.abs(q.y0 - cy(t)) < 8);
+          const hz = segs.filter(q => Math.abs(q.y1 - q.y0) < Math.max(0.3, (q.x1 - q.x0) * 0.12) && q.x1 - q.x0 > 2 && Math.abs(q.y0 - cy(t)) < 8);   // 기울어진 괄호(빔을 따라 비스듬히)도
           const L = hz.filter(q => q.x1 <= t.x0 + 2 && q.x1 >= t.x0 - 8).sort((a, b) => b.x1 - a.x1)[0];
-          const R = hz.filter(q => q.x0 >= t.x1 - 2 && q.x0 <= t.x1 + 8 && (!L || Math.abs(q.y0 - L.y0) < 0.6)).sort((a, b) => a.x0 - b.x0)[0];
+          const R = hz.filter(q => q.x0 >= t.x1 - 2 && q.x0 <= t.x1 + 8 && (!L || Math.abs(q.y0 - L.y0) < 1.5)).sort((a, b) => a.x0 - b.x0)[0];
           if (L && R) br = { x0: L.x0, x1: R.x1 };
         }
         if (br) {
@@ -983,6 +990,24 @@ export function parseScore(pages, opts = {}) {
           }
         }
       }
+      // 두 성부가 같은 리듬으로 함께 치는 잇단음표(화음을 윗·아랫성부로 나눈 경우): 숫자는 한 성부 쪽에만 있으므로,
+      // 다른 성부에도 잇단음표 음과 같은 자리(x)에만 음이 놓여 있으면 그 음들도 잇단음표로 본다
+      {
+        const tupl = notes.filter(n => n.tuplet && !n.grace);
+        const groups = [];
+        for (const n of tupl.sort((a, b) => a.x - b.x)) { const g = groups.find(g => g.v === n.voice && n.x - g.xs[g.xs.length - 1] < 40); if (g) g.xs.push(n.x); else groups.push({ v: n.voice, xs: [n.x] }); }
+        for (const g of groups) {
+          if (g.xs.length < 2) continue;
+          const lo = g.xs[0] - 1.5, hi = g.xs[g.xs.length - 1] + 1.5;
+          for (const v of ['R', 'L']) {
+            if (v === g.v) continue;
+            const other = notes.filter(n => n.voice === v && !n.grace && n.x >= lo && n.x <= hi);
+            if (other.length < 2 || other.some(n => n.tuplet)) continue;
+            const ox = [...new Set(other.map(n => Math.round(n.x)))];
+            if (ox.length === new Set(g.xs.map(x => Math.round(x))).size && ox.every(x => g.xs.some(t => Math.abs(t - x) < 1.6))) other.forEach(n => { n.tuplet = true; });
+          }
+        }
+      }
       for (const c of curves) {
         if (!(st.top - 30 < c.y0 && c.y0 < st.bottom + 30) || c.width < 4) continue;
         const ccy = (c.y0 + c.y1) / 2;
@@ -1000,7 +1025,9 @@ export function parseScore(pages, opts = {}) {
       const staffStart = measures.length;
       for (let i = 0; i < regions.length; i++) {
         const [a, b] = regions[i];
-        const r = [...rects, ...thickH].find(r => a <= r.x0 && r.x1 <= b && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3);
+        const isBeam = r => beamList.some(bm => bm.x0 - 2 <= r.x0 && r.x1 <= bm.x1 + 2 && Math.abs(bm.yAt((r.x0 + r.x1) / 2) - (r.y0 + r.y1) / 2) < 3);
+        // 마디 안의 굵은 가로 막대(여러 마디 쉼표)로 마디를 나눈다. 가운데 줄 높이에 놓인 빔(16분음표 묶음 등)은 제외
+        const r = [...rects, ...thickH].find(r => a <= r.x0 && r.x1 <= b && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3 && !isBeam(r));
         if (r && notes.some(n => n.x > r.x1 + 3 && n.x < b)) { regions.splice(i, 1, [a, r.x1 + 2], [r.x1 + 2, b]); leftDouble.splice(i + 1, 0, false); i++; }
       }
       // ---- 음높이: 음자리표·조표·임시표로 음표마다 MIDI 번호를 붙인다 (오선 5줄, 타악기 음자리표가 아닐 때) ----
