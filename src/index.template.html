@@ -550,6 +550,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 파일은 여러 개를 한꺼번에 고를 수 있고(총보 칸에 여러 개를 고르면 줄이 가장 많은 것을 총보로, 나머지는 더한 악보로 씁니다), 목록의 ✕로 뺄 수 있습니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
   </section>
   <div class="msg" id="msg" hidden></div>
+  <div class="msg" id="bootMsg" role="alert">이 화면에서는 프로그램이 실행되지 않습니다. 파일 앱·메일·메신저의 미리보기에서는 버튼이 동작하지 않으니, Safari나 Chrome 같은 브라우저에서 합주연습기 링크로 열어 주세요.</div>
   <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
@@ -823,9 +824,24 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
   <div class="mini-pos"><div class="mini-now" id="miniNow"><b>정지</b></div><div class="mini-track"><i id="miniFill"></i></div></div>
   <button class="mini-up" id="miniUp" type="button" aria-label="연주 칸으로">연주 칸</button>
 </div>
+<script>
+// 프로그램이 실행되지 않는 환경(파일 앱의 미리보기 등) 안내 + 실행 중 오류를 화면에 보여 준다(원인 찾기용)
+(function () {
+  function show(t) { var m = document.getElementById('bootMsg'); if (!m) return; m.hidden = false; m.textContent = t; }
+  window.__bootShow = show;
+  document.addEventListener('DOMContentLoaded', function () { var m = document.getElementById('bootMsg'); if (m && window.__appReady !== 'ok') m.hidden = true; });
+  { var m0 = document.getElementById('bootMsg'); if (m0) m0.hidden = true; }
+  window.addEventListener('error', function (e) { if (window.__appReady === 'ok' && !/Script error/.test(e.message || '')) return; show('프로그램을 시작하지 못했습니다: ' + (e.message || e.type) + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : '') + ' — 이 문구를 캡처해 알려 주세요.'); }, true);
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; if (window.__appReady === 'ok') return; show('프로그램을 시작하지 못했습니다: ' + (r && r.message ? r.message : r) + ' — 이 문구를 캡처해 알려 주세요.'); });
+  setTimeout(function () { if (window.__appReady !== 'ok') show('프로그램이 시작되지 않았습니다. 파일 앱·메일의 미리보기 화면에서는 프로그램이 돌아가지 않습니다. Safari나 Chrome 같은 브라우저에서 링크로 열어 주세요. 브라우저에서 열었는데도 이 문구가 보이면 기기의 iPadOS·iOS 버전(설정 > 일반 > 정보)을 알려 주세요.'); }, 6000);
+})();
+</script>
 <script type="module">
-import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs';
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs';
+// pdf.js(악보 PDF 읽기 도구)는 따로 받아 온다: 받지 못해도 나머지 기능(예시 장단 재생 등)은 움직이게
+let pdfjsLib = null;
+const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.min.mjs';
+const pdfjsReady = import(PDFJS_URL).then(m => { pdfjsLib = m; m.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/pdf.worker.min.mjs'; return m; });
+pdfjsReady.catch(e => console.error('pdf.js', e));
 
 /*__PARSER__*/
 
@@ -1859,6 +1875,7 @@ function showMsg(t) { $('msg').hidden = !t; $('msg').textContent = t || ''; }
 async function readPdf(file, onPage) {
   const data = new Uint8Array(await file.arrayBuffer());
   const fp = scoreFingerprint(data);   // pdf.js가 data를 넘겨받기 전에
+  try { await pdfjsReady; } catch (e) { throw new Error('악보 PDF를 읽는 도구(pdf.js)를 인터넷에서 받지 못했습니다. 인터넷 연결을 확인하고 페이지를 새로 고쳐 주세요. (' + (e && e.message ? e.message : e) + ')'); }
   const sc = await loadScore(pdfjsLib, data, onPage || (() => {}));
   sc.fp = fp; sc.fileName = file.name;
   return sc;
@@ -1972,7 +1989,7 @@ async function loadFullPdf(files) {
   } catch (e) {
     console.error(e);
     $('fileInfo').textContent = '읽지 못했습니다.';
-    showMsg('PDF를 여는 중에 문제가 생겼습니다. 암호가 걸렸거나 손상된 파일인지 확인해 주세요.');
+    showMsg(e && /pdf\.js/.test(e.message || '') ? e.message : 'PDF를 여는 중에 문제가 생겼습니다. 암호가 걸렸거나 손상된 파일인지 확인해 주세요.' + (e && e.message ? ' (' + e.message + ')' : ''));
   }
 }
 // 총보에 피아노 악보 등을 더한다
@@ -2288,4 +2305,5 @@ state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
 renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay();
+window.__appReady = 'ok'; { const bm = $('bootMsg'); if (bm) bm.hidden = true; }
 </script>

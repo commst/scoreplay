@@ -757,7 +757,7 @@ function findTempoMarks(glyphs) {
   const runs = [];
   for (const g of eng) {
     const r = runs[runs.length - 1];
-    if (r && Math.abs(r.at(-1).oy - g.oy) < 2 && g.ox - r.at(-1).x1 < 8) r.push(g); else runs.push([g]);
+    if (r && Math.abs(r[r.length - 1].oy - g.oy) < 2 && g.ox - r[r.length - 1].x1 < 8) r.push(g); else runs.push([g]);
   }
   for (const r of runs) {
     // '♩=70~73'의 물결표가 다른 글꼴로 찍혀 빠지면 숫자 사이가 벌어진다 → 그 자리를 '~'로
