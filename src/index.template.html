@@ -469,6 +469,21 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
   .drop { padding: 14px; } .drop label.btn { width: 100%; } .drop .file { flex-basis: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .play, .b, .btn, .drop { transition: none; } .play:hover { transform: none; } }
+.hero .caution { margin: 10px 0 0; max-width: 58ch; font-size: 13.5px; color: var(--ink, inherit); padding: 8px 12px; border-left: 3px solid #d8a400; background: rgba(216, 164, 0, .09); border-radius: 0 6px 6px 0; }
+.flist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.flist:empty { display: none; }
+.flist li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 5px 6px 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.flist li .fn { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.flist li .fn small { color: var(--muted); margin-left: 6px; }
+.flist li .rm { flex: none; width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 15px; cursor: pointer; }
+.flist li .rm:hover, .flist li .rm:focus-visible { background: rgba(200, 40, 40, .1); color: #b42318; }
+.extra { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); }
+.extra-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.extra-head .file { flex: 1 1 220px; min-width: 0; }
+.extra-head .file strong { display: block; font-weight: 600; font-size: 14px; }
+.extra-head .file span { color: var(--muted); font-size: 13px; }
+.extra.disabled .btn { opacity: .5; pointer-events: none; }
+.tempo-alert { outline: 2px solid #d8a400; outline-offset: 2px; }
 
 </style>
 
@@ -477,6 +492,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <div class="hero-text">
       <h1>합주연습기</h1>
       <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 늘봄에서 녹음한 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
+      <p class="caution">악보를 자동으로 읽기 때문에 템포·악기 이름·음표가 실제와 다르게 인식될 수 있습니다. 재생하기 전에 줄 이름과 빠르기 표를 악보와 한 번 맞춰 보세요.</p>
     </div>
     <svg class="hero-notes" viewBox="0 0 330 136" role="img" aria-label="선율 오선과 장구 줄에 놓인 음표 그림"><g class="st"><line x1="2" x2="328" y1="20" y2="20"/><line x1="2" x2="328" y1="30" y2="30"/><line x1="2" x2="328" y1="40" y2="40"/><line x1="2" x2="328" y1="50" y2="50"/><line x1="2" x2="328" y1="60" y2="60"/></g><g class="bl"><line x1="168" x2="168" y1="20" y2="60"/><line x1="324" x2="324" y1="20" y2="60"/><line class="thick" x1="327.5" x2="327.5" y1="20" y2="60"/></g><g class="st"><line x1="2" x2="328" y1="108" y2="108"/></g><g class="bl"><line x1="168" x2="168" y1="96" y2="120"/><line x1="324" x2="324" y1="96" y2="120"/><line class="thick" x1="327.5" x2="327.5" y1="96" y2="120"/></g><g class="mel"><ellipse class="m" cx="30" cy="25.0" rx="5.4" ry="3.9" transform="rotate(-22 30 25.0)"/><ellipse class="m" cx="50" cy="20.0" rx="5.4" ry="3.9" transform="rotate(-22 50 20.0)"/><ellipse class="m" cx="76" cy="15.0" rx="5.4" ry="3.9" transform="rotate(-22 76 15.0)"/><ellipse class="m" cx="102" cy="15.0" rx="5.4" ry="3.9" transform="rotate(-22 102 15.0)"/><ellipse class="m" cx="117" cy="20.0" rx="5.4" ry="3.9" transform="rotate(-22 117 20.0)"/><ellipse class="m" cx="132" cy="25.0" rx="5.4" ry="3.9" transform="rotate(-22 132 25.0)"/><ellipse class="m" cx="147" cy="20.0" rx="5.4" ry="3.9" transform="rotate(-22 147 20.0)"/><ellipse class="m open" cx="196" cy="5.0" rx="5.4" ry="3.9" transform="rotate(-22 196 5.0)"/><line class="ledger" x1="187" x2="205" y1="10.0" y2="10.0"/><ellipse class="m" cx="240" cy="15.0" rx="5.4" ry="3.9" transform="rotate(-22 240 15.0)"/><ellipse class="m" cx="276" cy="25.0" rx="5.4" ry="3.9" transform="rotate(-22 276 25.0)"/><circle class="m" cx="286" cy="22.5" r="1.8"/><line class="stem m" x1="25.1" x2="25.1" y1="25.8" y2="55.0"/><line class="stem m" x1="45.1" x2="45.1" y1="20.8" y2="55.0"/><line class="stem m" x1="71.1" x2="71.1" y1="15.8" y2="45.0"/><line class="stem m" x1="97.1" x2="97.1" y1="15.8" y2="57.0"/><line class="stem m" x1="112.1" x2="112.1" y1="20.8" y2="57.0"/><line class="stem m" x1="127.1" x2="127.1" y1="25.8" y2="57.0"/><line class="stem m" x1="142.1" x2="142.1" y1="20.8" y2="57.0"/><line class="stem m" x1="191.1" x2="191.1" y1="5.8" y2="35.0"/><line class="stem m" x1="235.1" x2="235.1" y1="15.8" y2="45.0"/><line class="stem m" x1="271.1" x2="271.1" y1="25.8" y2="55.0"/><path class="beam" d="M24.400000000000002 55.0 L45.800000000000004 55.0 L45.800000000000004 50.8 L24.400000000000002 50.8 Z"/><path class="beam" d="M96.39999999999999 57.0 L142.79999999999998 57.0 L142.79999999999998 52.8 L96.39999999999999 52.8 Z"/><path class="beam" d="M96.39999999999999 50.0 L142.79999999999998 50.0 L142.79999999999998 45.8 L96.39999999999999 45.8 Z"/><path class="acc" d="M25 10.0 L35 13.0 L25 16.0"/><path class="acc" d="M191 -8.0 L201 -5.0 L191 -2.0"/></g><g class="perc"><path class="xh" d="M26.2 98.2 L33.8 105.8 M26.2 105.8 L33.8 98.2"/><line class="stem c" x1="33.8" x2="33.8" y1="102" y2="78"/><ellipse class="b" cx="30" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 30 114)"/><line class="stem b" x1="25.1" x2="25.1" y1="114" y2="136"/><path class="xh" d="M72.2 98.2 L79.8 105.8 M72.2 105.8 L79.8 98.2"/><line class="stem c" x1="79.8" x2="79.8" y1="102" y2="78"/><path class="xh" d="M98.2 98.2 L105.8 105.8 M98.2 105.8 L105.8 98.2"/><line class="stem c" x1="105.8" x2="105.8" y1="102" y2="78"/><path class="xh" d="M128.2 98.2 L135.8 105.8 M128.2 105.8 L135.8 98.2"/><line class="stem c" x1="135.8" x2="135.8" y1="102" y2="78"/><path class="xh" d="M192.2 98.2 L199.8 105.8 M192.2 105.8 L199.8 98.2"/><line class="stem c" x1="199.8" x2="199.8" y1="102" y2="78"/><ellipse class="b" cx="196" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 196 114)"/><line class="stem b" x1="191.1" x2="191.1" y1="114" y2="136"/><ellipse class="b" cx="240" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 240 114)"/><line class="stem b" x1="235.1" x2="235.1" y1="114" y2="136"/><path class="xh" d="M254.2 98.2 L261.8 105.8 M254.2 105.8 L261.8 98.2"/><line class="stem c" x1="261.8" x2="261.8" y1="102" y2="78"/><path class="xh" d="M272.2 98.2 L279.8 105.8 M272.2 105.8 L279.8 98.2"/><line class="stem c" x1="279.8" x2="279.8" y1="102" y2="78"/><ellipse class="b" cx="276" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 276 114)"/><line class="stem b" x1="271.1" x2="271.1" y1="114" y2="136"/></g></svg>
   </header>
@@ -492,8 +508,18 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <span id="fileInfo">총보 PDF 한 개를 이 상자에 끌어다 놓거나 버튼으로 고르세요.</span>
       </div>
       <label class="btn primary" for="pdfInput">총보 고르기</label>
-      <input type="file" id="pdfInput" accept="application/pdf,.pdf" hidden>
+      <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
     </section>
+    <ul id="fullFileList" class="flist" aria-label="올린 총보"></ul>
+    <div class="extra" id="extraBox">
+      <div class="extra-head">
+        <div class="file"><strong>피아노 악보 더하기</strong>
+          <span id="extraInfo">총보에 없는 피아노(건반) 악보 등을 따로 올려 총보와 함께 연주합니다. 여러 개를 한꺼번에 골라도 됩니다.</span></div>
+        <label class="btn" for="extraInput">악보 더하기</label>
+        <input type="file" id="extraInput" accept="application/pdf,.pdf" multiple hidden>
+      </div>
+      <ul id="extraFileList" class="flist" aria-label="총보에 더한 악보"></ul>
+    </div>
     </section>
     <section class="up" aria-labelledby="partsUploadTitle">
     <h3 id="partsUploadTitle">파트보 여러 개</h3>
@@ -505,10 +531,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <label class="btn primary" for="partsInput">파트보 추가</label>
       <input type="file" id="partsInput" accept="application/pdf,.pdf" multiple hidden>
     </section>
-    <div id="partsFileList" class="warnlist" aria-live="polite"></div>
+    <ul id="partsFileList" class="flist" aria-live="polite" aria-label="올린 파트보"></ul>
     </section>
     </div>
-    <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
+    <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 파일은 여러 개를 한꺼번에 고를 수 있고(총보 칸에 여러 개를 고르면 줄이 가장 많은 것을 총보로, 나머지는 더한 악보로 씁니다), 목록의 ✕로 뺄 수 있습니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
   </section>
   <div class="msg" id="msg" hidden></div>
   <details class="help panel" id="fullHelp">
@@ -523,7 +549,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <dt>3. 소리 · 음량 · 옥타브</dt>
       <dd>줄마다 악기 소리를 고르고 음량 막대로 크기를 맞춥니다. 장구는 작게 깔고 내 악기는 크게 하는 식입니다. 선율 줄의 <b>옥타브</b>는 악보보다 한두 옥타브 높이거나 낮춰 낼 때 씁니다(대금·소금처럼 악보와 실제 소리 높이가 다른 악기).</dd>
       <dt>4. 템포 · 재생</dt>
-      <dd>악보의 빠르기 표시를 찾아 템포 구간을 미리 채웁니다(노란 칸은 숫자를 넣어 주세요). 연습 속도, 연주 범위, 카운트인, 메트로놈, 쉬는 마디 박 짚기를 정하고 재생하거나 MP3·WAV로 저장합니다. 템포 표시, 도돌이표, D.S.·코다는 단 맨 위에만 적혀 있어도 고른 모든 줄에 함께 적용됩니다.</dd>
+      <dd>악보의 빠르기 표시를 찾아 템포 구간을 미리 채웁니다. 템포를 못 읽은 구간은 노란 칸으로 표시되고, BPM 숫자를 넣기 전에는 재생·저장되지 않습니다. 연습 속도, 연주 범위, 카운트인, 메트로놈, 쉬는 마디 박 짚기를 정하고 재생하거나 MP3·WAV로 저장합니다. 템포 표시, 도돌이표, D.S.·코다는 단 맨 위에만 적혀 있어도 고른 모든 줄에 함께 적용됩니다.</dd>
       <dt>알아 둘 점</dt>
       <dd>가야금·거문고·대금·소금·피리·태평소·해금·아쟁·피아노와 장구·꽹과리·징·바라와 심벌·하이햇·베이스드럼은 녹음한 소리를 씁니다(양금·북·북 테는 합성음, 북은 녹음도 고를 수 있음). 긴 음에는 녹음한 농현·요성을 넣을 수 있고(줄마다 켜고 끄기), 추성·퇴성 같은 시김새는 악보 기호를 읽지 못해 나오지 않습니다. 음높이는 음자리표·조표·임시표로 읽습니다. 소리가 악보와 다르게 들리는 마디가 있으면 마디 번호를 알려 주세요.</dd>
     </dl>
@@ -830,7 +856,7 @@ const UNIT_LABEL = { q: '♩ 4분', dq: '♩. 점4분', e: '♪ 8분', h: '𝅗�
 const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
-  score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
+  score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
   marks: { dyn: [], tempo: [] }, manualOrder: null };
 let raf = 0, audioUrl = null;
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
@@ -909,7 +935,7 @@ function renderTempo() {
   });
   const missing = rows.filter(r => !(r.bpm > 0));
   $('tempoHint').textContent = missing.length
-    ? `${missing.map(r => r.start + '마디').join(', ')} 템포 숫자를 넣어 주세요. 비워 두면 ${DEFAULT_BPM}으로 연주합니다.`
+    ? `템포를 인식하지 못했습니다: ${missing.map(r => r.start + '마디').join(', ')}. 노란 칸에 BPM 숫자를 넣어야 재생·저장할 수 있습니다.`
     : '악보에 적힌 템포 표시를 찾아 미리 채웠습니다. 기준 음표와 숫자를 악보와 맞춰 보세요.';
   explainTempo();
 }
@@ -956,7 +982,7 @@ function barTempoLabel(bar) {
     const unit = (typeof UNIT_LABEL !== 'undefined' && UNIT_LABEL[row.unit]) ? UNIT_LABEL[row.unit] : '♩';
     return `${unit} = ${row.bpm} BPM`;
   }
-  return `템포 미지정 (기본 ${DEFAULT_BPM} BPM)`;
+  return '템포 미지정 (BPM 입력 필요)';
 }
 // 마디 미리보기: 머리(마디 번호·박자·빠르기·표시) + 악기별 줄
 //  - 타임라인: 박 눈금 위에 음을 막대로. 선율은 음높이에 따라 위아래, 타악은 윗·아랫성부 두 줄
@@ -978,7 +1004,7 @@ function barTipContent(b) {
   const chip = (t, cls = '') => chips.append(tipNode('span', 'bt-chip ' + cls, t));
   chip((b.timesig || []).join('/') || '?/?');
   const row = [...state.tempoRows].filter(r => r.start <= b.number).sort((a, c) => c.start - a.start)[0];
-  chip(row && row.bpm > 0 ? `${(UNIT_LABEL[row.unit] || '♩').split(' ')[0]}=${row.bpm}` : `빠르기 ${DEFAULT_BPM}(기본)`);
+  chip(row && row.bpm > 0 ? `${(UNIT_LABEL[row.unit] || '♩').split(' ')[0]}=${row.bpm}` : '빠르기 입력 필요');
   if (b.repeatStart) chip('𝄆 반복 시작', 'mark'); if (b.repeatEnd) chip('반복 끝 𝄇', 'mark');
   for (const l of new Set(b.labels || [])) chip(l, 'mark');
   if (b.events.some(e => e.edited)) chip('✎ 고침', 'edit');
@@ -1158,7 +1184,7 @@ function srcInfo(key) {
   const sl = item && Object.prototype.hasOwnProperty.call(item, 'sourceLineId') ? item.sourceLineId : (item ? item.id : null);
   return { sc, srcKey: sl == null ? 'p' : String(sl) };
 }
-function loadedSources() { return state.sourceScores.length ? state.sourceScores : (state.score && state.score.fp ? [state.score] : []); }
+function loadedSources() { return state.sourceScores.length ? state.sourceScores : (state.score && state.score.fp ? [state.score, ...(state.extras || []).map(x => x.sc)] : []); }
 function reapplyEdits() {
   for (const k of Object.keys(state.lineRaw)) { const { sc, srcKey } = srcInfo(k); state.lineRes[k] = applyEdits(state.lineRaw[k], sc, srcKey); }
   const keepOrder = state.manualOrder;
@@ -1470,7 +1496,7 @@ function explainTempo() {
   const lines = rows.map((r, i) => {
     const end = i + 1 < rows.length ? rows[i + 1].start - 1 : lastBar();
     const range = end > r.start ? `${r.start}~${end}마디` : `${r.start}마디`;
-    if (!(r.bpm > 0)) return `${range}: 빠르기 숫자가 비어 있어 ${UNIT_WORD[r.unit]}를 1분에 ${Math.round(DEFAULT_BPM * sp)}번으로 연주`;
+    if (!(r.bpm > 0)) return `${range}: 템포를 인식하지 못했습니다 — BPM 숫자를 넣어야 재생됩니다`;
     const bpm = r.bpm * sp;
     const beat = 60 / bpm;
     const bar = state.bars.find(b => b.number >= r.start);
@@ -1565,7 +1591,23 @@ function fmt(s) { s = Math.max(0, s); return `${Math.floor(s / 60)}:${String(Mat
 // 아이폰: 버튼을 누른 그 순간에 소리 요소를 한 번 깨워 둬야 나중에 재생된다 (무음 스위치와 상관없이 들림)
 const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
 function unlockAudio() { if (audio.dataset.unlocked) return; audio.src = SILENT; const p = audio.play(); if (p && p.catch) p.catch(() => {}); audio.dataset.unlocked = '1'; }
+// 빠르기를 못 읽은 구간이 연주 범위에 있으면 재생하지 않고 숫자를 넣으라고 알린다
+function tempoBlocked() {
+  if (!state.bars.length) return false;
+  const from = +$('from').value || 1, to = +$('to').value || lastBar();
+  const rows = [...state.tempoRows].sort((a, b) => a.start - b.start);
+  const miss = rows.filter((r, i) => { const end = i + 1 < rows.length ? rows[i + 1].start - 1 : lastBar(); return !(r.bpm > 0) && r.start <= to && end >= from; });
+  if (!miss.length) return false;
+  const where = miss.map(r => r.start + '마디').join(', ');
+  showMsg(`템포를 인식하지 못했습니다. 빠르기 표의 노란 칸(${where}부터)에 BPM 숫자를 넣은 뒤 다시 재생해 주세요.`);
+  $('nowText').innerHTML = '<b>템포를 입력해 주세요</b>';
+  const i = rows.indexOf(miss[0]), el = $(`tb-${i}`);
+  $('tTempo').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  if (el) { el.classList.add('tempo-alert'); setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) {} }, 350); el.addEventListener('input', () => { el.classList.remove('tempo-alert'); if (!document.querySelector('#tempoBody input.need')) showMsg(''); }, { once: true }); }
+  return true;
+}
 async function play(offset = 0) {
+  if (tempoBlocked()) { stop(true); return; }
   unlockAudio();
   if (state.dirty || !state.rendered) {
     $('playBtn').disabled = true; $('saveBtn').disabled = true;
@@ -1629,7 +1671,8 @@ $('track').addEventListener('click', ev => {
 function playFromBar(n) {
   const to = +$('to').value;
   if (n < +$('from').value || n > to) { $('from').value = n; $('to').value = lastBar(); changed(); updateOut(); }
-  if (state.dirty || !state.rendered) { unlockAudio(); play(0).then(() => seekBar(n)); return; }
+  if (tempoBlocked()) return;
+  if (state.dirty || !state.rendered) { unlockAudio(); play(0).then(() => { if (state.rendered) seekBar(n); }); return; }
   seekBar(n);
 }
 function seekBar(n) {
@@ -1692,6 +1735,7 @@ function updateSaveFormatUI() {
 $('saveFormat').addEventListener('change', updateSaveFormatUI);
 (async () => { try { downloads = await window.claude?.use?.('downloads'); } catch (e) { downloads = null; } updateSaveFormatUI(); })();
 $('saveBtn').addEventListener('click', async () => {
+  if (tempoBlocked()) return;
   const btn = $('saveBtn'); btn.disabled = true; const label = btn.textContent; btn.textContent = '만드는 중…';
   try {
     if (state.dirty || !state.rendered) { await new Promise(r => setTimeout(r, 30)); await buildAudio(p => { btn.textContent = `오디오 생성 중… ${Math.round(p * 100)}%`; }); }
@@ -1721,40 +1765,119 @@ $('saveBtn').addEventListener('click', async () => {
 
 // ---------- PDF 읽기 ----------
 function showMsg(t) { $('msg').hidden = !t; $('msg').textContent = t || ''; }
-async function loadFullPdf(file) {
+// PDF 한 개를 읽는다 (총보·파트보·더한 악보 공통)
+async function readPdf(file, onPage) {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const fp = scoreFingerprint(data);   // pdf.js가 data를 넘겨받기 전에
+  const sc = await loadScore(pdfjsLib, data, onPage || (() => {}));
+  sc.fp = fp; sc.fileName = file.name;
+  return sc;
+}
+const isPdf = f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name);
+const stemOf = f => f.name.replace(/\.pdf$/i, '');
+let uidSeq = 0;
+// 줄 하나 = 파트보 한 장(줄 1개) 또는 총보의 한 줄. 더한 악보·파트보는 고유 id로 구분해 빼도 다른 줄 설정이 그대로 남는다
+function linesOfSource(x, prefix) {
+  const sc = x.sc;
+  if (sc.isFull && sc.lines.length > 1) return sc.lines.map((l, k) => ({ ...l, id: `${prefix}${x.uid}_${k}`, label: `${x.label} · ${l.label || (k + 1) + '번째 줄'}`, sourceScore: sc, sourceLineId: k, sourceFileName: x.file.name }));
+  const L0 = sc.layouts.find(L => L.staves.length);
+  return [{ id: `${prefix}${x.uid}`, label: x.label, clef: L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false,
+    first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null,
+    sourceScore: sc, sourceLineId: null, sourceFileName: x.file.name }];
+}
+function resetEmpty(text) {
   stop();
-  state.sourceScores = []; state.parts = []; state.lineRes = {}; state.lineRaw = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = [];
-  $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.'; $('partsFileList').textContent = '';
+  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [], bars: [], title: '', fileName: '', manualOrder: null, rendered: null, dirty: true });
+  state.tempoRows = [{ start: 1, unit: 'q', bpm: null, text: '' }];
+  $('linesPanel').hidden = true; $('lineList').textContent = '';
+  $('fileName').textContent = text || '총보를 아직 올리지 않았습니다.';
+  $('fileInfo').textContent = '총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
+  $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
+  showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder();
+}
+function fileRow(text, sub, onRemove, what) {
+  const li = document.createElement('li');
+  const fn = document.createElement('span'); fn.className = 'fn'; fn.textContent = text;
+  if (sub) { const sm = document.createElement('small'); sm.textContent = sub; fn.appendChild(sm); }
+  const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'rm'; rm.textContent = '✕';
+  rm.title = `${what} 빼기`; rm.setAttribute('aria-label', `${text} ${what}에서 빼기`);
+  rm.addEventListener('click', onRemove);
+  li.append(fn, rm); return li;
+}
+function renderFileLists() {
+  const full = $('fullFileList'); full.textContent = '';
+  const sc = state.score;
+  if (sc && !sc.isComposite && sc.fileName) full.appendChild(fileRow(sc.fileName, `${sc.isFull ? '총보 ' + sc.lines.length + '줄' : '줄 1개'}`, () => resetEmpty('총보를 뺐습니다.'), '총보'));
+  const ex = $('extraFileList'); ex.textContent = '';
+  for (const x of state.extras || []) ex.appendChild(fileRow(x.file.name, x.label !== stemOf(x.file) ? x.label : '', () => removeExtra(x.uid), '더한 악보'));
+  const hasFull = !!(sc && !sc.isComposite);
+  $('extraBox').classList.toggle('disabled', !hasFull);
+  $('extraInfo').textContent = hasFull ? '총보에 없는 피아노(건반) 악보 등을 따로 올려 총보와 함께 연주합니다. 여러 개를 한꺼번에 골라도 됩니다.' : '총보를 먼저 올린 뒤 피아노(건반) 악보 등을 더할 수 있습니다.';
+  const pl = $('partsFileList'); pl.textContent = '';
+  for (const x of (sc && sc.isComposite ? state.parts : [])) pl.appendChild(fileRow(x.file.name, x.label !== stemOf(x.file) ? x.label : '', () => removePart(x.uid), '파트보'));
+}
+// 줄 설정은 이미 있던 줄은 그대로 두고 새 줄만 기본값으로
+function cfgNewLines(newLines, allOn) {
+  for (const l of newLines) {
+    if (state.lineCfg[cfgKey(l.id)]) continue;
+    const c = state.lineCfg[cfgKey(l.id)] = defaultCfg(l, true);
+    if (allOn) { c.role = c.pitched && !PERC_NAME.test(l.label || '') ? 'melody' : 'perc'; if (c.role === 'melody') { if (!c.inst) c.inst = 'piano'; ensureInst(c); } }
+  }
+}
+function syncLineIds() {
+  const keys = new Set(state.lineList.map(l => cfgKey(l.id)));
+  for (const k of Object.keys(state.lineCfg)) if (!keys.has(k)) delete state.lineCfg[k];
+  for (const k of Object.keys(state.lineRaw)) if (!keys.has(k)) { delete state.lineRaw[k]; delete state.lineRes[k]; }
+  state.lineIds = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => l.id);
+}
+function fullLineList() {
+  const sc = state.score, L0 = sc.layouts.find(L => L.staves.length);
+  const base = sc.isFull && sc.lines.length > 1 ? sc.lines
+    : [{ id: null, label: sc.partName || state.title, clef: L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false, first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null }];
+  return [...base, ...(state.extras || []).flatMap(x => linesOfSource(x, 'x'))];
+}
+async function loadFullPdf(files) {
+  files = (Array.isArray(files) ? files : [files]).filter(isPdf);
+  if (!files.length) return;
+  stop();
+  state.sourceScores = []; state.parts = []; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = [];
+  $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
+  state.score = null; renderFileLists();
   showMsg('');
-  $('fileName').textContent = file.name;
+  $('fileName').textContent = files.map(f => f.name).join(', ');
   $('fileInfo').textContent = '악보를 읽는 중…';
   $('linesPanel').hidden = true;
   try {
-    const data = new Uint8Array(await file.arrayBuffer());
-    const fp = scoreFingerprint(data);   // pdf.js가 data를 넘겨받기 전에
-    const sc = await loadScore(pdfjsLib, data, (i, n) => { $('fileInfo').textContent = `악보를 읽는 중… ${i}/${n}쪽`; });
-    sc.fp = fp; sc.fileName = file.name;
+    const loaded = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i], pre = files.length > 1 ? `${i + 1}/${files.length} ${file.name} · ` : '';
+      loaded.push({ file, sc: await readPdf(file, (k, n) => { $('fileInfo').textContent = `${pre}악보를 읽는 중… ${k}/${n}쪽`; }) });
+    }
+    // 여러 개를 고르면 줄이 가장 많은 것이 총보, 나머지는 더한 악보
+    const nLines = x => x.sc.isFull ? x.sc.lines.length : 1;
+    const main = loaded.reduce((b, x) => nLines(x) > nLines(b) ? x : b, loaded[0]);
+    const sc = main.sc, file = main.file;
     state.score = sc; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.fileName = file.name;
-    state.title = sc.title || file.name.replace(/\.pdf$/i, '');
-    // 줄 목록: 총보는 악보 줄, 파트보는 줄 하나
-    const L0 = sc.layouts.find(L => L.staves.length);
-    state.lineList = sc.isFull && sc.lines.length > 1 ? sc.lines
-      : [{ id: null, label: sc.partName || state.title, clef: L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false, first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null }];
+    state.title = sc.title || stemOf(file);
+    state.extras = loaded.filter(x => x !== main).map(x => ({ ...x, uid: ++uidSeq, label: (x.sc.partName || '').trim() || stemOf(x.file) }));
+    state.lineList = fullLineList();
     state.lineCfg = {};
     let melodyGiven = false;
     for (const l of state.lineList) {
+      if (l.sourceScore) continue;
       const isMel = l.clef === 'pitched' && !PERC_NAME.test(l.label || '');
       state.lineCfg[cfgKey(l.id)] = defaultCfg(l, isMel && !melodyGiven);
       if (isMel) melodyGiven = true;
     }
+    cfgNewLines(state.lineList.filter(l => l.sourceScore), true);
     // 장구가 없으면 첫 타악 줄 하나는 켠다
     if (!state.lineList.some(l => state.lineCfg[cfgKey(l.id)].role === 'perc')) {
       const p = state.lineList.find(l => l.clef !== 'pitched'); if (p) state.lineCfg[cfgKey(p.id)].role = 'perc';
     }
     // 파트보 하나뿐이면 무조건 켠다
     if (state.lineList.length === 1) { const c = state.lineCfg[cfgKey(state.lineList[0].id)]; if (c.role === 'off') { c.role = c.pitched ? 'melody' : 'perc'; if (c.pitched) ensureInst(c); } }
-    state.lineIds = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => l.id);
-    renderLineList();
+    syncLineIds();
+    renderFileLists(); renderLineList();
     applySelection(true);
   } catch (e) {
     console.error(e);
@@ -1762,7 +1885,33 @@ async function loadFullPdf(file) {
     showMsg('PDF를 여는 중에 문제가 생겼습니다. 암호가 걸렸거나 손상된 파일인지 확인해 주세요.');
   }
 }
-
+// 총보에 피아노 악보 등을 더한다
+async function loadExtraPdfs(files) {
+  files = files.filter(isPdf); if (!files.length) return;
+  if (!state.score || state.score.isComposite) { showMsg('총보를 먼저 올린 뒤 피아노 악보를 더해 주세요. 파트보끼리 합칠 때는 파트보 칸에 올리면 됩니다.'); return; }
+  stop(); showMsg('');
+  const info = $('extraInfo');
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const sc = await readPdf(file, (k, n) => { info.textContent = `${file.name} 읽는 중… ${k}/${n}쪽`; });
+      if (!sc.maestroCount) showMsg(`${file.name}: 악보 기호를 찾지 못했습니다(스캔한 PDF일 수 있음). 목록에서 빼 주세요.`);
+      state.extras.push({ file, sc, uid: ++uidSeq, label: (sc.partName || '').trim() || stemOf(file) });
+    }
+    state.lineList = fullLineList();
+    cfgNewLines(state.lineList.filter(l => l.sourceScore), true);
+    syncLineIds(); state.manualOrder = null;
+    renderFileLists(); renderLineList(); applySelection();
+  } catch (e) {
+    console.error(e); renderFileLists(); showMsg(`${e && e.message ? e.message : '더한 악보를 읽지 못했습니다.'}`);
+  }
+}
+function removeExtra(uid) {
+  stop();
+  state.extras = state.extras.filter(x => x.uid !== uid);
+  state.lineList = fullLineList(); syncLineIds();
+  renderFileLists(); renderLineList(); applySelection();
+}
 function lineLabel(id) { const item = state.lineList.find(l => cfgKey(l.id) === cfgKey(id)); if (item) return item.label || item.sourceScore?.partName || item.sourceScore?.title || ''; if (id == null) return state.score?.partName || ''; const l = state.score?.lines?.[id]; return l ? l.label : ''; }
 
 // 고른 줄들을 해석해 하나의 마디 목록으로 합친다 (기준 = 고른 줄 중 맨 위)
@@ -1824,7 +1973,7 @@ function applySelection(first = false) {
   if (first || !state.tempoRows.length || prevBars.length !== bars.length) state.tempoRows = defaultTempoRows(bars).map(x => ({ ...x }));
   $('ritRow').hidden = !master.r.marks.tempo.some(t => t.kind !== 'atempo');
   $('fileName').textContent = state.sourceScores.length > 1 ? `${state.sourceScores.length}개 파트보 · ${state.title || ''}` : (sc.title ? sc.title + ' · ' : '') + (state.fileName || '');
-  $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '');
+  $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 더한 악보 ${state.extras.length}개` : '');
   if (master.r.mismatches.length) showMsg(`악보에 인쇄된 마디 번호와 읽은 마디 수가 ${master.r.mismatches.length}곳에서 다릅니다(처음: ${master.r.mismatches[0][1]}마디 근처). 그 뒤 마디는 번호가 밀렸을 수 있습니다.`);
   if (first || +$('to').value > lastBar()) { $('from').value = 1; $('to').value = lastBar(); }
   changed(); renderTempo(); renderBars(); refreshOrder(); updateEditTools(results);
@@ -1971,7 +2120,8 @@ $('exportJsonBtn').addEventListener('click', () => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-$('pdfInput').addEventListener('change', e => { if (e.target.files[0]) loadFullPdf(e.target.files[0]); e.target.value = ''; });
+$('pdfInput').addEventListener('change', e => { if (e.target.files.length) loadFullPdf([...e.target.files]); e.target.value = ''; });
+$('extraInput').addEventListener('change', e => { if (e.target.files.length) loadExtraPdfs([...e.target.files]); e.target.value = ''; });
 const drop = $('drop');
 const partsDrop = $('partsDrop');
 function wirePdfDrop(zone, handler) {
@@ -1979,64 +2129,63 @@ function wirePdfDrop(zone, handler) {
   ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
   zone.addEventListener('drop', e => { const files = [...e.dataTransfer.files].filter(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name)); if (files.length) handler(files); });
 }
-wirePdfDrop(drop, files => loadFullPdf(files[0]));
+wirePdfDrop(drop, files => loadFullPdf(files));
+wirePdfDrop($('extraBox'), files => loadExtraPdfs(files));
 wirePdfDrop(partsDrop, files => loadPartPdfs(files));
 $('partsInput').addEventListener('change', e => { if (e.target.files.length) loadPartPdfs([...e.target.files]); e.target.value = ''; });
 
 async function loadPartPdfs(files) {
-  const pdfs = files.filter(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
+  const pdfs = files.filter(isPdf);
   if (!pdfs.length) return;
   stop(); showMsg('');
-  const existingParts = state.score?.isComposite ? state.parts.slice() : [];
-  $('fileName').textContent = '파트보를 불러오는 중…'; $('fileInfo').textContent = `${pdfs.length}개 파일 준비 중…`; $('linesPanel').hidden = true;
-  $('partsFileName').textContent = `${existingParts.length + pdfs.length}개 파트보 준비 중`; $('partsFileInfo').textContent = '각 파트보를 분석하고 있습니다…'; $('partsFileList').textContent = '';
-  state.score = null; state.sourceScores = []; state.parts = existingParts; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = [];
+  const existing = state.score?.isComposite ? state.parts.slice() : [];
+  if (!existing.length) { state.score = null; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = []; renderFileLists(); }
+  $('fileName').textContent = '총보를 아직 올리지 않았습니다.'; $('fileInfo').textContent = '파트보를 쓰는 중이라 총보는 비워 두었습니다.';
+  $('partsFileName').textContent = `${existing.length + pdfs.length}개 파트보 준비 중`;
   try {
     const loaded = [];
     for (let i = 0; i < pdfs.length; i++) {
       const file = pdfs[i];
       $('partsFileInfo').textContent = `파트보 분석 중… ${i + 1}/${pdfs.length}: ${file.name}`;
-      const data = new Uint8Array(await file.arrayBuffer());
-      const fp = scoreFingerprint(data);
-      const sc = await loadScore(pdfjsLib, data, () => {});
-      sc.fp = fp; sc.fileName = file.name;
+      const sc = await readPdf(file);
       const layout = sc.layouts.find(L => L.staves.length);
-      const label = (sc.partName || '').trim();   // 곡 제목은 파트 이름이 아니므로 쓰지 않는다
-      loaded.push({ file, sc, layout, label });
+      loaded.push({ file, sc, layout, label: (sc.partName || '').trim(), uid: ++uidSeq });   // 곡 제목은 파트 이름이 아니므로 쓰지 않는다
     }
-    state.parts = [...existingParts, ...loaded];
-    // 파트 이름을 못 읽었거나 여러 파트가 같은 이름(대개 곡 제목)이면 파일 이름으로 부른다
-    const stem = f => f.name.replace(/\.pdf$/i, '');
-    const dupl = new Set(state.parts.filter(x => x.label && state.parts.filter(y => y.label === x.label).length > 1).map(x => x.label));
-    for (const x of state.parts) if (!x.label || dupl.has(x.label)) x.label = stem(x.file);
-    state.sourceScores = state.parts.map(x => x.sc);
-    state.fileName = state.parts.map(x => x.file.name).join(', ');
-    state.title = state.parts.length === 1 ? state.parts[0].label : '파트보 합주';
-    // 파트보마다 독립적으로 읽고, 고유 ID로 구분한다. 실제 음표 해석기는 그대로 사용한다.
-    state.lineList = state.parts.map((x, i) => ({
-      id: `part${i}`, label: x.label, clef: x.layout ? x.layout.clefs[0] : 'perc',
-      oneLine: x.layout ? !!x.layout.staves[0].oneLine : false,
-      first: x.layout ? { page: x.sc.layouts.indexOf(x.layout), top: x.layout.staves[0].top, bottom: x.layout.staves[0].bottom, x0: x.layout.staves[0].x0 } : null,
-      sourceScore: x.sc, sourceLineId: null, sourceFileName: x.file.name
-    }));
-    state.score = { title: state.title, numPages: state.parts.reduce((n, x) => n + x.sc.numPages, 0), maestroCount: state.parts.reduce((n, x) => n + x.sc.maestroCount, 0), isFull: false, isComposite: true, lines: [], doc: state.parts[0]?.sc.doc, layouts: [], pages: [] };
-    // 파트보는 일부러 고른 파일이므로 모두 켠다 (선율 파트는 선율로, 나머지는 타악으로)
-    for (const l of state.lineList) {
-      const c = state.lineCfg[cfgKey(l.id)] = defaultCfg(l, true);
-      c.role = c.pitched && !PERC_NAME.test(l.label || '') ? 'melody' : 'perc';
-      if (c.role === 'melody') ensureInst(c);
-    }
-    if (state.lineList.length === 1) { const c = state.lineCfg[cfgKey(state.lineList[0].id)]; if (c.role === 'off') { c.role = c.pitched ? 'melody' : 'perc'; if (c.pitched) ensureInst(c); } }
-    state.lineIds = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => l.id);
-    $('partsFileList').textContent = '';
-    for (const x of state.parts) { const row = document.createElement('div'); row.textContent = `✓ ${x.file.name} — ${x.label}`; $('partsFileList').appendChild(row); }
-    $('partsFileName').textContent = `${state.parts.length}개 파트보 등록됨`;
-    $('partsFileInfo').textContent = '파트보는 파일별로 분석한 뒤 마디 번호를 기준으로 합쳐 재생합니다.';
-    renderLineList(); applySelection(true);
+    state.parts = [...existing, ...loaded];
+    rebuildParts();
   } catch (e) {
     console.error(e); $('partsFileInfo').textContent = '파트보를 읽지 못했습니다.';
     showMsg(e && e.message ? e.message : '파트보 PDF를 여는 중 문제가 생겼습니다.');
   }
+}
+function removePart(uid) {
+  stop();
+  state.parts = state.parts.filter(x => x.uid !== uid);
+  if (!state.parts.length) { resetEmpty(); return; }
+  rebuildParts();
+}
+function rebuildParts() {
+  // 파트 이름을 못 읽었거나 여러 파트가 같은 이름(대개 곡 제목)이면 파일 이름으로 부른다
+  for (const x of state.parts) x.label = (x.sc.partName || '').trim();
+  const dupl = new Set(state.parts.filter(x => x.label && state.parts.filter(y => y.label === x.label).length > 1).map(x => x.label));
+  for (const x of state.parts) if (!x.label || dupl.has(x.label)) x.label = stemOf(x.file);
+  state.sourceScores = state.parts.map(x => x.sc);
+  state.fileName = state.parts.map(x => x.file.name).join(', ');
+  state.title = state.parts.length === 1 ? state.parts[0].label : '파트보 합주';
+  // 파트보마다 독립적으로 읽고, 고유 ID로 구분한다. 실제 음표 해석기는 그대로 사용한다.
+  state.lineList = state.parts.map(x => ({ ...linesOfSource({ ...x, sc: { ...x.sc, isFull: false } }, 'part')[0], sourceScore: x.sc }));
+  state.score = { title: state.title, numPages: state.parts.reduce((n, x) => n + x.sc.numPages, 0), maestroCount: state.parts.reduce((n, x) => n + x.sc.maestroCount, 0), isFull: false, isComposite: true, lines: [], doc: state.parts[0]?.sc.doc, layouts: [], pages: [] };
+  // 파트보는 일부러 고른 파일이므로 모두 켠다 (선율 파트는 선율로, 나머지는 타악으로)
+  for (const l of state.lineList) {
+    if (state.lineCfg[cfgKey(l.id)]) continue;
+    const c = state.lineCfg[cfgKey(l.id)] = defaultCfg(l, true);
+    c.role = c.pitched && !PERC_NAME.test(l.label || '') ? 'melody' : 'perc';
+    if (c.role === 'melody') ensureInst(c);
+  }
+  syncLineIds(); state.manualOrder = null;
+  $('partsFileName').textContent = `${state.parts.length}개 파트보 등록됨`;
+  $('partsFileInfo').textContent = '파트보는 파일별로 분석한 뒤 마디 번호를 기준으로 합쳐 재생합니다. 더 올리면 목록에 이어 붙습니다.';
+  renderFileLists(); renderLineList(); applySelection(true);
 }
 
 // ---------- 시작: 예시 장단 ----------
@@ -2046,5 +2195,5 @@ state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
 state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
-renderTempo(); renderBars(); refreshOrder();
+renderTempo(); renderBars(); refreshOrder(); renderFileLists();
 </script>

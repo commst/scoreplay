@@ -315,6 +315,11 @@ export async function extractPages(doc, OPS, onPage) {
       if (c != null) g.code = c; else if (g.raw >= 0xE000 && g.raw <= 0xF8FF) g.code = 0;
       if (!/\(MusicFont\)/.test(g.font)) g.font += ' (MusicFont)';
     }
+    // SMuFL 글자 글꼴(BravuraText·LelandText 등)의 메트로놈 음표: 빠르기 표시 '♩.=110'
+    {
+      const MET = new Map([[0xECA3, 104], [0xECA5, 113], [0xECA7, 101], [0xECB7, 107], [0xE1D3, 104], [0xE1D5, 113], [0xE1D7, 101], [0xE1E7, 107]]);
+      for (const g of glyphs) if (/Bravura|Leland|Petaluma|Finale|MScore|Emmentaler/i.test(g.font) && /Text/i.test(g.font) && MET.has(g.raw)) { g.code = MET.get(g.raw); g.font += ' (MusicFont)'; }
+    }
     // Maestro를 CID 글꼴로 넣은 PDF(PDF-XChange 등): 일부 글자의 유니코드가 Symbol 글꼴 배치의 그리스 문자로 나오고,
     // 그 자리가 실제 글자보다 하나 앞이다 (α→b 내림표, ι→j·Ι→J 꼬리, ϖ→w 온음표, −→. 점, µ→n 제자리표)
     {
@@ -488,9 +493,9 @@ function findStaves(drawings) {
     }
     else {
       // 여러 오선을 한꺼번에 관통하는 마디선만 있는 경우 (총보의 타악기 줄)
-      const span = vls.filter(v => !v[4] && v[0] > x0 - 1 && v[0] < x1 + 1 && v[1] < y - 5 && v[2] > y + 5 && v[2] - v[1] > 25);
+      const span = vls.filter(v => !v[4] && v[0] > x0 - 1 && v[0] < x1 + 1 && v[1] < y - 2 && v[2] > y + 2 && v[2] - v[1] > 25);   // 묶음의 맨 끝 줄은 마디선이 줄 바로 아래(2~3pt)에서 끝나기도 한다
       if (span.length < 2) continue;
-      top = y - 5; bottom = y + 5;
+      top = Math.max(y - 5, med(span.map(v => v[1]))); bottom = Math.min(y + 5, med(span.map(v => v[2])));
     }
     out1.push({ lines: [y], top, bottom, mid: y, x0, x1, oneLine: true });
   }
@@ -625,8 +630,17 @@ export function assignLines(pages) {
   for (const L of layouts) for (const g of L.systems) if (!tmpl || g.length > tmpl.g.length) tmpl = { L, g };
   if (!tmpl) return { layouts, lines: [] };
   const lines = tmpl.g.map((i, k) => ({ id: k, name: tmpl.L.labels[i] || '', clef: tmpl.L.clefs[i], oneLine: !!tmpl.L.staves[i].oneLine, first: null, count: 0 }));
+  // 총보 뒤에 파트보를 이어 붙인 PDF: 총보가 끝난 뒤 쪽마다 1~2단짜리 단만 여럿 있으면 파트보 → 읽지 않는다
+  let partFrom = layouts.length;
+  if (tmpl.g.length >= 4) {
+    let k = layouts.length;
+    while (k > 0 && layouts[k - 1].systems.every(g => g.length <= 2)) k--;
+    const tail = layouts.slice(k), nSys = tail.reduce((a, L) => a + L.systems.length, 0);
+    if (k > 0 && tail.length >= 2 && nSys >= tail.length * 3) partFrom = k;
+  }
   layouts.forEach((L, pi) => {
     L.lineOf = new Array(L.staves.length).fill(null);
+    if (pi >= partFrom) { L.partPage = true; return; }
     for (const g of L.systems) {
       if (g.length === lines.length) g.forEach((i, k) => { L.lineOf[i] = k; });
       else {
@@ -792,7 +806,9 @@ function pagePrep(pg, layout, pi) {
   const smallSize = normSize * 0.75;
   // 잇단음표 숫자: Finale은 굵은 기울임, Sibelius는 OpusText 글꼴의 작은 숫자 하나 (옆에 다른 글자가 붙어 있으면 템포 등 글자)
   const lone = g => !glyphs.some(o => o !== g && Math.abs(o.oy - g.oy) < 1.5 && o.code > 32 && (Math.abs(o.x0 - g.x1) < 3 || Math.abs(g.x0 - o.x1) < 3));
-  const tupletNums = glyphs.filter(g => (g.code === 51 || g.code === 57) && (g.font.includes('BoldItal') || (/OpusText|Opus Text/.test(g.font) && g.size < normSize * 0.75 && lone(g))));
+  const tupletNums = glyphs.filter(g => ((g.code === 51 || g.code === 57) && (g.font.includes('BoldItal') || (/OpusText|Opus Text/.test(g.font) && g.size < normSize * 0.75 && lone(g))))
+    // MuseScore 2 등: 기울임 글꼴의 작은 숫자 하나(3·4·5·6·7) — 4잇단(겹박자에서 셋 자리에 넷) 등도
+    || ([51, 52, 53, 54, 55].includes(g.code) && /Italic|Oblique/i.test(g.font) && !MUSIC_FONT.test(g.font) && g.size < normSize * 0.75 && lone(g)));
   const runs = textRuns(glyphs);
   const segs = strokeSegs(drawings);
   const italicNums = glyphs.filter(g => !MUSIC_FONT.test(g.font) && isDigit(g.code) && g.size < 14);
@@ -875,13 +891,18 @@ export function parseScore(pages, opts = {}) {
       numRuns.sort((a, b) => b[0].oy - a[0].oy || a[0].ox - b[0].ox);
       const nums = numRuns.length && numRuns[0][0].ox <= st.x0 + 10 ? numRuns[0] : [];
       if (nums.length) { const last = nums[nums.length - 1]; if (glyphs.some(g => !isDigit(g.code) && g.code > 32 && !isMusicFont(g.font) && Math.abs(g.oy - last.oy) < 2 && g.x0 - last.x1 > -0.5 && g.x0 - last.x1 < 3)) nums.length = 0; }
+      // '♩ = 150' 같은 빠르기 숫자는 마디 번호가 아님
+      if (nums.length) { const f0 = nums[0]; if (glyphs.some(g => g.code === 61 && Math.abs(g.oy - f0.oy) < 2 && f0.x0 - g.x1 > -0.5 && f0.x0 - g.x1 < 14)) nums.length = 0; }
       if (nums.length) systemNumbers.push([measures.length, +nums.map(g => String.fromCharCode(g.code)).join('')]);
 
       // 음표 머리에 붙은 세로선은 기둥 (작은 오선에서 기둥 길이가 오선 높이와 거의 같을 때)
       const stemHeads = sg.filter(g => g.code === HEAD_FILLED || g.code === HEAD_HALF);
       const touchesHead = v => !(Math.abs(v[1] - st.top) < 0.15 && Math.abs(v[2] - st.bottom) < 0.15) && stemHeads.some(g => g.x0 - 0.8 <= v[0] && v[0] <= g.x1 + 0.8 && (Math.abs(g.oy - v[1]) < 2.5 || Math.abs(g.oy - v[2]) < 2.5));
       const isBar = v => !v[4] && !touchesHead(v) && (Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6)
-        || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20 && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && (v[2] >= o.bottom - 1.5
+        || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20
+          // 마디선은 어떤 오선의 맨 윗줄에서 시작해 어떤 오선의 맨 아랫줄에서 끝난다 (두 오선에 걸친 화음 기둥은 위·아래로 삐져나옴)
+          && staves.some(o => Math.abs(v[1] - o.top) < 1.5) && staves.some(o => Math.abs(v[2] - o.bottom) < 1.5 || vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && Math.abs(w[2] - o.bottom) < 1.5))
+          && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && (v[2] >= o.bottom - 1.5
           // 큰보표 마디선을 토막으로 나눠 그린 경우(위 오선~아래 오선 가운데, 아래 오선 부분 따로)
           || (v[2] >= o.top - 0.5 && vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && w[2] >= o.bottom - 1.5)))));
       // 같은 자리에 두 번 그린 마디선(한컴 PDF 등)은 하나로: 겹세로줄로 잘못 읽어 마디마다 '구간 시작'이 되던 문제
@@ -907,7 +928,7 @@ export function parseScore(pages, opts = {}) {
       lineState.pitched = pitchedStaff;
       const heads = sg.filter(g => g.code === HEAD_FILLED || g.code === HEAD_WHOLE || g.code === HEAD_HALF);
       const rests = sg.filter(g => [REST_Q, REST_8, REST_16, REST_32, REST_HALF, REST_WHOLE].includes(g.code) && g.size > smallSize);
-      const dots = sg.filter(g => g.code === DOT);
+      const dots = sg.filter(g => g.code === DOT).filter((g, i, a) => !a.slice(0, i).some(o => Math.abs(o.ox - g.ox) < 0.3 && Math.abs(o.oy - g.oy) < 0.3));   // 같은 자리에 두 번 찍은 점은 하나
       // 도돌이표 점: 같은 x에 위아래 대칭인 점 두 개 + 바로 옆이 겹세로줄(굵은 줄 포함)
       const reserved = new Set();
       dots.forEach((a, i) => dots.forEach((b, j) => {
@@ -973,13 +994,17 @@ export function parseScore(pages, opts = {}) {
           }
           n.dur = (g.code === HEAD_HALF ? F(1, 2) : F(1, 4)).div(2 ** (beams + flags));
         }
-        let nd = forceDots ?? 0;
+        let nd = forceDots ?? 0, firstDot = null;
+        // 2도 화음: 기둥 반대쪽으로 비켜 찍은 머리가 오른쪽에 있으면 점은 그 머리 뒤에 온다
+        let gx1 = g.x1;
+        if (!isRest && pitchedStaff) for (let k = 0; k < 3; k++) for (const h of heads) if (h !== g && h.x0 > g.x0 + 1 && h.x0 < gx1 + 0.5 && h.x1 > gx1 && Math.abs(h.oy - g.oy) < staffSp * 1.6 && Math.abs(h.size - g.size) < 1) gx1 = h.x1;
         if (forceDots == null) dots.forEach((dg, i) => {
           if (usedDots.has(i) || reserved.has(i)) return;
-          if (g.x1 + 0.3 <= dg.x0 && dg.x0 <= g.x1 + 6 + nd * 4 && Math.abs(dg.oy - g.oy) < (isRest ? 8 : dotTol(g))
+          if (firstDot && Math.abs(dg.oy - firstDot.oy) > 1) return;   // 겹점은 같은 높이에
+          if (gx1 + 0.3 <= dg.x0 && dg.x0 <= gx1 + 6 + nd * 4 && Math.abs(dg.oy - g.oy) < (isRest ? 8 : dotTol(g))
             && (isRest || !heads.some(h => h !== g && Math.abs(cx(h) - cx(g)) < 1.5 && Math.abs(h.oy - dg.oy) < Math.abs(g.oy - dg.oy) - 0.1))   // 화음(타악의 위·아래 성부 포함): 점은 높이가 가장 가까운 머리의 것
             && (isRest || !pitchedStaff || !heads.some(h => h !== g && h.x0 > g.x1 - 0.5 && Math.abs((dg.x0 + dg.x1) / 2 - (h.x0 + h.x1) / 2) < (h.x1 - h.x0) * 0.2 && Math.abs(dg.oy - h.oy) > staffSp * 0.6 && Math.abs(dg.oy - h.oy) < staffSp * 1.8))   // 다른 머리 한가운데 위·아래 점 = 스타카토
-            && !bars.some(b => b[0] > g.x1 - 0.5 && b[0] < dg.x0 + 0.5)) { usedDots.add(i); nd++; }
+            && !bars.some(b => b[0] > g.x1 - 0.5 && b[0] < dg.x0 + 0.5)) { usedDots.add(i); nd++; firstDot = firstDot || dg; }
         });
         if (nd === 1) n.dur = n.dur.mul(F(3, 2)); else if (nd >= 2) n.dur = n.dur.mul(F(7, 4));
         n._dots = nd;
@@ -1021,8 +1046,23 @@ export function parseScore(pages, opts = {}) {
         }
         for (const g of groups.values()) if (g.length > 1) {
           g.sort((a, b) => a.x - b.x || a.y - b.y);
+          // 한 기둥의 머리는 길이가 같다: 점이 붙은 머리가 있으면(2도 화음 등에서 점 하나를 두 머리가 나눠 씀) 모두 점음표로
+          const sm = g.filter(n => n._stem != null), mx = sm.reduce((b, n) => (n._dots || 0) > (b?._dots || 0) ? n : b, null);
+          if (mx && mx._dots) for (const n of sm) if ((n._dots || 0) < mx._dots && n.dur.mul(mx._dots === 1 ? F(3, 2) : F(7, 4)).div(n._dots === 1 ? F(3, 2) : F(1)).eq(mx.dur)) { n.dur = mx.dur; n._dots = mx._dots; }
           // 기둥 없는 음(온음표)은 x가 거의 같을 때만
           for (const n of g.slice(1)) if (n._stem != null || Math.abs(n.x - g[0].x) < 1.5) { if (n.dur.eq(g[0].dur)) n.chordOf = g[0]; }
+        }
+      }
+      // 타악 오선에서 한 기둥에 머리가 둘(장구 덩 등): 기둥 끝 쪽 머리는 그 성부, 다른 머리는 같은 때 반대 성부로 친다
+      // (전에는 같은 성부의 음 둘로 이어 읽어 마디가 길어졌음)
+      if (!pitchedStaff) {
+        const byStem = new Map();
+        for (const n of headNotesAll) if (n._stem != null && !n.grace) { const k = n.voice + Math.round(n._stem * 4); if (!byStem.has(k)) byStem.set(k, []); byStem.get(k).push(n); }
+        for (const grp of byStem.values()) {
+          if (grp.length < 2) continue;
+          grp.sort((a, b) => grp[0]._up ? a.y - b.y : b.y - a.y);
+          const main = grp[0];
+          grp.slice(1).forEach(n => { if (Math.abs(n.y - main.y) > 1 && n.dur.eq(main.dur)) { n.chordOf = main; n.voice = main.voice === 'R' ? 'L' : 'R'; } });
         }
       }
       const notes = [...headNotesAll, ...rests.map(g => makeNote(g, true))];
@@ -1037,7 +1077,10 @@ export function parseScore(pages, opts = {}) {
         const c = headNotes.filter(n => n.voice === voice && !n.grace && Math.abs(n.x - cx(a)) < 5);
         if (c.length) c.reduce((b, n) => Math.abs(n.x - cx(a)) < Math.abs(b.x - cx(a)) ? n : b).accent = true;
       }
+      // 잇단음표 숫자 → 길이 배율 (3: 셋을 둘 자리, 4: 넷을 셋 자리, 5·7: 넷 자리, 6: 넷 자리)
+      const TUP_F = { 51: F(2, 3), 52: F(3, 4), 53: F(4, 5), 54: F(2, 3), 55: F(4, 7), 57: F(2, 3) };
       for (const t of tupletNums.filter(g => staffOf(g.oy) === si)) {
+        const tf = TUP_F[t.code] || F(2, 3), tk = t.code - 48;
         const voice = t.oy < st.mid ? 'R' : 'L';
         let br = brackets.find(b => b.x0 - 2 <= cx(t) && cx(t) <= b.x1 + 2 && Math.abs((b.y0 + b.y1) / 2 - cy(t)) < 8);
         if (!br) {
@@ -1051,7 +1094,7 @@ export function parseScore(pages, opts = {}) {
           // 잇단음표 숫자와 세로로 가장 가까운 음표의 성부에 적용 (숫자가 오선 위에 있어도 아랫성부일 수 있음)
           const inBr = notes.filter(n => !n.grace && br.x0 - 4 <= n.x && n.x <= br.x1 + 4);
           const v = inBr.length ? inBr.reduce((b, n) => Math.abs(n.y - t.oy) < Math.abs(b.y - t.oy) ? n : b).voice : voice;
-          inBr.forEach(n => { if (n.voice === v) n.tuplet = true; });
+          inBr.forEach(n => { if (n.voice === v) n.tuplet = tf; });
         } else {
           // 괄호 없이 숫자 3만 빔 묶음 위·아래에 적힌 경우: 숫자 가운데에 놓인 이웃한 음표 3개
           const near = notes.filter(n => !n.grace && Math.abs(n.x - cx(t)) < 20);
@@ -1061,15 +1104,15 @@ export function parseScore(pages, opts = {}) {
             const bm = beamList.filter(b => b.x0 - 3 <= cx(t) && cx(t) <= b.x1 + 3 && Math.abs(b.yAt(cx(t)) - t.oy) < 25).sort((a, b) => (b.x1 - b.x0) - (a.x1 - a.x0))[0];
             const inSpan = n => n.x >= bm.x0 - 5 && n.x <= bm.x1 + 5;
             const solo = bm && !notes.some(n => !n.rest && n.voice !== v && inSpan(n));
-            if (bm) notes.forEach(n => { if ((n.voice === v || (n.rest && solo)) && !n.grace && inSpan(n)) n.tuplet = true; });
+            if (bm) notes.forEach(n => { if ((n.voice === v || (n.rest && solo)) && !n.grace && inSpan(n)) n.tuplet = tf; });
           } else if (near.length) {
             const v = near.reduce((b, n) => Math.abs(n.y - t.oy) < Math.abs(b.y - t.oy) ? n : b).voice;
             const xs = [...new Set(notes.filter(n => n.voice === v && !n.grace).map(n => Math.round(n.x * 10) / 10))].sort((a, b) => a - b);
             let best = null, bd = 1e9;
-            for (let i = 0; i + 2 < xs.length; i++) { const d = Math.abs((xs[i] + xs[i + 2]) / 2 - cx(t)); if (d < bd) { bd = d; best = i; } }
-            if (best != null && bd < 6 && xs[best + 2] - xs[best] < 40) {
-              const lo = xs[best] - 0.2, hi = xs[best + 2] + 0.2;
-              notes.forEach(n => { if (n.voice === v && !n.grace && n.x >= lo && n.x <= hi) n.tuplet = true; });
+            for (let i = 0; i + tk - 1 < xs.length; i++) { const d = Math.abs((xs[i] + xs[i + tk - 1]) / 2 - cx(t)); if (d < bd) { bd = d; best = i; } }
+            if (best != null && bd < 6 && xs[best + tk - 1] - xs[best] < 20 * (tk - 1)) {
+              const lo = xs[best] - 0.2, hi = xs[best + tk - 1] + 0.2;
+              notes.forEach(n => { if (n.voice === v && !n.grace && n.x >= lo && n.x <= hi) n.tuplet = tf; });
             }
           }
         }
@@ -1079,7 +1122,7 @@ export function parseScore(pages, opts = {}) {
       {
         const tupl = notes.filter(n => n.tuplet && !n.grace);
         const groups = [];
-        for (const n of tupl.sort((a, b) => a.x - b.x)) { const g = groups.find(g => g.v === n.voice && n.x - g.xs[g.xs.length - 1] < 40); if (g) g.xs.push(n.x); else groups.push({ v: n.voice, xs: [n.x] }); }
+        for (const n of tupl.sort((a, b) => a.x - b.x)) { const g = groups.find(g => g.v === n.voice && n.x - g.xs[g.xs.length - 1] < 40); if (g) g.xs.push(n.x); else groups.push({ v: n.voice, xs: [n.x], tf: n.tuplet }); }
         for (const g of groups) {
           if (g.xs.length < 2) continue;
           const lo = g.xs[0] - 1.5, hi = g.xs[g.xs.length - 1] + 1.5;
@@ -1088,7 +1131,7 @@ export function parseScore(pages, opts = {}) {
             const other = notes.filter(n => n.voice === v && !n.grace && n.x >= lo && n.x <= hi);
             if (other.length < 2 || other.some(n => n.tuplet)) continue;
             const ox = [...new Set(other.map(n => Math.round(n.x)))];
-            if (ox.length === new Set(g.xs.map(x => Math.round(x))).size && ox.every(x => g.xs.some(t => Math.abs(t - x) < 1.6))) other.forEach(n => { n.tuplet = true; });
+            if (ox.length === new Set(g.xs.map(x => Math.round(x))).size && ox.every(x => g.xs.some(t => Math.abs(t - x) < 1.6))) other.forEach(n => { n.tuplet = g.tf; });
           }
         }
       }
@@ -1109,7 +1152,8 @@ export function parseScore(pages, opts = {}) {
       const staffStart = measures.length;
       for (let i = 0; i < regions.length; i++) {
         const [a, b] = regions[i];
-        const isBeam = r => beamList.some(bm => bm.x0 - 2 <= r.x0 && r.x1 <= bm.x1 + 2 && Math.abs(bm.yAt((r.x0 + r.x1) / 2) - (r.y0 + r.y1) / 2) < 3) && notes.filter(n => !n.rest && n.x >= r.x0 - 4 && n.x <= r.x1 + 4).length >= 2;   // 빔 아래에는 음표가 있다 (여러 마디 쉼표 막대에는 없음)
+        const isBeam = r => beamList.some(bm => bm.x0 - 2 <= r.x0 && r.x1 <= bm.x1 + 2 && Math.abs(bm.yAt((r.x0 + r.x1) / 2) - (r.y0 + r.y1) / 2) < 3) && (notes.filter(n => !n.rest && n.x >= r.x0 - 4 && n.x <= r.x1 + 4).length >= 2
+          || glyphs.filter(g => isMaestro(g) && (g.code === HEAD_FILLED || g.code === HEAD_HALF) && g.ox >= r.x0 - 6 && g.ox <= r.x1 + 4 && Math.abs(g.oy - st.mid) < 45).length >= 2);   // 빔 아래(옆 오선 포함)에는 음표가 있다 (여러 마디 쉼표 막대에는 없음)
         // 마디 안의 굵은 가로 막대(여러 마디 쉼표)로 마디를 나눈다. 가운데 줄 높이에 놓인 빔(16분음표 묶음 등)은 제외
         const r = [...rects, ...thickH].find(r => a <= r.x0 && r.x1 <= b && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3 && !isBeam(r));
         if (r && notes.some(n => n.x > r.x1 + 3 && n.x < b)) { regions.splice(i, 1, [a, r.x1 + 2], [r.x1 + 2, b]); leftDouble.splice(i + 1, 0, false); i++; }
@@ -1185,10 +1229,23 @@ export function parseScore(pages, opts = {}) {
           const big = Math.max(...ts.map(g => g.size));
           const ts2 = ts.filter(g => g.size > big - 1.5);
           const x0 = Math.min(...ts2.map(g => g.ox));
-          const near = ts2.filter(g => g.ox - x0 < 12);
-          const num = near.filter(g => g.oy < st.mid + 0.5).sort((a, b) => a.ox - b.ox);
+          // 더해 쓴 박자(3+3+2/8): 분자 숫자 바로 옆에 '+'(Maestro ˆ)가 끼어 이어지는 경우만 이어 읽어 더한다
+          let near = ts2.filter(g => g.ox - x0 < 12);
+          let num = near.filter(g => g.oy < st.mid + 0.5).sort((a, b) => a.ox - b.ox);
           const den = near.filter(g => g.oy >= st.mid + 0.5).sort((a, b) => a.ox - b.ox);
-          if (num.length && den.length) tsig = [+num.map(g => g.code - 48).join(''), +den.map(g => g.code - 48).join('')];
+          let numV = +num.map(g => g.code - 48).join('');
+          if (num.length) {
+            const row = sg.filter(g => (isDigit(g.code) || g.code === 43 || g.code === 246) && Math.abs(g.oy - num[0].oy) < 1 && g.ox >= num[0].ox).sort((a, b) => a.ox - b.ox);
+            const chain = [row[0]];
+            for (const g of row.slice(1)) { const p = chain[chain.length - 1]; if (g.ox - p.ox > g.size * 0.75) break; chain.push(g); }
+            const pl = chain.filter(g => g.code === 43 || g.code === 246);
+            const isP = g => g.code === 43 || g.code === 246;
+            const ok = pl.length && isDigit(chain[0].code) && isDigit(chain[chain.length - 1].code) && chain.every((g, i) => i === 0 || !(isP(g) && isP(chain[i - 1])));
+            if (ok) {
+              let sum = 0, cur = ''; for (const g of chain) { if (!isDigit(g.code)) { sum += +cur || 0; cur = ''; } else cur += String(g.code - 48); } numV = sum + (+cur || 0);
+            }
+          }
+          if (num.length && den.length) tsig = [numV, +den.map(g => g.code - 48).join('')];
         } else if (cts.length) tsig = [4, 4];
         if (!tsig) { const bt = bigTs.find(t => t.sys === sysOf(si) && inr((t.x + t.x1) / 2)); if (bt) tsig = bt.ts; }
         if (tsig) pendingTimesig = tsig;
@@ -1245,7 +1302,12 @@ export function parseScore(pages, opts = {}) {
           const used = head.length ? Math.max(...head.map(g => g.x1)) : rx0;
           if (rx1 - used > 40) content = true;
         }
-        if (!content && !isFirst && !isTrailing) content = true;
+        if (!content && !isFirst && !isTrailing) {
+          // 겹세로줄과 도돌이 시작 사이에 박자표만 들어 있는 좁은 칸은 마디가 아니다
+          const head = sg.filter(g => inr(cx(g)) && g.oy > st.top - 12 && g.oy < st.bottom + 12);
+          const used = head.length ? Math.max(...head.map(g => g.x1)) : rx0;
+          content = !(tsig && rx1 - rx0 < 45 && rx1 - used < 12 && !rests.some(r => inr(cx(r))));
+        }
           if (!content) { if (m.repeatEnd && measures.length) measures[measures.length - 1].repeatEnd = true; return; }
         if (pendingTwoBar && m.kind === 'normal' && !m.notes.length) m.kind = 'repeat2b';
         for (const v of Object.keys(pendingTie)) {
@@ -1414,8 +1476,8 @@ function timing(m, barLen) {
     const vn = main.filter(n => n.voice === v);
     if (vn.some(n => n.tuplet)) {
       const plain = frSum(vn.map(n => n.dur));
-      const scaled = frSum(vn.map(n => n.tuplet ? n.dur.mul(F(2, 3)) : n.dur));
-      if (scaled.eq(barLen) || (!plain.eq(barLen) && scaled.lt(plain))) vn.forEach(n => { if (n.tuplet) n.dur = n.dur.mul(F(2, 3)); });
+      const scaled = frSum(vn.map(n => n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : n.dur));
+      if (scaled.eq(barLen) || (!plain.eq(barLen) && scaled.lt(plain))) vn.forEach(n => { if (n.tuplet) n.dur = n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet); });
     }
   }
   const onset = new Map();
@@ -1540,7 +1602,7 @@ function voiceSums(m) {
     const vn = m.notes.filter(n => n.voice === v && !n.grace && !n.chordOf);
     if (!vn.length || (vn.length === 1 && vn[0].wholeRest)) continue;
     const plain = frSum(vn.map(n => n.dur));
-    const scaled = frSum(vn.map(n => n.tuplet ? n.dur.mul(F(2, 3)) : n.dur));
+    const scaled = frSum(vn.map(n => n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : n.dur));
     out[v] = [plain, scaled];
   }
   return out;
@@ -1830,7 +1892,14 @@ export async function loadScore(pdfjs, data, onPage) {
   const isFull = layouts.some(L => L.systems.some(g => g.length > 1));
   const title = (() => {
     const g = pages[0]?.glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < 120 && g.code > 0xAC00) || [];
-    if (!g.length) return '';
+    if (!g.length) {
+      // 한글이 없는 제목(영문 등): 맨 위의 가장 큰 글자 줄
+      const all = (pages[0]?.glyphs || []).filter(g => !isMusicFont(g.font) && !g.font.includes('Engraver') && g.oy < 130 && g.code >= 32);
+      const big = Math.max(0, ...all.filter(g => g.code > 32).map(x => x.size));
+      if (big < 16) return '';
+      const y = all.find(g => g.size > big - 1 && g.code > 32).oy;
+      return all.filter(x => x.size > big - 1 && Math.abs(x.oy - y) < 2).sort((a, b) => a.ox - b.ox).map(x => x.uni || String.fromCharCode(x.code)).join('').replace(/\s+/g, ' ').trim();
+    }
     const big = Math.max(...g.map(x => x.size));
     const t = g.filter(x => x.size > big - 1).sort((a, b) => a.ox - b.ox);
     const seen = new Set(); let s = '';
