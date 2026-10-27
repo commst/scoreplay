@@ -472,6 +472,22 @@ function findStaves(drawings) {
     cur.push(h);
   }
   if (cur.length) groups.push(cur);
+  // 오선 바로 위·아래에 붙은 긴 선(1·2번 괄호 선, '2nd time only ____' 연장선 등)이 오선 줄과 한 덩어리가 되면 뺀다:
+  // 오선 줄은 모두 같은 자리에서 시작하고 끝나는데, 이런 선은 마디 중간에서 시작한다
+  for (let gi = 0; gi < groups.length; gi++) {
+    const g = groups[gi]; if (g.length < 6) continue;
+    const mx0 = [...g.map(h => h[1])].sort((a, b) => a - b)[g.length >> 1], mx1 = [...g.map(h => h[2])].sort((a, b) => a - b)[g.length >> 1];
+    const keep = g.filter(h => Math.abs(h[1] - mx0) < 4 && Math.abs(h[2] - mx1) < 4);
+    if (keep.length >= 5 && keep.length < g.length && (g[0] !== keep[0] || g[g.length - 1] !== keep[keep.length - 1])) groups[gi] = keep;
+  }
+  // 오선 바로 위·아래에 붙은 긴 선(1·2번 괄호 선, '2nd time only ____' 연장선 등)이 오선 줄과 한 덩어리가 되면 뺀다:
+  // 오선 줄은 모두 같은 자리에서 시작하고 끝나는데, 이런 선은 마디 중간에서 시작한다
+  for (let gi = 0; gi < groups.length; gi++) {
+    const g = groups[gi]; if (g.length < 6) continue;
+    const mx0 = [...g.map(h => h[1])].sort((a, b) => a - b)[g.length >> 1], mx1 = [...g.map(h => h[2])].sort((a, b) => a - b)[g.length >> 1];
+    const keep = g.filter(h => Math.abs(h[1] - mx0) < 4 && Math.abs(h[2] - mx1) < 4);
+    if (keep.length >= 5 && keep.length < g.length && (g[0] !== keep[0] || g[g.length - 1] !== keep[keep.length - 1])) groups[gi] = keep;
+  }
   // 오선 두 개가 11pt보다 가깝게 붙어 한 덩어리가 된 경우: 줄 간격이 갑자기 넓어지는 곳에서 나눈다
   for (let gi = 0; gi < groups.length; gi++) {
     const g = groups[gi]; if (g.length < 6) continue;
@@ -481,8 +497,17 @@ function findStaves(drawings) {
     if (cut >= 0) { groups.splice(gi, 1, g.slice(0, cut + 1), g.slice(cut + 1)); gi--; }
   }
   const out1 = [];
+  // 한 줄 오선은 단의 왼쪽 끝에서 시작한다. 1·2번 괄호 선, '2nd time only ____' 같은 연장선, 긴 셈여림 선은 마디 중간에서 시작하므로 오선이 아니다
+  const multiX0 = groups.filter(g => g.length >= 2).map(g => Math.min(...g.map(h => h[1])));
+  const singleX0 = groups.filter(g => g.length === 1).map(g => g[0][1]);
+  const singles = groups.filter(g => g.length === 1).map(g => g[0]);
+  const startsSystem = (x0, y, x1) => multiX0.length ? multiX0.some(v => Math.abs(v - x0) < 4)
+    : singleX0.filter(v => Math.abs(v - x0) < 4).length >= Math.max(1, singleX0.length / 2)
+      // 첫 단을 들여 쓴 한 줄 파트보: 맨 위 줄은 시작이 달라도 오른쪽 끝이 다른 줄과 같으면 오선
+      || (y === Math.min(...singles.map(h => h[0])) && singles.filter(h => Math.abs(h[2] - x1) < 2).length >= Math.max(2, singles.length / 2));
   for (const g of groups.filter(g => g.length === 1)) {
     const [y, x0, x1] = g[0];
+    if (!startsSystem(x0, y, x1)) continue;
     const cross = vls.filter(v => !v[4] && v[0] > x0 - 1 && v[0] < x1 + 1 && v[1] < y - 2 && v[2] > y + 2 && v[2] - v[1] > 6 && (v[2] - v[1] < 17 || (v[2] - v[1] < 24 && Math.abs(v[1] + v[2] - 2 * y) < 6)));
     const med = a => a.sort((p, q) => p - q)[a.length >> 1];
     let top, bottom;
