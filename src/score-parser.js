@@ -892,7 +892,7 @@ export function parseScore(pages, opts = {}) {
       const nums = numRuns.length && numRuns[0][0].ox <= st.x0 + 10 ? numRuns[0] : [];
       if (nums.length) { const last = nums[nums.length - 1]; if (glyphs.some(g => !isDigit(g.code) && g.code > 32 && !isMusicFont(g.font) && Math.abs(g.oy - last.oy) < 2 && g.x0 - last.x1 > -0.5 && g.x0 - last.x1 < 3)) nums.length = 0; }
       // '♩ = 150' 같은 빠르기 숫자는 마디 번호가 아님
-      if (nums.length) { const f0 = nums[0]; if (glyphs.some(g => g.code === 61 && Math.abs(g.oy - f0.oy) < 2 && f0.x0 - g.x1 > -0.5 && f0.x0 - g.x1 < 14)) nums.length = 0; }
+      if (nums.length) { const f0 = nums[0]; if (glyphs.some(g => g.code === 61 && !isMusicFont(g.font) && Math.abs(g.oy - f0.oy) < 2 && f0.x0 - g.x1 > -0.5 && f0.x0 - g.x1 < 14)) nums.length = 0; }
       if (nums.length) systemNumbers.push([measures.length, +nums.map(g => String.fromCharCode(g.code)).join('')]);
 
       // 음표 머리에 붙은 세로선은 기둥 (작은 오선에서 기둥 길이가 오선 높이와 거의 같을 때)
@@ -901,7 +901,7 @@ export function parseScore(pages, opts = {}) {
       const isBar = v => !v[4] && !touchesHead(v) && (Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6)
         || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20
           // 마디선은 어떤 오선의 맨 윗줄에서 시작해 어떤 오선의 맨 아랫줄에서 끝난다 (두 오선에 걸친 화음 기둥은 위·아래로 삐져나옴)
-          && staves.some(o => Math.abs(v[1] - o.top) < 1.5) && staves.some(o => Math.abs(v[2] - o.bottom) < 1.5 || vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && Math.abs(w[2] - o.bottom) < 1.5))
+          && staves.some(o => Math.abs(v[1] - o.top) < 1.5 || (o.oneLine && v[1] <= o.mid + 1.5 && v[1] >= o.mid - 9)) && staves.some(o => Math.abs(v[2] - o.bottom) < 1.5 || (o.oneLine && v[2] >= o.mid - 1.5 && v[2] <= o.mid + 9) || vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && Math.abs(w[2] - o.bottom) < 1.5))
           && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && (v[2] >= o.bottom - 1.5
           // 큰보표 마디선을 토막으로 나눠 그린 경우(위 오선~아래 오선 가운데, 아래 오선 부분 따로)
           || (v[2] >= o.top - 0.5 && vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && w[2] >= o.bottom - 1.5)))));
@@ -1612,7 +1612,44 @@ export function resolveBars(measures, systemNumbers = []) {
   const out = [];
   let ts = [4, 4], tsLen = F(4, 4), num = 1, inferredTs = false, tsExplicit = false;
   const printedAt = new Map(systemNumbers);
+  // 마디선을 숨긴 칸(MuseScore 등): 음표 뒤에 마디 가운데 온쉼표가 따로 이어지면 쉼표마다 한 마디.
+  // 다음 단의 인쇄된 마디 번호가 모자란 만큼과 꼭 맞을 때만 나눈다 (♩+온쉼표 같은 5/4 마디를 잘못 나누지 않게)
+  const trailingRests = m => {
+    if (m.kind !== 'normal' || m._first == null) return 0;
+    const wr = m.notes.filter(n => n.wholeRest && n.centered && !n.grace).sort((a, b) => a.x - b.x).filter((n, i, a) => i === 0 || n.x - a[i - 1].x > 3);
+    if (!wr.length || wr.some(n => Math.abs(n.y - wr[0].y) > 1)) return 0;
+    const others = m.notes.filter(n => !n.grace && !(n.wholeRest && wr.some(w => Math.abs(w.x - n.x) < 3)));
+    if (others.length ? others.some(o => o.x > wr[0].x - 8) : wr.length < 2) return 0;
+    if (wr.length >= 2) { const sp = (wr[wr.length - 1].x - wr[0].x) / (wr.length - 1); if (wr.some((w, i) => i && Math.abs(w.x - wr[i - 1].x - sp) > sp * 0.25)) return 0; }
+    return others.length ? wr.length : wr.length - 1;
+  };
+  let sysStart = 0;
+  const splitHiddenBars = diff => {
+    const cand = [];
+    // 온쉼표가 없으면(붙임줄로 이은 긴 음 등) 늘려 읽은 마디 길이가 박자의 정수배인 마디
+    const overK = j => { const m = measures[j], e = out[m._first]; if (m.kind !== 'normal' || !e || !m._tsLen || !e.warnings.some(w => /보다 김/.test(w))) return 0; const r = e.barLen.v / m._tsLen.v; return Math.abs(r - Math.round(r)) < 1e-9 && r >= 2 ? Math.round(r) - 1 : 0; };
+    for (let j = sysStart; j < measures.length && measures[j] !== curM; j++) { const k = trailingRests(measures[j]) || overK(j); if (k) cand.push([j, k]); }
+    if (!cand.length || cand.reduce((a, c) => a + c[1], 0) !== diff) return false;
+    for (const [j, k] of cand.reverse()) {
+      const at = measures[j]._first, e = out[at];
+      e.barLen = measures[j]._tsLen || e.barLen;
+      e.warnings = e.warnings.filter(w => !/보다 김/.test(w));
+      const tail = { repeatEnd: e.repeatEnd, ds: e.ds, dc: e.dc, fine: e.fine, toCoda: e.toCoda };
+      Object.assign(e, { repeatEnd: false, ds: false, dc: false, fine: false, toCoda: false });
+      const add = Array.from({ length: k }, (_, q) => ({ ...e, ...(q === k - 1 ? tail : {}), number: e.number + 1 + q, events: [], note: '쉼', kind: 'rest', labels: [], segno: false, codaStart: false,
+        repeatStart: false, sectionStart: false, fermata: false, warnings: q === 0 ? ['마디선이 숨겨져 있어 온쉼표마다 마디를 나눠 읽음'] : [], tempoMarks: [], timesigChange: false }));
+      // 늘려 읽은 마디의 뒤쪽 음은 나눈 마디로 옮긴다
+      const L = e.barLen;
+      for (const ev of e.events.slice()) { const t = typeof ev.t === 'object' ? ev.t : F(0); const q = Math.min(k, Math.floor(t.v / L.v + 1e-9)); if (q > 0) { e.events.splice(e.events.indexOf(ev), 1); add[q - 1].events.push({ ...ev, t: t.sub(L.mul(F(q))) }); add[q - 1].note = ''; add[q - 1].kind = 'normal'; } }
+      out.splice(at + 1, 0, ...add);
+      for (let q = at + 1 + k; q < out.length; q++) out[q].number += k;
+      for (let q = j + 1; q < measures.length; q++) if (measures[q]._first != null) measures[q]._first += k;
+    }
+    return true;
+  };
+  let curM = null;
   measures.forEach((m, mi) => {
+    curM = m;
     if (m.timesig) { ts = m.timesig; tsLen = F(ts[0], ts[1]); inferredTs = false; tsExplicit = true; }
     // 악보에 인쇄된 단 첫 마디 번호에 맞춘다 (숨긴 마디선이 있으면 번호가 건너뜀)
     const printed = printedAt.get(mi);
@@ -1648,6 +1685,7 @@ export function resolveBars(measures, systemNumbers = []) {
         num = printed;
       }
     }
+    if (printed && printed > num && printed - num < 40 && out.length && splitHiddenBars(printed - num)) num = printed;
     if (printed && printed > num && printed - num < 40 && out.length) {
       out[out.length - 1].warnings.push(`마디선이 보이지 않아 ${out[out.length - 1].number}~${printed - 1}마디를 한 마디로 읽음`);
       num = printed;
@@ -1658,6 +1696,7 @@ export function resolveBars(measures, systemNumbers = []) {
       const later = [...printedAt.entries()].filter(([k]) => k > mi).sort((a, b) => a[0] - b[0])[0];
       if (!later || later[1] > printed) num = printed;
     }
+    if (printedAt.has(mi)) sysStart = mi;
     let barLen = tsLen;
     let thisTs = ts, tsNote = '';
     // 박자표를 못 읽었거나 다른 경우: 두 성부 길이가 같으면 그 길이를 박자로 본다
@@ -1693,6 +1732,7 @@ export function resolveBars(measures, systemNumbers = []) {
       }
     }
     const marks = m.tempoMarks;
+    m._tsLen = tsLen;
     m._first = out.length; m._count = m.kind === 'multirest' ? m.multirest : 1; m.timesigLen = barLen.v;
     const flags = (k, cnt) => ({ segno: !!m.segno && k === 0, codaStart: !!m.codaStart && k === 0, volta: m.volta || null,
       ds: !!m.ds && k === cnt - 1, dc: !!m.dc && k === cnt - 1, fine: !!m.fine && k === cnt - 1, toCoda: !!m.toCoda && k === cnt - 1,
@@ -1891,7 +1931,9 @@ export async function loadScore(pdfjs, data, onPage) {
   const { layouts, lines } = assignLines(pages);
   const isFull = layouts.some(L => L.systems.some(g => g.length > 1));
   const title = (() => {
-    const g = pages[0]?.glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < 120 && g.code > 0xAC00) || [];
+    let g = pages[0]?.glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < 120 && g.code > 0xAC00) || [];
+    // 표지 쪽: 제목이 쪽 위쪽 1/3 안의 큰 글자로 따로 있다
+    if (!g.length && pages[0]) g = pages[0].glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < pages[0].height * 0.35 && g.code > 0xAC00 && g.size >= 18);
     if (!g.length) {
       // 한글이 없는 제목(영문 등): 맨 위의 가장 큰 글자 줄
       const all = (pages[0]?.glyphs || []).filter(g => !isMusicFont(g.font) && !g.font.includes('Engraver') && g.oy < 130 && g.code >= 32);
