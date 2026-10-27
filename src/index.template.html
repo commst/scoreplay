@@ -93,6 +93,14 @@ button { cursor: pointer; }
 .save-format-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin: 10px 0 2px; padding: 10px 12px; border:1px solid var(--line); border-radius: var(--r); background:var(--card); }
 .save-format-row label { font-weight:600; font-size:13px; color:var(--muted); }
 .save-format-row select { max-width:100%; min-width:230px; }
+.savebox { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); display: grid; gap: 10px; }
+.savebox-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.savebox h3 { margin: 0; font-size: 15px; }
+.savebox .save-format-row { margin: 0; padding: 0; border: 0; background: none; }
+.savebox .save-format-row .btn { margin-left: auto; }
+.savebox .hint { margin: 0; }
+.savebox .sspeed { width: 64px; }
+.savebox.flash { outline: 2px solid var(--accent); outline-offset: 2px; }
 .play { width: 54px; height: 54px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
 .play svg { width: 22px; height: 22px; fill: currentColor; }
 .pos { flex: 1 1 200px; min-width: 0; display: grid; gap: 6px; }
@@ -669,14 +677,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <div class="bar-track" id="track"><i id="trackFill"></i></div>
           </div>
           <button class="btn" id="exportJsonBtn" type="button">인식 결과 JSON 저장</button>
-          <button class="btn" id="saveBtn" type="button">MP3 저장 (128 kbps)</button>
-        </div>
-        <div class="save-format-row">
-          <label for="saveFormat">오디오 저장 형식</label>
-          <select id="saveFormat" class="mini">
-            <option value="mp3" selected>MP3 · 128 kbps (작은 용량, 기본값)</option>
-            <option value="wav">WAV · 무압축 고음질</option>
-          </select>
+          <button class="btn" id="saveJump" type="button">음원 저장…</button>
         </div>
         <div class="range">
           <label for="from">마디</label><input type="number" id="from" min="1" value="1" class="num">
@@ -701,7 +702,41 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <div class="order-row"><input id="orderText" class="num" spellcheck="false" autocomplete="off"><button class="x" id="orderAuto" type="button">자동으로</button></div>
           <p class="hint" id="orderHint">도돌이표, 1·2번 괄호, D.S.·D.C.·코다를 따라 정한 순서입니다. 틀렸으면 직접 고쳐 주세요. 예: 1-8, 1-4, 9-16</p>
         </div>
-        <p class="hint" id="saveHint">wav 파일은 zip으로 묶여 저장됩니다. 압축을 풀면 wav가 나옵니다.</p>
+        <section class="savebox" id="saveBox" aria-labelledby="saveTitle">
+          <div class="savebox-head">
+            <h3 id="saveTitle">음원 저장</h3>
+            <span class="pill" id="saveLinkState">재생 설정과 같음</span>
+          </div>
+          <div class="range">
+            <label for="sFrom">마디</label><input type="number" id="sFrom" min="1" value="1" class="num">
+            <span>부터</span><input type="number" id="sTo" min="1" value="8" class="num"><span>까지</span>
+            <button class="x" id="sAll" type="button">전곡</button>
+            <button class="x" id="sSync" type="button">재생 설정 가져오기</button>
+          </div>
+          <div class="opts">
+            <label><input type="checkbox" id="sRepeat" checked>도돌이표대로 반복</label>
+            <label><input type="checkbox" id="sCount" checked>카운트인</label>
+            <label><input type="checkbox" id="sMetro">메트로놈</label>
+            <label>쉬는 마디 박 짚기
+              <select id="sRest" class="mini">
+                <option value="off">끔</option>
+                <option value="beat">박만</option>
+                <option value="sub" selected>분박까지</option>
+              </select></label>
+            <label><input type="checkbox" id="sDyn" checked>셈여림 반영</label>
+            <label>속도 <input type="number" id="sSpeed" min="50" max="150" step="5" value="100" class="num sspeed">%</label>
+          </div>
+          <div class="save-format-row">
+            <label for="saveFormat">형식</label>
+            <select id="saveFormat" class="mini">
+              <option value="mp3" selected>MP3 · 128 kbps (작은 용량, 기본값)</option>
+              <option value="wav">WAV · 무압축 고음질</option>
+            </select>
+            <button class="btn primary" id="saveBtn" type="button">MP3 저장 (128 kbps)</button>
+          </div>
+          <p class="hint" id="saveSummary"></p>
+          <p class="hint" id="saveHint">wav 파일은 zip으로 묶여 저장됩니다. 압축을 풀면 wav가 나옵니다.</p>
+        </section>
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
@@ -730,7 +765,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd>실제로 칠 마디 순서입니다. 반복 기호를 잘못 읽었으면 직접 고칩니다. 쉼표(,)로 구간을 나누고 붙임표(-)로 범위를 적습니다.
               <span class="eg">1-8, 1-4, 9-16 → 1~8마디, 다시 1~4마디, 이어서 9~16마디</span></dd>
             <dt>MP3 · WAV 저장</dt>
-            <dd>지금 설정(범위, 속도, 소리, 카운트인, 메트로놈)을 그대로 소리 파일로 만듭니다. 기본은 MP3(128kbps, 작은 용량)이고 '오디오 저장 형식'에서 WAV(무압축)로 바꿀 수 있습니다. MP3 변환기는 처음 한 번 인터넷에서 받아 옵니다. 휴대폰에 넣어 두고 들으며 연습할 수 있습니다.</dd>
+            <dd><b>음원 저장</b> 칸에서 저장할 마디 범위(몇 마디부터 몇 마디까지), 카운트인, 메트로놈, 쉬는 마디 박 짚기, 도돌이표 반복, 셈여림, 속도를 정해 소리 파일로 만듭니다. 처음에는 재생 설정을 그대로 따라가고, 저장 칸을 직접 바꾸면 그때부터 따로 정해집니다([재생 설정 가져오기]로 다시 맞춤). 저장해도 재생 중인 소리는 바뀌지 않습니다. 켜 둔 줄과 악기 소리·음량은 줄 설정을 따릅니다. 파일 이름에 마디 범위·속도·카운트인 여부가 붙습니다. 기본은 MP3(128kbps, 작은 용량)이고 '형식'에서 WAV(무압축)로 바꿀 수 있습니다. MP3 변환기는 처음 한 번 인터넷에서 받아 옵니다. 휴대폰에 넣어 두고 들으며 연습할 수 있습니다.</dd>
           </dl>
         </details>
       </section>
@@ -1552,22 +1587,29 @@ function clampRange() {
   $('from').value = f; $('to').value = t;
 }
 
-async function buildAudio(onProgress) {
+// 재생 칸의 설정 (연주 범위·반복·카운트인 등)
+function playOpts() {
+  clampRange();
+  return { from: +$('from').value, to: +$('to').value, repeats: $('optRepeat').checked, countIn: $('optCount').checked, metronome: $('optMetro').checked,
+    restCount: $('optRest').value, dyn: $('optDyn').checked, speed: +$('speed').value };
+}
+// o를 주면(음원 저장) 재생용 소리는 그대로 두고 따로 만든 소리를 돌려준다
+async function buildAudio(onProgress, o = null) {
+  const forSave = !!o; o = o || playOpts();
   if (!state.sounds) state.sounds = { ...makeSounds(), ...decodeRecorded(RECORDED_DATA) };
   bankFailed.clear();
   for (const v of Object.values(currentMelodic())) { const b = bankOf(v.inst); if (b) await loadBank(b); }
   const failed = Object.values(currentMelodic()).map(v => bankOf(v.inst)).filter(b => b && bankFailed.has(b));
   if (failed.length) showMsg(`${[...new Set(failed)].map(b => INSTRUMENTS[b].name.replace(' (녹음)', '')).join(', ')} 녹음 소리를 받지 못해 합성음으로 연주합니다. 인터넷 연결을 확인하고 다시 재생해 보세요.`);
-  clampRange();
-  const from = +$('from').value, to = +$('to').value;
-  const full = state.manualOrder || playbackOrder(state.bars, { repeats: $('optRepeat').checked });
+  const { from, to } = o;
+  const full = state.manualOrder || playbackOrder(state.bars, { repeats: o.repeats });
   let order = full.filter(k => state.bars[k].number >= from && state.bars[k].number <= to);
   if (!order.length) order = state.bars.map((b, i) => i).filter(k => state.bars[k].number >= from && state.bars[k].number <= to);
   const plan = renderPlan(state.bars, order, {
-    tempoRows: state.tempoRows, speed: +$('speed').value / 100, sounds: currentSounds(), useLvl: $('optDyn').checked,
+    tempoRows: state.tempoRows, speed: o.speed / 100, sounds: currentSounds(), useLvl: o.dyn,
     melodic: currentMelodic(), lineGain: currentGains(),
-    countIn: $('optCount').checked, metronome: $('optMetro').checked, restCount: $('optRest').value,
-    dyn: $('optDyn').checked && state.marks.dyn.length ? state.marks.dyn : null,
+    countIn: o.countIn, metronome: o.metronome, restCount: o.restCount,
+    dyn: o.dyn && state.marks.dyn.length ? state.marks.dyn : null,
     tempo: state.marks.tempo, ritF: (+$('ritF').value || 80) / 100, accF: (+$('accF').value || 120) / 100,
   });
   // 선율 음은 조금씩 나눠 합성해 휴대폰에서도 화면이 멈추지 않게
@@ -1584,6 +1626,7 @@ async function buildAudio(onProgress) {
   if (peak > 0) { const k = 0.89 / peak; for (let i = 0; i < raw.length; i++) raw[i] *= k; }
   // 휴대폰 메모리를 아끼려고 소리 데이터는 wav 파일 하나로만 들고 있는다
   const wavBlob = new Blob([encodeWav(raw)], { type: 'audio/wav' });
+  if (forSave) return { plan, blob: wavBlob };
   if (audioUrl) URL.revokeObjectURL(audioUrl);
   audioUrl = URL.createObjectURL(wavBlob);
   state.rendered = { plan, blob: wavBlob, url: audioUrl };
@@ -1607,9 +1650,9 @@ function fmt(s) { s = Math.max(0, s); return `${Math.floor(s / 60)}:${String(Mat
 const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
 function unlockAudio() { if (audio.dataset.unlocked) return; audio.src = SILENT; const p = audio.play(); if (p && p.catch) p.catch(() => {}); audio.dataset.unlocked = '1'; }
 // 빠르기를 못 읽은 구간이 연주 범위에 있으면 재생하지 않고 숫자를 넣으라고 알린다
-function tempoBlocked() {
+function tempoBlocked(range) {
   if (!state.bars.length) return false;
-  const from = +$('from').value || 1, to = +$('to').value || lastBar();
+  const from = range ? range.from : (+$('from').value || 1), to = range ? range.to : (+$('to').value || lastBar());
   const rows = [...state.tempoRows].sort((a, b) => a.start - b.start);
   const miss = rows.filter((r, i) => { const end = i + 1 < rows.length ? rows[i + 1].start - 1 : lastBar(); return !(r.bpm > 0) && r.start <= to && end >= from; });
   if (!miss.length) return false;
@@ -1625,11 +1668,11 @@ async function play(offset = 0) {
   if (tempoBlocked()) { stop(true); return; }
   unlockAudio();
   if (state.dirty || !state.rendered) {
-    $('playBtn').disabled = true; $('saveBtn').disabled = true;
+    $('playBtn').disabled = true;
     tick.html = null; $('nowText').innerHTML = '<span class="busy">소리를 만드는 중… <span class="num" id="pct">0%</span></span>';
     await new Promise(r => setTimeout(r, 30));
     try { await buildAudio(p => { const el = $('pct'); if (el) el.textContent = Math.round(p * 100) + '%'; }); }
-    finally { $('playBtn').disabled = false; $('saveBtn').disabled = false; }
+    finally { $('playBtn').disabled = false; }
   }
   stop(true);
   if (audio.src !== state.rendered.url) audio.src = state.rendered.url;
@@ -1749,18 +1792,48 @@ function updateSaveFormatUI() {
 }
 $('saveFormat').addEventListener('change', updateSaveFormatUI);
 (async () => { try { downloads = await window.claude?.use?.('downloads'); } catch (e) { downloads = null; } updateSaveFormatUI(); })();
+// ---------- 음원 저장 칸: 저장할 마디 범위와 카운트인 등 옵션 (처음에는 재생 설정을 따라감) ----------
+const SAVE_IDS = ['sFrom', 'sTo', 'sRepeat', 'sCount', 'sMetro', 'sRest', 'sDyn', 'sSpeed'];
+let saveLinked = true;
+function syncSaveFromPlay() {
+  const o = playOpts();
+  $('sFrom').value = o.from; $('sTo').value = o.to; $('sRepeat').checked = o.repeats; $('sCount').checked = o.countIn;
+  $('sMetro').checked = o.metronome; $('sRest').value = o.restCount; $('sDyn').checked = o.dyn; $('sSpeed').value = o.speed;
+  saveSummary();
+}
+function saveOpts() {
+  let f = Math.max(1, Math.min(lastBar(), +$('sFrom').value || 1)), t = Math.max(1, Math.min(lastBar(), +$('sTo').value || lastBar()));
+  if (t < f) [f, t] = [t, f];
+  $('sFrom').value = f; $('sTo').value = t;
+  const sp = Math.max(50, Math.min(150, +$('sSpeed').value || 100)); $('sSpeed').value = sp;
+  return { from: f, to: t, repeats: $('sRepeat').checked, countIn: $('sCount').checked, metronome: $('sMetro').checked, restCount: $('sRest').value, dyn: $('sDyn').checked, speed: sp };
+}
+function saveSummary() {
+  const o = saveOpts();
+  const opt = [o.countIn && '카운트인', o.metronome && '메트로놈', o.restCount !== 'off' && '쉬는 마디 박', o.repeats && '도돌이표 반복', o.dyn && '셈여림'].filter(Boolean);
+  $('saveSummary').textContent = `${o.from}~${o.to}마디 · 속도 ${o.speed}%${opt.length ? ' · ' + opt.join(', ') : ''} 설정으로 저장합니다. 켜 둔 줄과 악기 소리·음량은 위 줄 설정을 따릅니다.`;
+  $('saveLinkState').textContent = saveLinked ? '재생 설정과 같음' : '저장용 설정';
+}
+for (const id of SAVE_IDS) $(id).addEventListener('change', () => { saveLinked = false; saveSummary(); });
+$('sAll').addEventListener('click', () => { $('sFrom').value = 1; $('sTo').value = lastBar(); saveLinked = false; saveSummary(); });
+$('sSync').addEventListener('click', () => { saveLinked = true; syncSaveFromPlay(); });
+// 재생 설정을 바꾸면, 저장 칸을 따로 고치기 전까지는 함께 바뀐다
+for (const id of ['from', 'to', 'optRepeat', 'optCount', 'optMetro', 'optRest', 'optDyn', 'speed', 'rangeAll']) $(id).addEventListener(id === 'rangeAll' ? 'click' : 'change', () => { if (saveLinked) syncSaveFromPlay(); });
+$('saveJump').addEventListener('click', () => { const b = $('saveBox'); b.scrollIntoView({ block: 'center', behavior: 'smooth' }); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1200); });
 $('saveBtn').addEventListener('click', async () => {
-  if (tempoBlocked()) return;
+  const o = saveOpts();
+  if (tempoBlocked(o)) return;
   const btn = $('saveBtn'); btn.disabled = true; const label = btn.textContent; btn.textContent = '만드는 중…';
   try {
-    if (state.dirty || !state.rendered) { await new Promise(r => setTimeout(r, 30)); await buildAudio(p => { btn.textContent = `오디오 생성 중… ${Math.round(p * 100)}%`; }); }
-    const base = (state.title || '합주').replace(/[\\/:*?"<>|]/g, '') + `_${$('from').value}-${$('to').value}마디_${$('speed').value}%`;
+    await new Promise(r => setTimeout(r, 30));
+    const made = await buildAudio(p => { btn.textContent = `오디오 생성 중… ${Math.round(p * 100)}%`; }, o);
+    const base = (state.title || '합주').replace(/[\\/:*?"<>|]/g, '') + `_${o.from}-${o.to}마디_${o.speed}%` + (o.countIn ? '_카운트인' : '') + (o.metronome ? '_메트로놈' : '');
     const format = $('saveFormat').value;
-    let blob = state.rendered.blob;
+    let blob = made.blob;
     let ext = 'wav';
     if (format === 'mp3') {
       btn.textContent = 'MP3 변환 중…';
-      blob = await encodeMp3FromWav(state.rendered.blob, 128, p => { btn.textContent = `MP3 변환 중… ${Math.round(p * 100)}%`; });
+      blob = await encodeMp3FromWav(made.blob, 128, p => { btn.textContent = `MP3 변환 중… ${Math.round(p * 100)}%`; });
       ext = 'mp3';
     }
     if (downloads) {
@@ -1991,6 +2064,8 @@ function applySelection(first = false) {
   $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 더한 악보 ${state.extras.length}개` : '');
   if (master.r.mismatches.length) showMsg(`악보에 인쇄된 마디 번호와 읽은 마디 수가 ${master.r.mismatches.length}곳에서 다릅니다(처음: ${master.r.mismatches[0][1]}마디 근처). 그 뒤 마디는 번호가 밀렸을 수 있습니다.`);
   if (first || +$('to').value > lastBar()) { $('from').value = 1; $('to').value = lastBar(); }
+  if (first) saveLinked = true;
+  if (saveLinked) syncSaveFromPlay(); else saveSummary();
   changed(); renderTempo(); renderBars(); refreshOrder(); updateEditTools(results);
 }
 
@@ -2210,5 +2285,5 @@ state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
 state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
-renderTempo(); renderBars(); refreshOrder(); renderFileLists();
+renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay();
 </script>
