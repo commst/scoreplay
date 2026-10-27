@@ -117,6 +117,32 @@ button { cursor: pointer; }
 .b:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .b-stop { position: absolute; z-index: 2; top: 4px; right: 4px; display: none; border: 1px solid var(--warn); border-radius: 5px; background: var(--paper); color: var(--warn); padding: 4px 6px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 1px 4px #0002; }
 .b:hover .b-stop, .b:focus-within .b-stop { display: inline-flex; align-items: center; gap: 3px; }
+/* 마디별 음 수정 */
+.b-edit { position: absolute; z-index: 2; right: 4px; bottom: 4px; display: none; border: 1px solid var(--accent); border-radius: 5px; background: var(--card); color: var(--accent); padding: 3px 6px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 1px 4px #0002; }
+.b:hover .b-edit, .b:focus-within .b-edit { display: inline-flex; align-items: center; gap: 3px; }
+@media (hover: none) { .b-edit { display: inline-flex; padding: 2px 5px; font-size: 10.5px; } .b .tag { padding-right: 46px; } }
+.b.edited .h .n::after { content: " ✎"; color: var(--accent); }
+.edit-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.edit-tools .hint { margin: 0; flex: 1 1 180px; }
+.edit-back { position: fixed; inset: 0; z-index: 10001; background: #0006; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.edit-dlg { width: min(640px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 48px #0004; padding: 16px; }
+.edit-dlg h3 { margin: 0; font-size: 17px; }
+.edit-dlg .ed-sub { color: var(--muted); font-size: 12.5px; margin: 2px 0 10px; }
+.edit-dlg .ed-line { border-top: 1px solid var(--line); padding: 10px 0 4px; }
+.edit-dlg .ed-line > b { font-size: 13.5px; }
+.edit-dlg .ed-voice { color: var(--muted); font-size: 12px; margin: 6px 0 2px; }
+.edit-dlg .ed-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 6px 8px; border-radius: 9px; margin: 3px 0; background: var(--paper); }
+.edit-dlg .ed-row.changed { box-shadow: inset 3px 0 0 var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--paper)); }
+.edit-dlg .ed-pos { min-width: 54px; font-size: 12px; color: var(--muted); }
+.edit-dlg .ed-pitch { display: inline-flex; align-items: center; gap: 3px; }
+.edit-dlg .ed-pitch b { min-width: 42px; text-align: center; font-size: 13.5px; }
+.edit-dlg .ed-pitch button, .edit-dlg .ed-rev { border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: 3px 6px; font: inherit; font-size: 12px; cursor: pointer; min-width: 30px; }
+.edit-dlg .ed-pitch button:hover, .edit-dlg .ed-rev:hover { border-color: var(--accent); }
+.edit-dlg .ed-orig { font-size: 11.5px; color: var(--muted); }
+.edit-dlg select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); font-size: 12.5px; }
+.edit-dlg .ed-warn { color: var(--warn); font-size: 12px; margin: 4px 0; }
+.edit-dlg .ed-foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 12px; }
+@media (max-width: 520px) { .edit-back { align-items: flex-end; padding: 0; } .edit-dlg { border-radius: 16px 16px 0 0; max-height: 88vh; } }
 .b-stop:hover { background: var(--warn-bg); }
 .b-stop:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .b.warn { border-color: var(--warn); box-shadow: inset 3px 0 0 var(--warn); }
@@ -648,6 +674,12 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
           <p class="hint">마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.</p>
           <button class="btn stop-near-bars" id="barsStopBtn" type="button" aria-label="재생 정지">⏹ 정지</button>
         </div>
+        <div class="edit-tools" id="editTools" hidden>
+          <p class="hint" id="editStatus">마디의 ✎ 수정 버튼으로 음정과 음 길이를 고칠 수 있습니다. 고친 내용은 자동 저장됩니다.</p>
+          <button class="btn" type="button" id="editExport">수정 내보내기</button>
+          <label class="btn" for="editImport">수정 가져오기</label><input type="file" id="editImport" accept="application/json,.json" hidden>
+          <button class="btn" type="button" id="editClearAll">수정 모두 되돌리기</button>
+        </div>
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
@@ -656,6 +688,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
               <b>큰 점</b>은 악센트, 앞의 <b>작은 점</b>은 꾸밈음, <b>가로 막대</b>는 롤입니다.</dd>
             <dt>마디 위 표시</dt>
             <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. 𝄆 𝄇는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
+            <dt>음 수정 (✎)</dt>
+            <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
+              고친 내용은 이 기기에 바로 저장되어 같은 악보 PDF를 다시 올리면 자동으로 적용되고, 고친 마디는 번호 옆에 ✎가 붙습니다. 음마다 [↺ 되돌리기], 마디마다 [이 마디 모두 되돌리기], 악보 전체는 [수정 모두 되돌리기]로 되돌리고, 방금 한 수정은 Ctrl+Z로 취소합니다.
+              [수정 내보내기]로 파일을 받아 두었다가 다른 기기에서 같은 악보를 올린 뒤 [수정 가져오기]로 불러올 수 있습니다. 휴대폰 브라우저는 오래 쓰지 않으면 저장 내용을 지우기도 하니 많이 고쳤다면 내보내 두세요.</dd>
             <dt>노란 테두리</dt>
             <dd>음표 길이가 박자와 맞지 않는 등 인식이 불확실한 마디입니다. 마우스를 올리거나 위의 노란 안내를 보면 이유가 나옵니다. 악보와 다르게 들리면 그 마디 번호를 알려 주세요.</dd>
           </dl>
@@ -745,7 +781,7 @@ const UNIT_LABEL = { q: '♩ 4분', dq: '♩. 점4분', e: '♪ 8분', h: '𝅗�
 const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
-  score: null, lineIds: [], lineRes: {}, parts: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
+  score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
   marks: { dyn: [], tempo: [] }, manualOrder: null };
 let raf = 0, audioUrl = null;
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
@@ -977,6 +1013,243 @@ function hideBarTip() {
   barTipEl.classList.remove('show');
   barTipHideTimer = setTimeout(() => { if (barTipEl) barTipEl.hidden = true; }, 140);
 }
+// ---------- 마디별 음 수정 (음정·음 길이) ----------
+// 수정은 악보 PDF 내용으로 만든 지문(fp)별로 이 브라우저에 저장한다: { lines: { 줄: { 마디순번: { '성부|순번': 수정 } } } }
+// 수정마다 원래 값(o)을 함께 적어 두고, 원래 값이 그대로일 때만 적용한다 (인식이 바뀌면 엉뚱한 음을 고치지 않게).
+const EDIT_KEY = 'hapju-edits:';
+const editStore = new Map(), undoStack = [];
+function scoreFingerprint(u8) {
+  let h1 = 0xdeadbeef ^ u8.length, h2 = 0x41c6ce57 ^ u8.length;
+  for (let i = 0; i < u8.length; i++) { const c = u8[i]; h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0') + '-' + u8.length;
+}
+function editsFor(fp) {
+  if (!fp) return null;
+  let e = editStore.get(fp);
+  if (!e) { try { const s = localStorage.getItem(EDIT_KEY + fp); if (s) e = JSON.parse(s); } catch (x) {} e = e && e.lines ? e : { lines: {} }; editStore.set(fp, e); }
+  return e;
+}
+function countEdits(e) { let n = 0; for (const L of Object.values((e && e.lines) || {})) for (const B of Object.values(L)) n += Object.keys(B).length; return n; }
+function saveEdits(sc) {
+  const e = editStore.get(sc.fp); if (!e) return;
+  e.title = sc.title || ''; e.file = sc.fileName || ''; e.updated = new Date().toISOString();
+  try { if (countEdits(e)) localStorage.setItem(EDIT_KEY + sc.fp, JSON.stringify(e)); else localStorage.removeItem(EDIT_KEY + sc.fp); }
+  catch (x) { showMsg('이 브라우저에는 수정 내용을 저장하지 못했습니다(사생활 보호 모드 등). [수정 내보내기]로 파일에 보관해 주세요.'); }
+}
+const parseFr = s => { const [n, d] = String(s).split('/').map(Number); return F(n, d || 1); };
+// 한 성부의 음 목록 (붙임줄로 이어진 앞 마디의 꼬리는 빼고, 시작 박 순서)
+function noteList(b, v) { return b.events.map((e, i) => ({ e, i })).filter(x => x.e.voice === v && !x.e.tie).sort((a, c) => a.e.t.v - c.e.t.v || a.i - c.i).map(x => x.e); }
+function origOf(e) { return { t: String(e.t), d: String(e.dur), m: e.midis ? e.midis.slice() : null }; }
+const sameOrig = (a, b) => a.t === b.t && a.d === b.d && JSON.stringify(a.m) === JSON.stringify(b.m);
+// 줄 하나의 해석 결과에 저장된 수정을 입힌다 (원본은 그대로 두고 바뀐 마디만 복사)
+function applyEdits(raw, sc, srcKey) {
+  const E = sc && sc.fp ? editsFor(sc.fp) : null, L = E && E.lines[srcKey];
+  if (!L || !Object.keys(L).length) return raw;
+  let applied = 0, miss = 0;
+  const bars = raw.bars.map((b, bi) => {
+    const B = L[bi]; if (!B || !Object.keys(B).length) return b;
+    const nb = { ...b, events: b.events.map(e => ({ ...e })), warnings: [...b.warnings], edited: true };
+    for (const v of ['R', 'L']) {
+      let shift = ZERO;
+      noteList(nb, v).forEach((e, ord) => {
+        const o = origOf(e);
+        if (shift.n) e.t = e.t.add(shift);
+        const rec = B[v + '|' + ord]; if (!rec) return;
+        if (!sameOrig(rec.o, o)) { miss++; return; }
+        applied++; e.edited = true;
+        if (rec.m && e.midis) e.midis = rec.m.slice();
+        if (rec.d) {
+          const nd = parseFr(rec.d), delta = nd.sub(e.dur);
+          if (e.sus) e.sus = e.sus.add(delta);
+          if (e.rollDur) e.rollDur = nd;
+          e.dur = nd; shift = shift.add(delta);
+        }
+      });
+      const vn = nb.events.filter(e => e.voice === v && !e.tie);
+      if (vn.some(e => e.t.add(e.dur).gt(nb.barLen))) nb.warnings.push(`수정한 음 길이가 마디를 넘음 (${v === 'R' ? '윗' : '아랫'}성부)`);
+    }
+    return nb;
+  });
+  return { ...raw, bars, editApplied: applied, editMiss: miss };
+}
+function srcInfo(key) {
+  const item = state.lineList.find(l => cfgKey(l.id) === key);
+  const sc = (item && item.sourceScore) || state.score;
+  const sl = item && Object.prototype.hasOwnProperty.call(item, 'sourceLineId') ? item.sourceLineId : (item ? item.id : null);
+  return { sc, srcKey: sl == null ? 'p' : String(sl) };
+}
+function loadedSources() { return state.sourceScores.length ? state.sourceScores : (state.score && state.score.fp ? [state.score] : []); }
+function reapplyEdits() {
+  for (const k of Object.keys(state.lineRaw)) { const { sc, srcKey } = srcInfo(k); state.lineRes[k] = applyEdits(state.lineRaw[k], sc, srcKey); }
+  const keepOrder = state.manualOrder;
+  applySelection();
+  if (keepOrder) { state.manualOrder = keepOrder; refreshOrder(); }
+  if (editorBar != null) renderEditor();
+}
+function pushUndo(sc) { undoStack.push({ fp: sc.fp, snap: JSON.stringify(editsFor(sc.fp)) }); if (undoStack.length > 100) undoStack.shift(); }
+// 수정 하나 바꾸기: patch = { m: [...] } 또는 { d: '1/4' }, null이면 그 음 되돌리기
+function setEdit(key, bi, v, ord, rawEv, patch) {
+  const { sc, srcKey } = srcInfo(key); if (!sc || !sc.fp) return;
+  pushUndo(sc);
+  const E = editsFor(sc.fp), L = E.lines[srcKey] || (E.lines[srcKey] = {}), B = L[bi] || (L[bi] = {}), id = v + '|' + ord;
+  if (patch == null) delete B[id];
+  else {
+    const o = origOf(rawEv), rec = { ...(B[id] && sameOrig(B[id].o, o) ? B[id] : {}), o, ...patch };
+    if (rec.m && JSON.stringify(rec.m) === JSON.stringify(o.m)) delete rec.m;
+    if (rec.d && rec.d === o.d) delete rec.d;
+    if (rec.m || rec.d) B[id] = rec; else delete B[id];
+  }
+  if (!Object.keys(B).length) delete L[bi];
+  if (!Object.keys(L).length) delete E.lines[srcKey];
+  saveEdits(sc); reapplyEdits();
+}
+function undoEdit() {
+  const u = undoStack.pop(); if (!u) return false;
+  editStore.set(u.fp, JSON.parse(u.snap));
+  const sc = loadedSources().find(s => s.fp === u.fp); if (sc) saveEdits(sc);
+  reapplyEdits(); return true;
+}
+function updateEditTools(results) {
+  const srcs = loadedSources();
+  $('editTools').hidden = !srcs.length;
+  if (!srcs.length) return;
+  const total = srcs.reduce((n, s) => n + countEdits(editsFor(s.fp)), 0);
+  const miss = (results || []).reduce((n, x) => n + (x.r.editMiss || 0), 0);
+  $('editStatus').textContent = (total ? `이 악보에 저장된 수정 ${total}곳 (마디 번호 옆 ✎).` : '마디의 ✎ 수정 버튼으로 음정과 음 길이를 고칠 수 있습니다.') + ' 고친 내용은 이 기기에 자동 저장됩니다.'
+    + (miss ? ` 악보 인식이 달라져 ${miss}곳은 적용하지 못했습니다.` : '');
+  $('editClearAll').disabled = !total; $('editExport').disabled = !total;
+}
+
+// ----- 수정 창 -----
+let editorBar = null, editorEl = null;
+const PITCH_NAMES = ['도', '도♯', '레', '레♯', '미', '파', '파♯', '솔', '솔♯', '라', '라♯', '시'];
+const pitchName = m => PITCH_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+const DUR_OPTS = [['1/32', '32분음표'], ['1/24', '셋잇단 16분'], ['1/16', '16분음표'], ['3/32', '점16분음표'], ['1/12', '셋잇단 8분'], ['1/8', '8분음표'], ['3/16', '점8분음표'], ['1/6', '셋잇단 4분'], ['1/4', '4분음표'], ['3/8', '점4분음표'], ['1/2', '2분음표'], ['3/4', '점2분음표'], ['1', '온음표']];
+const durName = s => (DUR_OPTS.find(o => o[0] === s) || [s, `${s} (온음표=1)`])[1];
+function openEditor(n) { editorBar = n; hideBarTip(); renderEditor(); }
+function closeEditor() { editorBar = null; if (editorEl) { editorEl.remove(); editorEl = null; } }
+function renderEditor() {
+  const n = editorBar; if (n == null) return;
+  if (!editorEl) {
+    editorEl = document.createElement('div'); editorEl.className = 'edit-back';
+    editorEl.addEventListener('click', ev => { if (ev.target === editorEl) closeEditor(); });
+    document.body.appendChild(editorEl);
+  }
+  const keepScroll = editorEl.firstChild ? editorEl.firstChild.scrollTop : 0;
+  editorEl.textContent = '';
+  const dlg = tipNode('div', 'edit-dlg'); dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-label', `${n}마디 음 수정`);
+  const bar = state.bars.find(b => b.number === n);
+  dlg.append(tipNode('h3', '', `${n}마디 음 수정`));
+  dlg.append(tipNode('div', 'ed-sub', `박자 ${bar ? bar.timesig.join('/') : ''} · 고치면 바로 저장되고 다음에 이 악보를 열 때도 적용됩니다. 음 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.`));
+  let any = false, barEdited = false;
+  for (const id of state.lineIds) {
+    const key = cfgKey(id), raw = state.lineRaw[key], cur = state.lineRes[key]; if (!raw || !cur) continue;
+    const bi = raw.bars.findIndex(b => b.number === n); if (bi < 0) continue;
+    const rb = raw.bars[bi], cb = cur.bars[bi], cfg = state.lineCfg[key] || {};
+    const sec = tipNode('div', 'ed-line'); sec.append(tipNode('b', '', lineLabel(id) || `${key}번 줄`));
+    let has = false;
+    for (const v of ['R', 'L']) {
+      const rl = noteList(rb, v), cl = noteList(cb, v); if (!rl.length) continue;
+      has = true;
+      const pitched = rl.some(e => e.midis && e.midis.length);
+      sec.append(tipNode('div', 'ed-voice', v === 'R' ? '윗성부 (기둥이 위로)' : '아랫성부 (기둥이 아래로)'));
+      rl.forEach((re, ord) => {
+        const ce = cl[ord] || re, rec = ((editsFor(srcInfo(key).sc?.fp)?.lines[srcInfo(key).srcKey] || {})[bi] || {})[v + '|' + ord];
+        const changed = !!rec; if (changed) barEdited = true;
+        const row = tipNode('div', 'ed-row' + (changed ? ' changed' : ''));
+        row.append(tipNode('span', 'ed-pos', `${ord + 1}. ${+(ce.t.v / cb.barLen.v * (cb.timesig[0] || 4) + 1).toFixed(2)}박`));
+        if (ce.midis && ce.midis.length) {
+          ce.midis.forEach((mm, j) => {
+            const box = tipNode('span', 'ed-pitch');
+            const mk = (label, delta, title) => { const b = tipNode('button', '', label); b.type = 'button'; b.title = title; b.addEventListener('click', () => { const nm = ce.midis.slice(); nm[j] = Math.max(12, Math.min(120, nm[j] + delta)); setEdit(key, bi, v, ord, re, { m: nm }); }); return b; };
+            box.append(mk('↓8', -12, '한 옥타브 내림'), mk('♭', -1, '반음 내림'), tipNode('b', '', pitchName(mm)), mk('♯', 1, '반음 올림'), mk('↑8', 12, '한 옥타브 올림'));
+            row.append(box);
+          });
+          if (rec && rec.m) row.append(tipNode('span', 'ed-orig', `원래 ${re.midis.map(pitchName).join('·')}`));
+        } else if (!pitched) {
+          const snd = cfg[v] || (v === 'R' ? '윗성부' : '아랫성부');
+          row.append(tipNode('span', '', `${snd}${re.roll ? ' 굴림' : ''}${re.accent ? ' (강세)' : ''}`));
+        } else row.append(tipNode('span', 'ed-orig', '쉼'));
+        const sel = document.createElement('select'); sel.title = '음 길이';
+        const curD = String(ce.dur), opts = DUR_OPTS.some(o => o[0] === curD) ? DUR_OPTS : [[curD, durName(curD)], ...DUR_OPTS];
+        for (const [val, lab] of opts) { const o = document.createElement('option'); o.value = val; o.textContent = lab; sel.append(o); }
+        sel.value = curD;
+        sel.addEventListener('change', () => setEdit(key, bi, v, ord, re, { d: sel.value }));
+        row.append(sel);
+        if (rec && rec.d) row.append(tipNode('span', 'ed-orig', `원래 ${durName(String(re.dur))}`));
+        if (changed) { const rv = tipNode('button', 'ed-rev', '↺ 되돌리기'); rv.type = 'button'; rv.addEventListener('click', () => setEdit(key, bi, v, ord, re, null)); row.append(rv); }
+        sec.append(row);
+      });
+    }
+    for (const w of cb.warnings.filter(w => w.startsWith('수정한'))) sec.append(tipNode('div', 'ed-warn', '⚠ ' + w));
+    if (has) { dlg.append(sec); any = true; }
+  }
+  if (!any) dlg.append(tipNode('p', 'hint', '켜 둔 줄에서 이 마디에 고칠 음이 없습니다. 줄 고르기에서 고칠 줄을 켜 주세요.'));
+  const foot = tipNode('div', 'ed-foot');
+  const btn = (label, fn, cls = 'btn') => { const b = tipNode('button', cls, label); b.type = 'button'; b.addEventListener('click', fn); return b; };
+  foot.append(btn('▶ 이 마디부터 듣기', () => { const k = n; closeEditor(); playFromBar(k); }));
+  if (barEdited) foot.append(btn('이 마디 모두 되돌리기', () => clearBar(n)));
+  foot.append(btn('닫기', closeEditor, 'btn primary'));
+  dlg.append(foot);
+  editorEl.append(dlg);
+  dlg.scrollTop = keepScroll;
+}
+function clearBar(n) {
+  for (const id of state.lineIds) {
+    const key = cfgKey(id), raw = state.lineRaw[key]; if (!raw) continue;
+    const bi = raw.bars.findIndex(b => b.number === n); const { sc, srcKey } = srcInfo(key);
+    const E = sc && sc.fp && editsFor(sc.fp); if (!E || !E.lines[srcKey] || !E.lines[srcKey][bi]) continue;
+    pushUndo(sc); delete E.lines[srcKey][bi]; if (!Object.keys(E.lines[srcKey]).length) delete E.lines[srcKey]; saveEdits(sc);
+  }
+  reapplyEdits();
+}
+$('editClearAll').addEventListener('click', () => {
+  const srcs = loadedSources(), total = srcs.reduce((n, s) => n + countEdits(editsFor(s.fp)), 0); if (!total) return;
+  if (!confirm(`이 악보의 수정 ${total}곳을 모두 되돌릴까요? (Ctrl+Z로 다시 살릴 수 있습니다)`)) return;
+  for (const s of srcs) { pushUndo(s); editStore.set(s.fp, { lines: {} }); saveEdits(s); }
+  reapplyEdits();
+});
+$('editExport').addEventListener('click', () => {
+  const scores = loadedSources().map(s => ({ fp: s.fp, file: s.fileName || '', title: s.title || '', lines: editsFor(s.fp).lines })).filter(s => Object.keys(s.lines).length);
+  if (!scores.length) return;
+  const data = { format: 'hapju-edits', version: 1, exportedAt: new Date().toISOString(), scores };
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `${(state.title || '악보').replace(/[\\/:*?"<>|]/g, '_')}_수정.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
+});
+$('editImport').addEventListener('change', async ev => {
+  const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
+  let data; try { data = JSON.parse(await f.text()); } catch (e) { showMsg('수정 파일을 읽지 못했습니다.'); return; }
+  if (!data || data.format !== 'hapju-edits' || !Array.isArray(data.scores)) { showMsg('합주연습기에서 내보낸 수정 파일이 아닙니다.'); return; }
+  const srcs = loadedSources(); if (!srcs.length) { showMsg('먼저 악보를 올린 뒤 수정을 가져와 주세요.'); return; }
+  let used = 0;
+  for (const s of data.scores) {
+    let tgt = srcs.find(x => x.fp === s.fp);
+    if (!tgt) {
+      // 다른 PDF 파일: 같은 곡을 다시 저장한 경우를 위해 물어보고 적용 (원래 음이 같은 곳만 적용된다)
+      const cand = srcs.length === 1 && data.scores.length === 1 ? srcs[0] : srcs.find(x => x.fileName && x.fileName === s.file);
+      if (!cand || !confirm(`가져온 수정은 다른 악보 파일(${s.file || s.title || '이름 없음'})에서 만든 것입니다. 지금 악보(${cand.fileName || cand.title})에 적용할까요? 음이 맞지 않는 곳은 건너뜁니다.`)) continue;
+      tgt = cand;
+    }
+    pushUndo(tgt);
+    const E = editsFor(tgt.fp);
+    for (const [lk, L] of Object.entries(s.lines || {})) { const D = E.lines[lk] || (E.lines[lk] = {}); for (const [bi, B] of Object.entries(L)) D[bi] = { ...(D[bi] || {}), ...B }; }
+    saveEdits(tgt); used++;
+  }
+  if (!used) { showMsg('이 악보에 맞는 수정이 없습니다.'); return; }
+  reapplyEdits();
+  const miss = Object.values(state.lineRes).reduce((n, r) => n + (r.editMiss || 0), 0);
+  showMsg(`수정을 가져왔습니다.` + (miss ? ` ${miss}곳은 이 악보와 음이 맞지 않아 건너뛰었습니다.` : ''));
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && editorBar != null) { closeEditor(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && (ev.key === 'z' || ev.key === 'Z')) {
+    const t = ev.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA)$/.test(t.tagName))) return;
+    if (undoEdit()) ev.preventDefault();
+  }
+});
 function renderBars() {
   const box = $('bars'); box.textContent = '';
   const frag = document.createDocumentFragment();
@@ -1010,11 +1283,19 @@ function renderBars() {
     stopBtn.title = '재생 정지';
     stopBtn.addEventListener('click', ev => { ev.stopPropagation(); stop(); });
     el.appendChild(stopBtn);
+    if (b.events.some(e => e.edited)) el.classList.add('edited');
+    if (loadedSources().length) {
+      const edBtn = document.createElement('button');
+      edBtn.type = 'button'; edBtn.className = 'b-edit'; edBtn.textContent = '✎ 수정';
+      edBtn.setAttribute('aria-label', `${b.number}마디 음정·음 길이 수정`);
+      edBtn.addEventListener('click', ev => { ev.stopPropagation(); openEditor(b.number); });
+      el.appendChild(edBtn);
+    }
     el.addEventListener('mouseenter', () => showBarTip(b, el));
     el.addEventListener('mouseleave', hideBarTip);
     el.addEventListener('focus', () => showBarTip(b, el));
     el.addEventListener('blur', hideBarTip);
-    el.addEventListener('click', ev => { if (!ev.target.closest('.b-stop')) playFromBar(b.number); });
+    el.addEventListener('click', ev => { if (!ev.target.closest('.b-stop') && !ev.target.closest('.b-edit')) playFromBar(b.number); });
     el.addEventListener('keydown', ev => {
       if (ev.target !== el) return;
       if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); playFromBar(b.number); }
@@ -1240,6 +1521,7 @@ $('barsStopBtn').addEventListener('click', () => stop());
 // 스페이스바로 어디서든 재생/정지. 입력란, 선택 상자 등에서의 기본 동작은 방해하지 않는다.
 document.addEventListener('keydown', ev => {
   if (ev.code !== 'Space' || ev.repeat || ev.ctrlKey || ev.altKey || ev.metaKey) return;
+  if (editorBar != null) return;   // 수정 창이 열려 있으면 재생하지 않는다
   const target = ev.target;
   if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
   ev.preventDefault();
@@ -1347,7 +1629,7 @@ $('saveBtn').addEventListener('click', async () => {
 function showMsg(t) { $('msg').hidden = !t; $('msg').textContent = t || ''; }
 async function loadFullPdf(file) {
   stop();
-  state.sourceScores = []; state.parts = []; state.lineRes = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = [];
+  state.sourceScores = []; state.parts = []; state.lineRes = {}; state.lineRaw = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = [];
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.'; $('partsFileList').textContent = '';
   showMsg('');
   $('fileName').textContent = file.name;
@@ -1355,8 +1637,10 @@ async function loadFullPdf(file) {
   $('linesPanel').hidden = true;
   try {
     const data = new Uint8Array(await file.arrayBuffer());
+    const fp = scoreFingerprint(data);   // pdf.js가 data를 넘겨받기 전에
     const sc = await loadScore(pdfjsLib, data, (i, n) => { $('fileInfo').textContent = `악보를 읽는 중… ${i}/${n}쪽`; });
-    state.score = sc; state.lineRes = {}; state.soundSel = {}; state.fileName = file.name;
+    sc.fp = fp; sc.fileName = file.name;
+    state.score = sc; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.fileName = file.name;
     state.title = sc.title || file.name.replace(/\.pdf$/i, '');
     // 줄 목록: 총보는 악보 줄, 파트보는 줄 하나
     const L0 = sc.layouts.find(L => L.staves.length);
@@ -1395,7 +1679,8 @@ function applySelection(first = false) {
     const k = cfgKey(id), item = state.lineList.find(l => cfgKey(l.id) === k);
     const sourceScore = item?.sourceScore || sc;
     const sourceLineId = item && Object.prototype.hasOwnProperty.call(item, 'sourceLineId') ? item.sourceLineId : id;
-    if (!state.lineRes[k]) state.lineRes[k] = analyzeLine(sourceScore, sourceLineId);
+    if (!state.lineRaw[k]) state.lineRaw[k] = analyzeLine(sourceScore, sourceLineId);
+    if (!state.lineRes[k]) state.lineRes[k] = applyEdits(state.lineRaw[k], sourceScore, sourceLineId == null ? 'p' : String(sourceLineId));
     return { id, key: k, r: state.lineRes[k], sc: sourceScore };
   });
   for (const { key } of results) autoOct(key);
@@ -1432,7 +1717,7 @@ function applySelection(first = false) {
   $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '');
   if (master.r.mismatches.length) showMsg(`악보에 인쇄된 마디 번호와 읽은 마디 수가 ${master.r.mismatches.length}곳에서 다릅니다(처음: ${master.r.mismatches[0][1]}마디 근처). 그 뒤 마디는 번호가 밀렸을 수 있습니다.`);
   if (first || +$('to').value > lastBar()) { $('from').value = 1; $('to').value = lastBar(); }
-  changed(); renderTempo(); renderBars(); refreshOrder();
+  changed(); renderTempo(); renderBars(); refreshOrder(); updateEditTools(results);
 }
 
 // 줄 카드: 번호·이름·첫 단 그림 + 역할·소리·음량·옥타브
@@ -1595,14 +1880,16 @@ async function loadPartPdfs(files) {
   const existingParts = state.score?.isComposite ? state.parts.slice() : [];
   $('fileName').textContent = '파트보를 불러오는 중…'; $('fileInfo').textContent = `${pdfs.length}개 파일 준비 중…`; $('linesPanel').hidden = true;
   $('partsFileName').textContent = `${existingParts.length + pdfs.length}개 파트보 준비 중`; $('partsFileInfo').textContent = '각 파트보를 분석하고 있습니다…'; $('partsFileList').textContent = '';
-  state.score = null; state.sourceScores = []; state.parts = existingParts; state.lineRes = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = [];
+  state.score = null; state.sourceScores = []; state.parts = existingParts; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = [];
   try {
     const loaded = [];
     for (let i = 0; i < pdfs.length; i++) {
       const file = pdfs[i];
       $('partsFileInfo').textContent = `파트보 분석 중… ${i + 1}/${pdfs.length}: ${file.name}`;
       const data = new Uint8Array(await file.arrayBuffer());
+      const fp = scoreFingerprint(data);
       const sc = await loadScore(pdfjsLib, data, () => {});
+      sc.fp = fp; sc.fileName = file.name;
       const layout = sc.layouts.find(L => L.staves.length);
       const label = (sc.partName || '').trim();   // 곡 제목은 파트 이름이 아니므로 쓰지 않는다
       loaded.push({ file, sc, layout, label });
