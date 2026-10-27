@@ -195,7 +195,7 @@ button { cursor: pointer; }
 .bar-tip .tip-detail-notes { margin-top:4px; font-size:12px; line-height:1.55; overflow-wrap:anywhere; }
 .bar-tip .tip-detail-meta { margin-top:3px; color:var(--muted); font-size:11px; line-height:1.45; }
 @media (prefers-reduced-motion: reduce) { .bar-tip { transition: none; } }
-.bar-tip { width: min(460px, calc(100vw - 24px)); }
+.bar-tip { width: min(460px, calc(100vw - 24px)); max-height: min(680px, calc(100vh - 24px)); overscroll-behavior: contain; }
 /* 마디 미리보기 (새 모양) */
 .bt-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .bt-num { display: flex; align-items: baseline; gap: 3px; flex: none; }
@@ -912,8 +912,9 @@ function ensureBarTip() {
   if (barTipEl) return barTipEl;
   barTipEl = document.createElement('div'); barTipEl.className = 'bar-tip'; barTipEl.setAttribute('role', 'dialog'); barTipEl.setAttribute('aria-label', '마디 미리보기'); barTipEl.hidden = true;
   document.body.appendChild(barTipEl);
-  barTipEl.addEventListener('mouseenter', () => clearTimeout(barTipHideTimer));
-  barTipEl.addEventListener('mouseleave', hideBarTip);
+  // 팝업 위로 올라오면(스크롤바 포함) 닫히지 않게: 닫기·바꾸기 예약을 모두 취소하고 다시 보이게
+  barTipEl.addEventListener('mouseenter', () => { clearTimeout(barTipHideTimer); clearTimeout(barTipSwitchTimer); barTipEl.hidden = false; barTipEl.classList.add('show'); });
+  barTipEl.addEventListener('mouseleave', () => hideBarTip());
   return barTipEl;
 }
 function tipNode(tag, cls, text) {
@@ -1031,8 +1032,17 @@ function barTipContent(b) {
   tip.append(tipNode('div', 'bt-foot', '누르면 이 마디부터 재생 · ✎ 수정으로 음정·길이 고치기'));
   return tip;
 }
+let barTipSwitchTimer = 0;
+// 마디에 마우스가 들어올 때: 팝업이 떠 있으면 팝업으로 가는 길에 다른 마디를 스칠 수 있으므로 잠깐 기다렸다가 바꾼다
+function enterBar(b, el) {
+  clearTimeout(barTipSwitchTimer);
+  if (barTipEl && !barTipEl.hidden && barTipAnchor && barTipAnchor !== el) barTipSwitchTimer = setTimeout(() => showBarTip(b, el), 250);
+  else showBarTip(b, el);
+}
+function leaveBar() { clearTimeout(barTipSwitchTimer); hideBarTip(); }
 function showBarTip(b, el) {
-  clearTimeout(barTipHideTimer);
+  clearTimeout(barTipHideTimer); clearTimeout(barTipSwitchTimer);
+  if (barTipEl && !barTipEl.hidden && barTipAnchor === el && barTipEl.classList.contains('show')) return;   // 같은 마디면 그대로 (스크롤 위치 유지)
   barTipAnchor = el;
   const tip = barTipContent(b); tip.hidden = false; tip.classList.remove('show');
   const r = el.getBoundingClientRect();
@@ -1049,11 +1059,16 @@ function showBarTip(b, el) {
     tip.style.left = `${left}px`; tip.style.top = `${top}px`; tip.classList.add('show');
   });
 }
-function hideBarTip() {
+// 바로 닫지 않고 잠깐(0.35초) 기다린다: 그 사이 팝업 위로 올라오면 그대로 둔다
+function hideBarTip(delay = 350) {
   clearTimeout(barTipHideTimer);
   if (!barTipEl) return;
-  barTipEl.classList.remove('show');
-  barTipHideTimer = setTimeout(() => { if (barTipEl) barTipEl.hidden = true; }, 140);
+  barTipHideTimer = setTimeout(() => {
+    if (!barTipEl) return;
+    if (delay && barTipEl.matches(':hover')) return;   // 마우스가 팝업 위에 있으면(스크롤바를 끄는 중 등) 닫지 않는다
+    barTipEl.classList.remove('show');
+    barTipHideTimer = setTimeout(() => { if (barTipEl && !barTipEl.classList.contains('show')) { barTipEl.hidden = true; barTipAnchor = null; } }, 140);
+  }, delay);
 }
 // ---------- 마디별 음 수정 (음정·음 길이) ----------
 // 수정은 악보 PDF 내용으로 만든 지문(fp)별로 이 브라우저에 저장한다: { lines: { 줄: { 마디순번: { '성부|순번': 수정 } } } }
@@ -1170,7 +1185,7 @@ const PITCH_NAMES = ['도', '도♯', '레', '레♯', '미', '파', '파♯', '
 const pitchName = m => PITCH_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
 const DUR_OPTS = [['1/32', '32분음표'], ['1/24', '셋잇단 16분'], ['1/16', '16분음표'], ['3/32', '점16분음표'], ['1/12', '셋잇단 8분'], ['1/8', '8분음표'], ['3/16', '점8분음표'], ['1/6', '셋잇단 4분'], ['1/4', '4분음표'], ['3/8', '점4분음표'], ['1/2', '2분음표'], ['3/4', '점2분음표'], ['1', '온음표']];
 const durName = s => (DUR_OPTS.find(o => o[0] === s) || [s, `${s} (온음표=1)`])[1];
-function openEditor(n) { editorBar = n; hideBarTip(); renderEditor(); }
+function openEditor(n) { editorBar = n; hideBarTip(0); renderEditor(); }
 function closeEditor() { editorBar = null; if (editorEl) { editorEl.remove(); editorEl = null; } }
 function renderEditor() {
   const n = editorBar; if (n == null) return;
@@ -1333,10 +1348,10 @@ function renderBars() {
       edBtn.addEventListener('click', ev => { ev.stopPropagation(); openEditor(b.number); });
       el.appendChild(edBtn);
     }
-    el.addEventListener('mouseenter', () => showBarTip(b, el));
-    el.addEventListener('mouseleave', hideBarTip);
+    el.addEventListener('mouseenter', () => enterBar(b, el));
+    el.addEventListener('mouseleave', leaveBar);
     el.addEventListener('focus', () => showBarTip(b, el));
-    el.addEventListener('blur', hideBarTip);
+    el.addEventListener('blur', () => hideBarTip());
     el.addEventListener('click', ev => { if (!ev.target.closest('.b-stop') && !ev.target.closest('.b-edit')) playFromBar(b.number); });
     el.addEventListener('keydown', ev => {
       if (ev.target !== el) return;
