@@ -1,3 +1,6 @@
+# 가야금 녹음 전용 (이번 녹음의 음 시작 시각이 코드에 적혀 있음 — 새 녹음에는 extract_pluck.py를 쓰세요)
+# 같은 폴더에 scale.wav(기본음계) nong.wav(농현) trem.wav(트레몰로) (44.1kHz 모노) 를 두고 실행 → bank.wav, bank.json
+#   ffmpeg -i bank.wav -ac 1 -ar 32000 -b:a 64k banks/gayageum.mp3 ; bank.json → banks/gayageum.json
 import numpy as np, scipy.io.wavfile as w, json
 from scipy.signal import resample_poly
 import noisereduce as nr

@@ -1,4 +1,5 @@
-# 해금 녹음(기본음계·농현)을 음별로 잘라 하나의 mp3 뱅크로 만든다
+# 해금 녹음(기본음계·농현)을 음별로 잘라 하나의 mp3 뱅크로 만든다 (해금 녹음 전용: 음 높이 목록이 코드에 적혀 있음 — 새 녹음에는 extract_sustained.py)
+# 사용: python3 extract_haegeum.py 기본음계.wav 농현.wav banks/haegeum
 import numpy as np, scipy.io.wavfile as w, json, sys, subprocess
 from scipy.signal import resample_poly
 SR=44100; EXP=[56,58,60,61,63,65,67,68,70,72,73,75,77,79]

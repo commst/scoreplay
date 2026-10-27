@@ -1,11 +1,14 @@
 """MuseScore 2 PDF(글꼴 없이 외곽선으로 저장)의 기호를 알아보기 위한 견본을 음악 글꼴에서 만든다.
-출력: outline-templates.json  [{k: 글꼴, n: 이름, c: Maestro 코드, t: 종류, a: 가로/세로, b: [xMin,yMin,xMax,yMax]/em, g: 16x16 비트(hex)}]"""
+사용: python3 tools/gen_outline_templates.py <MuseScore 2 fonts 폴더> src/outline-templates.js
+  fonts 폴더: MuseScore 2.0.3 소스의 fonts/ (mscore/, bravura/, gootville/, FreeSerifItalic.ttf 가 들어 있음)
+출력: [{k: 글꼴, n: 이름, c: Maestro 코드, t: 종류, a: 가로/세로, b: [xMin,yMin,xMax,yMax]/em, g: 16x16 비트(hex)}]
+  .js 로 저장하면 앱이 바로 쓰는 모듈(export const OUTLINE_TEMPLATES = ...), .json 이면 JSON 그대로"""
 import json, sys
 from fontTools.ttLib import TTFont
 from fontTools.pens.pointInsidePen import PointInsidePen
 from fontTools.pens.boundsPen import BoundsPen
 
-FD = '/home/claude/musescore/ms203/fonts/'
+FD = sys.argv[1].rstrip('/') + '/'
 FONTS = {'emm': FD + 'mscore/mscore.ttf', 'bra': FD + 'bravura/Bravura.otf', 'goo': FD + 'gootville/Gootville.otf'}
 NAMES = {'emm': FD + 'mscore/glyphnames.json', 'bra': FD + 'bravura/glyphnames.json', 'goo': FD + 'gootville/glyphnames.json'}
 N = 16
@@ -88,5 +91,9 @@ for d in '35679':
             pen = PointInsidePen(gs, (x0 + (i + 0.5) * w / N, y1 - (j + 0.5) * h / N), evenOdd=False); gs[gn].draw(pen)
             if pen.getResult(): bits |= 1 << (j * N + i)
     allt.append({'k': 'txt', 'n': 'tuplet' + d, 'c': ord(d), 't': 'tuplet', 'a': round(w / h, 4), 'b': [round(v / em, 4) for v in (x0, y0, x1, y1)], 'g': format(bits, '064x')})
-json.dump(allt, open(sys.argv[1], 'w'), separators=(',', ':'))
+out = sys.argv[2]
+if out.endswith('.js'):
+    open(out, 'w').write('// tools/gen_outline_templates.py 로 만든 견본 (MuseScore 2 외곽선 악보용)\nexport const OUTLINE_TEMPLATES = ' + json.dumps(allt, separators=(',', ':')) + ';\n')
+else:
+    json.dump(allt, open(out, 'w'), separators=(',', ':'))
 print(len(allt), 'templates', {k: sum(1 for t in allt if t['k'] == k) for k in ['emm', 'bra', 'goo', 'txt']})
