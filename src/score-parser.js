@@ -587,6 +587,29 @@ export function pageLayout(pg) {
   // 숫자는 마디 번호일 수 있어 빼되, 글자 바로 뒤에 붙은 숫자('가야금2', '해금 1')는 이름의 일부로 남긴다
   const leftGlyphs = leftAll.filter(g => !isDigit(g.code) || leftAll.some(o => !isDigit(o.code) && Math.abs(o.oy - g.oy) < 1.5 && g.x0 - o.x1 > -1 && g.x0 - o.x1 < Math.max(3, g.size * 0.4)));
   const nearestStaff = y => { let b = -1, bd = 26; staves.forEach((st, i) => { const d = Math.max(0, st.top - y, y - st.bottom - 4); if (d < bd) { bd = d; b = i; } }); return b; };
+  // 한글 글꼴의 유니코드 표가 깨져 같은 글자로 나오는 PDF(예: '피리'→'피피', '거문고'→'거거거', '대고'→'대거'):
+  // 이 쪽 이름 글자 가운데 떨어져 찍힌 같은 글자가 이어지는 이름이 둘 이상인 글꼴은 깨진 것으로 보고,
+  // 알려진 악기 이름이 아니면 첫 글자 + 글자 수(+ 선율/타악)로 악기 이름을 정한다
+  const brokenFonts = new Set();
+  {
+    const byFont = {};
+    for (const g of leftGlyphs) if (g.code >= 0xAC00 && g.code <= 0xD7A3) (byFont[g.font] = byFont[g.font] || []).push(g);
+    for (const [f, gs] of Object.entries(byFont)) {
+      gs.sort((a, b) => a.oy - b.oy || a.ox - b.ox);
+      let n = 0;
+      for (let k = 1; k < gs.length; k++) { const a = gs[k - 1], b = gs[k]; if (a.code === b.code && Math.abs(a.oy - b.oy) < 1 && b.ox - a.ox > a.size * 0.6 && b.ox - a.ox < a.size * 1.6 && !(k > 1 && gs[k - 2].code === a.code && Math.abs(gs[k - 2].oy - a.oy) < 1)) n++; }
+      if (n >= 2) brokenFonts.add(f);
+    }
+  }
+  const KNOWN_INST = /^(소금|대금|중금|피리|대피리|세피리|향피리|태평소|생황|단소|해금|저해금|아쟁|소아쟁|대아쟁|가야금|거문고|양금|장구|장고|꽹과리|쇠|징|북|대고|모듬북|바라|공|편종|편경|박|피아노|신디|타악기?)$/;
+  const BROKEN_BY = { 2: { '소': '소금', '피': '피리', '해': '해금', '양': '양금', '장': '장구', '북': '북', '징': '징', '쇠': '쇠', '생': '생황', '바': '바라', '단': '단소', '아': '아쟁' },
+    3: { '태': '태평소', '소': '소아쟁', '대': '대아쟁', '가': '가야금', '거': '거문고', '꽹': '꽹과리', '모': '모듬북', '저': '저해금', '피': '피아노', '타': '타악기', '대피': '대피리' } };
+  const fixBroken = (w, perc) => {
+    if (KNOWN_INST.test(w) || !/^[가-힣]+$/.test(w)) return w;
+    const n = [...w].length, c0 = [...w][0];
+    if (n === 2 && c0 === '대') return perc ? '대고' : '대금';
+    return (BROKEN_BY[n] && BROKEN_BY[n][c0]) || w;
+  };
   const labels = staves.map((st, i) => {
     const gs = leftGlyphs.filter(g => nearestStaff(g.oy) === i).sort((a, b) => a.ox - b.ox);
     // 일부 PDF의 한글 폰트는 글리프의 유니코드 매핑이 실제 인쇄 문자와 다르다.
@@ -606,7 +629,8 @@ export function pageLayout(pg) {
         prev = { c, ox: g.ox, oy: g.oy };
       }
       return [raw.replace(/\s+/g, ''), t.replace(/\s+/g, ' ').trim()]; };
-    const parts = rowsG.map(r => readRow(r.g)).filter(p => p[1]);
+    const isPercSt = clefsTmp(st) !== 'p';
+    const parts = rowsG.map(r => { const p = readRow(r.g); return r.g.some(g => brokenFonts.has(g.font)) ? [p[0], p[1].split(/\s+/).map(w => fixBroken(w, isPercSt)).join(' ')] : p; }).filter(p => p[1]);
     const vertical = parts.length > 1 && parts.every(p => [...p[1].replace(/\s/g, '')].length <= 1);
     let raw = parts.map(p => p[0]).join(''), t = parts.length > 1 && !vertical ? parts.map(p => p[1]).join(' / ') : parts.map(p => p[1].replace(/\s+/g, '')).join('');
     // 일부 PDF(Finale Type3 한글 글꼴)는 둘째 글자 이후를 모두 '소'로 잘못 알려 준다 → 알려진 악기 이름으로 교정
@@ -736,7 +760,8 @@ function findTempoMarks(glyphs) {
     if (r && Math.abs(r.at(-1).oy - g.oy) < 2 && g.ox - r.at(-1).x1 < 8) r.push(g); else runs.push([g]);
   }
   for (const r of runs) {
-    const s = decodeRun(r);
+    // '♩=70~73'의 물결표가 다른 글꼴로 찍혀 빠지면 숫자 사이가 벌어진다 → 그 자리를 '~'로
+    const s = r.map((g, k) => (k && isDigit(g.code) && isDigit(r[k - 1].code) && g.x0 - r[k - 1].x1 > 2.5 ? '~' : '') + String.fromCharCode(g.code)).join('');
     const m = s.match(/([qehx])\s*([.k]?)\s*=\s*(\d+)(?:\s*[-~]\s*(\d+))?/);
     if (!m) continue;
     const unit = { q: [1, 4], e: [1, 8], h: [1, 2], x: [1, 16] }[m[1]];
