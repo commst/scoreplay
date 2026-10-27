@@ -71,7 +71,7 @@ export function makeSounds() {
   return S;
 }
 
-const GAIN = { '궁': 1.15, '북': 1.15, '북짧게': 1.1, '바라': 0.72, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
+const GAIN = { '궁': 1.15, '북': 1.15, '북짧게': 1.1, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -224,8 +224,8 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   const buf = new Float32Array(n);
   const vary = {};
   let lastTa = -9, flip = 0;
-  // 북·바라는 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
-  const fam = k => k === '북' || k === '북짧게' ? 'b' : k === '바라' ? 'r' : null;
+  // 북·바라·심벌·베이스드럼은 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
+  const fam = k => k === '북' || k === '북짧게' ? 'b' : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : null;
   const nextSame = new Float64Array(hits.length).fill(Infinity);
   { const ord = hits.map((_, i) => i).sort((a, b) => hits[a][0] - hits[b][0]), last = {};
     for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1]); if (!f) continue;
@@ -310,6 +310,32 @@ function bounceRoll(buf, S, key, t, dur, gain, pick, strokes) {
     }
   }
 }
+// 심벌 롤: 녹음은 0.6초쯤 가장 커진 뒤 울리며 줄어든다.
+//  짧은 롤은 커지는 부분의 뒤쪽부터 시작해 롤 끝에서 가장 크게, 긴 롤은 가장 큰 부분을 겹쳐 이어 붙인 뒤 울림으로 끝낸다
+const PEAK_CACHE = new WeakMap();
+function cymbalRoll(buf, r, t, dur, gain) {
+  const n = buf.length, i0 = Math.round(t * SR), X = Math.round(0.15 * SR);
+  let P = PEAK_CACHE.get(r);
+  if (P == null) { const w = Math.round(0.05 * SR); let best = -1; P = 0;
+    for (let i = 0; i + w < r.length && i < 3 * SR; i += w) { let e = 0; for (let j = i; j < i + w; j++) e += r[j] * r[j]; if (e > best) { best = e; P = i + (w >> 1); } }
+    PEAK_CACHE.set(r, P); }
+  const add = (from, to, at, fin, fout) => {   // r[from, to)를 at에 더한다. 앞뒤를 equal-power로 서서히
+    const len = to - from;
+    for (let i = 0; i < len; i++) { const k = at + i; if (k < 0) continue; if (k >= n) break;
+      let w = 1; if (fin && i < fin) w *= Math.sin(Math.PI / 2 * i / fin); if (fout && i > len - fout) w *= Math.sin(Math.PI / 2 * (len - i) / fout);
+      buf[k] += r[from + i] * gain * w; }
+  };
+  const D = Math.round(dur * SR), tail = Math.min(r.length, P + 3 * SR);
+  if (D <= P) { add(P - D, tail, i0, Math.round(0.01 * SR), Math.round(0.4 * SR)); return; }
+  add(0, P + X, i0, 0, X);                       // 커지는 부분
+  const a = Math.max(0, P - Math.round(0.15 * SR)), L = Math.round(0.5 * SR);
+  let seed = (i0 * 2654435761) >>> 0;
+  for (let at = i0 + P; at < i0 + D; at += L - X) {   // 가장 큰 부분을 겹쳐 이어 붙임
+    seed = (seed * 1664525 + 1013904223) >>> 0; const off = a + Math.floor((seed / 4294967296) * 0.1 * SR);
+    add(off, Math.min(r.length, off + L), at, X, X);
+  }
+  add(P, tail, i0 + D, X, Math.round(0.4 * SR));  // 울림
+}
 function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   const n = buf.length, i0 = Math.round(t * SR);
   const put = (x, at, g, fadeLen) => {
@@ -320,6 +346,8 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   const pick = k => { let s = S[k]; if (Array.isArray(s)) { vary[k] = (vary[k] || 0) + 1; s = s[vary[k] % s.length]; } return s; };
   // 녹음한 굴림 타가 있으면 그것으로 (직접 넣은 따 소리가 있으면 그 소리로)
   if ((key === '따' || key === '덩') && Array.isArray(S['굴림타']) && !custom['따']) { bounceRoll(buf, S, key, t, dur, gain, pick, S['굴림타']); return; }
+  // 심벌 롤: 녹음한 롤(점점 커졌다 울리는 소리)을 길이에 맞춰
+  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌']) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9); return; }
   // 꽹과리: 녹음한 '개르르르'를 길이에 맞춰 (길면 이어 붙임)
   if (/^꽹과리/.test(key) && Array.isArray(S['꽹과리굴림']) && !custom['꽹과리']) {
     const r = S['꽹과리굴림'][0], seg = dur <= 1.1 ? dur + 1 : dur / Math.ceil(dur / 0.85);   // 길면 0.85초쯤마다 다시 친다

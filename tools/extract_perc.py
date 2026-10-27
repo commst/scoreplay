@@ -24,9 +24,12 @@ def cut(x, max_sec=3.0, which=0):
     db = 20 * np.log10(fr + 1e-9); peak = db.max()
     ons = []
     for i in range(2, len(db)):
-        if db[i] - db[i - 2] > 12 and db[i] > peak - 30 and (not ons or i - ons[-1] > 10):
+        if db[i] - db[i - 2] > 12 and db[i] > peak - (30 if not ons else 15) and (not ons or i - ons[-1] > 10):   # 다음 타는 봉우리 가까이 커질 때만
             ons.append(i)
-    if not ons: raise SystemExit('소리 시작을 찾지 못했습니다')
+    if not ons:   # 심벌 롤처럼 천천히 커지는 소리: 봉우리보다 40dB 작은 곳을 시작으로
+        q = [i for i in range(len(db)) if db[i] > peak - 40]
+        if not q: raise SystemExit('소리 시작을 찾지 못했습니다')
+        ons = [q[0]]
     o = ons[min(which, len(ons) - 1)]
     # 시작 직전 조용한 곳으로 조금 당긴다
     while o > 0 and db[o - 1] > db[o] - 30 and db[o - 1] > peak - 45: o -= 1
