@@ -504,6 +504,12 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .extra.disabled .btn { opacity: .5; pointer-events: none; }
 .tempo-alert { outline: 2px solid #d8a400; outline-offset: 2px; }
 [hidden] { display: none !important; }
+.support { margin-top: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); font-size: 13.5px; }
+.support summary { cursor: pointer; font-weight: 600; }
+.support p { margin: 8px 0; color: var(--muted); }
+.support table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+.support th, .support td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+.support th { font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .app-foot { margin: 28px 0 8px; text-align: center; color: var(--muted); font-size: 12.5px; }
 #updateBar { position: sticky; top: 8px; z-index: 50; box-shadow: 0 6px 20px #0002; }
 .msg.openext { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px; }
@@ -576,6 +582,23 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <ul id="partsFileList" class="flist" aria-live="polite" aria-label="올린 파트보"></ul>
     </section>
     </div>
+    <details class="support" id="supportBox">
+      <summary>읽을 수 있는 악보 PDF</summary>
+      <p>악보 프로그램에서 <b>PDF로 저장하거나 PDF 프린터로 인쇄한</b> 악보만 읽습니다. 어떤 PDF 도구로 만들었는지(Acrobat, doPDF, pdfFactory, PDF24, PDF-XChange, 한컴 PDF, 'Microsoft PDF로 인쇄' 등)는 상관없습니다.</p>
+      <table>
+        <thead><tr><th>악보 프로그램</th><th>읽기</th></tr></thead>
+        <tbody>
+          <tr><td>Finale (2004 이후)</td><td>됨 — 가장 많이 시험함</td></tr>
+          <tr><td>Sibelius</td><td>됨</td></tr>
+          <tr><td>MuseScore 2.0 · 2.1</td><td>됨 (2.0은 악보 기호와 글자를 그림으로 저장해 악기 이름·제목은 못 읽음)</td></tr>
+          <tr><td>Encore</td><td>됨</td></tr>
+          <tr><td>MuseScore 3 · 4, Dorico</td><td>읽도록 만들었지만 시험한 악보가 아직 없음 — 안 되면 PDF를 보내 주세요</td></tr>
+          <tr><td>그 밖의 프로그램 (Noteflight, Flat, LilyPond, Guitar Pro, 한글·워드 문서에 그린 악보 등)</td><td>확인 안 됨</td></tr>
+          <tr><td>종이 악보를 스캔하거나 사진으로 찍어 만든 PDF, 그림 파일(jpg·png)</td><td><b>안 됨</b> — 악보가 그림이라 음표를 읽을 수 없음</td></tr>
+        </tbody>
+      </table>
+      <p>정간보는 읽지 못합니다. PDF를 크게 확대했을 때 음표 가장자리가 흐려지거나 계단처럼 깨지면 스캔한 그림 PDF입니다(악보 프로그램으로 만든 PDF는 아무리 확대해도 선명합니다).</p>
+    </details>
     <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 파일은 여러 개를 한꺼번에 고를 수 있고(총보 칸에 여러 개를 고르면 줄이 가장 많은 것을 총보로, 나머지는 더한 악보로 씁니다), 목록의 ✕로 뺄 수 있습니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
     <section class="setbox" id="setBox" aria-labelledby="setTitle" hidden>
       <div class="setbox-head">
@@ -5255,7 +5278,7 @@ function applySelection(first = false) {
   if (!master) {
     $('fileInfo').textContent = ids.length ? '악보를 읽지 못했습니다.' : '들을 줄을 하나 이상 켜세요 (선율 또는 타악).';
     if (ids.length) showMsg(sc.maestroCount === 0
-      ? '이 PDF에서는 악보 기호를 찾을 수 없습니다. 스캔하거나 사진으로 만든 PDF이거나, 아직 지원하지 않는 프로그램으로 만든 악보일 수 있습니다. Finale·Sibelius·MuseScore 2·Encore에서 PDF로 저장한 악보를 올려 주세요.'
+      ? '이 PDF에서는 악보 기호를 찾을 수 없습니다. 스캔하거나 사진으로 만든 PDF이거나, 아직 지원하지 않는 프로그램으로 만든 악보일 수 있습니다. Finale·Sibelius·MuseScore·Encore에서 PDF로 저장한 악보를 올려 주세요(\'악보 올리기\' 아래 \'읽을 수 있는 악보 PDF\' 참고).'
       : '오선을 찾지 못했습니다. 이 악보 형식은 아직 지원하지 않습니다.');
     state.bars = []; renderBars(); return;
   }
@@ -5517,7 +5540,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-28 12:46';
+const APP_VERSION = '2026-10-28 12:55';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
