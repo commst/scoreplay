@@ -489,6 +489,19 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 }
 @media (prefers-reduced-motion: reduce) { .play, .b, .btn, .drop { transition: none; } .play:hover { transform: none; } }
 .hero .caution { margin: 10px 0 0; max-width: 58ch; font-size: 13.5px; color: var(--ink, inherit); padding: 8px 12px; border-left: 3px solid #d8a400; background: rgba(216, 164, 0, .09); border-radius: 0 6px 6px 0; }
+/* 머리: 쪽빛 판 위에 제목·설명·주의·네 단계, 오른쪽에 흐린 음표 하나 */
+.hero { position: relative; overflow: hidden; display: block; margin: 8px 0 26px; padding: 44px 48px 36px; border: 0; border-radius: 24px;
+  background: linear-gradient(115deg, #172a4d 0%, #22426f 52%, #3a6a9a 100%); color: #fff; }
+.hero h1 { position: relative; color: #fff; font-size: clamp(38px, 6vw, 60px); }
+.hero .lede { position: relative; color: rgba(255,255,255,.86); max-width: 64ch; font-size: 15.5px; }
+.hero .caution { position: relative; color: #fff; background: rgba(255,255,255,.08); border-left-color: #f2c14e; max-width: 64ch; }
+.hero-mark { position: absolute; right: 44px; top: 26px; width: 150px; height: auto; color: #fff; opacity: .1; pointer-events: none; }
+.hero-steps { position: relative; list-style: none; margin: 26px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.hero-steps li { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border: 1px solid rgba(255,255,255,.18); border-radius: 14px; background: rgba(255,255,255,.06); font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,.88); }
+.hero-steps b { color: #fff; }
+.hs-n { flex: none; width: 24px; height: 24px; border-radius: 7px; background: #e8eef8; color: #1c3560; font-weight: 700; font-size: 13px; display: grid; place-items: center; margin-top: 1px; }
+@media (max-width: 980px) { .hero-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .hero { padding: 26px 18px 20px; border-radius: 18px; } .hero .lede { font-size: 14.5px; } .hero-steps { grid-template-columns: 1fr; gap: 8px; margin-top: 18px; } .hero-steps li { padding: 10px 12px; font-size: 13px; } .hero-mark { width: 80px; right: 14px; top: 14px; } }
 .flist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
 .flist:empty { display: none; }
 .flist li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 5px 6px 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
@@ -537,12 +550,16 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
   <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
     <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
   <header class="hero">
-    <div class="hero-text">
-      <h1>합주연습기</h1>
-      <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 늘봄에서 녹음한 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
-      <p class="caution">악보를 자동으로 읽기 때문에 템포·악기 이름·음표가 실제와 다르게 인식될 수 있습니다. 재생하기 전에 줄 이름과 빠르기 표를 악보와 한 번 맞춰 보세요.</p>
-    </div>
-    <svg class="hero-notes" viewBox="0 0 330 136" role="img" aria-label="선율 오선과 장구 줄에 놓인 음표 그림"><g class="st"><line x1="2" x2="328" y1="20" y2="20"/><line x1="2" x2="328" y1="30" y2="30"/><line x1="2" x2="328" y1="40" y2="40"/><line x1="2" x2="328" y1="50" y2="50"/><line x1="2" x2="328" y1="60" y2="60"/></g><g class="bl"><line x1="168" x2="168" y1="20" y2="60"/><line x1="324" x2="324" y1="20" y2="60"/><line class="thick" x1="327.5" x2="327.5" y1="20" y2="60"/></g><g class="st"><line x1="2" x2="328" y1="108" y2="108"/></g><g class="bl"><line x1="168" x2="168" y1="96" y2="120"/><line x1="324" x2="324" y1="96" y2="120"/><line class="thick" x1="327.5" x2="327.5" y1="96" y2="120"/></g><g class="mel"><ellipse class="m" cx="30" cy="25.0" rx="5.4" ry="3.9" transform="rotate(-22 30 25.0)"/><ellipse class="m" cx="50" cy="20.0" rx="5.4" ry="3.9" transform="rotate(-22 50 20.0)"/><ellipse class="m" cx="76" cy="15.0" rx="5.4" ry="3.9" transform="rotate(-22 76 15.0)"/><ellipse class="m" cx="102" cy="15.0" rx="5.4" ry="3.9" transform="rotate(-22 102 15.0)"/><ellipse class="m" cx="117" cy="20.0" rx="5.4" ry="3.9" transform="rotate(-22 117 20.0)"/><ellipse class="m" cx="132" cy="25.0" rx="5.4" ry="3.9" transform="rotate(-22 132 25.0)"/><ellipse class="m" cx="147" cy="20.0" rx="5.4" ry="3.9" transform="rotate(-22 147 20.0)"/><ellipse class="m open" cx="196" cy="5.0" rx="5.4" ry="3.9" transform="rotate(-22 196 5.0)"/><line class="ledger" x1="187" x2="205" y1="10.0" y2="10.0"/><ellipse class="m" cx="240" cy="15.0" rx="5.4" ry="3.9" transform="rotate(-22 240 15.0)"/><ellipse class="m" cx="276" cy="25.0" rx="5.4" ry="3.9" transform="rotate(-22 276 25.0)"/><circle class="m" cx="286" cy="22.5" r="1.8"/><line class="stem m" x1="25.1" x2="25.1" y1="25.8" y2="55.0"/><line class="stem m" x1="45.1" x2="45.1" y1="20.8" y2="55.0"/><line class="stem m" x1="71.1" x2="71.1" y1="15.8" y2="45.0"/><line class="stem m" x1="97.1" x2="97.1" y1="15.8" y2="57.0"/><line class="stem m" x1="112.1" x2="112.1" y1="20.8" y2="57.0"/><line class="stem m" x1="127.1" x2="127.1" y1="25.8" y2="57.0"/><line class="stem m" x1="142.1" x2="142.1" y1="20.8" y2="57.0"/><line class="stem m" x1="191.1" x2="191.1" y1="5.8" y2="35.0"/><line class="stem m" x1="235.1" x2="235.1" y1="15.8" y2="45.0"/><line class="stem m" x1="271.1" x2="271.1" y1="25.8" y2="55.0"/><path class="beam" d="M24.400000000000002 55.0 L45.800000000000004 55.0 L45.800000000000004 50.8 L24.400000000000002 50.8 Z"/><path class="beam" d="M96.39999999999999 57.0 L142.79999999999998 57.0 L142.79999999999998 52.8 L96.39999999999999 52.8 Z"/><path class="beam" d="M96.39999999999999 50.0 L142.79999999999998 50.0 L142.79999999999998 45.8 L96.39999999999999 45.8 Z"/><path class="acc" d="M25 10.0 L35 13.0 L25 16.0"/><path class="acc" d="M191 -8.0 L201 -5.0 L191 -2.0"/></g><g class="perc"><path class="xh" d="M26.2 98.2 L33.8 105.8 M26.2 105.8 L33.8 98.2"/><line class="stem c" x1="33.8" x2="33.8" y1="102" y2="78"/><ellipse class="b" cx="30" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 30 114)"/><line class="stem b" x1="25.1" x2="25.1" y1="114" y2="136"/><path class="xh" d="M72.2 98.2 L79.8 105.8 M72.2 105.8 L79.8 98.2"/><line class="stem c" x1="79.8" x2="79.8" y1="102" y2="78"/><path class="xh" d="M98.2 98.2 L105.8 105.8 M98.2 105.8 L105.8 98.2"/><line class="stem c" x1="105.8" x2="105.8" y1="102" y2="78"/><path class="xh" d="M128.2 98.2 L135.8 105.8 M128.2 105.8 L135.8 98.2"/><line class="stem c" x1="135.8" x2="135.8" y1="102" y2="78"/><path class="xh" d="M192.2 98.2 L199.8 105.8 M192.2 105.8 L199.8 98.2"/><line class="stem c" x1="199.8" x2="199.8" y1="102" y2="78"/><ellipse class="b" cx="196" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 196 114)"/><line class="stem b" x1="191.1" x2="191.1" y1="114" y2="136"/><ellipse class="b" cx="240" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 240 114)"/><line class="stem b" x1="235.1" x2="235.1" y1="114" y2="136"/><path class="xh" d="M254.2 98.2 L261.8 105.8 M254.2 105.8 L261.8 98.2"/><line class="stem c" x1="261.8" x2="261.8" y1="102" y2="78"/><path class="xh" d="M272.2 98.2 L279.8 105.8 M272.2 105.8 L279.8 98.2"/><line class="stem c" x1="279.8" x2="279.8" y1="102" y2="78"/><ellipse class="b" cx="276" cy="114" rx="5.4" ry="3.9" transform="rotate(-22 276 114)"/><line class="stem b" x1="271.1" x2="271.1" y1="114" y2="136"/></g></svg>
+    <svg class="hero-mark" viewBox="0 0 120 150" aria-hidden="true"><path d="M30 18 L104 4 L104 108" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><path d="M30 18 L30 122" fill="none" stroke="currentColor" stroke-width="7"/><path d="M30 18 L104 4 L104 24 L30 38 Z" fill="currentColor"/><ellipse cx="18" cy="124" rx="18" ry="13" transform="rotate(-20 18 124)" fill="currentColor"/><ellipse cx="92" cy="110" rx="18" ry="13" transform="rotate(-20 92 110)" fill="currentColor"/></svg>
+    <h1>합주연습기</h1>
+    <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 늘봄에서 녹음한 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
+    <p class="caution">악보를 자동으로 읽기 때문에 템포·악기 이름·음표가 실제와 다르게 인식될 수 있습니다. 재생하기 전에 줄 이름과 빠르기 표를 악보와 한 번 맞춰 보세요.</p>
+    <ol class="hero-steps">
+      <li><span class="hs-n">1</span><span><b>악보 PDF 올리기</b> · 총보 또는 파트보. 악보 프로그램에서 저장한 PDF.</span></li>
+      <li><span class="hs-n">2</span><span><b>줄마다 역할 정하기</b> · 선율 / 타악 / 끄기. 악기 소리·음량도 줄마다.</span></li>
+      <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
+      <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
+    </ol>
   </header>
 
   <section class="step" aria-labelledby="stepLoad">
@@ -5540,7 +5557,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-28 12:55';
+const APP_VERSION = '2026-10-28 14:53';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
