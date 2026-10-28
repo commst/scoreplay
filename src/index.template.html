@@ -515,7 +515,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <div class="wrap">
   <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 카카오톡·파일 앱·메일에서 html 파일을 누르면 미리보기로 열려 버튼이 동작하지 않습니다. 컴퓨터에서는 파일을 내려받아 두 번 누르면 브라우저에서 열리고, 안드로이드는 파일을 저장한 뒤 [다른 앱으로 열기] → Chrome을 고르세요. 아이폰·아이패드는 파일로는 열 수 없어 웹 주소(링크)로 열어야 합니다.</span>
-    </div>
+    <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
   <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
     <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
   <header class="hero">
@@ -866,7 +866,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
   function show(t) { var m = document.getElementById('bootMsg'), x = document.getElementById('bootText'); if (!m) return; m.hidden = false; if (x) x.textContent = t; else m.textContent = t; }
   window.__bootShow = show;
   // 카카오톡·네이버·인스타그램 같은 앱 안의 브라우저: 바깥 브라우저(Safari·Chrome)로 넘기는 단추
-  var APP_URL = '';   // 일반 웹 주소(예: GitHub Pages)가 생기면 여기에. claude.ai 링크는 휴대폰에서 Claude 앱이 열려 쓰지 않는다
+  var APP_URL = 'https://commst.github.io/scoreplay/';   // GitHub Pages 주소. claude.ai 링크는 휴대폰에서 Claude 앱이 열려 쓰지 않는다
   function pageUrl() { try { if (window.top === window && /^https?:/.test(location.href) && !/claude\.ai/.test(location.host)) return location.href; } catch (e) {} return APP_URL; }
   function openExternal() {
     var url = pageUrl(), ua = navigator.userAgent || '';
