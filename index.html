@@ -504,6 +504,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .extra.disabled .btn { opacity: .5; pointer-events: none; }
 .tempo-alert { outline: 2px solid #d8a400; outline-offset: 2px; }
 [hidden] { display: none !important; }
+.app-foot { margin: 28px 0 8px; text-align: center; color: var(--muted); font-size: 12.5px; }
+#updateBar { position: sticky; top: 8px; z-index: 50; box-shadow: 0 6px 20px #0002; }
 .msg.openext { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px; }
 .msg.openext > span:first-child { flex: 1 1 260px; }
 .openext-btns { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -524,6 +526,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <div class="wrap">
   <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 카카오톡·파일 앱·메일에서 html 파일을 누르면 미리보기로 열려 버튼이 동작하지 않습니다. 컴퓨터에서는 파일을 내려받아 두 번 누르면 브라우저에서 열리고, 안드로이드는 파일을 저장한 뒤 [다른 앱으로 열기] → Chrome을 고르세요. 아이폰·아이패드는 파일로는 열 수 없어 웹 주소(링크)로 열어야 합니다.</span>
     <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
+  <div class="msg openext" id="updateBar" role="status" hidden><span id="updateText">새 판이 나왔습니다. 새로 고치면 최신 판으로 바뀝니다(저장한 설정은 그대로 남습니다).</span>
+    <span class="openext-btns"><button class="btn primary" id="updateGo" type="button">새로 고침</button><button class="btn" id="updateLater" type="button">나중에</button></span></div>
   <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
     <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
   <header class="hero">
@@ -861,6 +865,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       </section>
     </div>
   </div>
+  <footer class="app-foot"><span id="appVer"></span></footer>
 </div>
 
 <div class="mini" id="mini" hidden>
@@ -3940,7 +3945,7 @@ function loadBank(name) {
   })());
 }
 // 녹음한 음역 [가장 낮은 음, 가장 높은 음] (빌드할 때 채움)
-const BANK_RANGE = {"piri": [56.952, 78.593], "taepyeongso": [67.931, 87.219], "gayageum": [39.191, 80.195], "sogeum": [70.696, 94.703], "ajaeng": [43.356, 71.922], "piano": [60.139, 72.116], "geomungo": [38.677, 65.674], "haegeum": [55.984, 79.0], "daegeum": [58.419, 87.613]};
+const BANK_RANGE = {"ajaeng": [43.356, 71.922], "daegeum": [58.419, 87.613], "gayageum": [39.191, 80.195], "geomungo": [38.677, 65.674], "haegeum": [55.984, 79.0], "piano": [60.139, 72.116], "piri": [56.952, 78.593], "sogeum": [70.696, 94.703], "taepyeongso": [67.931, 87.219]};
 // 악보 음이 녹음 음역을 많이 벗어나면(예: 태평소·소금을 한 옥타브 낮게 적은 악보) 옥타브를 자동으로 맞춘다. 직접 고르면 그대로 둔다.
 function autoOct(key) {
   const c = state.lineCfg[key]; if (!c || c.role !== 'melody' || c.octUser) return;
@@ -5509,6 +5514,32 @@ state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
 renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay();
+// ---------- 판 번호와 새 판 알림 ----------
+// 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
+// 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
+const APP_VERSION = '2026-10-28 12:46';
+$('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
+{
+  const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
+  let dismissed = '';
+  const check = async () => {
+    if (!hosted || !APP_VERSION || APP_VERSION.startsWith('/*')) return;
+    try {
+      const r = await fetch(new URL('version.json', location.href).href + '?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      if (j && j.v && j.v > APP_VERSION && j.v !== dismissed) {
+        $('updateText').textContent = `새 판(${j.v})이 나왔습니다. 지금 화면은 ${APP_VERSION} 판입니다. 새로 고치면 최신 판으로 바뀝니다(저장한 설정은 그대로 남습니다).`;
+        $('updateBar').hidden = false; $('updateBar').dataset.v = j.v;
+      }
+    } catch (e) {}
+  };
+  $('updateGo').addEventListener('click', () => { const v = $('updateBar').dataset.v || Date.now(); location.replace(location.pathname + '?v=' + encodeURIComponent(v) + location.hash); });
+  $('updateLater').addEventListener('click', () => { dismissed = $('updateBar').dataset.v || ''; $('updateBar').hidden = true; });
+  setTimeout(check, 4000);
+  setInterval(check, 10 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+}
 window.__appReady = 'ok'; { const bm = $('bootMsg'); if (bm) bm.hidden = true; }
 </script>
 
