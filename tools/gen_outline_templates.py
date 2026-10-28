@@ -21,6 +21,9 @@ MAP = {
   'restWhole': (183, 'rest'), 'restHalf': (238, 'rest'), 'restQuarter': (206, 'rest'), 'rest8th': (228, 'rest'),
   'rest16th': (197, 'rest'), 'rest32nd': (168, 'rest'),
   'augmentationDot': (46, 'dot'),
+  # 임시표·조표 (전에는 없어서 외곽선 악보의 내림표·올림표를 하나도 읽지 못했음)
+  'accidentalFlat': (98, 'acc'), 'accidentalNatural': (110, 'acc'), 'accidentalSharp': (35, 'acc'),
+  'accidentalDoubleSharp': (220, 'acc'), 'accidentalDoubleFlat': (186, 'acc'),
   'flag8thUp': (106, 'flag'), 'flag8thDown': (74, 'flag'), 'flag16thUp': (114, 'flag'), 'flag16thDown': (82, 'flag'),
   'articAccentAbove': (62, 'mark'), 'articAccentBelow': (62, 'mark'),
   'fermataAbove': (85, 'mark'), 'fermataBelow': (85, 'mark'),
@@ -28,6 +31,9 @@ MAP = {
   'repeat1Bar': (212, 'mark'), 'repeat2Bars': (199, 'mark'), 'tremolo3': (190, 'mark'),
   'segno': (37, 'mark'), 'coda': (222, 'mark'),
   'unpitchedPercussionClef1': (214, 'clef'), 'gClef': (38, 'clef'), 'fClef': (63, 'clef'), 'cClef': (66, 'clef'),
+  # 옥타브 음자리표(아래·위 8, 15): 기본 음자리표로 읽는다 (대아쟁·콘트라베이스 등의 낮은음자리표 8vb)
+  'gClef8vb': (38, 'clef'), 'gClef8va': (38, 'clef'), 'gClef15mb': (38, 'clef'), 'gClef15ma': (38, 'clef'),
+  'fClef8vb': (63, 'clef'), 'fClef8va': (63, 'clef'), 'fClef15mb': (63, 'clef'), 'fClef15ma': (63, 'clef'), 'cClef8vb': (66, 'clef'),
   'dynamicPiano': (112, 'dyn'), 'dynamicForte': (102, 'dyn'), 'dynamicMezzo': (109, 'dyn'),
   'dynamicSforzando': (115, 'dyn'), 'dynamicZ': (122, 'dyn'), 'dynamicRinforzando': (114, 'dyn'),
 }

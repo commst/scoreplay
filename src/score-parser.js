@@ -313,6 +313,7 @@ export async function extractPages(doc, OPS, onPage) {
       if (!tab) continue;
       const c = tab.get(g.raw);
       if (c != null) g.code = c; else if (g.raw >= 0xE000 && g.raw <= 0xF8FF) g.code = 0;
+      if (tab === SMUFL_PUA) { const o = { 0xE052: -1, 0xE053: 1, 0xE051: -2, 0xE054: 2, 0xE064: -1, 0xE065: 1, 0xE063: -2, 0xE066: 2 }[g.raw]; if (o) g.clefOct = o; }
       if (!/\(MusicFont\)/.test(g.font)) g.font += ' (MusicFont)';
     }
     // SMuFL 글자 글꼴(BravuraText·LelandText 등)의 메트로놈 음표: 빠르기 표시 '♩.=110'
@@ -1216,6 +1217,7 @@ export function parseScore(pages, opts = {}) {
         const clefs = sg.filter(g => [38, 63, 66].includes(g.code) && g.oy > st.top - sp * 3 && g.oy < st.bottom + sp * 3).map(g => {
           let base = g.code === 38 ? 30 : g.code === 63 ? 18 : 24;           // 높은음 E4, 낮은음 G2, 가온(알토) F3
           if (g.code === 66 && stepOf(g.oy) >= 6) base = 22;                 // 테너 음자리표(넷째 줄 C)
+          if (g.clefOct) base += g.clefOct * 7;                             // 옥타브 음자리표(아래 8 = 한 옥타브 낮게 소리 남)
           return { x: g.x0, x1: g.x1, base };
         }).sort((a, b) => a.x - b.x);
         // 임시표·조표 글자

@@ -111,6 +111,8 @@ export function recognizeOutlines(drawings) {
     if (t.t === 'digit' || t.t === 'tuplet' || t.t === 'dyn' || t.t.startsWith('dyncombo')) oy = r.y1;
     const font = t.k === 'txt' ? 'MuseScoreText,BoldItalic' : 'MuseScore-' + t.k;
     const base = { font, size: em, ox, oy, x0: r.x0, x1: r.x1, y0: r.y0, y1: r.y1, outline: t.n };
+    // 옥타브 음자리표(8vb 등): 실제 소리는 옥타브 아래·위
+    { const m = /Clef(8|15)(vb|va|mb|ma)$/.exec(t.n || ''); if (m) base.clefOct = (m[1] === '8' ? 1 : 2) * (/b$/.test(m[2]) ? -1 : 1); }
     if (t.t.startsWith('dyncombo') && !t.c) {
       // 이어 쓴 셈여림 글자: 글자마다 하나씩 (sf, fp 등)
       const s = t.t.split(':')[1], step = (r.x1 - r.x0) / s.length;
