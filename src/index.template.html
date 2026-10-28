@@ -497,6 +497,11 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .extra-head .file span { color: var(--muted); font-size: 13px; }
 .extra.disabled .btn { opacity: .5; pointer-events: none; }
 .tempo-alert { outline: 2px solid #d8a400; outline-offset: 2px; }
+[hidden] { display: none !important; }
+.msg.openext { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px; }
+.msg.openext > span:first-child { flex: 1 1 260px; }
+.openext-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.msg.openext .btn { text-decoration: none; }
 .setbox { margin-top: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); display: grid; gap: 10px; }
 .setbox-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
 .setbox h3 { margin: 0; font-size: 15px; }
@@ -509,6 +514,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 </style>
 
 <div class="wrap">
+  <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 파일 앱·메일·카카오톡의 미리보기에서는 버튼이 동작하지 않으니 브라우저에서 열어 주세요.</span>
+    <a class="btn primary" id="bootOpen" href="https://claude.ai/artifact/TQbJi9QkjyuDQpp9txsqCF" target="_blank" rel="noopener">브라우저에서 실행</a></div>
+  <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
+    <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
   <header class="hero">
     <div class="hero-text">
       <h1>합주연습기</h1>
@@ -576,7 +585,6 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     </section>
   </section>
   <div class="msg" id="msg" hidden></div>
-  <div class="msg" id="bootMsg" role="alert">이 화면에서는 프로그램이 실행되지 않습니다. 파일 앱·메일·메신저의 미리보기에서는 버튼이 동작하지 않으니, Safari나 Chrome 같은 브라우저에서 합주연습기 링크로 열어 주세요.</div>
   <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
@@ -855,8 +863,31 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <script>
 // 프로그램이 실행되지 않는 환경(파일 앱의 미리보기 등) 안내 + 실행 중 오류를 화면에 보여 준다(원인 찾기용)
 (function () {
-  function show(t) { var m = document.getElementById('bootMsg'); if (!m) return; m.hidden = false; m.textContent = t; }
+  function show(t) { var m = document.getElementById('bootMsg'), x = document.getElementById('bootText'); if (!m) return; m.hidden = false; if (x) x.textContent = t; else m.textContent = t; }
   window.__bootShow = show;
+  // 카카오톡·네이버·인스타그램 같은 앱 안의 브라우저: 바깥 브라우저(Safari·Chrome)로 넘기는 단추
+  var APP_URL = 'https://claude.ai/artifact/TQbJi9QkjyuDQpp9txsqCF';
+  function pageUrl() { try { if (window.top === window && /^https?:/.test(location.href)) return location.href; } catch (e) {} return APP_URL; }
+  function openExternal() {
+    var url = pageUrl(), ua = navigator.userAgent || '';
+    if (/KAKAOTALK/i.test(ua)) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); return; }
+    if (/Android/i.test(ua)) { location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url) + ';end'; return; }
+    if (/iPhone|iPad|iPod|Macintosh/i.test(ua)) { location.href = 'x-safari-' + url; setTimeout(function () { window.open(url, '_blank'); }, 800); return; }
+    window.open(url, '_blank');
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var ua = navigator.userAgent || '';
+    var name = /KAKAOTALK/i.test(ua) ? '카카오톡' : /NAVER\(inapp|; NAVER/i.test(ua) ? '네이버' : /Instagram/i.test(ua) ? '인스타그램' : /FBAN|FBAV/i.test(ua) ? '페이스북' : /\bLine\//i.test(ua) ? '라인' : /DaumApps|everytimeApp|BAND/i.test(ua) ? '앱' : '';
+    var bar = document.getElementById('inappBar'); if (!bar) return;
+    if (name) { bar.hidden = false; document.getElementById('inappText').textContent = name + ' 안의 브라우저에서는 악보 올리기·음원 저장 같은 기능이 제대로 동작하지 않을 수 있습니다. Safari나 Chrome에서 여는 것을 권합니다.'; }
+    document.getElementById('inappOpen').addEventListener('click', openExternal);
+    document.getElementById('inappCopy').addEventListener('click', function () {
+      var url = pageUrl(), btn = this;
+      function done(ok) { btn.textContent = ok ? '복사했습니다' : url; }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); }); else done(false);
+    });
+    var bo = document.getElementById('bootOpen'); if (bo) bo.addEventListener('click', function (e) { if (name) { e.preventDefault(); openExternal(); } });
+  });
   document.addEventListener('DOMContentLoaded', function () { var m = document.getElementById('bootMsg'); if (m && window.__appReady !== 'ok') m.hidden = true; });
   { var m0 = document.getElementById('bootMsg'); if (m0) m0.hidden = true; }
   window.addEventListener('error', function (e) { if (window.__appReady === 'ok' && !/Script error/.test(e.message || '')) return; show('프로그램을 시작하지 못했습니다: ' + (e.message || e.type) + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : '') + ' — 이 문구를 캡처해 알려 주세요.'); }, true);
