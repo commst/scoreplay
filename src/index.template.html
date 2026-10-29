@@ -648,7 +648,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     </dl>
   </details>
 
-  <section class="panel" id="linesPanel" hidden aria-labelledby="tLines">
+  <section class="panel" id="linesPanel" aria-labelledby="tLines">
     <div class="row" style="justify-content:space-between">
       <h2 class="step-h" id="tLines"><span class="sn">2</span>줄 고르기</h2>
       <span class="hint" id="linesCount"></span>
@@ -659,6 +659,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <span class="hint">줄 그림을 보고 역할을 정하세요. 이름은 악보에서 읽은 그대로입니다.</span>
     </div>
     <div class="linelist" id="lineList"></div>
+    <p class="hint lines-empty" id="linesEmpty">악보 PDF를 올리면 여기에 악보의 줄(악기)이 차례로 나옵니다. 줄마다 선율로 연주할지, 타악으로 칠지, 끌지를 정합니다.</p>
     <details class="help">
       <summary>설명 보기</summary>
       <dl>
@@ -2147,7 +2148,7 @@ function resetEmpty(text) {
   stop();
   Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [], bars: [], title: '', fileName: '', manualOrder: null, rendered: null, dirty: true });
   state.tempoRows = [{ start: 1, unit: 'q', bpm: null, text: '' }];
-  $('linesPanel').hidden = true; $('lineList').textContent = '';
+  linesEmptyState(); $('lineList').textContent = '';
   $('fileName').textContent = text || '총보를 아직 올리지 않았습니다.';
   $('fileInfo').textContent = '총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
@@ -2204,7 +2205,7 @@ async function loadFullPdf(files) {
   showMsg('');
   $('fileName').textContent = files.map(f => f.name).join(', ');
   $('fileInfo').textContent = '악보를 읽는 중…';
-  $('linesPanel').hidden = true;
+  linesEmptyState('악보를 읽는 중입니다…');
   try {
     const loaded = [];
     for (let i = 0; i < files.length; i++) {
@@ -2241,6 +2242,7 @@ async function loadFullPdf(files) {
   } catch (e) {
     console.error(e);
     $('fileInfo').textContent = '읽지 못했습니다.';
+    linesEmptyState('악보를 읽지 못했습니다. 다른 PDF를 올려 주세요.');
     showMsg(e && /pdf\.js/.test(e.message || '') ? e.message : 'PDF를 여는 중에 문제가 생겼습니다. 암호가 걸렸거나 손상된 파일인지 확인해 주세요.' + (e && e.message ? ' (' + e.message + ')' : ''));
   }
 }
@@ -2345,9 +2347,14 @@ function applySelection(first = false) {
 
 // 줄 카드: 번호·이름·첫 단 그림 + 역할·소리·음량·옥타브
 const PERC_OPTIONS = SOUND_OPTIONS.filter(([k]) => k !== 'off');
+// 악보를 올리기 전·읽는 중: 2단계 칸은 그대로 보이고 안내만
+function linesEmptyState(t) {
+  $('linesPanel').hidden = false; $('lineList').textContent = ''; $('lineFilters').hidden = true; $('linesCount').textContent = '';
+  const e = $('linesEmpty'); e.hidden = false; if (t) e.textContent = t; else e.textContent = '악보 PDF를 올리면 여기에 악보의 줄(악기)이 차례로 나옵니다. 줄마다 선율로 연주할지, 타악으로 칠지, 끌지를 정합니다.';
+}
 function renderLineList() {
   const box = $('lineList'); box.textContent = '';
-  $('linesPanel').hidden = false;
+  $('linesPanel').hidden = false; $('linesEmpty').hidden = true; $('lineFilters').hidden = false;
   state.lineList.forEach((l, idx) => {
     const key = cfgKey(l.id), c = state.lineCfg[key];
     const card = document.createElement('div'); card.className = 'lcard ' + (c.role === 'off' ? '' : c.role);
@@ -2560,7 +2567,7 @@ state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
 state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
-renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay();
+renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); linesEmptyState();
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
