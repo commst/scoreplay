@@ -5340,6 +5340,15 @@ function applySelection(first = false) {
 // 줄 카드: 번호·이름·첫 단 그림 + 역할·소리·음량·옥타브
 const PERC_OPTIONS = SOUND_OPTIONS.filter(([k]) => k !== 'off');
 // 악보를 올리기 전·읽는 중: 2단계 칸은 그대로 보이고 안내만
+// 악보를 올리기 전: 예시 장단 줄 하나를 보여 줘 줄 설정을 미리 써 볼 수 있게
+const EXAMPLE_LINE = { id: null, label: '예시 장단 (장구)', clef: 'perc', oneLine: false, first: null };
+function showExampleLine() {
+  state.lineList = [EXAMPLE_LINE];
+  if (!state.lineCfg.p) state.lineCfg.p = { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false };
+  state.lineIds = state.lineCfg.p.role === 'off' ? [] : [null];
+  renderLineList();
+  const e = $('linesEmpty'); e.hidden = false; e.textContent = '지금은 예시 장단 한 줄만 있습니다. 악보 PDF를 올리면 악보의 줄(악기)이 차례로 나오고, 줄마다 선율로 연주할지·타악으로 칠지·끌지를 정합니다.';
+}
 function linesEmptyState(t) {
   $('linesPanel').hidden = false; $('lineList').textContent = ''; $('lineFilters').hidden = true; $('linesCount').textContent = '';
   const e = $('linesEmpty'); e.hidden = false; if (t) e.textContent = t; else e.textContent = '악보 PDF를 올리면 여기에 악보의 줄(악기)이 차례로 나옵니다. 줄마다 선율로 연주할지, 타악으로 칠지, 끌지를 정합니다.';
@@ -5354,7 +5363,7 @@ function renderLineList() {
     top.innerHTML = `<span class="no">${idx + 1}번</span><span class="lname"></span><span class="lmeta"></span>`;
     top.querySelector('.lname').textContent = l.label || `${idx + 1}번째 줄`;
     top.querySelector('.lmeta').textContent = l.clef === 'pitched' ? '선율 악보' : (l.oneLine ? '타악 · 1줄' : '타악 악보');
-    const cv = document.createElement('canvas'); cv.dataset.line = key; cv.width = 10; cv.height = 10;
+    const cv = document.createElement('canvas'); cv.dataset.line = key; cv.width = 10; cv.height = 10; if (!l.first) cv.hidden = true;
     const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', '역할');
     for (const [r, t] of [['melody', '선율'], ['perc', '타악'], ['off', '끄기']]) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-pressed', String(c.role === r));
@@ -5411,7 +5420,9 @@ function selField(label, options, value, onChange) {
 }
 function lineChanged() {
   state.lineIds = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => l.id);
-  stop(); applySelection();
+  stop();
+  if (!state.score) { changed(); return; }   // 악보를 올리기 전의 예시 장단
+  applySelection();
 }
 $('allOn').addEventListener('click', () => { for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; c.role = c.pitched ? 'melody' : 'perc'; if (c.pitched) ensureInst(c); } lineChanged(); renderLineList(); });
 $('allOff').addEventListener('click', () => { for (const l of state.lineList) state.lineCfg[cfgKey(l.id)].role = 'off'; lineChanged(); renderLineList(); });
@@ -5559,11 +5570,11 @@ state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
 state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
-renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); linesEmptyState();
+renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); showExampleLine();
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-29 10:21';
+const APP_VERSION = '2026-10-29 10:28';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
