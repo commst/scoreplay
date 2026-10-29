@@ -4833,7 +4833,7 @@ function tick() {
   if (w !== tick.w) { $('trackFill').style.width = w; tick.w = w; }
   if (n !== lastNow) {
     document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now'));
-    if (n) { const el = document.querySelector(`.b[data-n="${n}"]`); if (el) { el.classList.add('now'); if (!document.hidden) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
+    if (n) { const el = document.querySelector(`.b[data-n="${n}"]`); if (el) el.classList.add('now'); }   // 지금 마디는 노란색으로만 표시하고 화면은 따라 움직이지 않는다(보던 곳을 그대로 두게)
     lastNow = n;
   }
   raf = requestAnimationFrame(tick);
@@ -5599,7 +5599,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-29 12:16';
+const APP_VERSION = '2026-10-29 16:43';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

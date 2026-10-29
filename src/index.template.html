@@ -1830,7 +1830,7 @@ function tick() {
   if (w !== tick.w) { $('trackFill').style.width = w; tick.w = w; }
   if (n !== lastNow) {
     document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now'));
-    if (n) { const el = document.querySelector(`.b[data-n="${n}"]`); if (el) { el.classList.add('now'); if (!document.hidden) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
+    if (n) { const el = document.querySelector(`.b[data-n="${n}"]`); if (el) el.classList.add('now'); }   // 지금 마디는 노란색으로만 표시하고 화면은 따라 움직이지 않는다(보던 곳을 그대로 두게)
     lastNow = n;
   }
   raf = requestAnimationFrame(tick);
