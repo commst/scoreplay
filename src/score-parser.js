@@ -1941,6 +1941,7 @@ export function parseOrderText(text, bars) {
 
 // 템포 구간 기본값: 템포 표시 + 박자표 변경 위치
 export function defaultTempoRows(bars) {
+  if (!bars || !bars.length) return [{ start: 1, unit: 'q', bpm: null, text: '' }];   // 마디를 못 읽은 악보(스캔 등)
   const rows = [];
   const unitFor = ts => (ts[1] === 8 && ts[0] % 3 === 0) ? 'dq' : ts[1] === 8 ? 'e' : ts[1] === 2 ? 'h' : 'q';
   // '♩=♪'처럼 박자표를 바꾸며 빠르기를 바꾼 뒤, 표시 없이 원래 박자표로 돌아오면 원래 빠르기로 (악보에 되돌림 표시를 빠뜨린 경우)

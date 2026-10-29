@@ -3056,6 +3056,7 @@ function parseOrderText(text, bars) {
 
 // 템포 구간 기본값: 템포 표시 + 박자표 변경 위치
 function defaultTempoRows(bars) {
+  if (!bars || !bars.length) return [{ start: 1, unit: 'q', bpm: null, text: '' }];   // 마디를 못 읽은 악보(스캔 등)
   const rows = [];
   const unitFor = ts => (ts[1] === 8 && ts[0] % 3 === 0) ? 'dq' : ts[1] === 8 ? 'e' : ts[1] === 2 ? 'h' : 'q';
   // '♩=♪'처럼 박자표를 바꾸며 빠르기를 바꾼 뒤, 표시 없이 원래 박자표로 돌아오면 원래 빠르기로 (악보에 되돌림 표시를 빠뜨린 경우)
@@ -4788,7 +4789,10 @@ function tempoBlocked(range) {
   if (el) { el.classList.add('tempo-alert'); setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) {} }, 350); el.addEventListener('input', () => { el.classList.remove('tempo-alert'); if (!document.querySelector('#tempoBody input.need')) showMsg(''); }, { once: true }); }
   return true;
 }
+// 읽은 마디가 없으면(스캔한 PDF 등) 빈 소리를 만들지 않는다
+function noBars() { if (state.bars.length) return false; showMsg('재생할 마디가 없습니다. 악보를 읽지 못했거나 켜 둔 악기가 없습니다. 다른 PDF를 올리거나 악기 선택에서 줄을 켜 주세요.'); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return true; }
 async function play(offset = 0) {
+  if (noBars()) { stop(true); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return; }
   if (tempoBlocked()) { stop(true); return; }
   unlockAudio();
   if (state.dirty || !state.rendered) {
@@ -4852,7 +4856,7 @@ $('track').addEventListener('click', ev => {
 });
 function playFromBar(n) {
   const to = +$('to').value;
-  if (n < +$('from').value || n > to) { $('from').value = n; $('to').value = lastBar(); changed(); updateOut(); }
+  if (n < +$('from').value || n > to) { $('from').value = n; $('to').value = lastBar(); changed(); updateOut(); if (saveLinked) syncSaveFromPlay(); scheduleAutoSave(); }
   if (tempoBlocked()) return;
   if (state.dirty || !state.rendered) { unlockAudio(); play(0).then(() => { if (state.rendered) seekBar(n); }); return; }
   seekBar(n);
@@ -4945,6 +4949,7 @@ $('sSync').addEventListener('click', () => { saveLinked = true; syncSaveFromPlay
 for (const id of ['from', 'to', 'optRepeat', 'optCount', 'optMetro', 'optRest', 'optDyn', 'speed', 'rangeAll']) $(id).addEventListener(id === 'rangeAll' ? 'click' : 'change', () => { if (saveLinked) syncSaveFromPlay(); });
 $('saveJump').addEventListener('click', () => { const b = $('saveBox'); b.scrollIntoView({ block: 'center', behavior: 'smooth' }); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1200); });
 $('saveBtn').addEventListener('click', async () => {
+  if (noBars()) return;
   const o = saveOpts();
   if (tempoBlocked(o)) return;
   const btn = $('saveBtn'); btn.disabled = true; const label = btn.textContent; btn.textContent = '만드는 중…';
@@ -4996,7 +5001,7 @@ function collectSettings() {
   return { format: 'hapju-settings', v: 1, title: state.title || '', file: state.fileName || '', saved: new Date().toISOString(), lastBar: lastBar(),
     lines, tempoRows: state.tempoRows.map(r => ({ ...r })), speed: +$('speed').value, ritF: $('ritF').value, accF: $('accF').value,
     play: { ...playOpts(), loop: $('optLoop').checked, rest: $('optRest').value }, save: { ...saveOpts(), linked: saveLinked, format: $('saveFormat').value },
-    order: state.manualOrder ? $('orderText').value : null,
+    order: state.manualOrder ? orderToText(state.bars, state.manualOrder) : null,
     extras: (state.extras || []).map(x => ({ name: x.file.name, fp: x.sc.fp })) };
 }
 const fmtTime = iso => { try { const d = new Date(iso); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; } catch (e) { return ''; } };
@@ -5247,7 +5252,7 @@ async function loadFullPdf(files) {
   } catch (e) {
     console.error(e);
     $('fileInfo').textContent = '읽지 못했습니다.';
-    linesEmptyState('악보를 읽지 못했습니다. 다른 PDF를 올려 주세요.');
+    resetEmpty('PDF를 열지 못해');
     showMsg(e && /pdf\.js/.test(e.message || '') ? e.message : 'PDF를 여는 중에 문제가 생겼습니다. 암호가 걸렸거나 손상된 파일인지 확인해 주세요.' + (e && e.message ? ' (' + e.message + ')' : ''));
   }
 }
@@ -5594,7 +5599,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-29 10:40';
+const APP_VERSION = '2026-10-29 12:16';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
