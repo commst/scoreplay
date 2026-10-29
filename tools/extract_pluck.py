@@ -35,7 +35,7 @@ for spec in sys.argv[2:]:
     x=load(f); E=env(x); regs=regions(E,thr); prev=None
     for r,(i,j) in enumerate(regs):
         a0=max(0,(i-15)*441); seg=np.abs(x[a0:(i+30)*441]); pk=seg.max()
-        a=a0+int(np.argmax(seg>pk*0.15))-int(0.003*SR)
+        a=max(0,a0+int(np.argmax(seg>pk*0.15))-int(0.003*SR))
         nxt=regs[r+1][0]*441-int(0.05*SR) if r+1<len(regs) else len(x)
         b=min(nxt, a+int(3.0*SR))
         rough=[yin_free(x[int(t*SR):int(t*SR)+5000]) for t in np.arange(a/SR+0.06,min(b/SR-0.1,a/SR+0.8),0.04)]

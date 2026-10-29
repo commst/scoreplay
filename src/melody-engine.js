@@ -8,13 +8,16 @@ export const INSTRUMENTS = {
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
   geomungo: { name: '거문고 (녹음)', kind: 'pluck', bank: 'geomungo', bright: 0.3, decay: 1.6, ring: 0.5, click: 0.35, nong: 28 },
   geomungo_syn: { name: '거문고 (합성음)', kind: 'pluck', bright: 0.3, decay: 1.6, ring: 0.5, click: 0.35, nong: 28 },
-  yanggeum: { name: '양금', kind: 'pluck', bright: 0.85, decay: 3.2, ring: 1.4, click: 0.15 },
+  yanggeum: { name: '양금 (녹음)', kind: 'pluck', bank: 'yanggeum', bright: 0.85, decay: 3.2, ring: 1.4, click: 0.15 },
+  yanggeum_syn: { name: '양금 (합성음)', kind: 'pluck', bright: 0.85, decay: 3.2, ring: 1.4, click: 0.15 },
   daegeum: { name: '대금 (녹음)', kind: 'wind', bank: 'daegeum', harm: [1, 0.32, 0.16, 0.09, 0.05, 0.03], breath: 0.10, buzz: 0.06, atk: 0.07, vib: [5.2, 18], formant: [] },
   daegeum_syn: { name: '대금 (합성음)', kind: 'wind', harm: [1, 0.32, 0.16, 0.09, 0.05, 0.03], breath: 0.10, buzz: 0.06, atk: 0.07, vib: [5.2, 18], formant: [] },
   sogeum: { name: '소금 (녹음)', kind: 'wind', bank: 'sogeum', harm: [1, 0.22, 0.08, 0.04], breath: 0.08, buzz: 0.02, atk: 0.05, vib: [5.5, 15], formant: [] },
   sogeum_syn: { name: '소금 (합성음)', kind: 'wind', harm: [1, 0.22, 0.08, 0.04], breath: 0.08, buzz: 0.02, atk: 0.05, vib: [5.5, 15], formant: [] },
   piri: { name: '피리 (녹음)', kind: 'wind', bank: 'piri', harm: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.42, 0.35, 0.28, 0.22, 0.17, 0.13], breath: 0.05, atk: 0.04, vib: [5.8, 30], formant: [[1100, 450, 2.2], [2600, 700, 1.0]] },
   piri_syn: { name: '피리 (합성음)', kind: 'wind', harm: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.42, 0.35, 0.28, 0.22, 0.17, 0.13], breath: 0.05, atk: 0.04, vib: [5.8, 30], formant: [[1100, 450, 2.2], [2600, 700, 1.0]] },
+  daepiri: { name: '대피리 (녹음)', kind: 'wind', bank: 'daepiri', harm: [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.42, 0.35, 0.28, 0.22, 0.17, 0.13], breath: 0.05, atk: 0.05, vib: [5.5, 28], formant: [[800, 400, 2.2], [2000, 650, 1.0]] },
+  saenghwang: { name: '생황 (녹음)', kind: 'wind', bank: 'saenghwang', harm: [1, 0.7, 0.5, 0.35, 0.25, 0.18, 0.12], breath: 0.03, atk: 0.06, vib: [5, 10], formant: [] },
   taepyeongso: { name: '태평소 (녹음)', kind: 'wind', bank: 'taepyeongso', harm: [1, 0.95, 0.9, 0.85, 0.8, 0.7, 0.6, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2], breath: 0.04, atk: 0.03, vib: [6, 25], formant: [[1400, 500, 2.5], [3000, 800, 1.4]] },
   taepyeongso_syn: { name: '태평소 (합성음)', kind: 'wind', harm: [1, 0.95, 0.9, 0.85, 0.8, 0.7, 0.6, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2], breath: 0.04, atk: 0.03, vib: [6, 25], formant: [[1400, 500, 2.5], [3000, 800, 1.4]] },
   haegeum: { name: '해금 (녹음)', kind: 'bow', bank: 'haegeum', harm: null, breath: 0.07, atk: 0.07, vib: [6, 28], formant: [[900, 300, 1.8], [2200, 600, 1.2]] },
@@ -34,12 +37,13 @@ export function guessInstrument(name = '') {
   if (/해금/.test(name)) return 'haegeum';   // '저해금'의 '저'를 대금(저)으로 읽지 않게 먼저
   if (/대금|^저$|^중금|^저\s/.test(name)) return 'daegeum';
   if (/태평소|날라리|새납/.test(name)) return 'taepyeongso';
+  if (/대피리|저피리/.test(name)) return 'daepiri';   // '피리'보다 먼저
   if (/피리/.test(name)) return 'piri';
   if (/해금/.test(name)) return 'haegeum';
   if (/아쟁/.test(name)) return 'ajaeng';
   if (/piano|피아노|pno|syn|신디|keyboard|건반/i.test(name)) return 'piano';   // 신디사이저·건반 줄은 피아노 소리로
-  // 녹음이 없는 악기는 가장 비슷한 소리로: 생황(리드 화음 악기) → 피리, 콘트라베이스·첼로(활로 켜는 낮은 현) → 아쟁
-  if (/생황/.test(name)) return 'piri';
+  if (/생황/.test(name)) return 'saenghwang';
+  // 녹음이 없는 악기는 가장 비슷한 소리로: 콘트라베이스·첼로(활로 켜는 낮은 현) → 아쟁
   if (/contra\s*bass|^cb\.?$|콘트라베이스|베이스|cello|vc\.?$|첼로/i.test(name)) return 'ajaeng';
   return null; // 악기명을 확실히 알아내지 못하면 임의로 가야금 소리를 지정하지 않는다.
 }
