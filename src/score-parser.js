@@ -1350,9 +1350,19 @@ export function parseScore(pages, opts = {}) {
         const isTrailing = ri === regions.length - 1 && (!groups.length || rx0 >= groups[groups.length - 1][groups[groups.length - 1].length - 1][0] - 0.5) && rx1 >= st.x1 - 0.5;
         if (pendingTwoBar && isFirst && !content) content = true;
         if (isFirst && !content) {
-          const head = sg.filter(g => inr(cx(g)) && g.oy > st.top - 12 && g.oy < st.bottom + 12);
+          // 단 머리(음자리표·조표·박자표)가 차지한 자리. 셈여림·빠르기 글자는 빼고 잰다(첫 마디 끝의 f 때문에 빈 첫 마디를 놓치던 문제)
+          const HEADC = new Set([38, 63, 66, 214, 47, 139, 98, 35, 110, 99, 67, 43, 246]);
+          const head = sg.filter(g => inr(cx(g)) && g.oy > st.top - 12 && g.oy < st.bottom + 12 && (isDigit(g.code) || HEADC.has(g.code)));
           const used = head.length ? Math.max(...head.map(g => g.x1)) : rx0;
           if (rx1 - used > 40) content = true;
+          // 총보: 같은 단의 다른 오선에 이 칸의 음표·쉼표가 있으면 이 오선도 그 마디가 있다(빈 마디를 쉼표 없이 비워 둔 관악 줄 등)
+          if (!content && rx1 - used > 12) {
+            const sys = layout.systems[layout.sysOf[si]] || [];
+            if (sys.length > 1) {
+              const NOTEISH = new Set([207, 250, 119, 183, 238, 206, 228, 197, 168]);
+              content = sys.some(oi => oi !== si && glyphs.some(g => isMusicFont(g.font) && NOTEISH.has(g.code) && g.ox > used && g.ox < rx1 - 1 && g.oy > staves[oi].top - 12 && g.oy < staves[oi].bottom + 12));
+            }
+          }
         }
         if (!content && !isFirst && !isTrailing) {
           // 겹세로줄과 도돌이 시작 사이에 박자표만 들어 있는 좁은 칸은 마디가 아니다

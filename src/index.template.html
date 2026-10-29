@@ -547,7 +547,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <p class="caution">악보를 자동으로 읽기 때문에 템포·악기 이름·음표가 실제와 다르게 인식될 수 있습니다. 재생하기 전에 줄 이름과 빠르기 표를 악보와 한 번 맞춰 보세요.</p>
     <ol class="hero-steps">
       <li><span class="hs-n">1</span><span><b>악보 PDF 올리기</b> · 총보 또는 파트보. 악보 프로그램에서 저장한 PDF.</span></li>
-      <li><span class="hs-n">2</span><span><b>줄마다 역할 정하기</b> · 선율 / 타악 / 끄기. 악기 소리·음량도 줄마다.</span></li>
+      <li><span class="hs-n">2</span><span><b>악기 선택</b> · 줄마다 선율 / 타악 / 끄기, 악기 소리·음량.</span></li>
       <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
       <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
     </ol>
@@ -632,7 +632,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
       <dt>1. 올리기</dt>
-      <dd>총보 PDF를 올리면 악보를 읽은 뒤 <b>줄 고르기</b> 칸에 악보 줄이 위에서부터 차례로 나옵니다. 줄마다 악보에 적힌 이름과 그 줄의 첫 단 그림이 보입니다. 이름이 잘리거나 없으면 그림으로 확인하세요.</dd>
+      <dd>총보 PDF를 올리면 악보를 읽은 뒤 <b>악기 선택</b> 칸에 악보 줄이 위에서부터 차례로 나옵니다. 줄마다 악보에 적힌 이름과 그 줄의 첫 단 그림이 보입니다. 이름이 잘리거나 없으면 그림으로 확인하세요.</dd>
       <dt>2. 줄마다 역할 정하기</dt>
       <dd><b>선율</b>은 음높이까지 읽어 고른 악기 소리로 가락을 연주하고, <b>타악</b>은 리듬만 읽어 장구·북 같은 소리로 칩니다. <b>끄기</b>는 듣지 않습니다.
         <span class="eg">가야금 연습 → 가야금 줄: 선율 / 장구 줄: 타악 / 나머지: 끄기</span>
@@ -650,7 +650,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
   <section class="panel" id="linesPanel" aria-labelledby="tLines">
     <div class="row" style="justify-content:space-between">
-      <h2 class="step-h" id="tLines"><span class="sn">2</span>줄 고르기</h2>
+      <h2 class="step-h" id="tLines"><span class="sn">2</span>악기 선택</h2>
       <span class="hint" id="linesCount"></span>
     </div>
     <div class="row" id="lineFilters">
@@ -1462,7 +1462,7 @@ function renderEditor() {
     for (const w of cb.warnings.filter(w => w.startsWith('수정한'))) sec.append(tipNode('div', 'ed-warn', '⚠ ' + w));
     if (has) { dlg.append(sec); any = true; }
   }
-  if (!any) dlg.append(tipNode('p', 'hint', '켜 둔 줄에서 이 마디에 고칠 음이 없습니다. 줄 고르기에서 고칠 줄을 켜 주세요.'));
+  if (!any) dlg.append(tipNode('p', 'hint', '켜 둔 줄에서 이 마디에 고칠 음이 없습니다. 악기 선택에서 고칠 줄을 켜 주세요.'));
   const foot = tipNode('div', 'ed-foot');
   const btn = (label, fn, cls = 'btn') => { const b = tipNode('button', cls, label); b.type = 'button'; b.addEventListener('click', fn); return b; };
   foot.append(btn('▶ 이 마디부터 듣기', () => { const k = n; closeEditor(); playFromBar(k); }));
@@ -2146,10 +2146,13 @@ function linesOfSource(x, prefix) {
 }
 function resetEmpty(text) {
   stop();
-  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [], bars: [], title: '', fileName: '', manualOrder: null, rendered: null, dirty: true });
-  state.tempoRows = [{ start: 1, unit: 'q', bpm: null, text: '' }];
-  linesEmptyState(); $('lineList').textContent = '';
-  $('fileName').textContent = text || '총보를 아직 올리지 않았습니다.';
+  // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
+  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS });
+  state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
+  state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
+  $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
+  showExampleLine();
+  $('fileName').textContent = text ? text + ' 예시 장단으로 돌아왔습니다.' : '예시 장단 (직접 만든 8마디)';
   $('fileInfo').textContent = '총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
@@ -2333,8 +2336,15 @@ function applySelection(first = false) {
   const prevBars = state.bars;
   state.bars = bars;
   state.marks = { dyn: [], tempo: master.r.marks.tempo };
+  // 악기를 켜고 끌 때마다 직접 고친 연주 순서·템포가 지워지던 문제: 마디 수가 그대로면 유지
+  const keepOrderText = !first && state.manualOrder ? $('orderText').value : null;
   state.manualOrder = null;
-  if (first || !state.tempoRows.length || prevBars.length !== bars.length) state.tempoRows = defaultTempoRows(bars).map(x => ({ ...x }));
+  if (keepOrderText) { const r = parseOrderText(keepOrderText, bars); if (!r.error) state.manualOrder = r.order; }   // 마디 번호로 다시 읽음
+  if (first || !state.tempoRows.length) state.tempoRows = defaultTempoRows(bars).map(x => ({ ...x }));
+  else if (prevBars.length !== bars.length) {
+    const keep = state.tempoRows.filter(r => r.start <= bars[bars.length - 1].number);
+    state.tempoRows = keep.some(r => r.start === 1) && keep.some(r => r.manual) ? keep : defaultTempoRows(bars).map(x => ({ ...x }));
+  }
   $('ritRow').hidden = !master.r.marks.tempo.some(t => t.kind !== 'atempo');
   $('fileName').textContent = state.sourceScores.length > 1 ? `${state.sourceScores.length}개 파트보 · ${state.title || ''}` : (sc.title ? sc.title + ' · ' : '') + (state.fileName || '');
   $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 더한 악보 ${state.extras.length}개` : '');
@@ -2534,7 +2544,7 @@ async function loadPartPdfs(files) {
       loaded.push({ file, sc, layout, label: (sc.partName || '').trim(), uid: ++uidSeq });   // 곡 제목은 파트 이름이 아니므로 쓰지 않는다
     }
     state.parts = [...existing, ...loaded];
-    rebuildParts();
+    rebuildParts(!existing.length);
   } catch (e) {
     console.error(e); $('partsFileInfo').textContent = '파트보를 읽지 못했습니다.';
     showMsg(e && e.message ? e.message : '파트보 PDF를 여는 중 문제가 생겼습니다.');
@@ -2544,9 +2554,9 @@ function removePart(uid) {
   stop();
   state.parts = state.parts.filter(x => x.uid !== uid);
   if (!state.parts.length) { resetEmpty(); return; }
-  rebuildParts();
+  rebuildParts(false);
 }
-function rebuildParts() {
+function rebuildParts(first = true) {
   // 파트 이름을 못 읽었거나 여러 파트가 같은 이름(대개 곡 제목)이면 파일 이름으로 부른다
   for (const x of state.parts) x.label = (x.sc.partName || '').trim();
   const dupl = new Set(state.parts.filter(x => x.label && state.parts.filter(y => y.label === x.label).length > 1).map(x => x.label));
@@ -2567,7 +2577,7 @@ function rebuildParts() {
   syncLineIds(); state.manualOrder = null;
   $('partsFileName').textContent = `${state.parts.length}개 파트보 등록됨`;
   $('partsFileInfo').textContent = '파트보는 파일별로 분석한 뒤 마디 번호를 기준으로 합쳐 재생합니다. 더 올리면 목록에 이어 붙습니다.';
-  renderFileLists(); renderLineList(); applySelection(true);
+  renderFileLists(); renderLineList(); applySelection(first);
   afterScoreLoaded();
 }
 
