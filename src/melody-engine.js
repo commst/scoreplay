@@ -30,21 +30,22 @@ export const INSTRUMENTS = {
 
 // 줄 이름으로 악기 짐작
 export function guessInstrument(name = '') {
-  if (/가야금|가야/.test(name)) return 'gayageum';
+  if (/가야금|가야|^가\.?\s*\d|현금|^현소?\s*[0-9IⅠⅡ]*$/.test(name)) return 'gayageum';   // 현·현금 = 25현 가야금 (총보 줄임 이름)
   if (/거문고/.test(name)) return 'geomungo';
   if (/양금/.test(name)) return 'yanggeum';
   if (/소금/.test(name)) return 'sogeum';
   if (/해금/.test(name)) return 'haegeum';   // '저해금'의 '저'를 대금(저)으로 읽지 않게 먼저
   if (/대금|^저$|^중금|^저\s/.test(name)) return 'daegeum';
   if (/태평소|날라리|새납/.test(name)) return 'taepyeongso';
-  if (/대피리|저피리/.test(name)) return 'daepiri';   // '피리'보다 먼저
+  if (/대피리|저피리|^[대저]피\.?(\s|$)/.test(name)) return 'daepiri';   // '피리'보다 먼저 (줄임: 대피·저피)
   if (/피리/.test(name)) return 'piri';
   if (/해금/.test(name)) return 'haegeum';
   if (/아쟁/.test(name)) return 'ajaeng';
   if (/piano|피아노|pno|syn|신디|keyboard|건반/i.test(name)) return 'piano';   // 신디사이저·건반 줄은 피아노 소리로
-  if (/생황/.test(name)) return 'saenghwang';
+  if (/생황|^생\.?$/.test(name)) return 'saenghwang';
   // 녹음이 없는 악기는 가장 비슷한 소리로: 콘트라베이스·첼로(활로 켜는 낮은 현) → 아쟁
-  if (/contra\s*bass|^cb\.?$|콘트라베이스|베이스|cello|vc\.?$|첼로/i.test(name)) return 'ajaeng';
+  if (/contra\s*bass|^cb\.?$|^bass|콘트라베이스|베이스|cello|vc\.?$|첼로/i.test(name)) return 'ajaeng';
+  if (/viola|비올라|violin|바이올린/i.test(name)) return 'haegeum';
   return null; // 악기명을 확실히 알아내지 못하면 임의로 가야금 소리를 지정하지 않는다.
 }
 
