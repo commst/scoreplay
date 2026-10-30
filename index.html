@@ -102,10 +102,6 @@ button { cursor: pointer; }
 .hint { font-size: 13px; color: var(--muted); margin: 0; }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .dot.R { background: var(--chae); } .dot.L { background: var(--buk); }
-.custom { display: grid; gap: 6px; }
-.custom .slot { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
-.custom .slot b { width: 26px; font-weight: 600; }
-.custom .slot span { color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* 연주 */
 .transport { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
@@ -536,6 +532,18 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .support th, .support td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; }
 .support th { font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .app-foot { margin: 28px 0 8px; text-align: center; color: var(--muted); font-size: 12.5px; }
+.hist-btn { position: relative; margin-top: 16px; padding: 7px 14px; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; background: rgba(255,255,255,.08); color: #fff; font: 600 13px/1.3 var(--font-body); cursor: pointer; }
+.hist-btn:hover { background: rgba(255,255,255,.16); }
+.hist-btn:focus-visible, .hist-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hist-link { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.hist-dlg h3 { margin: 0 0 4px; }
+.hist-dlg .hist-sub { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
+.hist-dlg section { border-top: 1px solid var(--line); padding: 10px 0 4px; }
+.hist-dlg h4 { margin: 0 0 4px; font-size: 14.5px; }
+.hist-dlg ul { margin: 0; padding-left: 1.2em; font-size: 13.5px; line-height: 1.6; }
+.hist-dlg li { margin: 2px 0; }
+.hist-dlg li b { font-weight: 600; }
+.hist-dlg .hist-foot { position: sticky; bottom: -16px; display: flex; justify-content: flex-end; padding: 10px 0 0; background: var(--card); }
 #updateBar { position: sticky; top: 8px; z-index: 50; box-shadow: 0 6px 20px #0002; }
 .msg.openext { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px; }
 .msg.openext > span:first-child { flex: 1 1 260px; }
@@ -572,6 +580,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
       <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
     </ol>
+    <button class="hist-btn" id="histBtn" type="button">업데이트 이력 보기</button>
   </header>
 
   <section class="step" aria-labelledby="stepLoad">
@@ -819,15 +828,6 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         </details>
       </section>
 
-      <section class="panel" aria-labelledby="tSound">
-        <h2 id="tSound">장구 녹음 바꾸기</h2>
-        <div class="custom">
-          <p class="hint">타악 줄의 장구 따·궁·덩은 늘봄에서 녹음한 소리를 씁니다. 다른 녹음으로 바꾸려면 한 번 친 소리를 담은 wav, mp3 파일을 고르세요. 여러 개를 고르면 번갈아 씁니다.</p>
-          <div class="slot"><b>따</b><span id="cu-따">기본 녹음</span><label class="btn" for="f-따">고르기</label><input type="file" id="f-따" accept="audio/*" multiple hidden></div>
-          <div class="slot"><b>궁</b><span id="cu-궁">기본 녹음</span><label class="btn" for="f-궁">고르기</label><input type="file" id="f-궁" accept="audio/*" multiple hidden></div>
-          <div class="slot"><b>덩</b><span id="cu-덩">기본 녹음</span><label class="btn" for="f-덩">고르기</label><input type="file" id="f-덩" accept="audio/*" multiple hidden></div>
-        </div>
-      </section>
     </div>
 
     <div class="side">
@@ -977,9 +977,64 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       </section>
     </div>
   </div>
-  <footer class="app-foot"><span id="appVer"></span></footer>
+  <footer class="app-foot"><span id="appVer"></span> · <button class="hist-link" id="histBtn2" type="button">업데이트 이력</button></footer>
 </div>
 
+
+<template id="histTpl">
+  <section><h4>10월 31일</h4><ul>
+    <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
+    <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
+    <li>'장구 녹음 바꾸기' 칸을 없앰: 늘봄에서 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</li>
+    <li>이 '업데이트 이력' 창</li>
+    <li>고침: 정지한 뒤 같은 마디부터 다시 재생하면 노란 표시가 늦게 나오던 문제 등</li>
+  </ul></section>
+  <section><h4>10월 30일</h4><ul>
+    <li><b>타악 크기</b>: 장구(약 2배)·북·꽹과리(약 3배)를 키워 같은 100%에서 선율 악기와 비슷하게 들리게. 징은 울림을 3초 안으로 줄임</li>
+    <li><b>rit.·accel. 더 읽기</b>: poco a poco accel., molto rit., 약간 accel, allargando, stringendo, in tempo</li>
+    <li>고침: 악보를 읽는 중에 다른 악보를 올리면 두 악보가 섞이던 문제, BPM 칸에 아주 작은 수를 넣으면 휴대폰이 멈출 수 있던 문제 등</li>
+  </ul></section>
+  <section><h4>10월 29일</h4><ul>
+    <li><b>새 녹음 악기</b>: 대피리(저피리), 생황, 양금, 스네어드럼</li>
+    <li>줄 이름 인식 보강: 대피·저피·생·현·현금(25현 가야금)·S.Dr·풋심벌 등</li>
+    <li>'2 줄 고르기' → '2 악기 선택'. 악보를 올리기 전에도 예시 장단 줄로 미리 써 보기</li>
+    <li>연주 중에 화면이 지금 마디를 따라 움직이지 않음(마디 지도의 노란 표시만 옮겨 감)</li>
+    <li>전체 점검으로 고친 문제: 마디를 눌러 재생할 때 재생 표시가 꺼지던 것, 소리를 만드는 동안 바꾼 설정이 반영되지 않던 것, 일부 줄의 첫 마디 번호가 밀리던 것 등</li>
+  </ul></section>
+  <section><h4>10월 28일</h4><ul>
+    <li><b>악보별 설정 저장</b>: 템포·연습 속도·줄 설정·재생 옵션을 악보마다 자동 저장하고, 같은 악보를 열면 자동으로 불러옴. 파일로 내보내기·가져오기</li>
+    <li><b>웹 주소</b> commst.github.io/scoreplay. 카카오톡 등 앱 안 브라우저에서는 [브라우저에서 실행] 단추</li>
+    <li>화면 아래 판 번호, 새 판이 나오면 [새로 고침] 안내</li>
+    <li>'읽을 수 있는 악보 PDF' 안내, 머리 부분 새 디자인, 휴대폰 화면 순서</li>
+    <li>아이패드 등에서 동작하지 않을 때 원인 안내</li>
+    <li>MuseScore 2.0 악보의 옥타브 음자리표·임시표 읽기(대아쟁 파트보를 타악으로 읽던 문제)</li>
+  </ul></section>
+  <section><h4>10월 27일</h4><ul>
+    <li><b>마디별 음 수정(✎)</b>: 음정·음 길이를 고치고 자동 저장, 되돌리기, 다른 기기로 내보내기·가져오기</li>
+    <li><b>마디 미리보기</b>(타임라인·상세)와 [n마디부터 재생]</li>
+    <li><b>마디 범위를 정해 음원 저장</b>(MP3·WAV), 카운트인·메트로놈 등 저장용 설정</li>
+    <li>새 녹음: 북, 바라, 심벌, 하이햇, 베이스드럼, 피아노</li>
+    <li>악보 빼기·여러 개 한꺼번에 고르기·피아노 악보 더하기</li>
+    <li>템포를 못 읽은 구간은 재생하지 않고 BPM 입력 안내</li>
+    <li>화면 디자인 새로, 아래쪽 작은 연주 막대, 휴대폰 글자 깨짐 고침</li>
+    <li>여러 총보(Frontier·미락흘·달빛항해·얼씨구야 등) 검토로 인식 개선, MuseScore 3·4·Dorico 기호 읽기</li>
+  </ul></section>
+  <section><h4>10월 24일</h4><ul>
+    <li><b>늘봄에서 직접 녹음한 국악기 소리</b>: 가야금(25현), 거문고, 대금, 소금, 피리, 태평소, 해금, 아쟁, 장구, 꽹과리, 징</li>
+    <li>긴 음의 농현·요성, 장구·꽹과리 굴림과 꾸밈음</li>
+    <li>태평소처럼 한 옥타브 낮게 적은 악보는 옥타브 자동 맞춤</li>
+  </ul></section>
+  <section><h4>10월 22일</h4><ul>
+    <li><b>국악 합주 연습기</b>: 총보의 선율 줄(가야금·대금·해금 등)과 장구·북을 함께 연주. 줄마다 역할(선율/타악/끄기)·악기·옥타브·음량</li>
+    <li>음높이 읽기(음자리표·조표·임시표·붙임줄·화음·꾸밈음), 휴대폰에서 재생</li>
+  </ul></section>
+  <section><h4>10월 21일</h4><ul>
+    <li>총보 읽기, 쉬는 마디 박 짚기, MuseScore 2·Encore·Sibelius 악보 읽기, ♩=♪ 같은 빠르기 표시</li>
+  </ul></section>
+  <section><h4>10월 20일</h4><ul>
+    <li>처음 시작: 장구 악보 PDF를 읽어 장단을 들려주는 '악보 리듬 연습기'</li>
+  </ul></section>
+</template>
 <div class="mini" id="mini" hidden>
   <button class="mini-play" id="miniPlay" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="miniIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
   <div class="mini-pos"><div class="mini-now" id="miniNow"><b>정지</b></div><div class="mini-track"><i id="miniFill"></i></div></div>
@@ -4833,29 +4888,6 @@ function currentMelodic() {
   return out;
 }
 function currentGains() { const out = {}; for (const id of state.lineIds) out[cfgKey(id)] = state.lineCfg[cfgKey(id)].vol; return out; }
-for (const key of ['따', '궁', '덩']) {
-  $('f-' + key).addEventListener('change', async ev => {
-    const files = [...ev.target.files]; if (!files.length) return;
-    try {
-      const out = [];
-      for (const f of files) {
-        const ab = await f.arrayBuffer();
-        const oc = new OfflineAudioContext(1, 1, SR);
-        const ab2 = await oc.decodeAudioData(ab);
-        let x = ab2.getChannelData(0).slice();
-        if (ab2.numberOfChannels > 1) { const y = ab2.getChannelData(1); for (let i = 0; i < x.length; i++) x[i] = (x[i] + y[i]) / 2; }
-        let peak = 0; for (const v of x) peak = Math.max(peak, Math.abs(v));
-        let s = 0; while (s < x.length && Math.abs(x[s]) < peak * 0.05) s++;
-        x = x.slice(Math.max(0, s - Math.round(0.002 * SR)), Math.max(0, s - Math.round(0.002 * SR)) + Math.round(2.5 * SR));
-        for (let i = 0; i < x.length; i++) x[i] /= peak || 1;
-        out.push(x);
-      }
-      state.custom[key] = out;
-      $('cu-' + key).textContent = files.map(f => f.name).join(', ');
-      changed();
-    } catch (e) { showMsg(`${key} 소리 파일을 읽지 못했습니다. wav나 mp3 파일인지 확인해 주세요.`); }
-  });
-}
 
 // ---------- 렌더 / 재생 ----------
 function changed() { state.dirty = true; if (state.playing) stop(); explainTempo(); try { prefetchBanks(); } catch (e) {} }
@@ -5825,10 +5857,24 @@ state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
 renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); showExampleLine();
+// ---------- 업데이트 이력 창 ----------
+function openHistory() {
+  const back = document.createElement('div'); back.className = 'edit-back';
+  const dlg = tipNode('div', 'edit-dlg hist-dlg'); dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-label', '업데이트 이력');
+  dlg.append(tipNode('h3', '', '업데이트 이력'), tipNode('p', 'hist-sub', (APP_VERSION && !APP_VERSION.startsWith('/*') ? `지금 화면: ${APP_VERSION} 판 · ` : '') + '날짜별로 새로 생긴 기능과 고친 점입니다. 최근 것이 위에 있습니다.'));
+  dlg.append($('histTpl').content.cloneNode(true));
+  const foot = tipNode('div', 'hist-foot'), cl = tipNode('button', 'btn primary', '닫기'); cl.type = 'button'; foot.append(cl); dlg.append(foot);
+  const close = () => { back.remove(); document.removeEventListener('keydown', esc, true); };
+  const esc = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); close(); } };
+  cl.addEventListener('click', close); back.addEventListener('click', ev => { if (ev.target === back) close(); });
+  document.addEventListener('keydown', esc, true);
+  back.append(dlg); document.body.append(back); cl.focus();
+}
+$('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListener('click', openHistory);
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 00:46';
+const APP_VERSION = '2026-10-31 00:53';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
