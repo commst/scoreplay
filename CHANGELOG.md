@@ -301,3 +301,12 @@
 - 줄 미리보기 그림: 총보는 줄마다 같은 쪽 전체를 다시 그려 휴대폰 메모리를 많이 쓰던 문제 → 쪽마다 한 번만 그림(20줄 총보: 쪽 그림 20장 → 2장)
 - 음 수정 창의 박 위치를 12/8 등에서도 마디 미리보기와 같은 박(4박)으로 표시
 
+## 2026-10-30 (41) · rit.·accel. 읽기 보강
+- 앞에 꾸밈말이 붙은 빠르기 변화도 읽음: 'poco a poco accel.', 'molto rit.', '약간 accel', '약간 rit' 등 (전에는 글자가 rit/accel로 시작할 때만 읽었음)
+- allargando → rit.처럼, stringendo(string.) → accel.처럼. 'in tempo' → a tempo
+- 'poco a poco accel. & cresc.'처럼 함께 적은 셈여림 변화도 넣음
+- 'poco a poco'·'점점'은 다음 빠르기 표시까지(최대 16마디) 천천히 바뀜. 점선이 없는 rit.·accel.은 예전처럼 2마디
+- 파트보에서 두 단 사이(단 아래)에 적은 '약간 accel'이 다음 단 첫 마디에 붙던 문제 → 글자 가운데 높이로 어느 단 것인지 정함
+- 샘플 85곡 확인: 새로 읽게 된 곳 — 얼씨구야(poco a poco accel. 8·12마디, in tempo 170마디), 판놀음 II·연변목가(약간 accel 42마디, 약간 rit 57·61마디), 6268ef29(allargando 318·463마디, poco a poco accel. 480마디), dee46270(poco a poco accel. 23마디). 마디 읽기는 바뀌지 않음
+- 도움말에 읽는 글자와 바뀌는 길이 설명
+

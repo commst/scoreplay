@@ -1480,10 +1480,20 @@ export function parseScore(pages, opts = {}) {
       return { x, found };
     };
 
+    const TEMPO_WORD = /^(rit|rall|allarg|slent|accel|string(\.|endo|e\b)|a tempo|in tempo)|점점\s*(느리게|빠르게)/i;
+    // 'poco a poco accel. & cresc.'처럼 빠르기와 셈여림을 함께 적은 글자: 셈여림 변화도 넣는다
+    const alsoDyn = (r, tc, e) => {
+      const m = tc.match(/(cresc|dim|decresc)/i); if (!m || m.index === 0) return;
+      marks.push({ type: 'dramp', dir: /cresc/i.test(m[1]) ? 1 : -1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found });
+    };
+
     // 글자로 된 지시어
     for (const r of runs) {
       if (r.used) continue;
-      const own = staffOf(r.y) === si, sys = sameSys(staffOf(r.y));
+      // 빠르기 변화 글자가 두 단 사이에 있으면 글자 밑줄(기준선)이 아니라 글자 가운데로 어느 단 것인지 정한다
+      // (파트보에서 단 아래에 적은 '약간 accel'이 다음 단 첫 마디로 가던 문제)
+      const yy = r.size && TEMPO_WORD.test(r.text.replace(/^((poco\s+a\s+poco|un\s+poco|poco|molto|sempre|subito|più|piu|ancora|약간|조금)\s*)+/i, '').trim()) ? r.y - r.size * 0.35 : r.y;
+      const own = staffOf(yy) === si, sys = sameSys(staffOf(yy));
       if (!sys) continue;
       let t = r.text.replace(/\s+/g, ' ').trim();
       if (!t || /=/.test(t)) continue;
@@ -1493,14 +1503,18 @@ export function parseScore(pages, opts = {}) {
       // 셈여림 글자는 그 줄 것만, 반복·빠르기 지시는 단 전체 공통
       if (!own && /^(cresc|dim|decresc)|점점\s*(세게|여리게)/i.test(t)) continue;
       let hit = true;
+      const tc = t.replace(/^((poco\s+a\s+poco|un\s+poco|poco|molto|sempre|subito|più|piu|ancora|약간|조금)\s*)+/i, '');
+      // 빠르기 변화 글자가 두 단 사이에 있으면 글자 밑줄(기준선)이 아니라 글자 가운데로 어느 단 것인지 정한다
+      // (파트보에서 단 아래에 적은 '약간 accel'이 다음 단 첫 마디로 가던 문제)
       if (/(^|[^A-Za-z])D\.\s?S\.?|^D\.?S\.?$|달\s*세뇨/.test(t)) { const m = mAt(r.x1 - 2); m.ds = true; addLabel(m, 'D.S.'); }
       else if (/(^|[^A-Za-z])D\.\s?C\.?|^D\.?C\.?$|다\s*카\s*포/.test(t)) { const m = mAt(r.x1 - 2); m.dc = true; addLabel(m, 'D.C.'); }
       else if (/to\s*coda|코다로/i.test(t)) { const m = mAt(r.x1 - 2); m.toCoda = true; addLabel(m, 'To Coda'); }
       else if (/^coda$|^코다$/i.test(t)) codaSigns.push({ mi: posAt(r.x0 + 2).mi });
       else if (/^fine\.?$|^피네$/i.test(t)) { const m = mAt(r.x1 - 2); m.fine = true; addLabel(m, 'Fine'); }
-      else if (/^(a tempo|tempo i\b|tempo primo)|(원래|처음)\s*빠르기/i.test(t)) { marks.push({ type: 'atempo', a: at(r.x0 + 2) }); addLabel(mAt(r.x0), 'a tempo'); }
-      else if (/^(rit|rall)|점점\s*느리게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'rit', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'rit.'); }
-      else if (/^accel|점점\s*빠르게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'accel', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'accel.'); }
+      else if (/^(a tempo|in tempo|tempo i\b|tempo primo)|(원래|처음)\s*빠르기/i.test(t)) { marks.push({ type: 'atempo', a: at(r.x0 + 2) }); addLabel(mAt(r.x0), 'a tempo'); }
+      // 'poco a poco accel.', 'molto rit.'처럼 앞에 꾸밈말이 붙은 것도. allargando(점점 느리고 넓게)는 rit.와 같이, stringendo는 accel.와 같이
+      else if (/^(rit|rall|allarg|slent)|점점\s*느리게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'rit', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco|점점/i.test(t) }); addLabel(mAt(r.x0), /^allarg/i.test(tc) ? 'allarg.' : 'rit.'); alsoDyn(r, tc, e); }
+      else if (/^(accel|string(\.|endo|e\b))|점점\s*빠르게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'accel', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco|점점/i.test(t) }); addLabel(mAt(r.x0), 'accel.'); alsoDyn(r, tc, e); }
       else if (/^cresc|점점\s*세게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: 1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'cresc.'); }
       else if (/^(dim|decresc)|점점\s*여리게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: -1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'dim.'); }
       else hit = false;
@@ -1854,7 +1868,7 @@ export function resolveMarks(measures, marks) {
   for (const k of marks) {
     if (k.type === 'dyn') dyn.push({ kind: 'mark', p0: P(k), level: k.level, label: k.label });
     else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed });
-    else if (k.type === 'tramp') tempo.push({ kind: k.kind, p0: P(k.a), p1: P(k.b), dashed: k.dashed });
+    else if (k.type === 'tramp') tempo.push({ kind: k.kind, p0: P(k.a), p1: P(k.b), dashed: k.dashed, gradual: k.gradual });
     else if (k.type === 'atempo') tempo.push({ kind: 'atempo', p0: P(k.a), p1: P(k.a) });
   }
   const byP = (a, b) => a.p0 - b.p0;
@@ -1863,7 +1877,8 @@ export function resolveMarks(measures, marks) {
     list.forEach((it, i) => {
       if (it.kind === 'mark' || it.kind === 'atempo') return;
       const next = list.slice(i + 1).find(x => x.p0 > it.p0 + 0.01);
-      if (!it.dashed || it.p1 - it.p0 < 0.2) it.p1 = Math.min(it.p0 + 2, next ? next.p0 : Infinity);
+      // 끝 점선이 없으면 2마디 동안 바뀐다고 본다. 'poco a poco'(조금씩)는 다음 빠르기 표시까지 길게(최대 16마디)
+      if (!it.dashed || it.p1 - it.p0 < 0.2) it.p1 = Math.min(it.p0 + (it.gradual ? 16 : 2), next ? next.p0 : Infinity);
       if (list === dyn) { const t = list.find(x => x.kind === 'mark' && x.p0 > it.p0 + 0.01 && x.p0 <= it.p1 + 1); it.target = t ? t.level : null; }
     });
   }
