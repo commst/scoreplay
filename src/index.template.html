@@ -1084,7 +1084,7 @@ const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
   marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false };
-let raf = 0, audioUrl = null;
+let raf = 0, audioUrl = null, lastNow = null;
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
 
 // ---------- 예시 장단 (직접 만든 연습용 패턴) ----------
@@ -1208,7 +1208,7 @@ function tempoItems() {
     const p0 = i + (c.off || 0);
     out.push({ kind: c.kind, p0, p1: c.kind === 'atempo' ? p0 : p0 + Math.max(0.25, c.len || 2), f: c.pct > 0 ? c.pct / 100 : null });
   }
-  return out.sort((a, b) => a.p0 - b.p0);
+  return out.sort((a, b) => a.p0 - b.p0 || (a.kind === 'atempo' ? -1 : b.kind === 'atempo' ? 1 : 0));   // 같은 곳이면 a tempo 먼저(원래 빠르기에서 다시 바뀌게)
 }
 // 마디 지도의 rit.·accel.·a tempo 글자를 표와 맞춘다
 function syncTempoLabels() {
@@ -1257,10 +1257,10 @@ function renderTempoChanges() {
   $('ritRow').hidden = !list.some(c => c.kind !== 'atempo');
 }
 $('tchgAdd').addEventListener('click', () => {
-  const n = Math.max(1, Math.min(lastBar(), lastNow || +$('from').value || 1));
+  const n = Math.max(1, Math.min(lastBar(), (state.playing && lastNow) || +$('from').value || 1));
   state.tempoChanges.push({ kind: 'rit', bar: n, off: 0, len: 2, pct: null, auto: false });
   tempoChEdited();
-  const rows = [...document.querySelectorAll('#tchgBody tr')], i = state.tempoChanges.slice().sort((a, b) => a.bar - b.bar || (a.off || 0) - (b.off || 0)).findIndex(c => c === state.tempoChanges[state.tempoChanges.length - 1]);
+  const rows = [...document.querySelectorAll('#tchgBody tr:not(.sum)')], i = state.tempoChanges.slice().sort((a, b) => a.bar - b.bar || (a.off || 0) - (b.off || 0)).findIndex(c => c === state.tempoChanges[state.tempoChanges.length - 1]);
   const inp = rows[i] && rows[i].querySelector('input'); if (inp) { try { inp.focus(); inp.select(); } catch (e) {} }
 });
 ['ritF', 'accF'].forEach(id => $(id).addEventListener('change', () => renderTempoChanges()));
@@ -1985,9 +1985,8 @@ function stop(silent) {
   try { audio.pause(); } catch (e) {}
   cancelAnimationFrame(raf);
   state.playing = false; setPlayIcon(false);
-  if (!silent) { tick.html = null; $('nowText').innerHTML = '<b>정지</b>'; document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now')); }
+  if (!silent) { tick.html = null; lastNow = null; $('nowText').innerHTML = '<b>정지</b>'; document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now')); }   // lastNow도 지워야 같은 마디부터 다시 재생할 때 노란 표시가 나온다
 }
-let lastNow = null;
 function tick() {
   if (!state.playing || !state.rendered) return;
   const { plan } = state.rendered;
