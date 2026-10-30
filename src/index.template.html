@@ -721,7 +721,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd>악보에 rit.(점점 느리게), accel.(점점 빠르게)이 있을 때만 보입니다. 그 표시가 끝나는 곳에서 원래 빠르기의 몇 %가 될지 정합니다.
               <span class="eg">rit. 80% → ♩=100이던 곳이 점점 느려져 ♩=80까지</span>
               읽는 글자: rit.·rall.·riten.·allargando·점점 느리게 / accel.·stringendo·점점 빠르게 (앞에 poco a poco·molto·약간 등이 붙어도 됨) / a tempo·in tempo·Tempo I(원래 빠르기로).
-              바뀌는 길이: 뒤에 점선(- - -)이 있으면 점선 끝까지, 없으면 2마디, poco a poco·점점은 다음 빠르기 표시까지(최대 16마디). 바뀐 빠르기는 a tempo나 빠르기 표의 다음 구간이 나올 때까지 이어집니다. 마디 지도에 rit.·accel. 글자가 붙은 마디에서 시작합니다.</dd>
+              바뀌는 길이: 뒤에 점선(- - -)이 있으면 점선 끝까지, 없으면 2마디, poco a poco는 다음 빠르기 표시까지(최대 16마디). 바뀐 빠르기는 a tempo나 빠르기 표의 다음 구간이 나올 때까지 이어집니다. 마디 지도에 rit.·accel. 글자가 붙은 마디에서 시작합니다.</dd>
           </dl>
         </details>
       </section>
@@ -1097,6 +1097,8 @@ function renderTempo() {
       rows.forEach((o, j) => { if (j !== i) { const el = $(`tb-${j}`); if (el) { el.value = o.bpm ?? ''; el.classList.toggle('need', !(o.bpm > 0)); } } });
       tempoHintText(); changed();
     });
+    // BPM 칸의 범위(20~600): 너무 작은 수(예: 1)는 소리가 몇 시간짜리가 되어 휴대폰이 멈출 수 있다
+    bIn.addEventListener('change', () => { if (r.bpm > 0 && (r.bpm < 20 || r.bpm > 600)) { r.bpm = Math.max(20, Math.min(600, r.bpm)); bIn.value = r.bpm; propagateEq(); changed(); renderTempo(); } });
     const del = tr.querySelector('.x');
     if (i === 0) del.hidden = true; else del.addEventListener('click', () => { state.tempoRows.splice(state.tempoRows.indexOf(r), 1); changed(); renderTempo(); });
     body.appendChild(tr);
@@ -1114,7 +1116,7 @@ function tempoHintText() {
 $('addRow').addEventListener('click', () => {
   const rows = state.tempoRows; const last = rows[rows.length - 1];
   const start = Math.min(lastBar(), (last ? last.start : 1) + 8);
-  if (rows.some(r => r.start === start)) return;
+  if (rows.some(r => r.start === start)) { showMsg(`${start}마디까지 빠르기 구간이 이미 있습니다. 구간의 시작 마디 칸을 고쳐 새 구간을 만들어 주세요.`); return; }
   rows.push({ start, unit: last ? last.unit : 'q', bpm: last ? last.bpm : null, text: '' });
   changed(); renderTempo();
 });
@@ -1728,6 +1730,8 @@ function playOpts() {
   return { from: +$('from').value, to: +$('to').value, repeats: $('optRepeat').checked, countIn: $('optCount').checked, metronome: $('optMetro').checked,
     restCount: $('optRest').value, dyn: $('optDyn').checked, speed: +$('speed').value };
 }
+// rit.·accel. 끝 빠르기 칸: 0·음수·아주 큰 수를 넣으면 시간이 거꾸로 가거나 소리가 끝없이 길어지므로 칸의 범위로 맞춘다
+function pctIn(id, def, lo, hi) { const v = +$(id).value; const x = v > 0 ? Math.max(lo, Math.min(hi, v)) : def; if (String(x) !== $(id).value) $(id).value = x; return x; }
 // o를 주면(음원 저장) 재생용 소리는 그대로 두고 따로 만든 소리를 돌려준다
 async function buildAudio(onProgress, o = null) {
   const forSave = !!o; o = o || playOpts();
@@ -1746,7 +1750,7 @@ async function buildAudio(onProgress, o = null) {
     melodic: currentMelodic(), lineGain: currentGains(),
     countIn: o.countIn, metronome: o.metronome, restCount: o.restCount,
     dyn: o.dyn && state.marks.dyn.length ? state.marks.dyn : null,
-    tempo: state.marks.tempo, ritF: (+$('ritF').value || 80) / 100, accF: (+$('accF').value || 120) / 100,
+    tempo: state.marks.tempo, ritF: pctIn('ritF', 80, 30, 100) / 100, accF: pctIn('accF', 120, 100, 200) / 100,
   });
   // 선율 음은 조금씩 나눠 합성해 휴대폰에서도 화면이 멈추지 않게
   const notes = plan.notes;
@@ -2175,8 +2179,9 @@ function linesOfSource(x, prefix) {
     first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null,
     sourceScore: sc, sourceLineId: null, sourceFileName: x.file.name }];
 }
+let loadSeq = 0;   // 악보를 읽는 중에 다른 악보를 또 올렸을 때 앞의 것을 버리기 위한 번호
 function resetEmpty(text) {
-  stop();
+  stop(); loadSeq++;   // 읽는 중이던 악보가 있으면 버린다
   // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
   Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS });
   state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
@@ -2240,11 +2245,14 @@ async function loadFullPdf(files) {
   $('fileName').textContent = files.map(f => f.name).join(', ');
   $('fileInfo').textContent = '악보를 읽는 중…';
   linesEmptyState('악보를 읽는 중입니다…');
+  const my = ++loadSeq;
   try {
     const loaded = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i], pre = files.length > 1 ? `${i + 1}/${files.length} ${file.name} · ` : '';
-      loaded.push({ file, sc: await readPdf(file, (k, n) => { $('fileInfo').textContent = `${pre}악보를 읽는 중… ${k}/${n}쪽`; }) });
+      const sc = await readPdf(file, (k, n) => { if (my === loadSeq) $('fileInfo').textContent = `${pre}악보를 읽는 중… ${k}/${n}쪽`; });
+      if (my !== loadSeq) return;   // 읽는 사이에 다른 악보를 올렸으면 이 악보는 버린다 (두 악보가 섞이지 않게)
+      loaded.push({ file, sc });
     }
     // 여러 개를 고르면 줄이 가장 많은 것이 총보, 나머지는 더한 악보
     const nLines = x => x.sc.isFull ? x.sc.lines.length : 1;
@@ -2275,6 +2283,7 @@ async function loadFullPdf(files) {
     afterScoreLoaded();
   } catch (e) {
     console.error(e);
+    if (my !== loadSeq) return;
     $('fileInfo').textContent = '읽지 못했습니다.';
     resetEmpty('PDF를 열지 못해');
     showMsg(e && /pdf\.js/.test(e.message || '') ? e.message : 'PDF를 여는 중에 문제가 생겼습니다. 암호가 걸렸거나 손상된 파일인지 확인해 주세요.' + (e && e.message ? ' (' + e.message + ')' : ''));
@@ -2285,11 +2294,12 @@ async function loadExtraPdfs(files) {
   files = files.filter(isPdf); if (!files.length) return;
   if (!state.score || state.score.isComposite) { showMsg('총보를 먼저 올린 뒤 피아노 악보를 더해 주세요. 파트보끼리 합칠 때는 파트보 칸에 올리면 됩니다.'); return; }
   stop(); showMsg('');
-  const info = $('extraInfo');
+  const info = $('extraInfo'), my = loadSeq, base = state.score;
   try {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const sc = await readPdf(file, (k, n) => { info.textContent = `${file.name} 읽는 중… ${k}/${n}쪽`; });
+      if (my !== loadSeq || state.score !== base) { renderFileLists(); return; }   // 그사이 총보가 바뀜
       if (!sc.maestroCount) showMsg(`${file.name}: 악보 기호를 찾지 못했습니다(스캔한 PDF일 수 있음). 목록에서 빼 주세요.`);
       state.extras.push({ file, sc, uid: ++uidSeq, label: (sc.partName || '').trim() || stemOf(file) });
     }
@@ -2301,7 +2311,7 @@ async function loadExtraPdfs(files) {
     syncLineIds(); state.manualOrder = null;
     renderFileLists(); renderLineList(); applySelection(); scheduleAutoSave();
   } catch (e) {
-    console.error(e); renderFileLists(); showMsg(`${e && e.message ? e.message : '더한 악보를 읽지 못했습니다.'}`);
+    console.error(e); renderFileLists(); if (my === loadSeq) showMsg(`${e && e.message ? e.message : '더한 악보를 읽지 못했습니다.'}`);
   }
 }
 function removeExtra(uid) {
@@ -2563,6 +2573,7 @@ async function loadPartPdfs(files) {
   const pdfs = files.filter(isPdf);
   if (!pdfs.length) return;
   stop(); showMsg('');
+  const my = ++loadSeq;
   const existing = state.score?.isComposite ? state.parts.slice() : [];
   if (!existing.length) { state.score = null; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = []; renderFileLists(); }
   $('fileName').textContent = '총보를 아직 올리지 않았습니다.'; $('fileInfo').textContent = '파트보를 쓰는 중이라 총보는 비워 두었습니다.';
@@ -2573,13 +2584,14 @@ async function loadPartPdfs(files) {
       const file = pdfs[i];
       $('partsFileInfo').textContent = `파트보 분석 중… ${i + 1}/${pdfs.length}: ${file.name}`;
       const sc = await readPdf(file);
+      if (my !== loadSeq) return;
       const layout = sc.layouts.find(L => L.staves.length);
       loaded.push({ file, sc, layout, label: (sc.partName || '').trim(), uid: ++uidSeq });   // 곡 제목은 파트 이름이 아니므로 쓰지 않는다
     }
     state.parts = [...existing, ...loaded];
     rebuildParts(!existing.length);
   } catch (e) {
-    console.error(e); $('partsFileInfo').textContent = '파트보를 읽지 못했습니다.';
+    console.error(e); if (my !== loadSeq) return; $('partsFileInfo').textContent = '파트보를 읽지 못했습니다.';
     showMsg(e && e.message ? e.message : '파트보 PDF를 여는 중 문제가 생겼습니다.');
   }
 }

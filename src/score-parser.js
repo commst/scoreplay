@@ -1513,8 +1513,8 @@ export function parseScore(pages, opts = {}) {
       else if (/^fine\.?$|^피네$/i.test(t)) { const m = mAt(r.x1 - 2); m.fine = true; addLabel(m, 'Fine'); }
       else if (/^(a tempo|in tempo|tempo i\b|tempo primo)|(원래|처음)\s*빠르기/i.test(t)) { marks.push({ type: 'atempo', a: at(r.x0 + 2) }); addLabel(mAt(r.x0), 'a tempo'); }
       // 'poco a poco accel.', 'molto rit.'처럼 앞에 꾸밈말이 붙은 것도. allargando(점점 느리고 넓게)는 rit.와 같이, stringendo는 accel.와 같이
-      else if (/^(rit|rall|allarg|slent)|점점\s*느리게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'rit', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco|점점/i.test(t) }); addLabel(mAt(r.x0), /^allarg/i.test(tc) ? 'allarg.' : 'rit.'); alsoDyn(r, tc, e); }
-      else if (/^(accel|string(\.|endo|e\b))|점점\s*빠르게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'accel', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco|점점/i.test(t) }); addLabel(mAt(r.x0), 'accel.'); alsoDyn(r, tc, e); }
+      else if (/^(rit|rall|allarg|slent)|점점\s*느리게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'rit', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco/i.test(t) }); addLabel(mAt(r.x0), /^allarg/i.test(tc) ? 'allarg.' : 'rit.'); alsoDyn(r, tc, e); }
+      else if (/^(accel|string(\.|endo|e\b))|점점\s*빠르게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'accel', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco/i.test(t) }); addLabel(mAt(r.x0), 'accel.'); alsoDyn(r, tc, e); }
       else if (/^cresc|점점\s*세게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: 1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'cresc.'); }
       else if (/^(dim|decresc)|점점\s*여리게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: -1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'dim.'); }
       else hit = false;
