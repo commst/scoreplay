@@ -783,6 +783,13 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd>빠르기 숫자 대신 "앞으로는 ♩ 하나를 지금까지의 ♪ 하나 길이로" 같은 박 단위 바꿈입니다. 바로 앞 구간 빠르기에서 자동으로 계산합니다.
               <span class="eg">앞 구간 ♩=172 → ♩=♪ 구간은 ♩=344, 이어서 ♪=♩ 구간은 ♪=344(다시 ♩=172와 같은 빠르기)</span>
               앞 구간 숫자를 고치면 이런 구간도 함께 바뀝니다. 직접 숫자를 고친 구간은 그대로 둡니다.</dd>
+            <dt>'왼쪽이 새 박' · '오른쪽이 새 박' 단추</dt>
+            <dd>♩=♪ 같은 표시는 악보(작곡가·사보가)마다 읽는 방향이 다릅니다. 이런 구간의 '끝' 칸에 있는 단추로 방향을 정합니다.
+              <span class="eg"><b>왼쪽이 새 박</b>(처음 값): "이제부터 왼쪽 음표(♩)를, 앞에서 오른쪽 음표(♪)가 걸리던 시간만큼" → ♩=♪이면 <b>두 배 빨라짐</b>. 앞이 ♩=172면 ♩=344</span>
+              <span class="eg"><b>오른쪽이 새 박</b>: "앞에서 왼쪽 음표(♩)가 걸리던 시간을, 이제부터 오른쪽 음표(♪) 하나로" → ♩=♪이면 <b>절반으로 느려짐</b>. 앞이 ♩=172면 ♪=172(♩=86)</span>
+              어느 쪽인지 모르겠으면 그 구간을 들어 보고, 2배 빠르거나 느리게 들리면 단추를 누르세요. 단추를 누르면 <b>그 악보의 ♩=♪ 표시 전체</b>가 함께 바뀝니다(보통 한 악보 안에서는 같은 방식으로 쓰기 때문). 바뀐 방향은 이 악보의 설정에 저장됩니다.
+              <span class="eg">예: Frontier 새판은 117마디 ♩=♪(넓게, 절반 빠르기)와 121마디 ♪=♩(원래 빠르기로)를 '오른쪽이 새 박' 방식으로 썼습니다 → 단추를 눌러 '오른쪽이 새 박'으로 바꾸면 117~120마디 ♩=86, 121마디부터 ♩=172</span>
+              이 단추가 있는 구간의 BPM을 직접 고치면 뒤의 ♩=♪ 구간이 그 숫자로 다시 계산되니, 방향이 틀렸을 때는 숫자보다 단추를 쓰세요.</dd>
             <dt>구간 추가 · ✕</dt>
             <dd>빠르기가 바뀌는 곳을 못 찾았으면 구간을 추가하고 시작 마디를 고칩니다. 첫 줄은 지울 수 없습니다.</dd>
             <dt>rit. · accel. 끝 빠르기</dt>
@@ -5821,7 +5828,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 00:24';
+const APP_VERSION = '2026-10-31 00:46';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
