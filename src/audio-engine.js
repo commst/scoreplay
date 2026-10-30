@@ -71,7 +71,9 @@ export function makeSounds() {
   return S;
 }
 
-const GAIN = { '궁': 1.15, '북': 1.12, '북녹음': 1.15, '북짧게': 1.1, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
+// 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB)
+const JG = 2.0, BK = 1.4;
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 1.12 * BK, '북녹음': 1.15 * BK, '북짧게': 1.1 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8, '꽹과리길게': 0.8, '꽹과리막음': 0.85 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -431,5 +433,11 @@ export function decodeRecorded(obj) {
       return y;
     });
   }
+  // 징: 녹음은 6초 가까이 울려 다음 소리를 덮는다 → 0.4초 뒤부터 빨리 줄여 3초 안에 끝나게
+  if (out['징']) out['징'] = out['징'].map(y => {
+    const n = Math.min(y.length, Math.round(3 * SR)), z = y.slice(0, n), a = Math.round(0.4 * SR), fo = Math.round(0.3 * SR);
+    for (let i = a; i < n; i++) z[i] *= Math.exp(-(i - a) / SR / 0.9) * (i > n - fo ? (n - i) / fo : 1);
+    return z;
+  });
   return out;
 }
