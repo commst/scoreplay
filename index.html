@@ -77,6 +77,15 @@ button { cursor: pointer; }
 .tchg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 .tchg-head b { font-size: 13.5px; }
 .tchg .auto { display: block; font-size: 11px; color: var(--muted); }
+.tchg tr.sum td { padding: 0 4px 8px; font-size: 12px; color: var(--muted); }
+.tchg tr.sum b { color: var(--ink); font-weight: 600; }
+.tchg .help { margin-top: 6px; }
+.tchg .help h4 { margin: 12px 0 2px; font-size: 13.5px; }
+.tchg .help p { margin: 4px 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.tchg .help p b { color: var(--ink); font-weight: 600; }
+.tchg .help table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 6px 0; }
+.tchg .help th, .tchg .help td { border-bottom: 1px solid var(--line); padding: 5px 4px; text-align: left; vertical-align: top; }
+.tchg .help th { color: var(--muted); font-weight: 500; }
 .tempo input.num { min-width: 3.9em; padding-left: 5px; padding-right: 3px; }
 .tempo select { min-width: 4.6em; }
 .tempo .src { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
@@ -712,6 +721,45 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <tbody id="tchgBody"></tbody>
           </table>
           <p class="hint" id="tchgHint"></p>
+          <details class="help" id="tchgHelp">
+            <summary>rit.·accel. 설정 방법과 예</summary>
+            <p><b>rit.(느리게)·accel.(빠르게)은 모두 '점점' 바뀝니다.</b> 시작 마디에서는 원래 빠르기이고, <b>길이(마디수)</b>에 걸쳐 고르게 바뀌어 마지막에 <b>끝 %</b>에 닿습니다. 갑자기 바뀌지 않습니다.</p>
+            <p>얼마나 급하게 바뀌는지는 두 값으로 정합니다.</p>
+            <p>· <b>끝 %</b>: 얼마나 많이 바뀔지. 100에서 멀수록 많이 바뀝니다. rit.는 100보다 작게(예: 85 조금, 60 많이), accel.은 100보다 크게(예: 110 조금, 140 많이).<br>
+               · <b>길이(마디수)</b>: 몇 마디에 걸쳐 바뀔지. 길수록 천천히, 짧을수록 급하게 바뀝니다.<br>
+               · 한 마디에 바뀌는 정도 ≈ (100과 끝 %의 차이) ÷ 길이. 예: 끝 % 80, 길이 4 → 한 마디에 5%씩.</p>
+
+            <h4>4마디에 걸쳐 느려지다가 끝내기</h4>
+            <p>마지막 마디가 32마디라면 시작 마디 = <b>29</b>(끝에서 4번째 마디), 종류 = <b>rit.</b>, 길이(마디수) = <b>4</b>.</p>
+            <table>
+              <thead><tr><th>원하는 느낌</th><th>끝 %</th><th>♩=100이면</th></tr></thead>
+              <tbody>
+                <tr><td>천천히, 살짝 느려지기</td><td>85</td><td>100 → 96 → 93 → 89 → 85 (한 마디에 약 4%)</td></tr>
+                <tr><td>보통</td><td>비워 둠 (공통 80)</td><td>100 → 95 → 90 → 85 → 80 (한 마디에 5%)</td></tr>
+                <tr><td>빠르게, 크게 느려지기</td><td>60</td><td>100 → 90 → 80 → 70 → 60 (한 마디에 10%)</td></tr>
+              </tbody>
+            </table>
+            <p>끝에서 <b>막판에만 확 느려지게</b> 하려면 길이를 줄입니다: 시작 마디 31, 길이 2, 끝 % 65 → 마지막 두 마디에서만 100 → 83 → 65.</p>
+
+            <h4>8마디에 걸쳐 빨라지기</h4>
+            <p>17마디부터라면 시작 마디 = <b>17</b>, 종류 = <b>accel.</b>, 길이(마디수) = <b>8</b> (17~24마디 동안 빨라짐).</p>
+            <table>
+              <thead><tr><th>원하는 느낌</th><th>끝 %</th><th>♩=100이면</th></tr></thead>
+              <tbody>
+                <tr><td>천천히 빨라지기</td><td>110</td><td>8마디 동안 100 → 110 (한 마디에 약 1%)</td></tr>
+                <tr><td>보통</td><td>비워 둠 (공통 120)</td><td>100 → 120 (한 마디에 2.5%)</td></tr>
+                <tr><td>빠르게 빨라지기</td><td>150</td><td>100 → 150 (한 마디에 약 6%)</td></tr>
+              </tbody>
+            </table>
+            <p>같은 끝 %라도 <b>길이를 4로 줄이면 두 배 빠르게</b> 빨라집니다(끝 % 120, 길이 4 → 한 마디에 5%).</p>
+
+            <h4>바뀐 빠르기는 언제 원래대로 돌아오나</h4>
+            <p>끝 %에 닿은 뒤에는 그 빠르기가 계속됩니다. <b>a tempo</b> 줄을 넣은 마디나, 위 빠르기 표의 다음 구간이 시작되는 마디에서 원래 빠르기로 돌아옵니다.</p>
+            <p>예: 17~24마디 accel. 뒤 25마디부터 원래대로 → 시작 마디 25, 종류 a tempo 줄을 하나 더 넣습니다.</p>
+
+            <h4>갑자기 바꾸고 싶을 때</h4>
+            <p>rit.·accel.이 아니라 위 <b>빠르기 표</b>에서 [구간 추가]를 눌러 그 마디부터 새 BPM을 넣습니다. 그 마디에서 바로 새 빠르기가 됩니다.</p>
+          </details>
         </div>
         <p class="hint" id="tempoHint">악보에 적힌 템포 표시를 찾아 미리 채웁니다. 숫자를 못 읽은 칸은 노란색으로 표시됩니다.</p>
         <p class="tempo-explain" id="tempoExplain"></p>
@@ -4143,7 +4191,7 @@ function renderTempo() {
       // 뒤쪽의 '♩=♪' 같은 박 단위 바꿈 구간은 이 빠르기를 따라 다시 계산
       propagateEq();
       rows.forEach((o, j) => { if (j !== i) { const el = $(`tb-${j}`); if (el) { el.value = o.bpm ?? ''; el.classList.toggle('need', !(o.bpm > 0)); } } });
-      tempoHintText(); changed();
+      tempoHintText(); renderTempoChanges(); changed();
     });
     // BPM 칸의 범위(20~600): 너무 작은 수(예: 1)는 소리가 몇 시간짜리가 되어 휴대폰이 멈출 수 있다
     bIn.addEventListener('change', () => { if (r.bpm > 0 && (r.bpm < 20 || r.bpm > 600)) { r.bpm = Math.max(20, Math.min(600, r.bpm)); bIn.value = r.bpm; propagateEq(); changed(); renderTempo(); } });
@@ -4201,6 +4249,15 @@ function syncTempoLabels() {
   for (const c of state.tempoChanges) { const i = barIndexOf(c.bar); if (i < 0) continue; const b = state.bars[i]; b.labels = b.labels || []; if (!b.labels.includes(TCH_LABEL[c.kind])) b.labels.push(TCH_LABEL[c.kind]); }
 }
 function tempoChEdited() { state.tempoChEdited = true; syncTempoLabels(); changed(); renderTempoChanges(); renderBars(); scheduleAutoSave(); }
+function tempoChangeText(c) {
+  if (c.kind === 'atempo') return `${c.bar}마디에서 원래 빠르기로 바로 돌아갑니다.`;
+  const end = c.pct > 0 ? c.pct : (c.kind === 'rit' ? pctIn('ritF', 80, 30, 100) : pctIn('accF', 120, 100, 200));
+  const len = c.len > 0 ? c.len : 2, lastN = Math.ceil(c.bar + len - 1 - 1e-9);
+  const row = [...state.tempoRows].filter(r => r.start <= c.bar).sort((a, b) => b.start - a.start)[0];
+  const per = Math.abs(100 - end) / len;
+  const bpmTxt = row && row.bpm > 0 ? ` (${UNIT_LABEL[row.unit] ? UNIT_LABEL[row.unit].split(' ')[0] : '♩'}=${row.bpm} → ${Math.round(row.bpm * end / 100)})` : '';
+  return `${c.bar}~${lastN}마디 동안 점점 ${c.kind === 'rit' ? '느려져' : '빨라져'} 원래의 ${end}%${bpmTxt}가 됩니다. 한 마디에 약 ${+per.toFixed(1)}%씩.`;
+}
 function renderTempoChanges() {
   const body = $('tchgBody'); if (!body) return;
   body.textContent = '';
@@ -4223,6 +4280,10 @@ function renderTempoChanges() {
     pIn.addEventListener('change', () => { const v = +pIn.value; c.pct = v > 0 ? (c.kind === 'rit' ? Math.max(30, Math.min(100, v)) : Math.max(100, Math.min(200, v))) : null; c.auto = false; tempoChEdited(); });
     tr.querySelector('.x').addEventListener('click', () => { state.tempoChanges.splice(state.tempoChanges.indexOf(c), 1); tempoChEdited(); });
     body.appendChild(tr);
+    // 줄마다 풀어 쓴 설명: 몇 마디부터 몇 마디까지, 빠르기가 어떻게 바뀌는지
+    const sum = document.createElement('tr'); sum.className = 'sum'; const td = document.createElement('td'); td.colSpan = 5; sum.appendChild(td);
+    td.textContent = tempoChangeText(c);
+    body.appendChild(sum);
   });
   $('tchgTable').hidden = !list.length;
   $('tchgHint').textContent = list.length ? '마디 지도에 rit.·accel. 글자로도 보입니다. 끝 %를 비우면 공통 끝 빠르기를 씁니다.' : '악보에서 읽은 rit.·accel.이 없습니다. [rit. 추가]로 원하는 마디에 넣을 수 있습니다.';
@@ -5761,7 +5822,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 00:08';
+const APP_VERSION = '2026-10-31 00:13';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
