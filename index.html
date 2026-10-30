@@ -708,7 +708,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <div class="tchg" id="tchgBox">
           <div class="tchg-head"><b>rit. · accel. (점점 느리게·빠르게)</b><button class="btn" id="tchgAdd" type="button">rit. 추가</button></div>
           <table class="tempo" id="tchgTable">
-            <thead><tr><th style="width:22%">시작 마디</th><th style="width:24%">종류</th><th style="width:20%">길이</th><th style="width:22%">끝 %</th><th></th></tr></thead>
+            <thead><tr><th style="width:22%">시작 마디</th><th style="width:24%">종류</th><th style="width:20%">길이(마디수)</th><th style="width:22%">끝 %</th><th></th></tr></thead>
             <tbody id="tchgBody"></tbody>
           </table>
           <p class="hint" id="tchgHint"></p>
@@ -5761,7 +5761,7 @@ renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 00:01';
+const APP_VERSION = '2026-10-31 00:08';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
