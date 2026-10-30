@@ -98,7 +98,7 @@ export function tempoFactorAt(items, p, resets = [], ritF = 0.8, accF = 1.2) {
     if (it.p0 > p) break;
     if (it.p0 < rs) continue;
     if (it.kind === 'atempo') { f = 1; continue; }
-    const target = it.kind === 'rit' ? ritF : accF;
+    const target = it.f > 0 ? it.f : it.kind === 'rit' ? ritF : accF;   // f: 그 표시만의 끝 빠르기(직접 넣은 값)
     if (p < it.p1) return f + (target - f) * (p - it.p0) / Math.max(1e-6, it.p1 - it.p0);
     f = target;
   }

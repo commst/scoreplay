@@ -67,6 +67,10 @@ button { cursor: pointer; }
 .tempo input, .tempo select, .field input, .field select { width: 100%; padding: 6px 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
 .tempo input.need { border-color: var(--warn); background: var(--warn-bg); }
 .tempo .end { color: var(--muted); white-space: nowrap; }
+.tchg { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.tchg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.tchg-head b { font-size: 13.5px; }
+.tchg .auto { display: block; font-size: 11px; color: var(--muted); }
 .tempo input.num { min-width: 3.9em; padding-left: 5px; padding-right: 3px; }
 .tempo select { min-width: 4.6em; }
 .tempo .src { display: block; font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
@@ -693,6 +697,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <div class="field"><label for="ritF">rit. 끝 빠르기 (%)</label><input type="number" id="ritF" min="30" max="100" step="5" value="80" class="num"></div>
           <div class="field"><label for="accF">accel. 끝 빠르기 (%)</label><input type="number" id="accF" min="100" max="200" step="5" value="120" class="num"></div>
         </div>
+        <div class="tchg" id="tchgBox">
+          <div class="tchg-head"><b>rit. · accel. (점점 느리게·빠르게)</b><button class="btn" id="tchgAdd" type="button">rit. 추가</button></div>
+          <table class="tempo" id="tchgTable">
+            <thead><tr><th style="width:22%">시작 마디</th><th style="width:24%">종류</th><th style="width:20%">길이</th><th style="width:22%">끝 %</th><th></th></tr></thead>
+            <tbody id="tchgBody"></tbody>
+          </table>
+          <p class="hint" id="tchgHint"></p>
+        </div>
         <p class="hint" id="tempoHint">악보에 적힌 템포 표시를 찾아 미리 채웁니다. 숫자를 못 읽은 칸은 노란색으로 표시됩니다.</p>
         <p class="tempo-explain" id="tempoExplain"></p>
         <details class="help">
@@ -722,6 +734,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
               <span class="eg">rit. 80% → ♩=100이던 곳이 점점 느려져 ♩=80까지</span>
               읽는 글자: rit.·rall.·riten.·allargando·점점 느리게 / accel.·stringendo·점점 빠르게 (앞에 poco a poco·molto·약간 등이 붙어도 됨) / a tempo·in tempo·Tempo I(원래 빠르기로).
               바뀌는 길이: 뒤에 점선(- - -)이 있으면 점선 끝까지, 없으면 2마디, poco a poco는 다음 빠르기 표시까지(최대 16마디). 바뀐 빠르기는 a tempo나 빠르기 표의 다음 구간이 나올 때까지 이어집니다. 마디 지도에 rit.·accel. 글자가 붙은 마디에서 시작합니다.</dd>
+            <dt>rit. · accel. 표</dt>
+            <dd>악보에서 읽은 rit.·accel.·a tempo가 나오고, 직접 더하거나 고치거나 뺄 수 있습니다. <b>rit. 추가</b>를 누르고 시작 마디·길이(마디 수)를 넣으면 그 마디부터 점점 느려집니다. <b>끝 %</b>를 비워 두면 위의 공통 끝 빠르기를 쓰고, 숫자를 넣으면 그 줄만 그 빠르기까지 바뀝니다. <b>a tempo</b>를 넣으면 그 마디에서 원래 빠르기로 돌아갑니다(빠르기 표의 다음 구간에서도 돌아갑니다). 고친 내용은 이 악보의 설정에 함께 저장됩니다.
+              <span class="eg">마지막 2마디만 느리게 → rit. 추가 · 시작 마디 = 끝에서 둘째 마디 · 길이 2 · 끝 % 70</span></dd>
           </dl>
         </details>
       </section>
@@ -1020,7 +1035,7 @@ const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
-  marks: { dyn: [], tempo: [] }, manualOrder: null };
+  marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false };
 let raf = 0, audioUrl = null;
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
 
@@ -1105,6 +1120,7 @@ function renderTempo() {
   });
   tempoHintText();
   explainTempo();
+  renderTempoChanges();
 }
 // 빠르기 표 아래 안내: 숫자를 넣으면 바로 바뀌게 (예전에는 표를 다시 그릴 때까지 '인식하지 못했습니다'가 남아 있었음)
 function tempoHintText() {
@@ -1120,6 +1136,73 @@ $('addRow').addEventListener('click', () => {
   rows.push({ start, unit: last ? last.unit : 'q', bpm: last ? last.bpm : null, text: '' });
   changed(); renderTempo();
 });
+
+// ---------- rit. · accel. 표 (악보에서 읽은 것 + 직접 넣은 것) ----------
+// 한 줄 = { kind: 'rit'|'accel'|'atempo', bar: 마디 번호, off: 마디 안 위치(0~1), len: 마디 수, pct: 끝 빠르기 %(비우면 공통), auto: 악보에서 읽음 }
+const TCH_LABEL = { rit: 'rit.', accel: 'accel.', atempo: 'a tempo' }, TCH_LABELS = new Set(['rit.', 'accel.', 'allarg.', 'a tempo']);
+function deriveTempoChanges(items, bars) {
+  const seen = new Set(), out = [];
+  for (const it of items || []) {
+    const i = Math.floor(it.p0 + 1e-6), b = bars[i]; if (!b) continue;
+    const len = it.kind === 'atempo' ? 0 : Math.round((it.p1 - it.p0) * 100) / 100;
+    const key = `${it.kind}|${i}|${Math.round((it.p0 - i) * 50)}|${len}`;
+    if (seen.has(key)) continue; seen.add(key);   // 단의 여러 줄에 같은 표시가 적혀 있다
+    out.push({ kind: it.kind, bar: b.number, off: Math.max(0, it.p0 - i), len, pct: null, auto: true });
+  }
+  return out;
+}
+function barIndexOf(n) { let i = state.bars.findIndex(b => b.number === n); if (i < 0) i = state.bars.findIndex(b => b.number > n); return i; }
+// 소리 만들 때 쓰는 목록 (마디 순번 축)
+function tempoItems() {
+  const out = [];
+  for (const c of state.tempoChanges) {
+    const i = barIndexOf(c.bar); if (i < 0) continue;
+    const p0 = i + (c.off || 0);
+    out.push({ kind: c.kind, p0, p1: c.kind === 'atempo' ? p0 : p0 + Math.max(0.25, c.len || 2), f: c.pct > 0 ? c.pct / 100 : null });
+  }
+  return out.sort((a, b) => a.p0 - b.p0);
+}
+// 마디 지도의 rit.·accel.·a tempo 글자를 표와 맞춘다
+function syncTempoLabels() {
+  for (const b of state.bars) if (b.labels && b.labels.some(l => TCH_LABELS.has(l))) b.labels = b.labels.filter(l => !TCH_LABELS.has(l));
+  for (const c of state.tempoChanges) { const i = barIndexOf(c.bar); if (i < 0) continue; const b = state.bars[i]; b.labels = b.labels || []; if (!b.labels.includes(TCH_LABEL[c.kind])) b.labels.push(TCH_LABEL[c.kind]); }
+}
+function tempoChEdited() { state.tempoChEdited = true; syncTempoLabels(); changed(); renderTempoChanges(); renderBars(); scheduleAutoSave(); }
+function renderTempoChanges() {
+  const body = $('tchgBody'); if (!body) return;
+  body.textContent = '';
+  const list = state.tempoChanges.slice().sort((a, b) => a.bar - b.bar || (a.off || 0) - (b.off || 0));
+  list.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><input type="number" min="1" class="num" aria-label="시작 마디"></td>
+      <td><select aria-label="종류"><option value="rit">rit.</option><option value="accel">accel.</option><option value="atempo">a tempo</option></select></td>
+      <td><input type="number" min="0.5" max="32" step="0.5" class="num" aria-label="길이(마디)"></td>
+      <td><input type="number" min="30" max="200" step="5" class="num" aria-label="끝 빠르기 %"></td>
+      <td><button class="x" type="button" aria-label="빼기">✕</button></td>`;
+    const [bIn, lIn, pIn] = tr.querySelectorAll('input'), sel = tr.querySelector('select');
+    bIn.value = c.bar; sel.value = c.kind; lIn.value = c.kind === 'atempo' ? '' : c.len; pIn.value = c.pct > 0 ? c.pct : '';
+    lIn.disabled = pIn.disabled = c.kind === 'atempo';
+    pIn.placeholder = c.kind === 'atempo' ? '' : String(c.kind === 'rit' ? pctIn('ritF', 80, 30, 100) : pctIn('accF', 120, 100, 200));
+    if (c.auto) { const a = document.createElement('span'); a.className = 'auto'; a.textContent = '악보에서 읽음'; tr.cells[1].appendChild(a); }
+    bIn.addEventListener('change', () => { const v = Math.max(1, Math.min(lastBar(), Math.round(+bIn.value) || c.bar)); if (v !== c.bar) { c.bar = v; c.off = 0; c.auto = false; } bIn.value = c.bar; tempoChEdited(); });
+    sel.addEventListener('change', () => { c.kind = sel.value; c.auto = false; if (c.kind !== 'atempo' && !(c.len > 0)) c.len = 2; tempoChEdited(); });
+    lIn.addEventListener('change', () => { const v = +lIn.value; c.len = v > 0 ? Math.max(0.5, Math.min(32, v)) : 2; c.auto = false; tempoChEdited(); });
+    pIn.addEventListener('change', () => { const v = +pIn.value; c.pct = v > 0 ? (c.kind === 'rit' ? Math.max(30, Math.min(100, v)) : Math.max(100, Math.min(200, v))) : null; c.auto = false; tempoChEdited(); });
+    tr.querySelector('.x').addEventListener('click', () => { state.tempoChanges.splice(state.tempoChanges.indexOf(c), 1); tempoChEdited(); });
+    body.appendChild(tr);
+  });
+  $('tchgTable').hidden = !list.length;
+  $('tchgHint').textContent = list.length ? '마디 지도에 rit.·accel. 글자로도 보입니다. 끝 %를 비우면 공통 끝 빠르기를 씁니다.' : '악보에서 읽은 rit.·accel.이 없습니다. [rit. 추가]로 원하는 마디에 넣을 수 있습니다.';
+  $('ritRow').hidden = !list.some(c => c.kind !== 'atempo');
+}
+$('tchgAdd').addEventListener('click', () => {
+  const n = Math.max(1, Math.min(lastBar(), lastNow || +$('from').value || 1));
+  state.tempoChanges.push({ kind: 'rit', bar: n, off: 0, len: 2, pct: null, auto: false });
+  tempoChEdited();
+  const rows = [...document.querySelectorAll('#tchgBody tr')], i = state.tempoChanges.slice().sort((a, b) => a.bar - b.bar || (a.off || 0) - (b.off || 0)).findIndex(c => c === state.tempoChanges[state.tempoChanges.length - 1]);
+  const inp = rows[i] && rows[i].querySelector('input'); if (inp) { try { inp.focus(); inp.select(); } catch (e) {} }
+});
+['ritF', 'accF'].forEach(id => $(id).addEventListener('change', () => renderTempoChanges()));
 
 // ---------- 화면: 마디 지도 ----------
 let barTipEl = null, barTipHideTimer = 0, barTipAnchor = null;
@@ -1750,7 +1833,7 @@ async function buildAudio(onProgress, o = null) {
     melodic: currentMelodic(), lineGain: currentGains(),
     countIn: o.countIn, metronome: o.metronome, restCount: o.restCount,
     dyn: o.dyn && state.marks.dyn.length ? state.marks.dyn : null,
-    tempo: state.marks.tempo, ritF: pctIn('ritF', 80, 30, 100) / 100, accF: pctIn('accF', 120, 100, 200) / 100,
+    tempo: tempoItems(), ritF: pctIn('ritF', 80, 30, 100) / 100, accF: pctIn('accF', 120, 100, 200) / 100,
   });
   // 선율 음은 조금씩 나눠 합성해 휴대폰에서도 화면이 멈추지 않게
   const notes = plan.notes;
@@ -2030,6 +2113,7 @@ function collectSettings() {
     lines, tempoRows: state.tempoRows.map(r => ({ ...r })), speed: +$('speed').value, ritF: $('ritF').value, accF: $('accF').value,
     play: { ...playOpts(), loop: $('optLoop').checked, rest: $('optRest').value }, save: { ...saveOpts(), linked: saveLinked, format: $('saveFormat').value },
     order: state.manualOrder ? orderToText(state.bars, state.manualOrder) : null,
+    tempoChanges: state.tempoChEdited ? state.tempoChanges.map(c => ({ ...c })) : null,
     extras: (state.extras || []).map(x => ({ name: x.file.name, fp: x.sc.fp })) };
 }
 const fmtTime = iso => { try { const d = new Date(iso); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; } catch (e) { return ''; } };
@@ -2066,6 +2150,10 @@ function applyRestSettings(S) {
   if (Array.isArray(S.tempoRows) && S.tempoRows.length) {
     const rows = S.tempoRows.filter(r => r.start >= 1 && r.start <= LB).map(r => ({ ...r }));
     if (rows.length && rows.some(r => r.start === 1)) state.tempoRows = rows;
+  }
+  if (Array.isArray(S.tempoChanges)) {
+    state.tempoChanges = S.tempoChanges.filter(c => c && TCH_LABEL[c.kind] && c.bar >= 1 && c.bar <= LB).map(c => ({ ...c }));
+    state.tempoChEdited = true; syncTempoLabels();
   }
   if (S.speed) { $('speed').value = S.speed; $('speedVal').textContent = $('speed').value + '%'; }
   if (S.ritF) $('ritF').value = S.ritF; if (S.accF) $('accF').value = S.accF;
@@ -2183,7 +2271,7 @@ let loadSeq = 0;   // 악보를 읽는 중에 다른 악보를 또 올렸을 때
 function resetEmpty(text) {
   stop(); loadSeq++;   // 읽는 중이던 악보가 있으면 버린다
   // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
-  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS });
+  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false });
   state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
   state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
@@ -2386,7 +2474,10 @@ function applySelection(first = false) {
     const keep = state.tempoRows.filter(r => r.start <= bars[bars.length - 1].number);
     state.tempoRows = keep.some(r => r.start === 1) && keep.some(r => r.manual) ? keep : defaultTempoRows(bars).map(x => ({ ...x }));
   }
-  $('ritRow').hidden = !master.r.marks.tempo.some(t => t.kind !== 'atempo');
+  // rit.·accel. 표: 직접 고치지 않았으면 기준 줄에서 읽은 것으로 (고쳤으면 마디 번호로 그대로 둔다)
+  if (first) state.tempoChEdited = false;
+  if (!state.tempoChEdited) state.tempoChanges = deriveTempoChanges(master.r.marks.tempo, bars);
+  syncTempoLabels();
   $('fileName').textContent = state.sourceScores.length > 1 ? `${state.sourceScores.length}개 파트보 · ${state.title || ''}` : (sc.title ? sc.title + ' · ' : '') + (state.fileName || '');
   $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 더한 악보 ${state.extras.length}개` : '');
   if (master.r.mismatches.length) showMsg(`악보에 인쇄된 마디 번호와 읽은 마디 수가 ${master.r.mismatches.length}곳에서 다릅니다(처음: ${master.r.mismatches[0][1]}마디 근처). 그 뒤 마디는 번호가 밀렸을 수 있습니다.`);
