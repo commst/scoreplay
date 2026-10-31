@@ -2054,7 +2054,26 @@ export function analyzeLine(score, line = null) {
   const marks = bars.length ? resolveMarks(res.measures, res.marks) : { dyn: [], tempo: [] };
   // 인쇄된 마디 번호와 대조 (번호를 맞춘 뒤에도 다른 곳)
   const mismatches = res.systemNumbers.filter(([mi, printed]) => res.measures[mi] && bars[res.measures[mi]._first] && bars[res.measures[mi]._first].number !== printed);
-  return { bars, marks, mismatches, scanned: res.scanned };
+  // 악보 보기용: 마디마다 PDF의 어느 쪽·어느 오선·가로 어디인지 (마디 지도 순번과 같은 순서)
+  // pts: [마디 안 위치(0~1), 음표의 가로 자리] — 재생 선을 음표를 따라 움직이게 (한 칸을 여러 마디로 나눈 경우는 빼고)
+  const srcCount = {}; for (const b of bars) srcCount[b.src] = (srcCount[b.src] || 0) + 1; const seenSrc = {};
+  const geo = bars.map(b => {
+    const m = res.measures[b.src]; if (!m || m.page == null) return null;
+    const g = { page: m.page, staff: m.staff, x0: m.x0, x1: m.x1 };
+    if (srcCount[b.src] > 1) {   // 여러 마디 쉼표처럼 한 칸이 여러 마디: 칸을 마디 수로 나눠 차례로
+      const j = (seenSrc[b.src] = (seenSrc[b.src] ?? -1) + 1), n = srcCount[b.src], w = (m.x1 - m.x0) / n;
+      g.x0 = m.x0 + w * j; g.x1 = g.x0 + w;
+    }
+    const L = b.barLen && b.barLen.v;
+    if (srcCount[b.src] === 1 && L > 0) {
+      const seen = new Map();
+      for (const n of m.notes || []) if (!n.grace && n.onset && n.x != null) { const f = Math.round(n.onset.v / L * 1000) / 1000; if (f >= 0 && f < 1 && (!seen.has(f) || n.x < seen.get(f))) seen.set(f, n.x); }
+      const pts = [...seen].sort((a, c) => a[0] - c[0]).filter((p, i, A) => !i || p[1] > A[i - 1][1]);   // 오른쪽으로만 가는 점
+      if (pts.length) g.pts = pts.map(([f, x]) => [f, Math.round(x * 10) / 10]);
+    }
+    return g;
+  });
+  return { bars, marks, mismatches, scanned: res.scanned, geo };
 }
 
 export async function analyzePdf(pdfjs, data) {

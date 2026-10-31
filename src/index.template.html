@@ -194,6 +194,21 @@ button { cursor: pointer; }
 .bar-tip .tip-part-meta { flex: none; color: var(--muted); font-size: 11px; font-weight: 400; }
 .bar-tip .tip-notes { color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; margin-top: 3px; }
 .bar-tip .tip-foot { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.view-switch { display: inline-grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.view-switch button { border: 0; padding: 7px 14px; background: var(--card); color: var(--muted); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
+.view-switch button + button { border-left: 1px solid var(--line); }
+.view-switch button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.sv-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin: 10px 0 8px; }
+.sv-tools .zoom { display: inline-flex; gap: 4px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.sv-tools .zoom button { min-width: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); color: var(--ink); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
+.sv-wrap { position: relative; height: min(78vh, 980px); overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--paper) 70%, #8884); padding: 10px; overscroll-behavior: contain; }
+.sv-page { position: relative; margin: 0 auto 12px; background: #fff; box-shadow: 0 1px 4px #0003; cursor: pointer; }
+.sv-page canvas { display: block; width: 100%; height: 100%; }
+.sv-page .sv-pno { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #888; pointer-events: none; }
+.sv-hl { position: absolute; border-radius: 4px; background: rgba(255, 196, 0, .18); outline: 2px solid #e0a100; pointer-events: none; transition: left .12s, top .12s, width .12s, height .12s; z-index: 2; }
+.sv-cur { position: absolute; width: 2px; margin-left: -1px; background: #d22; box-shadow: 0 0 0 1px #fff8; pointer-events: none; z-index: 3; }
+.sv-hl b { position: absolute; left: 0; top: -18px; padding: 0 5px; border-radius: 4px; background: #e0a100; color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
+.sv-empty { padding: 30px 12px; text-align: center; color: var(--muted); font-size: 14px; }
 .bar-view-settings { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:10px 0; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); }
 .bar-view-label { color:var(--muted); font-size:12px; font-weight:650; }
 .bar-view-options { display:flex; gap:5px; flex-wrap:wrap; }
@@ -928,12 +943,16 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <section class="panel" aria-labelledby="tBars">
         <div class="row" style="justify-content:space-between">
           <h2 id="tBars">마디 지도</h2>
-          <div class="legend"><span><span class="dot R"></span>윗성부</span><span><span class="dot L"></span>아랫성부</span></div>
+          <div class="view-switch" role="group" aria-label="보기 방식">
+            <button type="button" id="viewMap" aria-pressed="true">마디 지도</button>
+            <button type="button" id="viewScore" aria-pressed="false">악보 보기</button>
+          </div>
         </div>
+        <div class="legend map-only"><span><span class="dot R"></span>윗성부</span><span><span class="dot L"></span>아랫성부</span></div>
         <div class="summary" id="summary"></div>
         <div class="warnlist" id="warnList"></div>
         <div class="bar-actions">
-          <p class="hint">마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.</p>
+          <p class="hint" id="barsHint">마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.</p>
           <button class="btn stop-near-bars" id="barsStopBtn" type="button" aria-label="재생 정지">⏹ 정지</button>
         </div>
         <div class="edit-tools" id="editTools" hidden>
@@ -945,6 +964,11 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
+            <dt>마디 지도 · 악보 보기</dt>
+            <dd>위의 단추로 두 가지 보기를 고릅니다. <b>마디 지도</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
+              악보 보기에서는 연주하는 동안 지금 마디가 노란 칸, 지금 위치가 빨간 선으로 음표를 따라 움직이고, 다음 단·다음 쪽으로 넘어가면 악보 칸이 따라 내려갑니다(화면 전체는 움직이지 않음). '연주 위치 따라가기'를 끄면 악보를 직접 넘겨 볼 수 있습니다.
+              악보를 누르면 그 마디부터 재생하고, [−]·[+]로 크기를 바꿉니다(휴대폰에서 총보가 작으면 키워 보세요). 고른 보기와 크기는 이 기기에 기억됩니다.
+              총보는 켠 줄 가운데 기준 줄이 있는 단 전체를 표시합니다. 예시 장단과 마디 위치를 읽지 못한 악보는 악보 보기를 할 수 없습니다.</dd>
             <dt>마디 칸 읽는 법</dt>
             <dd>위 줄은 윗성부, 아래 줄은 아랫성부입니다. 점 하나가 한 번 치는 자리이고, 왼쪽이 마디 처음입니다.
               <b>큰 점</b>은 악센트, 앞의 <b>작은 점</b>은 꾸밈음, <b>가로 막대</b>는 롤입니다.</dd>
@@ -958,7 +982,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd>음표 길이가 박자와 맞지 않는 등 인식이 불확실한 마디입니다. 마우스를 올리거나 위의 노란 안내를 보면 이유가 나옵니다. 악보와 다르게 들리면 그 마디 번호를 알려 주세요.</dd>
           </dl>
         </details>
-        <div class="bar-view-settings" role="group" aria-label="마디 미리보기 표시 방식">
+        <div class="score-view" id="scoreView" hidden>
+          <div class="sv-tools">
+            <label class="chk"><input type="checkbox" id="svFollow" checked>연주 위치 따라가기</label>
+            <span class="zoom">크기 <button type="button" id="svZoomOut" aria-label="작게">−</button><span id="svZoomVal">100%</span><button type="button" id="svZoomIn" aria-label="크게">+</button></span>
+          </div>
+          <div class="sv-wrap" id="svWrap"></div>
+        </div>
+        <div class="bar-view-settings map-only" role="group" aria-label="마디 미리보기 표시 방식">
           <span class="bar-view-label">마디 미리보기</span>
           <div class="bar-view-options">
             <button class="bar-view-btn" id="barViewTimeline" type="button" aria-pressed="true">박자별 타임라인 보기</button>
@@ -975,6 +1006,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li><b>악보 보기</b>: 마디 지도 칸에서 [악보 보기]를 고르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
     <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
     <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
     <li>'장구 녹음 바꾸기' 칸을 없앰: 늘봄에서 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</li>
@@ -1145,7 +1177,7 @@ const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
-  marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false };
+  marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false, scoreGeo: null };
 let raf = 0, audioUrl = null, lastNow = null;
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
 
@@ -1330,6 +1362,7 @@ $('tchgAdd').addEventListener('click', () => {
 
 // ---------- 화면: 마디 지도 ----------
 let barTipEl = null, barTipHideTimer = 0, barTipAnchor = null;
+const PREF_VIEW = 'hapju-view';   // 마디 지도 / 악보 보기 선택과 악보 크기 (이 기기에만)
 const MIDI_NOTE_NAMES = ['도','도♯','레','레♯','미','파','파♯','솔','솔♯','라','라♯','시'];
 function noteLabel(midi) {
   if (!Number.isFinite(midi)) return '';
@@ -1510,6 +1543,144 @@ function hideBarTip(delay = 350) {
     barTipHideTimer = setTimeout(() => { if (barTipEl && !barTipEl.classList.contains('show')) { barTipEl.hidden = true; barTipAnchor = null; } }, 140);
   }, delay);
 }
+// ---------- 악보 보기: 올린 PDF 쪽을 그대로 보여 주고 연주 중인 마디를 표시 ----------
+let svCur = null;
+let viewMode = 'map', svZoom = 1, svKey = null, svIO = null, svHl = null, svPages = new Map(), svCurrent = -1;
+try { const v = JSON.parse(localStorage.getItem(PREF_VIEW) || '{}'); if (v.mode === 'score') viewMode = 'score'; if (v.zoom >= 1 && v.zoom <= 3) svZoom = v.zoom; if (v.follow === false) $('svFollow').checked = false; } catch (e) {}
+function saveViewPref() { try { localStorage.setItem(PREF_VIEW, JSON.stringify({ mode: viewMode, zoom: svZoom, follow: $('svFollow').checked })); } catch (e) {} }
+function setView(mode) {
+  viewMode = mode === 'score' ? 'score' : 'map';
+  $('viewMap').setAttribute('aria-pressed', String(viewMode === 'map')); $('viewScore').setAttribute('aria-pressed', String(viewMode === 'score'));
+  $('tBars').textContent = viewMode === 'score' ? '악보 보기' : '마디 지도';
+  $('bars').hidden = viewMode === 'score'; $('scoreView').hidden = viewMode !== 'score';
+  document.querySelectorAll('.map-only').forEach(e => { e.hidden = viewMode === 'score'; });
+  $('barsHint').textContent = viewMode === 'score' ? '악보에서 마디를 누르면 그 마디부터 재생합니다. 연주 중인 마디는 노란 칸으로 표시됩니다.' : '마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.';
+  if (viewMode === 'score') { hideBarTip(0); buildScoreView(); if (state.playing && lastNow != null) svShow(state.rendered ? (state.rendered.plan.barTimes.find(b => b.number === lastNow) || {}).idx ?? -1 : -1, true); }
+  saveViewPref();
+}
+$('viewMap').addEventListener('click', () => setView('map'));
+$('viewScore').addEventListener('click', () => setView('score'));
+$('svFollow').addEventListener('change', saveViewPref);
+const SV_ZOOMS = [1, 1.25, 1.5, 2, 2.5, 3];
+function setZoom(dir) {
+  const i = Math.max(0, Math.min(SV_ZOOMS.length - 1, SV_ZOOMS.indexOf(svZoom) + dir)); if (SV_ZOOMS[i] === svZoom) return;
+  svZoom = SV_ZOOMS[i]; $('svZoomVal').textContent = Math.round(svZoom * 100) + '%'; saveViewPref();
+  const k = svCurrent; svKey = null; buildScoreView(); if (k >= 0) svShow(k, true);
+}
+$('svZoomOut').addEventListener('click', () => setZoom(-1)); $('svZoomIn').addEventListener('click', () => setZoom(1));
+$('svZoomVal').textContent = Math.round(svZoom * 100) + '%';
+// 마디 칸(쪽 좌표): 기준 줄이 있는 단 전체 높이 × 마디 가로
+function svRect(k) {
+  const G = state.scoreGeo, g = G && G.geo[k]; if (!g) return null;
+  const L = G.sc.layouts[g.page]; if (!L || !L.staves[g.staff]) return null;
+  const sys = (L.systems && L.sysOf && L.systems[L.sysOf[g.staff]]) || [g.staff];
+  const top = Math.min(...sys.map(i => L.staves[i].top)), bottom = Math.max(...sys.map(i => L.staves[i].bottom));
+  return { page: g.page, x0: g.x0, x1: g.x1, y0: top - 10, y1: bottom + 10 };
+}
+function buildScoreView() {
+  const wrap = $('svWrap'), G = state.scoreGeo;
+  const key = G ? G.sc.fp + '|' + G.geo.length + '|' + svZoom + '|' + G.geo.map(g => g ? g.page : '-').join('') : 'none';
+  if (key === svKey && wrap.firstChild) return;
+  svKey = key; svCurrent = -1;
+  if (svIO) { svIO.disconnect(); svIO = null; }
+  svPages.clear(); wrap.textContent = ''; svHl = null; svCur = null;
+  if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? '이 악보는 마디 위치를 읽지 못해 악보 보기를 할 수 없습니다. 마디 지도를 써 주세요.' : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
+  const pages = [...new Set(G.geo.filter(Boolean).map(g => g.page))].sort((a, b) => a - b);
+  const sc = G.sc, myKey = key;
+  wrap.appendChild(tipNode('div', 'sv-empty', '악보를 펼치는 중…'));
+  // 쪽 크기를 먼저 모두 알아 둔다 (자리를 정확히 잡아야 연주 위치로 바로 옮겨 갈 수 있다)
+  Promise.all(pages.map(pi => sc.doc.getPage(pi + 1).then(pg => pg.getViewport({ scale: 1 })).catch(() => null))).then(vps => {
+    if (svKey !== myKey) return;
+    wrap.textContent = '';
+    svLayout(pages, vps, sc, myKey);
+    if (svCurrent >= 0) { const k = svCurrent; svCurrent = -1; svShow(k, true); }
+  });
+}
+function svLayout(pages, vps, sc, myKey) {
+  const wrap = $('svWrap');
+  svIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting) svRender(+e.target.dataset.page); }, { root: wrap, rootMargin: '800px 0px' }) : null;
+  pages.forEach((pi, j) => {
+    const vp = vps[j] || { width: 595, height: 842 };
+    const d = document.createElement('div'); d.className = 'sv-page'; d.dataset.page = pi;
+    d.style.width = (svZoom * 100) + '%'; d.style.aspectRatio = `${vp.width} / ${vp.height}`;
+    d.appendChild(tipNode('span', 'sv-pno', `${pi + 1}쪽`));
+    d.addEventListener('click', ev => svClick(pi, d, ev));
+    wrap.appendChild(d); svPages.set(pi, { el: d, canvas: null, w: vp.width, h: vp.height, busy: false });
+    if (svIO) svIO.observe(d); else svRender(pi);
+  });
+}
+// 쪽 그림은 보이는 쪽 근처만 그리고, 멀리 떨어진 쪽 그림은 지워 휴대폰 메모리를 아낀다
+async function svRender(pi) {
+  const P = svPages.get(pi), G = state.scoreGeo; if (!P || P.canvas || P.busy || !G) return;
+  P.busy = true; const myKey = svKey;
+  try {
+    const pg = await G.sc.doc.getPage(pi + 1); if (svKey !== myKey) return;
+    const vp1 = pg.getViewport({ scale: 1 }), cssW = P.el.clientWidth || 600;
+    const sc = Math.min(3000 / vp1.width, Math.max(0.5, cssW * Math.min(3, window.devicePixelRatio || 1) / vp1.width));   // 휴대폰 화면(배율 3)에서도 또렷하게, 그림 폭은 3000점까지
+    const vp = pg.getViewport({ scale: sc });
+    const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+    const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+    await pg.render({ canvasContext: cx, viewport: vp }).promise;
+    if (svKey !== myKey) return;
+    P.el.insertBefore(c, P.el.firstChild); P.canvas = c;
+    const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
+    if (drawn.length > 6) {   // 지금 쪽에서 먼 것부터 지운다
+      const ref = svCurrent >= 0 && state.scoreGeo.geo[svCurrent] ? state.scoreGeo.geo[svCurrent].page : pi;
+      drawn.sort((a, b) => Math.abs(b[0] - ref) - Math.abs(a[0] - ref));
+      for (const [qi, q] of drawn.slice(0, drawn.length - 6)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; }
+    }
+  } catch (e) { console.warn('악보 보기', e); }
+  finally { P.busy = false; }
+}
+function svPlace(k, scroll) {
+  const r = svRect(k), P = r && svPages.get(r.page); if (!P || !P.w) { if (svHl) svHl.hidden = true; return; }
+  if (!svHl) { svHl = document.createElement('div'); svHl.className = 'sv-hl'; svHl.appendChild(document.createElement('b')); }
+  if (svHl.parentNode !== P.el) P.el.appendChild(svHl);
+  svHl.hidden = false;
+  svHl.style.left = (r.x0 / P.w * 100) + '%'; svHl.style.width = ((r.x1 - r.x0) / P.w * 100) + '%';
+  svHl.style.top = (r.y0 / P.h * 100) + '%'; svHl.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
+  svHl.firstChild.textContent = `${state.bars[k] ? state.bars[k].number : ''}마디`;
+  if (scroll && $('svFollow').checked) {
+    // 악보 칸 안에서만 움직인다(화면 전체는 그대로). 지금 단이 칸 위쪽 1/4쯤에 오게
+    const wrap = $('svWrap'), y = P.el.offsetTop + r.y0 / P.h * P.el.offsetHeight, x = P.el.offsetLeft + r.x0 / P.w * P.el.offsetWidth;
+    const yb = P.el.offsetTop + r.y1 / P.h * P.el.offsetHeight;
+    const far = Math.abs(y - wrap.scrollTop) > wrap.clientHeight * 1.5;   // 멀리 떨어진 곳(다른 쪽·도돌이표로 돌아감)은 바로 옮긴다
+    if (y < wrap.scrollTop + 10 || yb > wrap.scrollTop + wrap.clientHeight - 10) wrap.scrollTo({ top: Math.max(0, y - wrap.clientHeight * 0.22), behavior: far ? 'auto' : 'smooth' });
+    if (x < wrap.scrollLeft || x + 40 > wrap.scrollLeft + wrap.clientWidth) wrap.scrollTo({ left: Math.max(0, x - 30), behavior: far ? 'auto' : 'smooth' });
+  }
+}
+function svShow(k, scroll) {
+  if (viewMode !== 'score') return;
+  if (k == null || k < 0) { svCurrent = -1; if (svHl) svHl.hidden = true; if (svCur) svCur.hidden = true; return; }
+  if (k === svCurrent && svHl && !svHl.hidden) return;
+  svCurrent = k; const r = svRect(k); if (r) svRender(r.page);
+  svPlace(k, scroll);
+}
+// 재생 선: 피날레처럼 마디 안에서 음표를 따라 움직인다 (음표 자리를 모르면 마디를 고르게)
+function svCursor(k, f) {
+  if (k !== svCurrent) svShow(k, true);
+  const r = svRect(k), P = r && svPages.get(r.page); if (!P || !P.w) return;
+  const g = state.scoreGeo.geo[k];
+  let pts = g.pts && g.pts.length ? g.pts.slice() : [[0, r.x0 + 6]];
+  if (pts[0][0] > 0) pts.unshift([0, Math.max(r.x0 + 4, pts[0][1] - 12)]);
+  pts.push([1, Math.max(pts[pts.length - 1][1] + 2, r.x1 - 4)]);
+  let x = pts[0][1];
+  for (let i = 1; i < pts.length; i++) if (f <= pts[i][0]) { const [f0, x0] = pts[i - 1], [f1, x1] = pts[i]; x = x0 + (x1 - x0) * (f1 > f0 ? (f - f0) / (f1 - f0) : 0); break; }
+  if (!svCur) svCur = document.createElement('div'), svCur.className = 'sv-cur';
+  if (svCur.parentNode !== P.el) P.el.appendChild(svCur);
+  svCur.hidden = false;
+  svCur.style.left = (x / P.w * 100) + '%'; svCur.style.top = (r.y0 / P.h * 100) + '%'; svCur.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
+}
+// 악보를 누르면 그 자리의 마디부터 재생
+function svClick(pi, el, ev) {
+  const P = svPages.get(pi), G = state.scoreGeo; if (!P || !P.w || !G) return;
+  const b = el.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width * P.w, y = (ev.clientY - b.top) / b.height * P.h;
+  // 누른 곳과 같은 가로 자리의 마디 중 위아래로 가장 가까운 단 (단 사이 빈 곳을 눌러도 가까운 단으로, 너무 멀면 무시)
+  let best = -1, bd = 60;
+  G.geo.forEach((g, k) => { if (!g || g.page !== pi) return; const r = svRect(k); if (!r || x < r.x0 || x > r.x1) return; const d = y < r.y0 ? r.y0 - y : y > r.y1 ? y - r.y1 : 0; if (d < bd) { bd = d; best = k; } });
+  if (best >= 0 && state.bars[best]) playFromBar(state.bars[best].number);
+}
+
 // ---------- 마디별 음 수정 (음정·음 길이) ----------
 // 수정은 악보 PDF 내용으로 만든 지문(fp)별로 이 브라우저에 저장한다: { lines: { 줄: { 마디순번: { '성부|순번': 수정 } } } }
 // 수정마다 원래 값(o)을 함께 적어 두고, 원래 값이 그대로일 때만 적용한다 (인식이 바뀌면 엉뚱한 음을 고치지 않게).
@@ -1813,6 +1984,7 @@ function renderBars() {
   for (const b of state.bars) for (const l of (b.labels || [])) cnt[l] = (cnt[l] || 0) + 1;
   const keys = Object.keys(cnt);
   add('악상기호', keys.length ? keys.map(k => cnt[k] > 1 ? `${k}×${cnt[k]}` : k).join(' ') : '없음');
+  if (viewMode === 'score') buildScoreView();
   $('warnList').textContent = '';
   for (const b of warnBars.slice(0, 6)) { const d = document.createElement('div'); d.className = 'msg'; d.textContent = `${b.number}마디: ${b.warnings.join(' / ')}`; $('warnList').appendChild(d); }
   updateOut();
@@ -2029,7 +2201,7 @@ function stop(silent) {
   try { audio.pause(); } catch (e) {}
   cancelAnimationFrame(raf);
   state.playing = false; setPlayIcon(false);
-  if (!silent) { tick.html = null; lastNow = null; $('nowText').innerHTML = '<b>정지</b>'; document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now')); }   // lastNow도 지워야 같은 마디부터 다시 재생할 때 노란 표시가 나온다
+  if (!silent) { svShow(-1); tick.html = null; lastNow = null; $('nowText').innerHTML = '<b>정지</b>'; document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now')); }   // lastNow도 지워야 같은 마디부터 다시 재생할 때 노란 표시가 나온다
 }
 function tick() {
   if (!state.playing || !state.rendered) return;
@@ -2045,9 +2217,11 @@ function tick() {
   if (html !== tick.html) { $('nowText').innerHTML = html; tick.html = html; }
   const w = Math.min(100, t / plan.total * 100).toFixed(1) + '%';
   if (w !== tick.w) { $('trackFill').style.width = w; tick.w = w; }
+  if (viewMode === 'score' && cur) { const nx = bt[k + 1], end = nx ? nx.abs : plan.total; svCursor(cur.idx, Math.max(0, Math.min(1, (t - cur.abs) / Math.max(0.01, end - cur.abs)))); }
   if (n !== lastNow) {
     document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now'));
-    if (n) { const el = document.querySelector(`.b[data-n="${n}"]`); if (el) el.classList.add('now'); }   // 지금 마디는 노란색으로만 표시하고 화면은 따라 움직이지 않는다(보던 곳을 그대로 두게)
+    if (n) { const el = document.querySelector(`.b[data-n="${n}"]`); if (el) el.classList.add('now'); }
+    if (viewMode === 'score') svShow(cur ? cur.idx : -1, true);   // 지금 마디는 노란색으로만 표시하고 화면은 따라 움직이지 않는다(보던 곳을 그대로 두게)
     lastNow = n;
   }
   raf = requestAnimationFrame(tick);
@@ -2378,7 +2552,7 @@ let loadSeq = 0;   // 악보를 읽는 중에 다른 악보를 또 올렸을 때
 function resetEmpty(text) {
   stop(); loadSeq++;   // 읽는 중이던 악보가 있으면 버린다
   // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
-  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false });
+  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false, scoreGeo: null });
   state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
   state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
@@ -2545,7 +2719,7 @@ function applySelection(first = false) {
     if (ids.length) showMsg(sc.maestroCount === 0
       ? '이 PDF에서는 악보 기호를 찾을 수 없습니다. 스캔하거나 사진으로 만든 PDF이거나, 아직 지원하지 않는 프로그램으로 만든 악보일 수 있습니다. Finale·Sibelius·MuseScore·Encore에서 PDF로 저장한 악보를 올려 주세요(\'악보 올리기\' 아래 \'읽을 수 있는 악보 PDF\' 참고).'
       : '오선을 찾지 못했습니다. 이 악보 형식은 아직 지원하지 않습니다.');
-    state.bars = []; renderBars(); return;
+    state.bars = []; state.scoreGeo = null; renderBars(); return;
   }
   showMsg('');
   const multi = results.length > 1;
@@ -2571,6 +2745,7 @@ function applySelection(first = false) {
   for (const b of bars) if (b.events.length && (b.note === '쉼' || b.note === '롤 연장')) b.note = '';
   const prevBars = state.bars;
   state.bars = bars;
+  state.scoreGeo = master.r.geo && master.sc && master.sc.doc ? { sc: master.sc, geo: master.r.geo } : null;   // 악보 보기: 기준 줄의 마디 위치
   state.marks = { dyn: [], tempo: master.r.marks.tempo };
   // 악기를 켜고 끌 때마다 직접 고친 연주 순서·템포가 지워지던 문제: 마디 수가 그대로면 유지
   const keepOrderText = !first && state.manualOrder ? $('orderText').value : null;
@@ -2833,6 +3008,7 @@ state.marks = EXAMPLE_MARKS;
 state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
 renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); showExampleLine();
+if (viewMode === 'score') setView('score');
 // ---------- 업데이트 이력 창 ----------
 function openHistory() {
   const back = document.createElement('div'); back.className = 'edit-back';
