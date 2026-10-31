@@ -1078,6 +1078,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li>고침: 악보를 열면 연주 범위가 1~1마디로 되던 문제(악기를 모두 끈 채 설정이 저장된 경우). 이미 1~1로 저장된 설정도 전곡으로 바로잡음</li>
     <li><b>악기 갈래 색</b>: 악기 선택의 줄 카드를 관악(초록)·현악(남색)·타악(주홍)·건반 등(보라)으로 색을 나누고 이름 앞에 갈래 표시. 마디 미리보기의 줄 색도 같은 색</li>
     <li><b>솔로·음소거</b>: 악기 선택의 줄마다 [솔로 (이 줄만)]·[음소거 (이 줄 빼기)]. 줄 설정은 그대로 두고 잠깐 듣기만 바꿉니다. [솔로·음소거 모두 해제]로 원래대로</li>
     <li><b>소리 다듬기</b>(연주 칸): 조옮김(반음 단위), 기준음 A4(415~466Hz), 늘임표(페르마타) 길이(늘이지 않음~4박, 울리던 음을 늘임), 잔향(없음·조금·보통·많이), 좌우 배치(입체 음향, 국악관현악 자리처럼. 줄마다 '좌우 위치'로 바꾸기)</li>
@@ -2180,6 +2181,7 @@ $('speed').addEventListener('input', () => { $('speedVal').textContent = $('spee
 for (const id of ['from', 'to']) $(id).addEventListener('change', () => { clampRange(); changed(); updateOut(); });
 $('rangeAll').addEventListener('click', () => { $('from').value = 1; $('to').value = lastBar(); changed(); updateOut(); });
 function clampRange() {
+  if (!state.bars.length) return;   // 악기를 모두 꺼 마디가 없을 때 범위를 1~1로 줄여 버리던 문제
   let f = Math.max(1, Math.min(lastBar(), +$('from').value || 1)), t = Math.max(1, Math.min(lastBar(), +$('to').value || lastBar()));
   if (t < f) [f, t] = [t, f];
   $('from').value = f; $('to').value = t;
@@ -2478,6 +2480,7 @@ function syncSaveFromPlay() {
   saveSummary();
 }
 function saveOpts() {
+  if (!state.bars.length) return { from: +$('sFrom').value || 1, to: +$('sTo').value || 1, repeats: $('sRepeat').checked, countIn: $('sCount').checked, metronome: $('sMetro').checked, restCount: $('sRest').value, dyn: $('sDyn').checked, speed: Math.max(50, Math.min(150, +$('sSpeed').value || 100)) };
   let f = Math.max(1, Math.min(lastBar(), +$('sFrom').value || 1)), t = Math.max(1, Math.min(lastBar(), +$('sTo').value || lastBar()));
   if (t < f) [f, t] = [t, f];
   $('sFrom').value = f; $('sTo').value = t;
@@ -2588,7 +2591,7 @@ function applyLineSettings(S, only) {
   return n;
 }
 function applyRestSettings(S) {
-  const LB = lastBar();
+  const LB = state.bars.length ? lastBar() : Infinity;   // 악기를 모두 꺼 마디가 없을 때는 저장한 템포 구간·범위를 자르지 않는다
   if (Array.isArray(S.tempoRows) && S.tempoRows.length) {
     const rows = S.tempoRows.filter(r => r.start >= 1 && r.start <= LB).map(r => ({ ...r }));
     if (rows.length && rows.some(r => r.start === 1)) state.tempoRows = rows;
@@ -2609,7 +2612,9 @@ function applyRestSettings(S) {
   if (S.speed) { $('speed').value = S.speed; $('speedVal').textContent = $('speed').value + '%'; }
   if (S.ritF) $('ritF').value = S.ritF; if (S.accF) $('accF').value = S.accF;
   const P = S.play || {};
-  if (P.from) $('from').value = P.from; if (P.to) $('to').value = Math.min(P.to, LB);
+  const badRange = state.bars.length > 1 && P.to === 1 && P.from === 1;   // 예전 판의 버그로 1~1마디가 저장된 경우
+  if (badRange) { $('from').value = 1; $('to').value = LB; }
+  else { if (P.from) $('from').value = P.from; if (P.to) $('to').value = Math.min(P.to, LB); }
   const ck = (id, v) => { if (typeof v === 'boolean') $(id).checked = v; };
   ck('optRepeat', P.repeats); ck('optCount', P.countIn); ck('optMetro', P.metronome); ck('optDyn', P.dyn); ck('optLoop', P.loop);
   if (P.restCount) $('optRest').value = P.restCount;
@@ -2618,7 +2623,7 @@ function applyRestSettings(S) {
   if (S.order) { const r = parseOrderText(S.order, state.bars); if (!r.error) state.manualOrder = r.order; }
   const V = S.save || {};
   if (V.format) $('saveFormat').value = V.format;
-  saveLinked = V.linked !== false;
+  saveLinked = V.linked !== false || (V.from === 1 && V.to === 1 && state.bars.length > 1);
   if (saveLinked) syncSaveFromPlay();
   else {
     if (V.from) $('sFrom').value = V.from; if (V.to) $('sTo').value = V.to; if (V.speed) $('sSpeed').value = V.speed;
@@ -2934,7 +2939,11 @@ function applySelection(first = false) {
   $('fileName').textContent = state.sourceScores.length > 1 ? `${state.sourceScores.length}개 파트보 · ${state.title || ''}` : (sc.title ? sc.title + ' · ' : '') + (state.fileName || '');
   $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 더한 악보 ${state.extras.length}개` : '');
   if (master.r.mismatches.length) showMsg(`악보에 인쇄된 마디 번호와 읽은 마디 수가 ${master.r.mismatches.length}곳에서 다릅니다(처음: ${master.r.mismatches[0][1]}마디 근처). 그 뒤 마디는 번호가 밀렸을 수 있습니다.`);
-  if (first || +$('to').value > lastBar()) { $('from').value = 1; $('to').value = lastBar(); }
+  const prevLast = prevBars.length ? prevBars[prevBars.length - 1].number : null, curTo = +$('to').value || 0;
+  if (first || curTo > lastBar() || (prevLast && curTo >= prevLast) || (!prevLast && curTo <= 1) || +$('from').value > lastBar()) {
+    if (first || +$('from').value > lastBar()) $('from').value = 1;
+    $('to').value = lastBar();
+  }
   if (first) saveLinked = true;
   if (saveLinked) syncSaveFromPlay(); else saveSummary();
   changed(); renderTempo(); renderBars(); refreshOrder(); updateEditTools(results);
