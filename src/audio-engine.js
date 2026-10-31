@@ -38,9 +38,11 @@ export function makeSounds() {
   }
   { const a = S['따'], b = S['궁']; const y = new Float32Array(Math.max(a.length, b.length)); for (let i = 0; i < y.length; i++) y[i] = (a[i] || 0) * 0.8 + (b[i] || 0); S['덩'] = norm(y); }
   { // 북
-    const n = Math.round(0.9 * SR), nz = band(n, 60, 900, 14); let ph = 0;
-    S['북'] = build(0.9, (t, i) => { const f = 58 + 45 * Math.exp(-t / 0.05); ph += 2 * Math.PI * f / SR;
-      return Math.sin(ph) * env(t, 0.003, 0.4) + 0.2 * Math.sin(2.3 * ph) * env(t, 0.003, 0.12) + 0.35 * nz[i] * env(t, 0.001, 0.04); });
+    // 예전 북은 소리가 거의 60Hz 아래에만 있어 노트북·휴대폰 스피커에서 잘 안 들렸다 → 가죽 울림(150~400Hz)과 채 닿는 소리를 넣음
+    const n = Math.round(0.9 * SR), nz = band(n, 60, 900, 14), sk = band(n, 180, 2200, 24); let ph = 0;
+    S['북'] = build(0.9, (t, i) => { const f = 72 + 50 * Math.exp(-t / 0.045); ph += 2 * Math.PI * f / SR;
+      return 0.8 * Math.sin(ph) * env(t, 0.003, 0.38) + 0.85 * Math.sin(1.59 * ph) * env(t, 0.002, 0.18) + 0.5 * Math.sin(2.14 * ph) * env(t, 0.002, 0.1)
+        + 0.25 * Math.sin(2.65 * ph) * env(t, 0.002, 0.06) + 0.35 * nz[i] * env(t, 0.001, 0.04) + 0.9 * sk[i] * env(t, 0.0005, 0.035); });
   }
   { // 북 테 (나무 몸통)
     const n = Math.round(0.12 * SR), nz = band(n, 2000, 5000, 15);
@@ -71,11 +73,12 @@ export function makeSounds() {
   return S;
 }
 
-// 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB)
+// 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB, 10월 31일 북을 장구 덩만큼 더 키움)
 const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 1.12 * BK, '북녹음': 1.15 * BK, '북짧게': 1.1 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const BUK_MID = 4;
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.0 * BK, '북녹음': 1.85 * BK, '북짧게': 1.45 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -472,6 +475,14 @@ export function decodeRecorded(obj) {
   if (out['징']) out['징'] = out['징'].map(y => {
     const n = Math.min(y.length, Math.round(3 * SR)), z = y.slice(0, n), a = Math.round(0.4 * SR), fo = Math.round(0.3 * SR);
     for (let i = a; i < n; i++) z[i] *= Math.exp(-(i - a) / SR / 0.9) * (i > n - fo ? (n - i) / fo : 1);
+    return z;
+  });
+  // 북 녹음도 소리가 거의 100Hz 아래라 작은 스피커에서 잘 안 들린다 → 가죽 울림(150Hz~1.5kHz)을 키우고 원래 크기(최댓값)로 맞춤
+  for (const k of ['북녹음', '북짧게']) if (out[k]) out[k] = out[k].map(y => {
+    let m = biquad(biquad(y, 'hp', 150), 'hp', 150); m = biquad(m, 'lp', 1500);
+    const z = new Float32Array(y.length); let p0 = 0, p1 = 0;
+    for (let i = 0; i < y.length; i++) { z[i] = y[i] + BUK_MID * m[i]; p0 = Math.max(p0, Math.abs(y[i])); p1 = Math.max(p1, Math.abs(z[i])); }
+    if (p1 > 0) for (let i = 0; i < z.length; i++) z[i] *= p0 / p1;
     return z;
   });
   return out;

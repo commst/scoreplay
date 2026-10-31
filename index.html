@@ -1086,6 +1086,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li>북 소리(합성·녹음 모두)를 크게: 소리가 거의 낮은 음역에만 있어 노트북·휴대폰 스피커에서 잘 안 들리던 것을, 가죽 울림을 살리고 크기를 장구만큼 올림</li>
     <li>고침: 악보를 열면 연주 범위가 1~1마디로 되던 문제(악기를 모두 끈 채 설정이 저장된 경우). 이미 1~1로 저장된 설정도 전곡으로 바로잡음</li>
     <li>스캔(사진) PDF처럼 읽지 못한 악보를 열면 연주 범위 칸을 비워 둠(1~1로 보이지 않게)</li>
     <li><b>악기 갈래 색</b>: 악기 선택의 줄 카드를 관악(초록)·현악(남색)·타악(주홍)·건반 등(보라)으로 색을 나누고 이름 앞에 갈래 표시. 마디 미리보기의 줄 색도 같은 색</li>
@@ -3491,9 +3492,11 @@ function makeSounds() {
   }
   { const a = S['따'], b = S['궁']; const y = new Float32Array(Math.max(a.length, b.length)); for (let i = 0; i < y.length; i++) y[i] = (a[i] || 0) * 0.8 + (b[i] || 0); S['덩'] = norm(y); }
   { // 북
-    const n = Math.round(0.9 * SR), nz = band(n, 60, 900, 14); let ph = 0;
-    S['북'] = build(0.9, (t, i) => { const f = 58 + 45 * Math.exp(-t / 0.05); ph += 2 * Math.PI * f / SR;
-      return Math.sin(ph) * env(t, 0.003, 0.4) + 0.2 * Math.sin(2.3 * ph) * env(t, 0.003, 0.12) + 0.35 * nz[i] * env(t, 0.001, 0.04); });
+    // 예전 북은 소리가 거의 60Hz 아래에만 있어 노트북·휴대폰 스피커에서 잘 안 들렸다 → 가죽 울림(150~400Hz)과 채 닿는 소리를 넣음
+    const n = Math.round(0.9 * SR), nz = band(n, 60, 900, 14), sk = band(n, 180, 2200, 24); let ph = 0;
+    S['북'] = build(0.9, (t, i) => { const f = 72 + 50 * Math.exp(-t / 0.045); ph += 2 * Math.PI * f / SR;
+      return 0.8 * Math.sin(ph) * env(t, 0.003, 0.38) + 0.85 * Math.sin(1.59 * ph) * env(t, 0.002, 0.18) + 0.5 * Math.sin(2.14 * ph) * env(t, 0.002, 0.1)
+        + 0.25 * Math.sin(2.65 * ph) * env(t, 0.002, 0.06) + 0.35 * nz[i] * env(t, 0.001, 0.04) + 0.9 * sk[i] * env(t, 0.0005, 0.035); });
   }
   { // 북 테 (나무 몸통)
     const n = Math.round(0.12 * SR), nz = band(n, 2000, 5000, 15);
@@ -3524,11 +3527,12 @@ function makeSounds() {
   return S;
 }
 
-// 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB)
+// 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB, 10월 31일 북을 장구 덩만큼 더 키움)
 const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 1.12 * BK, '북녹음': 1.15 * BK, '북짧게': 1.1 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const BUK_MID = 4;
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.0 * BK, '북녹음': 1.85 * BK, '북짧게': 1.45 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 function dynLevelAt(items, p) {
   let level = 0.75;
@@ -3925,6 +3929,14 @@ function decodeRecorded(obj) {
   if (out['징']) out['징'] = out['징'].map(y => {
     const n = Math.min(y.length, Math.round(3 * SR)), z = y.slice(0, n), a = Math.round(0.4 * SR), fo = Math.round(0.3 * SR);
     for (let i = a; i < n; i++) z[i] *= Math.exp(-(i - a) / SR / 0.9) * (i > n - fo ? (n - i) / fo : 1);
+    return z;
+  });
+  // 북 녹음도 소리가 거의 100Hz 아래라 작은 스피커에서 잘 안 들린다 → 가죽 울림(150Hz~1.5kHz)을 키우고 원래 크기(최댓값)로 맞춤
+  for (const k of ['북녹음', '북짧게']) if (out[k]) out[k] = out[k].map(y => {
+    let m = biquad(biquad(y, 'hp', 150), 'hp', 150); m = biquad(m, 'lp', 1500);
+    const z = new Float32Array(y.length); let p0 = 0, p1 = 0;
+    for (let i = 0; i < y.length; i++) { z[i] = y[i] + BUK_MID * m[i]; p0 = Math.max(p0, Math.abs(y[i])); p1 = Math.max(p1, Math.abs(z[i])); }
+    if (p1 > 0) for (let i = 0; i < z.length; i++) z[i] *= p0 / p1;
     return z;
   });
   return out;
@@ -6370,7 +6382,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 21:53';
+const APP_VERSION = '2026-10-31 22:09';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
