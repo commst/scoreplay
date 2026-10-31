@@ -22,6 +22,18 @@ function band(n, lo, hi, seed) { let x = noise(n, seed); x = biquad(biquad(x, 'h
 function norm(x) { let m = 0; for (const v of x) m = Math.max(m, Math.abs(v)); if (m > 0) for (let i = 0; i < x.length; i++) x[i] /= m; return x; }
 const env = (t, atk, dec) => (atk > 0 && t < atk ? t / atk : 1) * Math.exp(-t / dec);
 
+// 북을 "때리는" 소리로: 스피커가 못 내는 아주 낮은 소리(70Hz 아래)는 줄여 자리(최대 크기)를 비우고,
+// 가죽 울림(150Hz~1.5kHz)을 키우고, 채가 닿는 순간의 딱 소리(1.5~5kHz, 몇 ms)를 더한다. 최댓값 1로 맞춤
+function bukPunch(y, mid, click, seed) {
+  let z = biquad(biquad(y, 'hp', 70), 'hp', 70);
+  let m = biquad(biquad(y, 'hp', 150), 'hp', 150); m = biquad(m, 'lp', 1500);
+  let pk = 0; for (const v of y) pk = Math.max(pk, Math.abs(v));
+  let on = 0; while (on < y.length && Math.abs(y[on]) < pk * 0.1) on++;
+  const cn = Math.round(0.03 * SR), nz = band(cn, 1500, 5000, seed);
+  const out = new Float32Array(y.length);
+  for (let i = 0; i < y.length; i++) { const j = i - on; out[i] = z[i] + mid * m[i] + (j >= 0 && j < cn ? click * pk * nz[j] * Math.exp(-j / SR / 0.006) : 0); }
+  return norm(out);
+}
 function build(sec, fn) { const n = Math.round(sec * SR); const y = new Float32Array(n); for (let i = 0; i < n; i++) y[i] = fn(i / SR, i); return norm(y); }
 
 export function makeSounds() {
@@ -43,6 +55,7 @@ export function makeSounds() {
     S['북'] = build(0.9, (t, i) => { const f = 72 + 50 * Math.exp(-t / 0.045); ph += 2 * Math.PI * f / SR;
       return 0.8 * Math.sin(ph) * env(t, 0.003, 0.38) + 0.85 * Math.sin(1.59 * ph) * env(t, 0.002, 0.18) + 0.5 * Math.sin(2.14 * ph) * env(t, 0.002, 0.1)
         + 0.25 * Math.sin(2.65 * ph) * env(t, 0.002, 0.06) + 0.35 * nz[i] * env(t, 0.001, 0.04) + 0.9 * sk[i] * env(t, 0.0005, 0.035); });
+    S['북'] = bukPunch(S['북'], 1.5, BUK_CLICK, 25);
   }
   { // 북 테 (나무 몸통)
     const n = Math.round(0.12 * SR), nz = band(n, 2000, 5000, 15);
@@ -77,8 +90,8 @@ export function makeSounds() {
 const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
-const BUK_MID = 4;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.0 * BK, '북녹음': 1.85 * BK, '북짧게': 1.45 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const BUK_MID = 4, BUK_CLICK = 0.6;
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.8 * BK, '북녹음': 2.6 * BK, '북짧게': 2.0 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -285,8 +298,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   }
   if (extra) extra(buf);   // 선율 악기 음 더하기
   if (!normalize) return buf;
-  let peak = 0; for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(buf[i]));
-  if (peak > 0) { const k = 0.89 / peak; for (let i = 0; i < n; i++) buf[i] *= k; }
+  fitLevel(buf);
   return buf;
 }
 
@@ -409,6 +421,20 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   }
 }
 
+// 크기 맞추기: 예전에는 가장 큰 한 점(최댓값)을 0.89에 맞췄는데, 북을 여러 번 겹쳐 친 순간 같은 드문 큰 점 때문에
+// 곡 전체가 작아졌다 → 거의 모든 소리(99.97%)가 0.8 안에 들도록 키우되 최대 6dB까지만, 넘치는 드문 점은 부드럽게 눌러 0.95 아래로
+export function fitLevel(L, R = null) {
+  let peak = 0; const st = Math.max(1, Math.floor(L.length / 200000)), smp = [];
+  for (const x of R ? [L, R] : [L]) for (let i = 0; i < x.length; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; if (i % st === 0) smp.push(a); }
+  if (!(peak > 0)) return;
+  smp.sort((a, b) => a - b);
+  const p = Math.max(smp[Math.floor(smp.length * 0.9997)] || 0, peak / 2);   // 많아야 6dB
+  const k = Math.min(0.8 / p, 0.89 / peak * 2), T = 0.7, H = 0.95 - T;
+  for (const x of R ? [L, R] : [L]) for (let i = 0; i < x.length; i++) {
+    const v = x[i] * k, a = Math.abs(v);
+    x[i] = a <= T ? v : Math.sign(v) * (T + H * Math.tanh((a - T) / H));
+  }
+}
 export function encodeWav(buf, bufR = null) {
   const ch = bufR ? 2 : 1, n = buf.length, bytes = n * 2 * ch, ab = new ArrayBuffer(44 + bytes), v = new DataView(ab);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
@@ -477,13 +503,7 @@ export function decodeRecorded(obj) {
     for (let i = a; i < n; i++) z[i] *= Math.exp(-(i - a) / SR / 0.9) * (i > n - fo ? (n - i) / fo : 1);
     return z;
   });
-  // 북 녹음도 소리가 거의 100Hz 아래라 작은 스피커에서 잘 안 들린다 → 가죽 울림(150Hz~1.5kHz)을 키우고 원래 크기(최댓값)로 맞춤
-  for (const k of ['북녹음', '북짧게']) if (out[k]) out[k] = out[k].map(y => {
-    let m = biquad(biquad(y, 'hp', 150), 'hp', 150); m = biquad(m, 'lp', 1500);
-    const z = new Float32Array(y.length); let p0 = 0, p1 = 0;
-    for (let i = 0; i < y.length; i++) { z[i] = y[i] + BUK_MID * m[i]; p0 = Math.max(p0, Math.abs(y[i])); p1 = Math.max(p1, Math.abs(z[i])); }
-    if (p1 > 0) for (let i = 0; i < z.length; i++) z[i] *= p0 / p1;
-    return z;
-  });
+  // 북 녹음도 소리가 거의 100Hz 아래라 작은 스피커에서 잘 안 들리고 힘이 없다 → bukPunch (가죽 울림·채 소리 살리기)
+  for (const k of ['북녹음', '북짧게']) if (out[k]) out[k] = out[k].map((y, n) => bukPunch(y, BUK_MID, BUK_CLICK, 26 + n));
   return out;
 }

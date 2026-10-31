@@ -1078,6 +1078,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li>북 소리에 힘을: 스피커가 못 내는 아주 낮은 소리는 줄이고 가죽 울림과 채가 닿는 소리를 살림. 북·모듬북·대고 줄의 기본 소리를 윗성부 '북 (녹음, 짧게)', 아랫성부 '북 (녹음, 낮고 길게)'로(예전에는 아랫성부가 장구 궁 소리). 곡 전체 크기 맞추기도 드문 큰 소리 때문에 전체가 작아지지 않게 바꿈</li>
     <li>북 소리(합성·녹음 모두)를 크게: 소리가 거의 낮은 음역에만 있어 노트북·휴대폰 스피커에서 잘 안 들리던 것을, 가죽 울림을 살리고 크기를 장구만큼 올림</li>
     <li>고침: 악보를 열면 연주 범위가 1~1마디로 되던 문제(악기를 모두 끈 채 설정이 저장된 경우). 이미 1~1로 저장된 설정도 전곡으로 바로잡음</li>
     <li>스캔(사진) PDF처럼 읽지 못한 악보를 열면 연주 범위 칸을 비워 둠(1~1로 보이지 않게)</li>
@@ -2103,7 +2104,7 @@ function percDefaults(name) {
   if (/베이스|bass|b\.\s*d\b|kick/i.test(name)) return ['베이스드럼', '베이스드럼'];
   if (/바라/.test(name)) return ['바라', '바라'];
   if (/징/.test(name)) return ['징', '징'];
-  if (/북|대고|고$|drum/i.test(name) && !/장/.test(name)) return ['북', '궁'];   // 북: 합성 북 소리(녹음 북은 소리가 약해 고를 때만)
+  if (/북|대고|고$|drum/i.test(name) && !/장/.test(name)) return ['북짧게', '북녹음'];   // 북: 윗성부 녹음 짧게, 아랫성부 녹음 낮고 길게 (예전 기본 북/궁은 아랫성부가 장구 소리라 힘이 없었음)
   return ['따', '궁'];
 }
 const PERC_NAME = /장구|장고|북|대고|징|꽹|쇠|심벌|cym|sym\b|sym\.|바라|타악|perc|drum|드럼|하이\s*햇|hi-?\s*hat|b\.\s*d\b|목탁|모듬|스네어|스내어|snare/i;
@@ -2256,9 +2257,7 @@ async function buildAudio(onProgress, o = null) {
     const rv = makeReverb(snd.reverb, stereo), N = raw.length, STEP = 32000 * 8;
     for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (onProgress) onProgress(0.9 + 0.1 * Math.min(1, (i + STEP) / N)); await new Promise(r => setTimeout(r, 0)); }
   }
-  let peak = 0; for (let i = 0; i < raw.length; i++) peak = Math.max(peak, Math.abs(raw[i]));
-  if (rawR) for (let i = 0; i < rawR.length; i++) peak = Math.max(peak, Math.abs(rawR[i]));
-  if (peak > 0) { const k = 0.89 / peak; for (let i = 0; i < raw.length; i++) raw[i] *= k; if (rawR) for (let i = 0; i < rawR.length; i++) rawR[i] *= k; }
+  fitLevel(raw, rawR);   // 크기 맞추기 (드문 큰 점은 부드럽게 눌러 곡 전체가 작아지지 않게)
   // 휴대폰 메모리를 아끼려고 소리 데이터는 wav 파일 하나로만 들고 있는다
   const wavBlob = new Blob([encodeWav(raw, rawR)], { type: 'audio/wav' });
   if (forSave) return { plan, blob: wavBlob };
