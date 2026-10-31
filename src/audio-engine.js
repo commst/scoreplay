@@ -105,7 +105,9 @@ const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
 const BUK_MID = 4, BUK_CLICK = 0.6;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.6 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.6 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG,
+  // 11월 1일 넣은 녹음: 녹음 크기가 제각각이라 들리는 크기로 맞춤 (봉고 ≈ 장구 따, 탬버린·트라이앵글 ≈ 심벌·바라, 카바사는 조금 작게)
+  '봉고': 1.6, '봉고높게': 1.6, '카바사': 2.25, '탬버린': 1.5, '트라이앵글': 0.85 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -304,7 +306,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   let lastTa = -9, flip = 0;
   // 북·바라·심벌·베이스드럼은 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
   // 같은 악기(같은 북)를 다시 치면 앞 소리의 울림을 줄인다. 높이가 다른 북·다른 북 소리끼리는 서로 끊지 않는다
-  const fam = (k, ex) => k === '북녹음' || k === '북짧게' || k === '북' ? k + ':' + ((ex && ex.sh) || 0) : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : null;
+  const fam = (k, ex) => k === '북녹음' || k === '북짧게' || k === '북' ? k + ':' + ((ex && ex.sh) || 0) : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : k === '봉고' || k === '봉고높게' ? k : null;
   const nextSame = new Float64Array(hits.length).fill(Infinity);
   { const ord = hits.map((_, i) => i).sort((a, b) => hits[a][0] - hits[b][0]), last = {};
     for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1], hits[i][4]); if (!f) continue;
@@ -457,6 +459,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   const rate = key === '궁' || key === '북' || key === '북녹음' || key === '북짧게' ? 18 : 24;     // 북편·북은 조금 느리게
   let tt = 0, k = 0;
   // 한 타 소리: 고음을 살짝 깎은 복사본 (첫 타는 원래 소리)
+  const metal = key === '트라이앵글' || key === '탬버린' || key === '카바사';
   const soft = new Float32Array(Math.min(base.length, Math.round(0.25 * SR)));
   { let lp = 0; for (let i = 0; i < soft.length; i++) { lp += 0.35 * (base[i] - lp); soft[i] = lp; } }
   while (tt < dur) {
@@ -465,11 +468,13 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
     const hand = k % 2 ? 0.86 : 1;                           // 양손(양 채) 세기 차이
     const swell = 0.75 + 0.25 * Math.sin(Math.PI * Math.min(1, tt / dur));
     const g = gain * (k === 0 ? 1 : 0.42 * hand * swell * (0.85 + 0.3 * rnd())) * (left < 0.12 ? left / 0.12 : 1);
-    const x = k === 0 ? base : soft;
-    const len = Math.min(x.length, Math.round((k === 0 ? 0.25 : step * 2.2) * SR));
-    put(x.subarray(0, len), i0 + Math.round(tt * SR), g, Math.round(0.015 * SR));
+    // 쇳소리 작은 악기(트라이앵글·탬버린·카바사)는 고음을 깎지 않고, 트라이앵글은 울림이 이어지게 길게 겹친다
+    const x = k === 0 || metal ? base : soft;
+    const len = Math.min(x.length, Math.round((key === '트라이앵글' ? Math.max(0.25, step * 6) : k === 0 ? 0.25 : step * 2.2) * SR));
+    put(x.subarray(0, len), i0 + Math.round(tt * SR), metal && k ? g * 1.3 : g, Math.round((key === '트라이앵글' ? 0.08 : 0.015) * SR));
     tt += step; k++;
   }
+  if (key === '트라이앵글') put(base, i0 + Math.round(dur * SR), gain * 0.5, Math.round(0.3 * SR));   // 굴림이 끝나면 울림이 남는다
 }
 
 // 크기 맞추기: 예전에는 가장 큰 한 점(최댓값)을 0.89에 맞췄는데, 북을 여러 번 겹쳐 친 순간 같은 드문 큰 점 때문에
@@ -549,6 +554,8 @@ export function decodeRecorded(obj) {
     });
   }
   // 징: 녹음은 6초 가까이 울려 다음 소리를 덮는다 → 0.4초 뒤부터 빨리 줄여 3초 안에 끝나게
+  // 봉고 한 쌍: 높은 봉고는 녹음을 반음 5개 높여 만든다
+  if (out['봉고']) out['봉고높게'] = out['봉고'].map(y => { const r = Math.pow(2, 5 / 12), n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; });
   if (out['징']) out['징'] = out['징'].map(y => {
     const n = Math.min(y.length, Math.round(3 * SR)), z = y.slice(0, n), a = Math.round(0.4 * SR), fo = Math.round(0.3 * SR);
     for (let i = a; i < n; i++) z[i] *= Math.exp(-(i - a) / SR / 0.9) * (i > n - fo ? (n - i) / fo : 1);
