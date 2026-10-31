@@ -979,7 +979,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
     <li>'장구 녹음 바꾸기' 칸을 없앰: 늘봄에서 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</li>
     <li>이 '업데이트 이력' 창</li>
-    <li>고침: 정지한 뒤 같은 마디부터 다시 재생하면 노란 표시가 늦게 나오던 문제 등</li>
+    <li>고침: 정지한 뒤 같은 마디부터 다시 재생하면 노란 표시가 늦게 나오던 문제, 악보를 뺀 뒤 Ctrl+Z를 누르면 프로그램이 멈추던 문제, 악기를 모두 끈 상태에서 설정을 저장하다 오류가 나던 문제, 읽는 중에 뺀 파트보가 되살아나던 문제 등</li>
   </ul></section>
   <section><h4>10월 30일</h4><ul>
     <li><b>타악 크기</b>: 장구(약 2배)·북·꽹과리(약 3배)를 키워 같은 100%에서 선율 악기와 비슷하게 들리게. 징은 울림을 3초 안으로 줄임</li>
@@ -1285,7 +1285,8 @@ function tempoChangeText(c) {
   const row = [...state.tempoRows].filter(r => r.start <= c.bar).sort((a, b) => b.start - a.start)[0];
   const per = Math.abs(100 - end) / len;
   const bpmTxt = row && row.bpm > 0 ? ` (${UNIT_LABEL[row.unit] ? UNIT_LABEL[row.unit].split(' ')[0] : '♩'}=${row.bpm} → ${Math.round(row.bpm * end / 100)})` : '';
-  return `${c.bar}~${lastN}마디 동안 점점 ${c.kind === 'rit' ? '느려져' : '빨라져'} 원래의 ${end}%${bpmTxt}가 됩니다. 한 마디에 약 ${+per.toFixed(1)}%씩.`;
+  const where = lastN > c.bar ? `${c.bar}~${lastN}마디 동안` : `${c.bar}마디 안에서`;
+  return `${where} 점점 ${c.kind === 'rit' ? '느려져' : '빨라져'} 원래의 ${end}%${bpmTxt}가 됩니다.` + (len >= 1 ? ` 한 마디에 약 ${+per.toFixed(1)}%씩.` : ` (${+len.toFixed(2)}마디 동안)`);
 }
 function renderTempoChanges() {
   const body = $('tchgBody'); if (!body) return;
@@ -1578,6 +1579,7 @@ function srcInfo(key) {
 }
 function loadedSources() { return state.sourceScores.length ? state.sourceScores : (state.score && state.score.fp ? [state.score, ...(state.extras || []).map(x => x.sc)] : []); }
 function reapplyEdits() {
+  if (!state.score) return;   // 예시 장단에는 수정이 없다
   for (const k of Object.keys(state.lineRaw)) { const { sc, srcKey } = srcInfo(k); state.lineRes[k] = applyEdits(state.lineRaw[k], sc, srcKey); }
   const keepOrder = state.manualOrder;
   applySelection();
@@ -1602,9 +1604,12 @@ function setEdit(key, bi, v, ord, rawEv, patch) {
   saveEdits(sc); reapplyEdits();
 }
 function undoEdit() {
-  const u = undoStack.pop(); if (!u) return false;
+  // 지금 올려 둔 악보의 수정만 되돌린다 (악보를 빼거나 바꾼 뒤 Ctrl+Z를 누르면 없는 악보를 다시 읽으려다 멈추던 문제)
+  let u, sc;
+  while ((u = undoStack.pop())) { sc = loadedSources().find(s => s.fp === u.fp); if (sc) break; }
+  if (!u || !sc || !state.score) return false;
   editStore.set(u.fp, JSON.parse(u.snap));
-  const sc = loadedSources().find(s => s.fp === u.fp); if (sc) saveEdits(sc);
+  saveEdits(sc);
   reapplyEdits(); return true;
 }
 function updateEditTools(results) {
@@ -1925,7 +1930,7 @@ async function buildAudio(onProgress, o = null) {
   const failed = Object.values(currentMelodic()).map(v => bankOf(v.inst)).filter(b => b && bankFailed.has(b));
   if (failed.length) showMsg(`${[...new Set(failed)].map(b => INSTRUMENTS[b].name.replace(' (녹음)', '')).join(', ')} 녹음 소리를 받지 못해 합성음으로 연주합니다. 인터넷 연결을 확인하고 다시 재생해 보세요.`);
   const { from, to } = o;
-  const full = state.manualOrder || playbackOrder(state.bars, { repeats: o.repeats });
+  const full = (state.manualOrder || playbackOrder(state.bars, { repeats: o.repeats })).filter(k => state.bars[k]);
   let order = full.filter(k => state.bars[k].number >= from && state.bars[k].number <= to);
   if (!order.length) order = state.bars.map((b, i) => i).filter(k => state.bars[k].number >= from && state.bars[k].number <= to);
   const plan = renderPlan(state.bars, order, {
@@ -2211,7 +2216,8 @@ function collectSettings() {
   return { format: 'hapju-settings', v: 1, title: state.title || '', file: state.fileName || '', saved: new Date().toISOString(), lastBar: lastBar(),
     lines, tempoRows: state.tempoRows.map(r => ({ ...r })), speed: +$('speed').value, ritF: $('ritF').value, accF: $('accF').value,
     play: { ...playOpts(), loop: $('optLoop').checked, rest: $('optRest').value }, save: { ...saveOpts(), linked: saveLinked, format: $('saveFormat').value },
-    order: state.manualOrder ? orderToText(state.bars, state.manualOrder) : null,
+    // 악기를 모두 꺼 마디가 없을 때는 순서 칸 글을 그대로 (마디 번호로 다시 읽으므로)
+    order: state.manualOrder ? (state.manualOrder.every(k => k < state.bars.length) ? orderToText(state.bars, state.manualOrder) : $('orderText').value) : null,
     tempoChanges: state.tempoChEdited ? state.tempoChanges.map(c => ({ ...c })) : null,
     extras: (state.extras || []).map(x => ({ name: x.file.name, fp: x.sc.fp })) };
 }
@@ -2253,6 +2259,8 @@ function applyRestSettings(S) {
   if (Array.isArray(S.tempoChanges)) {
     state.tempoChanges = S.tempoChanges.filter(c => c && TCH_LABEL[c.kind] && c.bar >= 1 && c.bar <= LB).map(c => ({ ...c }));
     state.tempoChEdited = true; syncTempoLabels();
+  } else if (state.tempoChEdited) {   // 저장한 설정에 직접 고친 rit.·accel.이 없으면 악보에서 읽은 대로 (지금 화면에서 고친 것이 남지 않게)
+    state.tempoChEdited = false; state.tempoChanges = deriveTempoChanges(state.marks.tempo, state.bars); syncTempoLabels();
   }
   if (S.speed) { $('speed').value = S.speed; $('speedVal').textContent = $('speed').value + '%'; }
   if (S.ritF) $('ritF').value = S.ritF; if (S.accF) $('accF').value = S.accF;
@@ -2778,8 +2786,9 @@ async function loadPartPdfs(files) {
       const layout = sc.layouts.find(L => L.staves.length);
       loaded.push({ file, sc, layout, label: (sc.partName || '').trim(), uid: ++uidSeq });   // 곡 제목은 파트 이름이 아니므로 쓰지 않는다
     }
-    state.parts = [...existing, ...loaded];
-    rebuildParts(!existing.length);
+    const cur = state.score?.isComposite ? state.parts : [];   // 읽는 사이에 목록에서 뺀 파트보가 되살아나지 않게 지금 목록에 붙인다
+    state.parts = [...cur, ...loaded];
+    rebuildParts(!cur.length);
   } catch (e) {
     console.error(e); if (my !== loadSeq) return; $('partsFileInfo').textContent = '파트보를 읽지 못했습니다.';
     showMsg(e && e.message ? e.message : '파트보 PDF를 여는 중 문제가 생겼습니다.');
