@@ -210,6 +210,14 @@ button { cursor: pointer; }
 .sv-hl { position: absolute; border-radius: 4px; background: rgba(255, 196, 0, .18); outline: 2px solid #e0a100; pointer-events: none; transition: left .12s, top .12s, width .12s, height .12s; z-index: 2; }
 .sv-cur { position: absolute; width: 2px; margin-left: -1px; background: #d22; box-shadow: 0 0 0 1px #fff8; pointer-events: none; z-index: 3; }
 .sv-hl b { position: absolute; left: 0; top: -18px; padding: 0 5px; border-radius: 4px; background: #e0a100; color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
+/* 화면 가득 보기: 악보 칸을 화면 전체로 */
+.score-view.sv-full { position: fixed; inset: 0; z-index: 1500; display: flex; flex-direction: column; padding: 8px max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); background: var(--bg, #eef1f5); }
+.score-view.sv-full .sv-tools { margin: 0 0 6px; gap: 6px 10px; }
+.score-view.sv-full .sv-tools .btn { padding: 6px 12px; font-size: 13.5px; }
+.score-view.sv-full .sv-wrap { flex: 1; height: auto; }
+.score-view:not(.sv-full) .sv-only-full { display: none; }
+body.sv-lock { overflow: hidden; }
+body.sv-lock #mini { display: none; }
 .sv-empty { padding: 30px 12px; text-align: center; color: var(--muted); font-size: 14px; }
 .bar-view-settings { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:10px 0; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--paper); }
 .bar-view-label { color:var(--muted); font-size:12px; font-weight:650; }
@@ -946,72 +954,76 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         </details>
       </section>
 
-      <section class="panel" aria-labelledby="tBars">
-        <div class="row" style="justify-content:space-between">
-          <h2 id="tBars">마디맵</h2>
-        </div>
-        <div class="view-switch" role="group" aria-label="보기 방식">
-          <button type="button" id="viewScore" aria-pressed="false">악보로 보기</button>
-          <button type="button" id="viewMap" aria-pressed="true">마디맵으로 보기</button>
-        </div>
-        <div class="legend map-only"><span><span class="dot R"></span>윗성부</span><span><span class="dot L"></span>아랫성부</span></div>
-        <div class="summary" id="summary"></div>
-        <div class="warnlist" id="warnList"></div>
-        <div class="bar-actions">
-          <p class="hint" id="barsHint">마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.</p>
-          <button class="btn stop-near-bars" id="barsStopBtn" type="button" aria-label="재생 정지">⏹ 정지</button>
-        </div>
-        <div class="edit-tools" id="editTools" hidden>
-          <p class="hint" id="editStatus">마디의 ✎ 수정 버튼으로 음정과 음 길이를 고칠 수 있습니다. 고친 내용은 자동 저장됩니다.</p>
-          <button class="btn" type="button" id="editExport">수정 내보내기</button>
-          <label class="btn" for="editImport">수정 가져오기</label><input type="file" id="editImport" accept="application/json,.json" hidden>
-          <button class="btn" type="button" id="editClearAll">수정 모두 되돌리기</button>
-        </div>
-        <details class="help">
-          <summary>설명 보기</summary>
-          <dl>
-            <dt>악보로 보기 · 마디맵으로 보기</dt>
-            <dd>위의 큰 단추(연주 칸에도 있음)로 두 가지 보기를 고릅니다. <b>마디맵으로 보기</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보로 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
-              악보 보기에서는 연주하는 동안 지금 마디가 노란 칸, 지금 위치가 빨간 선으로 음표를 따라 움직이고, 다음 단·다음 쪽으로 넘어가면 악보 칸이 따라 내려갑니다(화면 전체는 움직이지 않음). '연주 위치 따라가기'를 끄면 악보를 직접 넘겨 볼 수 있습니다.
-              악보를 누르면 그 마디부터 재생하고, [−]·[+]로 크기를 바꿉니다(휴대폰에서 총보가 작으면 키워 보세요). 고른 보기와 크기는 이 기기에 기억됩니다.
-              총보는 켠 줄 가운데 기준 줄이 있는 단 전체를 표시합니다. 예시 장단과 마디 위치를 읽지 못한 악보는 악보 보기를 할 수 없습니다.</dd>
-            <dt>마디 칸 읽는 법</dt>
-            <dd>위 줄은 윗성부, 아래 줄은 아랫성부입니다. 점 하나가 한 번 치는 자리이고, 왼쪽이 마디 처음입니다.
-              <b>큰 점</b>은 악센트, 앞의 <b>작은 점</b>은 꾸밈음, <b>가로 막대</b>는 롤입니다.</dd>
-            <dt>마디 위 표시</dt>
-            <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. ‖: :‖는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
-            <dt>음 수정 (✎)</dt>
-            <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
-              고친 내용은 이 기기에 바로 저장되어 같은 악보 PDF를 다시 올리면 자동으로 적용되고, 고친 마디는 번호 옆에 ✎가 붙습니다. 음마다 [↺ 되돌리기], 마디마다 [이 마디 모두 되돌리기], 악보 전체는 [수정 모두 되돌리기]로 되돌리고, 방금 한 수정은 Ctrl+Z로 취소합니다.
-              [수정 내보내기]로 파일을 받아 두었다가 다른 기기에서 같은 악보를 올린 뒤 [수정 가져오기]로 불러올 수 있습니다. 휴대폰 브라우저는 오래 쓰지 않으면 저장 내용을 지우기도 하니 많이 고쳤다면 내보내 두세요.</dd>
-            <dt>노란 테두리</dt>
-            <dd>음표 길이가 박자와 맞지 않는 등 인식이 불확실한 마디입니다. 마우스를 올리거나 위의 노란 안내를 보면 이유가 나옵니다. 악보와 다르게 들리면 그 마디 번호를 알려 주세요.</dd>
-          </dl>
-        </details>
-        <div class="score-view" id="scoreView" hidden>
-          <div class="sv-tools">
-            <label class="chk"><input type="checkbox" id="svFollow" checked>연주 위치 따라가기</label>
-            <span class="zoom">크기 <button type="button" id="svZoomOut" aria-label="작게">−</button><span id="svZoomVal">100%</span><button type="button" id="svZoomIn" aria-label="크게">+</button></span>
-          </div>
-          <div class="sv-wrap" id="svWrap"></div>
-        </div>
-        <div class="bar-view-settings map-only" role="group" aria-label="마디 미리보기 표시 방식">
-          <span class="bar-view-label">마디 미리보기</span>
-          <div class="bar-view-options">
-            <button class="bar-view-btn" id="barViewTimeline" type="button" aria-pressed="true">박자별 타임라인 보기</button>
-            <button class="bar-view-btn" id="barViewDetail" type="button" aria-pressed="false">마디 정보 상세 보기</button>
-          </div>
-        </div>
-        <div class="bars" id="bars"></div>
-      </section>
     </div>
   </div>
+
+    <section class="panel bars-panel" aria-labelledby="tBars">
+      <div class="row" style="justify-content:space-between">
+        <h2 id="tBars">마디맵</h2>
+      </div>
+      <div class="view-switch" role="group" aria-label="보기 방식">
+        <button type="button" id="viewScore" aria-pressed="false">악보로 보기</button>
+        <button type="button" id="viewMap" aria-pressed="true">마디맵으로 보기</button>
+      </div>
+      <div class="legend map-only"><span><span class="dot R"></span>윗성부</span><span><span class="dot L"></span>아랫성부</span></div>
+      <div class="summary" id="summary"></div>
+      <div class="warnlist" id="warnList"></div>
+      <div class="bar-actions">
+        <p class="hint" id="barsHint">마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.</p>
+        <button class="btn stop-near-bars" id="barsStopBtn" type="button" aria-label="재생 정지">⏹ 정지</button>
+      </div>
+      <div class="edit-tools" id="editTools" hidden>
+        <p class="hint" id="editStatus">마디의 ✎ 수정 버튼으로 음정과 음 길이를 고칠 수 있습니다. 고친 내용은 자동 저장됩니다.</p>
+        <button class="btn" type="button" id="editExport">수정 내보내기</button>
+        <label class="btn" for="editImport">수정 가져오기</label><input type="file" id="editImport" accept="application/json,.json" hidden>
+        <button class="btn" type="button" id="editClearAll">수정 모두 되돌리기</button>
+      </div>
+      <details class="help">
+        <summary>설명 보기</summary>
+        <dl>
+          <dt>악보로 보기 · 마디맵으로 보기</dt>
+          <dd>위의 큰 단추(연주 칸에도 있음)로 두 가지 보기를 고릅니다. <b>마디맵으로 보기</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보로 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
+            악보 보기에서는 연주하는 동안 지금 마디가 노란 칸, 지금 위치가 빨간 선으로 음표를 따라 움직이고, 다음 단·다음 쪽으로 넘어가면 악보 칸이 따라 내려갑니다(화면 전체는 움직이지 않음). '연주 위치 따라가기'를 끄면 악보를 직접 넘겨 볼 수 있습니다.
+            악보를 누르면 그 마디부터 재생하고, [−]·[+]로 크기를 바꿉니다(휴대폰에서 총보가 작으면 키워 보세요). <b>[화면 가득 보기]</b>를 누르면 화면 전체에 악보만 보이고, 위쪽 단추로 재생·일시정지합니다(✕ 닫기나 Esc로 돌아옴). 고른 보기와 크기는 이 기기에 기억됩니다.
+            총보는 켠 줄 가운데 기준 줄이 있는 단 전체를 표시합니다. 예시 장단과 마디 위치를 읽지 못한 악보는 악보 보기를 할 수 없습니다.</dd>
+          <dt>마디 칸 읽는 법</dt>
+          <dd>위 줄은 윗성부, 아래 줄은 아랫성부입니다. 점 하나가 한 번 치는 자리이고, 왼쪽이 마디 처음입니다.
+            <b>큰 점</b>은 악센트, 앞의 <b>작은 점</b>은 꾸밈음, <b>가로 막대</b>는 롤입니다.</dd>
+          <dt>마디 위 표시</dt>
+          <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. ‖: :‖는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
+          <dt>음 수정 (✎)</dt>
+          <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
+            고친 내용은 이 기기에 바로 저장되어 같은 악보 PDF를 다시 올리면 자동으로 적용되고, 고친 마디는 번호 옆에 ✎가 붙습니다. 음마다 [↺ 되돌리기], 마디마다 [이 마디 모두 되돌리기], 악보 전체는 [수정 모두 되돌리기]로 되돌리고, 방금 한 수정은 Ctrl+Z로 취소합니다.
+            [수정 내보내기]로 파일을 받아 두었다가 다른 기기에서 같은 악보를 올린 뒤 [수정 가져오기]로 불러올 수 있습니다. 휴대폰 브라우저는 오래 쓰지 않으면 저장 내용을 지우기도 하니 많이 고쳤다면 내보내 두세요.</dd>
+          <dt>노란 테두리</dt>
+          <dd>음표 길이가 박자와 맞지 않는 등 인식이 불확실한 마디입니다. 마우스를 올리거나 위의 노란 안내를 보면 이유가 나옵니다. 악보와 다르게 들리면 그 마디 번호를 알려 주세요.</dd>
+        </dl>
+      </details>
+      <div class="score-view" id="scoreView" hidden>
+        <div class="sv-tools">
+          <button type="button" class="btn sv-only-full" id="svPlay">▶ 재생 · 일시정지</button>
+          <label class="chk"><input type="checkbox" id="svFollow" checked>연주 위치 따라가기</label>
+          <button type="button" class="btn" id="svFull">화면 가득 보기</button>
+          <span class="zoom">크기 <button type="button" id="svZoomOut" aria-label="작게">−</button><span id="svZoomVal">100%</span><button type="button" id="svZoomIn" aria-label="크게">+</button></span>
+        </div>
+        <div class="sv-wrap" id="svWrap"></div>
+      </div>
+      <div class="bar-view-settings map-only" role="group" aria-label="마디 미리보기 표시 방식">
+        <span class="bar-view-label">마디 미리보기</span>
+        <div class="bar-view-options">
+          <button class="bar-view-btn" id="barViewTimeline" type="button" aria-pressed="true">박자별 타임라인 보기</button>
+          <button class="bar-view-btn" id="barViewDetail" type="button" aria-pressed="false">마디 정보 상세 보기</button>
+        </div>
+      </div>
+      <div class="bars" id="bars"></div>
+    </section>
   <footer class="app-foot"><span id="appVer"></span> · <button class="hist-link" id="histBtn2" type="button">업데이트 이력</button></footer>
 </div>
 
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li><b>악보·마디맵을 넓게</b>: 악보·마디맵 칸을 화면 폭 전체로 넓혀 크게 키워도 잘 보이게. 악보로 보기에는 <b>[화면 가득 보기]</b>(화면 전체에 악보만, 재생·일시정지 단추 포함, Esc나 ✕ 닫기로 돌아옴)</li>
     <li><b>일시정지</b>: 재생 단추·스페이스바로 멈추면 그 자리를 기억했다가 다시 누르면 이어서 재생합니다(처음부터 다시 시작하던 문제). 연주 중에 속도·악기를 바꿔도 그 마디부터 이어서. 처음부터 들으려면 ⏹ 정지</li>
     <li><b>악보 보기</b>: 연주 칸과 마디맵 칸의 [악보로 보기]를 누르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
     <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
@@ -1560,6 +1572,7 @@ function setView(mode) {
   for (const id of ['viewMap', 'viewMap2']) $(id).setAttribute('aria-pressed', String(viewMode === 'map'));
   for (const id of ['viewScore', 'viewScore2']) $(id).setAttribute('aria-pressed', String(viewMode === 'score'));
   $('tBars').textContent = viewMode === 'score' ? '악보' : '마디맵';
+  if (viewMode !== 'score' && $('scoreView').classList.contains('sv-full')) setFull(false);
   $('bars').hidden = viewMode === 'score'; $('scoreView').hidden = viewMode !== 'score';
   document.querySelectorAll('.map-only').forEach(e => { e.hidden = viewMode === 'score'; });
   $('barsHint').textContent = viewMode === 'score' ? '악보에서 마디를 누르면 그 마디부터 재생합니다. 연주 중인 마디는 노란 칸으로 표시됩니다.' : '마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.';
@@ -1571,6 +1584,16 @@ $('viewMap').addEventListener('click', () => setView('map'));
 for (const [id, mode] of [['viewScore2', 'score'], ['viewMap2', 'map']]) $(id).addEventListener('click', () => { setView(mode); $('tBars').closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
 $('viewScore').addEventListener('click', () => setView('score'));
 $('svFollow').addEventListener('change', saveViewPref);
+// 화면 가득 보기 (휴대폰·아이패드에서도 되게 브라우저 전체 화면 대신 화면을 덮는 칸으로)
+function setFull(on) {
+  const v = $('scoreView'); const k = svCurrent;
+  v.classList.toggle('sv-full', on); document.body.classList.toggle('sv-lock', on);
+  $('svFull').textContent = on ? '✕ 닫기' : '화면 가득 보기';
+  svKey = null; buildScoreView(); if (k >= 0) { svCurrent = -1; svShow(k, true); }
+}
+$('svFull').addEventListener('click', () => setFull(!$('scoreView').classList.contains('sv-full')));
+$('svPlay').addEventListener('click', () => togglePlay());
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('scoreView').classList.contains('sv-full') && editorBar == null) setFull(false); });
 const SV_ZOOMS = [1, 1.25, 1.5, 2, 2.5, 3];
 function setZoom(dir) {
   const i = Math.max(0, Math.min(SV_ZOOMS.length - 1, SV_ZOOMS.indexOf(svZoom) + dir)); if (SV_ZOOMS[i] === svZoom) return;
