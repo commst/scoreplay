@@ -34,6 +34,20 @@ function bukPunch(y, mid, click, seed, hp = 70) {
   for (let i = 0; i < y.length; i++) { const j = i - on; out[i] = z[i] + mid * m[i] + (j >= 0 && j < cn ? click * pk * nz[j] * Math.exp(-j / SR / 0.006) : 0); }
   return norm(out);
 }
+// 북 울림: 가죽이 계속 떠는 소리(그 북의 음높이로 서서히 줄어드는 소리)와 북통·방에서 되울리는 짧은 잔향을 더한다
+function bukRing(y, f, tau, amt, wet, rt) {
+  let pk = 0; for (const v of y) pk = Math.max(pk, Math.abs(v));
+  let on = 0; while (on < y.length && Math.abs(y[on]) < pk * 0.1) on++;
+  const n = y.length + Math.round(rt * SR), z = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const t = (i - on) / SR; z[i] = (y[i] || 0) + (t >= 0 ? amt * pk * Math.sin(2 * Math.PI * f * t) * Math.min(1, t / 0.006) * Math.exp(-t / tau) : 0); }
+  // 짧은 잔향 (빗살 4개 + 올패스 2개)
+  const w = new Float32Array(n);
+  for (const ms of [29.7, 37.1, 41.1, 43.7]) { const d = Math.round(ms / 1000 * SR), g = Math.pow(10, -3 * (ms / 1000) / rt); const c = new Float32Array(n); for (let i = 0; i < n; i++) c[i] = z[i] + (i >= d ? g * c[i - d] : 0); for (let i = 0; i < n; i++) w[i] += c[i] / 4; }
+  let r = w; for (const [ms, g] of [[5, 0.7], [1.7, 0.7]]) { const d = Math.round(ms / 1000 * SR), o = new Float32Array(n); for (let i = 0; i < n; i++) { const xd = i >= d ? r[i - d] : 0, yd = i >= d ? o[i - d] : 0; o[i] = -g * r[i] + xd + g * yd; } r = o; }
+  r = biquad(r, 'lp', 3000);
+  for (let i = 0; i < n; i++) z[i] = z[i] * (1 - wet) + r[i] * wet;
+  return norm(z);
+}
 function build(sec, fn) { const n = Math.round(sec * SR); const y = new Float32Array(n); for (let i = 0; i < n; i++) y[i] = fn(i / SR, i); return norm(y); }
 
 export function makeSounds() {
@@ -55,7 +69,7 @@ export function makeSounds() {
     S['북'] = build(0.9, (t, i) => { const f = 72 + 50 * Math.exp(-t / 0.045); ph += 2 * Math.PI * f / SR;
       return 0.8 * Math.sin(ph) * env(t, 0.003, 0.38) + 0.85 * Math.sin(1.59 * ph) * env(t, 0.002, 0.18) + 0.5 * Math.sin(2.14 * ph) * env(t, 0.002, 0.1)
         + 0.25 * Math.sin(2.65 * ph) * env(t, 0.002, 0.06) + 0.35 * nz[i] * env(t, 0.001, 0.04) + 0.9 * sk[i] * env(t, 0.0005, 0.035); });
-    S['북'] = bukPunch(S['북'], 1.5, BUK_CLICK, 25);
+    S['북'] = bukRing(bukPunch(S['북'], 1.5, BUK_CLICK, 25), 120, 0.25, 0.25, 0.3, 0.8);
   }
   { // 북 테 (나무 몸통)
     const n = Math.round(0.12 * SR), nz = band(n, 2000, 5000, 15);
@@ -91,7 +105,7 @@ const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
 const BUK_MID = 4, BUK_CLICK = 0.6;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.8 * BK, '북녹음': 2.6 * BK, '북짧게': 1.9 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.6 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -507,7 +521,7 @@ export function decodeRecorded(obj) {
   // 두 녹음이 같은 음색으로 들리지 않게: 낮고 길게는 큰북답게 반음 3개 낮추고(약 50Hz) 낮은 울림을 남기고 채 소리는 약하게,
   // 짧게는 작은북답게 반음 10개 높이고(약 195Hz, 악보 윗부분 음표 = 높은 북) 가죽·채 소리를 더 또렷하게
   const up = (y, r) => { const n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; };
-  if (out['북녹음']) out['북녹음'] = out['북녹음'].map((y, n) => bukPunch(up(y, Math.pow(2, -3 / 12)), 2.5, 0.4, 26 + n, 30));
-  if (out['북짧게']) out['북짧게'] = out['북짧게'].map((y, n) => bukPunch(up(y, Math.pow(2, 10 / 12)), BUK_MID, 1.0, 28 + n, 130));
+  if (out['북녹음']) out['북녹음'] = out['북녹음'].map((y, n) => bukRing(bukPunch(up(y, Math.pow(2, -3 / 12)), 2.5, 0.4, 26 + n, 30), 100, 0.3, 0.15, 0.3, 1.0));
+  if (out['북짧게']) out['북짧게'] = out['북짧게'].map((y, n) => bukRing(bukPunch(up(y, Math.pow(2, 10 / 12)), BUK_MID, 1.0, 28 + n, 130), 192, 0.22, 0.35, 0.3, 0.8));
   return out;
 }
