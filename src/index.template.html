@@ -916,7 +916,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <label><input type="checkbox" id="sArtic" checked>스타카토·트릴 연주</label>
             <label><input type="checkbox" id="sStereo" checked>좌우 배치 (입체 음향)</label>
           </div>
-          <p class="hint">재생과 음원 저장에 함께 적용됩니다. 조옮김·기준음은 선율 악기에만(타악은 그대로). 좌우 배치는 국악관현악 자리처럼 가야금·거문고는 왼쪽, 아쟁·대금은 오른쪽으로 나눠 들리게 하고, 줄마다 '좌우 위치'로 바꿀 수 있습니다(타악은 가운데). 10분이 넘는 소리는 휴대폰 메모리를 생각해 한 줄(모노)로 만듭니다.</p>
+          <p class="hint">재생과 음원 저장에 함께 적용됩니다. 조옮김·기준음은 선율 악기에만(타악은 그대로). 좌우 배치는 국악관현악 자리처럼 가야금·거문고는 왼쪽, 아쟁·대금은 오른쪽으로 나눠 들리게 하고, 줄마다 '좌우 위치'로 바꿀 수 있습니다(타악은 가운데). 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.</p>
         </details>
         <div class="field">
           <label for="orderText">연주 순서<span class="pill" id="orderState">자동</span></label>
@@ -986,7 +986,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd><b>조옮김</b>: 선율 악기를 반음 단위로 올리거나 내립니다(타악은 그대로). <b>기준음 A4</b>: 라(A4) 높이를 Hz로 정합니다. 보통 440, 악기를 442에 맞췄다면 442.
               <b>늘임표</b>: 악보의 늘임표(𝄐가 있는 마디)에서 울리던 음을 몇 박 더 늘이고 그만큼 쉽니다. <b>잔향</b>: 방에서 울리는 것처럼 소리에 울림을 더합니다.
               <b>스타카토·트릴 연주</b>: 스타카토 점이 찍힌 선율 음은 절반쯤 짧게 끊고, 물결선 트릴은 바로 위 음(조표·임시표 따름)과 빠르게 오갑니다.
-              <b>좌우 배치</b>: 국악관현악 자리처럼 가야금·거문고·양금은 왼쪽, 아쟁·대금·소금은 오른쪽, 피리는 가운데쯤으로 나눠 들리게 합니다. 줄마다 '좌우 위치'로 바꿀 수 있고, 타악은 가운데입니다. 10분이 넘는 소리는 휴대폰 메모리를 생각해 한 줄(모노)로 만듭니다.
+              <b>좌우 배치</b>: 국악관현악 자리처럼 가야금·거문고·양금은 왼쪽, 아쟁·대금·소금은 오른쪽, 피리는 가운데쯤으로 나눠 들리게 합니다. 줄마다 '좌우 위치'로 바꿀 수 있고, 타악은 가운데입니다. 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.
               모두 재생과 음원 저장에 함께 적용되고, 이 악보의 설정에 저장됩니다.</dd>
             <dt>연주 순서</dt>
             <dd>실제로 칠 마디 순서입니다. 반복 기호를 잘못 읽었으면 직접 고칩니다. 쉼표(,)로 구간을 나누고 붙임표(-)로 범위를 적습니다.
@@ -1068,6 +1068,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
   <section><h4>10월 31일</h4><ul>
     <li><b>솔로·음소거</b>: 악기 선택의 줄마다 [솔로 (이 줄만)]·[음소거 (이 줄 빼기)]. 줄 설정은 그대로 두고 잠깐 듣기만 바꿉니다. [솔로·음소거 모두 해제]로 원래대로</li>
     <li><b>소리 다듬기</b>(연주 칸): 조옮김(반음 단위), 기준음 A4(415~466Hz), 늘임표(페르마타) 길이(늘이지 않음~4박, 울리던 음을 늘임), 잔향(없음·조금·보통·많이), 좌우 배치(입체 음향, 국악관현악 자리처럼. 줄마다 '좌우 위치'로 바꾸기)</li>
+    <li>고침: 소리를 만드는 중에 ⏹ 정지를 눌러도 다 만든 뒤 재생되던 문제, [화면 가득 보기]·솔로 단추를 누른 뒤 스페이스바가 재생 대신 그 단추를 다시 누르던 문제, 꾸밈음이 조옮김을 따르지 않던 문제, 휴대폰·태블릿은 5분 넘는 소리를 모노로(메모리), 다른 곡을 열면 조옮김이 남던 문제</li>
     <li><b>스타카토·트릴</b>: 악보의 스타카토 점은 짧게 끊고, 선율의 트릴(물결선)은 위 음과 빠르게 오가며 연주. MP3도 입체로 저장</li>
     <li><b>악보·마디맵을 넓게</b>: 악보·마디맵 칸을 화면 폭 전체로 넓혀 크게 키워도 잘 보이게. 악보로 보기에는 <b>[화면 가득 보기]</b>(화면 전체에 악보만, 재생·일시정지 단추 포함, Esc나 ✕ 닫기로 돌아옴)</li>
     <li><b>일시정지</b>: 재생 단추·스페이스바로 멈추면 그 자리를 기억했다가 다시 누르면 이어서 재생합니다(처음부터 다시 시작하던 문제). 연주 중에 속도·악기를 바꿔도 그 마디부터 이어서. 처음부터 들으려면 ⏹ 정지</li>
@@ -1704,7 +1705,7 @@ async function svRender(pi) {
     P.el.insertBefore(c, P.el.firstChild); P.canvas = c;
     const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
     if (drawn.length > 6) {   // 지금 쪽에서 먼 것부터 지운다
-      const ref = svCurrent >= 0 && state.scoreGeo.geo[svCurrent] ? state.scoreGeo.geo[svCurrent].page : pi;
+      const G2 = state.scoreGeo, ref = svCurrent >= 0 && G2 && G2.geo[svCurrent] ? G2.geo[svCurrent].page : pi;
       drawn.sort((a, b) => Math.abs(b[0] - ref) - Math.abs(a[0] - ref));
       for (const [qi, q] of drawn.slice(0, drawn.length - 6)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; }
     }
@@ -2221,7 +2222,8 @@ async function buildAudio(onProgress, o = null) {
   const notes = plan.notes;
   const raw = mix(plan, state.sounds, state.custom, null, false);   // 타악 (크기 맞추기는 선율까지 더한 뒤)
   // 좌우 배치: 타악은 가운데(양쪽 같게), 선율은 줄마다 좌우 위치. 10분 넘는 소리는 메모리 때문에 한 줄로
-  const stereo = snd.stereo && raw.length <= 600 * SR;
+  const coarse = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
+  const stereo = snd.stereo && raw.length <= (coarse ? 300 : 600) * SR;   // 휴대폰·태블릿은 5분, 컴퓨터는 10분까지 입체 (메모리)
   const rawR = stereo ? raw.slice() : null;
   if (stereo) for (const nt of notes) { const c = state.lineCfg[nt.line]; nt.pan = c ? panOf(c) : 0; }
   const CH = 120;
@@ -2279,7 +2281,7 @@ function tempoBlocked(range) {
 }
 // 읽은 마디가 없으면(스캔한 PDF 등) 빈 소리를 만들지 않는다
 function noBars() { if (state.bars.length) return false; showMsg('재생할 마디가 없습니다. 악보를 읽지 못했거나 켜 둔 악기가 없습니다. 다른 PDF를 올리거나 악기 선택에서 줄을 켜 주세요.'); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return true; }
-let building = false, playTok = 0, pendingBar = null;
+let building = false, playTok = 0, pendingBar = null, cancelPlay = false;   // cancelPlay: 소리를 만드는 중에 정지(⏹·다른 악보 올리기 등)를 누르면 다 만든 뒤 재생하지 않는다
 async function play(offset = 0) {
   if (building) return;
   resumeAt = null;   // 소리를 만드는 중에 마디·스페이스바를 또 누르면 같은 소리를 두 번 만들지 않게
@@ -2287,7 +2289,7 @@ async function play(offset = 0) {
   if (tempoBlocked()) { stop(true); return; }
   unlockAudio();
   if (state.dirty || !state.rendered) {
-    $('playBtn').disabled = true; building = true;
+    $('playBtn').disabled = true; building = true; cancelPlay = false;
     tick.html = null; $('nowText').innerHTML = '<span class="busy">소리를 만드는 중… <span class="num" id="pct">0%</span></span>';
     await new Promise(r => setTimeout(r, 30));
     try { await buildAudio(p => { const el = $('pct'); if (el) el.textContent = Math.round(p * 100) + '%'; }); }
@@ -2298,6 +2300,7 @@ async function play(offset = 0) {
       return;
     }
     finally { $('playBtn').disabled = false; building = false; }
+    if (cancelPlay) { cancelPlay = false; pendingBar = null; $('nowText').innerHTML = '<b>정지</b>'; return; }
     if (state.dirty) return play(offset);   // 만드는 동안 설정·악보가 바뀌었으면 바뀐 대로 다시 만든다
   }
   stop(true);
@@ -2334,7 +2337,7 @@ function resume() {
 }
 function togglePlay() { if (state.playing) pause(); else resume(); }
 function stop(silent) {
-  if (!silent) resumeAt = null;
+  if (!silent) { resumeAt = null; if (building) cancelPlay = true; }
   try { audio.pause(); } catch (e) {}
   cancelAnimationFrame(raf);
   state.playing = false; setPlayIcon(false);
@@ -2365,6 +2368,9 @@ function tick() {
 }
 $('playBtn').addEventListener('click', togglePlay);
 $('barsStopBtn').addEventListener('click', () => stop());
+// 마우스·손가락으로 누른 단추는 누른 뒤 포커스를 놓는다: 그대로 두면 스페이스바(재생·일시정지)가 그 단추를 또 누르게 된다
+// (예: [화면 가득 보기]를 누른 뒤 스페이스바를 누르면 재생 대신 화면 가득 보기가 닫히던 문제, 솔로 단추가 다시 눌리던 문제)
+document.addEventListener('click', ev => { const b = ev.target && ev.target.closest && ev.target.closest('button'); if (b && ev.detail > 0 && !b.closest('.edit-dlg')) setTimeout(() => { if (document.activeElement === b) b.blur(); }, 0); }, true);
 // 스페이스바로 어디서든 재생/정지. 입력란, 선택 상자 등에서의 기본 동작은 방해하지 않는다.
 document.addEventListener('keydown', ev => {
   if (ev.code !== 'Space' || ev.repeat || ev.ctrlKey || ev.altKey || ev.metaKey) return;
@@ -2466,7 +2472,8 @@ function saveOpts() {
 function saveSummary() {
   const o = saveOpts();
   const opt = [o.countIn && '카운트인', o.metronome && '메트로놈', o.restCount !== 'off' && '쉬는 마디 박', o.repeats && '도돌이표 반복', o.dyn && '셈여림'].filter(Boolean);
-  $('saveSummary').textContent = `${o.from}~${o.to}마디 · 속도 ${o.speed}%${opt.length ? ' · ' + opt.join(', ') : ''} 설정으로 저장합니다. 켜 둔 줄과 악기 소리·음량은 위 줄 설정을 따릅니다.`;
+  const sm = state.lineIds.some(id => state.solo.has(cfgKey(id)) || state.mute.has(cfgKey(id)));
+  $('saveSummary').textContent = `${o.from}~${o.to}마디 · 속도 ${o.speed}%${opt.length ? ' · ' + opt.join(', ') : ''} 설정으로 저장합니다. 켜 둔 줄과 악기 소리·음량은 위 줄 설정을 따릅니다.` + (sm ? ' 지금 솔로·음소거 중이라 그대로 저장됩니다(전체를 저장하려면 [솔로·음소거 모두 해제]).' : '');
   $('saveLinkState').textContent = saveLinked ? '재생 설정과 같음' : '저장용 설정';
 }
 for (const id of SAVE_IDS) $(id).addEventListener('change', () => { saveLinked = false; saveSummary(); });
@@ -2483,7 +2490,9 @@ $('saveBtn').addEventListener('click', async () => {
   try {
     await new Promise(r => setTimeout(r, 30));
     const made = await buildAudio(p => { btn.textContent = `오디오 생성 중… ${Math.round(p * 100)}%`; }, o);
-    const base = (state.title || '합주').replace(/[\\/:*?"<>|]/g, '') + `_${o.from}-${o.to}마디_${o.speed}%` + (o.countIn ? '_카운트인' : '') + (o.metronome ? '_메트로놈' : '');
+    const snd = soundOpts(), solos = state.lineIds.filter(id => state.solo.has(cfgKey(id))).map(id => (lineLabel(id) || '').replace(/\s*\(.*?\)/g, '')).filter(Boolean);
+    const base = (state.title || '합주').replace(/[\\/:*?"<>|]/g, '') + `_${o.from}-${o.to}마디_${o.speed}%` + (o.countIn ? '_카운트인' : '') + (o.metronome ? '_메트로놈' : '')
+      + (snd.transpose ? `_조옮김${snd.transpose > 0 ? '+' : ''}${snd.transpose}` : '') + (solos.length ? `_솔로-${[...new Set(solos)].slice(0, 3).join('·')}`.replace(/[\\/:*?"<>|]/g, '') : '');   // 파일 이름에 조옮김·솔로 줄 표시
     const format = $('saveFormat').value;
     let blob = made.blob;
     let ext = 'wav';
@@ -2579,6 +2588,7 @@ function applyRestSettings(S) {
     const D = S.sound;
     if (D.transpose != null) $('sTranspose').value = String(D.transpose); if (D.tune) $('sTune').value = D.tune; if (D.fermata != null) $('sFermata').value = String(D.fermata);
     if (D.reverb != null) $('sReverb').value = String(D.reverb); if (typeof D.artic === 'boolean') $('sArtic').checked = D.artic; if (typeof D.stereo === 'boolean') $('sStereo').checked = D.stereo;
+    if (state.score) renderLineList();   // 좌우 위치 막대(입체를 끄면 못 바꿈)를 불러온 설정에 맞춘다
   }
   soundSummary();
   if (S.speed) { $('speed').value = S.speed; $('speedVal').textContent = $('speed').value + '%'; }
@@ -2619,6 +2629,7 @@ function afterScoreLoaded() {
   $('setBox').hidden = !key;
   if (!key) return;
   const S = readSettings(key);
+  if (!(S && prefs.autoLoad && S.sound) && $('sTranspose').value !== '0') { $('sTranspose').value = '0'; soundSummary(); changed(); }   // 다른 곡의 조옮김이 남지 않게
   if (S && prefs.autoLoad) restoreSettings(S, '불러옴');
   else setState(S ? `${fmtTime(S.saved)}에 저장한 설정이 있습니다. [저장한 설정 불러오기]로 쓸 수 있습니다.` : '아직 저장한 설정이 없습니다.' + (prefs.autoSave ? ' 설정을 바꾸면 자동으로 저장됩니다.' : ''));
 }
@@ -3029,7 +3040,7 @@ function lineChanged() {
   if (!state.score) { changed(); return; }   // 악보를 올리기 전의 예시 장단
   applySelection();
 }
-function soloChanged() { changed(); renderLineList(); }
+function soloChanged() { changed(); renderLineList(); saveSummary(); }
 $('soloClear').addEventListener('click', () => { state.solo.clear(); state.mute.clear(); soloChanged(); });
 $('allOn').addEventListener('click', () => { for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; c.role = c.pitched ? 'melody' : 'perc'; if (c.pitched) ensureInst(c); } lineChanged(); renderLineList(); });
 $('allOff').addEventListener('click', () => { for (const l of state.lineList) state.lineCfg[cfgKey(l.id)].role = 'off'; lineChanged(); renderLineList(); });

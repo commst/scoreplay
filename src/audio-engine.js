@@ -181,7 +181,7 @@ export function renderPlan(bars, order, opts) {
         const sdur = e.stacc && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
         notes.push({ t: ts, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? 0.95 : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
-          graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0)) : null });
+          graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
         continue;
       }
       if (e.tie) continue;
