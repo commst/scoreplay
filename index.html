@@ -474,6 +474,17 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .seg button + button { border-left: 1px solid var(--line-2); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); box-shadow: none; }
 .lcard.melody .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+/* 악기 갈래 색: 관악 초록, 현악 남색, 타악 주홍, 건반·그 밖 보라 (카드 왼쪽 띠·갈래 표·마디 미리보기) */
+:root { --fam-wind: #2e8b57; --fam-string: #3f5bb5; --fam-perc: #d0533a; --fam-etc: #8e57c4; }
+@media (prefers-color-scheme: dark) { :root { --fam-wind: #46b47a; --fam-string: #7088e0; --fam-perc: #e8745a; --fam-etc: #ad85e0; } }
+.lcard[data-fam] { --fam: var(--fam-etc); }
+.lcard[data-fam="wind"] { --fam: var(--fam-wind); } .lcard[data-fam="string"] { --fam: var(--fam-string); } .lcard[data-fam="perc"] { --fam: var(--fam-perc); }
+.lcard[data-fam].melody, .lcard[data-fam].perc { border-color: color-mix(in srgb, var(--fam) 50%, var(--line)); box-shadow: inset 5px 0 0 var(--fam); }
+.lcard[data-fam]:not(.melody):not(.perc) { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--fam) 45%, transparent); }
+.lcard[data-fam].melody .seg button[aria-pressed="true"], .lcard[data-fam].perc .seg button[aria-pressed="true"] { background: var(--fam); color: #fff; }
+.fam-tag { flex: none; padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, var(--fam, var(--fam-etc)) 15%, transparent); color: var(--fam, var(--fam-etc)); font: 700 11.5px/1.5 var(--font-body); }
+.fam-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 2px 0 8px; font-size: 13px; color: var(--muted); }
+.fam-legend span::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 5px; border-radius: 3px; vertical-align: -1px; background: var(--c); }
 .lcard.perc .seg button[aria-pressed="true"] { background: var(--chae); color: #fff; }
 
 /* 4단계: 연주 */
@@ -723,6 +734,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <button class="btn" type="button" id="allOff">모두 끄기</button>
       <span class="hint">줄 그림을 보고 역할을 정하세요. 이름은 악보에서 읽은 그대로입니다.</span>
     </div>
+    <div class="fam-legend" id="famLegend" aria-label="악기 갈래 색"><span style="--c: var(--fam-wind)">관악</span><span style="--c: var(--fam-string)">현악</span><span style="--c: var(--fam-perc)">타악</span><span style="--c: var(--fam-etc)">건반·그 밖</span></div>
     <div class="solo-bar" id="soloBar" hidden><span id="soloText"></span><button class="btn" type="button" id="soloClear">솔로·음소거 모두 해제</button></div>
     <div class="linelist" id="lineList"></div>
     <p class="hint lines-empty" id="linesEmpty">악보 PDF를 올리면 여기에 악보의 줄(악기)이 차례로 나옵니다. 줄마다 선율로 연주할지, 타악으로 칠지, 끌지를 정합니다.</p>
@@ -1074,6 +1086,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li><b>악기 갈래 색</b>: 악기 선택의 줄 카드를 관악(초록)·현악(남색)·타악(주홍)·건반 등(보라)으로 색을 나누고 이름 앞에 갈래 표시. 마디 미리보기의 줄 색도 같은 색</li>
     <li><b>솔로·음소거</b>: 악기 선택의 줄마다 [솔로 (이 줄만)]·[음소거 (이 줄 빼기)]. 줄 설정은 그대로 두고 잠깐 듣기만 바꿉니다. [솔로·음소거 모두 해제]로 원래대로</li>
     <li><b>소리 다듬기</b>(연주 칸): 조옮김(반음 단위), 기준음 A4(415~466Hz), 늘임표(페르마타) 길이(늘이지 않음~4박, 울리던 음을 늘임), 잔향(없음·조금·보통·많이), 좌우 배치(입체 음향, 국악관현악 자리처럼. 줄마다 '좌우 위치'로 바꾸기)</li>
     <li>고침: 소리를 만드는 중에 ⏹ 정지를 눌러도 다 만든 뒤 재생되던 문제, [화면 가득 보기]·솔로 단추를 누른 뒤 스페이스바가 재생 대신 그 단추를 다시 누르던 문제, 꾸밈음이 조옮김을 따르지 않던 문제, 휴대폰·태블릿은 5분 넘는 소리를 모노로(메모리), 다른 곡을 열면 조옮김이 남던 문제</li>
@@ -4624,7 +4637,9 @@ function barTipContent(b) {
     ruler.append(scale); tip.append(ruler);
   }
   for (const key of order) {
-    const evs = groups.get(key), cfg = state.lineCfg[key] || state.lineCfg.p || {}, color = LINE_COLORS[order.indexOf(key) % LINE_COLORS.length];
+    const evs = groups.get(key), cfg = state.lineCfg[key] || state.lineCfg.p || {};
+    const famC = { wind: '#2e8b57', string: '#3f5bb5', perc: '#d0533a', etc: '#8e57c4' }[familyOf(state.lineList.find(l => cfgKey(l.id) === key), cfg)];
+    const color = famC || LINE_COLORS[order.indexOf(key) % LINE_COLORS.length];
     const item = state.lineList.find(l => cfgKey(l.id) === key);
     const name = (item && item.label) || (key === 'p' ? '장단' : `${key}번 줄`);
     const melodic = evs.some(e => e.midis && e.midis.length);
@@ -6059,14 +6074,25 @@ function linesEmptyState(t) {
   $('linesPanel').hidden = false; $('lineList').textContent = ''; $('lineFilters').hidden = true; $('linesCount').textContent = '';
   const e = $('linesEmpty'); e.hidden = false; if (t) e.textContent = t; else e.textContent = '악보 PDF를 올리면 여기에 악보의 줄(악기)이 차례로 나옵니다. 줄마다 선율로 연주할지, 타악으로 칠지, 끌지를 정합니다.';
 }
+// 악기 갈래: 타악 줄(또는 타악으로 친 줄), 관악(대금·소금·피리·대피리·태평소·생황), 현악(가야금·거문고·양금·해금·아쟁), 건반·그 밖
+const FAM_WIND = new Set(['daegeum', 'sogeum', 'piri', 'daepiri', 'taepyeongso', 'saenghwang']), FAM_STRING = new Set(['gayageum', 'geomungo', 'yanggeum', 'haegeum', 'ajaeng']);
+const FAM_NAME = { wind: '관악', string: '현악', perc: '타악', etc: '건반·그 밖' };
+function familyOf(l, c) {
+  const name = (l && l.label) || '';
+  if (c && c.role === 'perc') return 'perc';
+  if (c && c.role !== 'melody' && (!c.pitched || PERC_NAME.test(name))) return 'perc';
+  const inst = ((c && c.role === 'melody' && c.inst) || guessInstrument(name) || (c && c.inst) || '').replace(/_syn$/, '');
+  return FAM_WIND.has(inst) ? 'wind' : FAM_STRING.has(inst) ? 'string' : 'etc';
+}
 function renderLineList() {
   const box = $('lineList'); box.textContent = '';
   $('linesPanel').hidden = false; $('linesEmpty').hidden = true; $('lineFilters').hidden = false;
   state.lineList.forEach((l, idx) => {
     const key = cfgKey(l.id), c = state.lineCfg[key];
     const card = document.createElement('div'); card.className = 'lcard ' + (c.role === 'off' ? '' : c.role);
+    const fam = familyOf(l, c); card.dataset.fam = fam;
     const top = document.createElement('div'); top.className = 'top';
-    top.innerHTML = `<span class="no">${idx + 1}번</span><span class="lname"></span><span class="lmeta"></span>`;
+    top.innerHTML = `<span class="no">${idx + 1}번</span><span class="fam-tag">${FAM_NAME[fam]}</span><span class="lname"></span><span class="lmeta"></span>`;
     top.querySelector('.lname').textContent = l.label || `${idx + 1}번째 줄`;
     top.querySelector('.lmeta').textContent = l.clef === 'pitched' ? '선율 악보' : (l.oneLine ? '타악 · 1줄' : '타악 악보');
     const cv = document.createElement('canvas'); cv.dataset.line = key; cv.width = 10; cv.height = 10; if (!l.first) cv.hidden = true;
@@ -6331,7 +6357,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 21:17';
+const APP_VERSION = '2026-10-31 21:35';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
