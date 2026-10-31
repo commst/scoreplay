@@ -848,6 +848,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           </div>
           <button class="btn" id="exportJsonBtn" type="button">인식 결과 JSON 저장</button>
           <button class="btn" id="saveJump" type="button">음원 저장…</button>
+          <button class="btn" id="scoreJump" type="button">악보 보며 듣기</button>
         </div>
         <div class="range">
           <label for="from">마디</label><input type="number" id="from" min="1" value="1" class="num">
@@ -1006,7 +1007,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
-    <li><b>악보 보기</b>: 마디 지도 칸에서 [악보 보기]를 고르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
+    <li><b>악보 보기</b>: 마디 지도 칸에서 [악보 보기]를 고르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기. 연주 칸의 [악보 보며 듣기]로도 바로 열 수 있습니다</li>
     <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
     <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
     <li>'장구 녹음 바꾸기' 칸을 없앰: 늘봄에서 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</li>
@@ -1559,6 +1560,8 @@ function setView(mode) {
   saveViewPref();
 }
 $('viewMap').addEventListener('click', () => setView('map'));
+// 연주 칸의 [악보 보며 듣기]: 악보 보기로 바꾸고 그 칸으로 옮겨 간다
+$('scoreJump').addEventListener('click', () => { setView('score'); $('tBars').closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
 $('viewScore').addEventListener('click', () => setView('score'));
 $('svFollow').addEventListener('change', saveViewPref);
 const SV_ZOOMS = [1, 1.25, 1.5, 2, 2.5, 3];
