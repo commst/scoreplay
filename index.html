@@ -200,14 +200,16 @@ button { cursor: pointer; }
 .bar-tip .tip-part-meta { flex: none; color: var(--muted); font-size: 11px; font-weight: 400; }
 .bar-tip .tip-notes { color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; margin-top: 3px; }
 .bar-tip .tip-foot { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.45; }
-.view-switch { display: inline-grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
-.view-switch button { border: 0; padding: 7px 14px; background: var(--card); color: var(--muted); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
-.view-switch button + button { border-left: 1px solid var(--line); }
+.view-switch { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border: 2px solid var(--accent); border-radius: 12px; overflow: hidden; margin: 6px 0 12px; }
+.view-switch button { border: 0; padding: 13px 10px; background: var(--card); color: var(--accent); font: 700 16px/1.25 var(--font-body); cursor: pointer; }
+.view-switch button + button { border-left: 2px solid var(--accent); }
 .view-switch button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.view-switch button:focus-visible { outline: 3px solid var(--now, #f5c400); outline-offset: -3px; }
 .sv-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin: 10px 0 8px; }
 .sv-tools .zoom { display: inline-flex; gap: 4px; align-items: center; font-size: 12.5px; color: var(--muted); }
 .sv-tools .zoom button { min-width: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); color: var(--ink); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
 .sv-wrap { position: relative; height: min(78vh, 980px); overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--paper) 70%, #8884); padding: 10px; overscroll-behavior: contain; }
+.sv-wrap:has(> .sv-empty) { height: auto; }
 .sv-page { position: relative; margin: 0 auto 12px; background: #fff; box-shadow: 0 1px 4px #0003; cursor: pointer; }
 .sv-page canvas { display: block; width: 100%; height: 100%; }
 .sv-page .sv-pno { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #888; pointer-events: none; }
@@ -848,6 +850,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <div class="side">
       <section class="panel" aria-labelledby="tPlay">
         <h2 class="step-h" id="tPlay"><span class="sn">4</span>연주</h2>
+        <div class="view-switch" role="group" aria-label="연주하면서 볼 화면">
+          <button type="button" id="viewScore2" aria-pressed="false">악보로 보기</button>
+          <button type="button" id="viewMap2" aria-pressed="true">마디맵으로 보기</button>
+        </div>
         <div class="transport">
           <button class="play" id="playBtn" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
           <div class="pos">
@@ -856,7 +862,6 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           </div>
           <button class="btn" id="exportJsonBtn" type="button">인식 결과 JSON 저장</button>
           <button class="btn" id="saveJump" type="button">음원 저장…</button>
-          <button class="btn" id="scoreJump" type="button">악보 보며 듣기</button>
         </div>
         <div class="range">
           <label for="from">마디</label><input type="number" id="from" min="1" value="1" class="num">
@@ -951,11 +956,11 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
       <section class="panel" aria-labelledby="tBars">
         <div class="row" style="justify-content:space-between">
-          <h2 id="tBars">마디 지도</h2>
-          <div class="view-switch" role="group" aria-label="보기 방식">
-            <button type="button" id="viewMap" aria-pressed="true">마디 지도</button>
-            <button type="button" id="viewScore" aria-pressed="false">악보 보기</button>
-          </div>
+          <h2 id="tBars">마디맵</h2>
+        </div>
+        <div class="view-switch" role="group" aria-label="보기 방식">
+          <button type="button" id="viewScore" aria-pressed="false">악보로 보기</button>
+          <button type="button" id="viewMap" aria-pressed="true">마디맵으로 보기</button>
         </div>
         <div class="legend map-only"><span><span class="dot R"></span>윗성부</span><span><span class="dot L"></span>아랫성부</span></div>
         <div class="summary" id="summary"></div>
@@ -973,8 +978,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
-            <dt>마디 지도 · 악보 보기</dt>
-            <dd>위의 단추로 두 가지 보기를 고릅니다. <b>마디 지도</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
+            <dt>악보로 보기 · 마디맵으로 보기</dt>
+            <dd>위의 큰 단추(연주 칸에도 있음)로 두 가지 보기를 고릅니다. <b>마디맵으로 보기</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보로 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
               악보 보기에서는 연주하는 동안 지금 마디가 노란 칸, 지금 위치가 빨간 선으로 음표를 따라 움직이고, 다음 단·다음 쪽으로 넘어가면 악보 칸이 따라 내려갑니다(화면 전체는 움직이지 않음). '연주 위치 따라가기'를 끄면 악보를 직접 넘겨 볼 수 있습니다.
               악보를 누르면 그 마디부터 재생하고, [−]·[+]로 크기를 바꿉니다(휴대폰에서 총보가 작으면 키워 보세요). 고른 보기와 크기는 이 기기에 기억됩니다.
               총보는 켠 줄 가운데 기준 줄이 있는 단 전체를 표시합니다. 예시 장단과 마디 위치를 읽지 못한 악보는 악보 보기를 할 수 없습니다.</dd>
@@ -1015,7 +1020,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
-    <li><b>악보 보기</b>: 마디 지도 칸에서 [악보 보기]를 고르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기. 연주 칸의 [악보 보며 듣기]로도 바로 열 수 있습니다</li>
+    <li><b>악보 보기</b>: 연주 칸과 마디맵 칸의 [악보로 보기]를 누르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
     <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
     <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
     <li>'장구 녹음 바꾸기' 칸을 없앰: 늘봄에서 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</li>
@@ -4603,8 +4608,9 @@ try { const v = JSON.parse(localStorage.getItem(PREF_VIEW) || '{}'); if (v.mode 
 function saveViewPref() { try { localStorage.setItem(PREF_VIEW, JSON.stringify({ mode: viewMode, zoom: svZoom, follow: $('svFollow').checked })); } catch (e) {} }
 function setView(mode) {
   viewMode = mode === 'score' ? 'score' : 'map';
-  $('viewMap').setAttribute('aria-pressed', String(viewMode === 'map')); $('viewScore').setAttribute('aria-pressed', String(viewMode === 'score'));
-  $('tBars').textContent = viewMode === 'score' ? '악보 보기' : '마디 지도';
+  for (const id of ['viewMap', 'viewMap2']) $(id).setAttribute('aria-pressed', String(viewMode === 'map'));
+  for (const id of ['viewScore', 'viewScore2']) $(id).setAttribute('aria-pressed', String(viewMode === 'score'));
+  $('tBars').textContent = viewMode === 'score' ? '악보' : '마디맵';
   $('bars').hidden = viewMode === 'score'; $('scoreView').hidden = viewMode !== 'score';
   document.querySelectorAll('.map-only').forEach(e => { e.hidden = viewMode === 'score'; });
   $('barsHint').textContent = viewMode === 'score' ? '악보에서 마디를 누르면 그 마디부터 재생합니다. 연주 중인 마디는 노란 칸으로 표시됩니다.' : '마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.';
@@ -4612,8 +4618,8 @@ function setView(mode) {
   saveViewPref();
 }
 $('viewMap').addEventListener('click', () => setView('map'));
-// 연주 칸의 [악보 보며 듣기]: 악보 보기로 바꾸고 그 칸으로 옮겨 간다
-$('scoreJump').addEventListener('click', () => { setView('score'); $('tBars').closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+// 연주 칸의 같은 단추: 보기를 바꾸고 그 칸으로 옮겨 간다
+for (const [id, mode] of [['viewScore2', 'score'], ['viewMap2', 'map']]) $(id).addEventListener('click', () => { setView(mode); $('tBars').closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
 $('viewScore').addEventListener('click', () => setView('score'));
 $('svFollow').addEventListener('change', saveViewPref);
 const SV_ZOOMS = [1, 1.25, 1.5, 2, 2.5, 3];
@@ -4639,7 +4645,7 @@ function buildScoreView() {
   svKey = key; svCurrent = -1;
   if (svIO) { svIO.disconnect(); svIO = null; }
   svPages.clear(); wrap.textContent = ''; svHl = null; svCur = null;
-  if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? '이 악보는 마디 위치를 읽지 못해 악보 보기를 할 수 없습니다. 마디 지도를 써 주세요.' : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
+  if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? '이 악보는 마디 위치를 읽지 못해 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요.' : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
   const pages = [...new Set(G.geo.filter(Boolean).map(g => g.page))].sort((a, b) => a - b);
   const sc = G.sc, myKey = key;
   wrap.appendChild(tipNode('div', 'sv-empty', '악보를 펼치는 중…'));
@@ -6081,7 +6087,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-10-31 19:39';
+const APP_VERSION = '2026-10-31 19:45';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
