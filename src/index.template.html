@@ -958,7 +958,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <div class="summary" id="summary"></div>
         <div class="warnlist" id="warnList"></div>
         <div class="bar-actions">
-          <p class="hint" id="barsHint">마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.</p>
+          <p class="hint" id="barsHint">마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.</p>
           <button class="btn stop-near-bars" id="barsStopBtn" type="button" aria-label="재생 정지">⏹ 정지</button>
         </div>
         <div class="edit-tools" id="editTools" hidden>
@@ -1012,6 +1012,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li><b>일시정지</b>: 재생 단추·스페이스바로 멈추면 그 자리를 기억했다가 다시 누르면 이어서 재생합니다(처음부터 다시 시작하던 문제). 연주 중에 속도·악기를 바꿔도 그 마디부터 이어서. 처음부터 들으려면 ⏹ 정지</li>
     <li><b>악보 보기</b>: 연주 칸과 마디맵 칸의 [악보로 보기]를 누르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
     <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
     <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
@@ -1561,7 +1562,7 @@ function setView(mode) {
   $('tBars').textContent = viewMode === 'score' ? '악보' : '마디맵';
   $('bars').hidden = viewMode === 'score'; $('scoreView').hidden = viewMode !== 'score';
   document.querySelectorAll('.map-only').forEach(e => { e.hidden = viewMode === 'score'; });
-  $('barsHint').textContent = viewMode === 'score' ? '악보에서 마디를 누르면 그 마디부터 재생합니다. 연주 중인 마디는 노란 칸으로 표시됩니다.' : '마디를 누르면 그 마디부터 재생합니다. 재생 중에는 정지 버튼이나 스페이스바를 사용하세요.';
+  $('barsHint').textContent = viewMode === 'score' ? '악보에서 마디를 누르면 그 마디부터 재생합니다. 연주 중인 마디는 노란 칸으로 표시됩니다.' : '마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.';
   if (viewMode === 'score') { hideBarTip(0); buildScoreView(); if (state.playing && lastNow != null) svShow(state.rendered ? (state.rendered.plan.barTimes.find(b => b.number === lastNow) || {}).idx ?? -1 : -1, true); }
   saveViewPref();
 }
@@ -2043,7 +2044,7 @@ function currentMelodic() {
 function currentGains() { const out = {}; for (const id of state.lineIds) out[cfgKey(id)] = state.lineCfg[cfgKey(id)].vol; return out; }
 
 // ---------- 렌더 / 재생 ----------
-function changed() { state.dirty = true; if (state.playing) stop(); explainTempo(); try { prefetchBanks(); } catch (e) {} }
+function changed() { state.dirty = true; if (state.playing) pause(); explainTempo(); try { prefetchBanks(); } catch (e) {} }
 const UNIT_WORD = { q: '4분음표', dq: '점4분음표', e: '8분음표', h: '2분음표' };
 function explainTempo() {
   const el = $('tempoExplain'); if (!el) return;
@@ -2176,7 +2177,8 @@ function tempoBlocked(range) {
 function noBars() { if (state.bars.length) return false; showMsg('재생할 마디가 없습니다. 악보를 읽지 못했거나 켜 둔 악기가 없습니다. 다른 PDF를 올리거나 악기 선택에서 줄을 켜 주세요.'); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return true; }
 let building = false, playTok = 0, pendingBar = null;
 async function play(offset = 0) {
-  if (building) return;   // 소리를 만드는 중에 마디·스페이스바를 또 누르면 같은 소리를 두 번 만들지 않게
+  if (building) return;
+  resumeAt = null;   // 소리를 만드는 중에 마디·스페이스바를 또 누르면 같은 소리를 두 번 만들지 않게
   if (noBars()) { stop(true); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return; }
   if (tempoBlocked()) { stop(true); return; }
   unlockAudio();
@@ -2206,7 +2208,29 @@ async function play(offset = 0) {
   if (pendingBar != null) { const n = pendingBar; pendingBar = null; seekBar(n); }   // 만드는 동안 누른 마디로
 }
 audio.addEventListener('ended', () => { if (!audio.loop && state.playing && audio.src === state.rendered?.url) stop(); });   // 아이폰용 무음 깨우기 소리가 끝날 때 '소리를 만드는 중'이 '정지'로 바뀌던 문제
+// 일시정지: 재생 단추·스페이스바·아래 작은 막대로 멈추면 그 자리를 기억해 두었다가 다시 누르면 이어서 재생한다.
+// 정지(⏹) 단추, 끝까지 재생, 다른 악보 올리기는 처음으로. 연주 중에 설정을 바꿔도 일시정지로 보고 바뀐 소리로 그 마디부터 이어서
+let resumeAt = null;   // { t: 소리 안의 시각(초), n: 마디 번호 }
+function pause() {
+  if (!state.playing) return;
+  const t = audio.currentTime || 0, n = lastNow;
+  try { audio.pause(); } catch (e) {}
+  cancelAnimationFrame(raf);
+  state.playing = false; setPlayIcon(false);
+  resumeAt = { t, n };
+  tick.html = null; $('nowText').innerHTML = n != null ? `<b>일시정지</b> · <span class="num">${n}</span>마디 <span style="color:var(--muted)">(다시 누르면 이어서)</span>` : '<b>일시정지</b>';
+}
+function resume() {
+  const r = resumeAt; resumeAt = null;
+  if (!r) return play(0);
+  if (!state.dirty && state.rendered && r.t > 0) return play(Math.max(0, r.t - 0.05));
+  // 그사이 소리가 바뀌었으면(속도·악기 등) 새로 만든 뒤 그 마디부터
+  if (r.n != null) pendingBar = r.n;
+  return play(0);
+}
+function togglePlay() { if (state.playing) pause(); else resume(); }
 function stop(silent) {
+  if (!silent) resumeAt = null;
   try { audio.pause(); } catch (e) {}
   cancelAnimationFrame(raf);
   state.playing = false; setPlayIcon(false);
@@ -2235,7 +2259,7 @@ function tick() {
   }
   raf = requestAnimationFrame(tick);
 }
-$('playBtn').addEventListener('click', () => state.playing ? stop() : play(0));
+$('playBtn').addEventListener('click', togglePlay);
 $('barsStopBtn').addEventListener('click', () => stop());
 // 스페이스바로 어디서든 재생/정지. 입력란, 선택 상자 등에서의 기본 동작은 방해하지 않는다.
 document.addEventListener('keydown', ev => {
@@ -2244,7 +2268,7 @@ document.addEventListener('keydown', ev => {
   const target = ev.target;
   if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
   ev.preventDefault();
-  if (state.playing) stop(); else play(0);
+  togglePlay();
 });
 $('track').addEventListener('click', ev => {
   if (!state.rendered || state.dirty) return;
@@ -2861,7 +2885,7 @@ function selField(label, options, value, onChange) {
 }
 function lineChanged() {
   state.lineIds = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => l.id);
-  stop();
+  pause();   // 악기를 켜고 꺼도 그 자리에서 이어서 들을 수 있게
   if (!state.score) { changed(); return; }   // 악보를 올리기 전의 예시 장단
   applySelection();
 }
