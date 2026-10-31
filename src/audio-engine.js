@@ -91,7 +91,7 @@ const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
 const BUK_MID = 4, BUK_CLICK = 0.6;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.8 * BK, '북녹음': 2.6 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.8 * BK, '북녹음': 2.6 * BK, '북짧게': 1.9 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -504,10 +504,10 @@ export function decodeRecorded(obj) {
     return z;
   });
   // 북 녹음도 소리가 거의 100Hz 아래라 작은 스피커에서 잘 안 들리고 힘이 없다 → bukPunch (가죽 울림·채 소리 살리기)
-  // 두 녹음이 같은 음색으로 들리지 않게: 낮고 길게는 큰북답게 낮은 울림(55Hz 근처)을 남기고 채 소리는 약하게,
-  // 짧게는 작은북답게 반음 7개 높이고(약 165Hz, 악보 윗부분 음표 = 높은 북) 가죽·채 소리를 더 또렷하게
+  // 두 녹음이 같은 음색으로 들리지 않게: 낮고 길게는 큰북답게 반음 3개 낮추고(약 50Hz) 낮은 울림을 남기고 채 소리는 약하게,
+  // 짧게는 작은북답게 반음 10개 높이고(약 195Hz, 악보 윗부분 음표 = 높은 북) 가죽·채 소리를 더 또렷하게
   const up = (y, r) => { const n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; };
-  if (out['북녹음']) out['북녹음'] = out['북녹음'].map((y, n) => bukPunch(y, 2.5, 0.4, 26 + n, 35));
-  if (out['북짧게']) out['북짧게'] = out['북짧게'].map((y, n) => bukPunch(up(y, Math.pow(2, 7 / 12)), BUK_MID, 1.0, 28 + n, 110));
+  if (out['북녹음']) out['북녹음'] = out['북녹음'].map((y, n) => bukPunch(up(y, Math.pow(2, -3 / 12)), 2.5, 0.4, 26 + n, 30));
+  if (out['북짧게']) out['북짧게'] = out['북짧게'].map((y, n) => bukPunch(up(y, Math.pow(2, 10 / 12)), BUK_MID, 1.0, 28 + n, 130));
   return out;
 }
