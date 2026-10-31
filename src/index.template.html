@@ -449,6 +449,16 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 /* 2단계: 줄 카드 */
 .linelist { gap: 12px; align-items: start; }
 .lcard { align-content: start; }
+.soundbox { margin: 10px 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.soundbox > summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.soundbox .sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 12px; margin: 10px 0 6px; }
+.soundbox .checks { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; margin: 4px 0; }
+.sm-row { display: flex; gap: 6px; }
+.sm-row button { flex: 1; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--muted); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
+.sm-row button.solo[aria-pressed="true"] { background: #e0a100; border-color: #e0a100; color: #fff; }
+.sm-row button.mute[aria-pressed="true"] { background: #6b7280; border-color: #6b7280; color: #fff; }
+.lcard.silenced { opacity: .55; }
+.solo-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; padding: 8px 10px; border-radius: 9px; background: rgba(224, 161, 0, .14); font-size: 13.5px; }
 .lcard { border-radius: 12px; background: var(--card); border: 1px solid var(--line); box-shadow: none; padding: 14px; gap: 10px; }
 .lcard.melody { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: inset 4px 0 0 var(--accent); }
 .lcard.perc { border-color: color-mix(in srgb, var(--chae) 40%, var(--line)); box-shadow: inset 4px 0 0 var(--chae); }
@@ -705,6 +715,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <button class="btn" type="button" id="allOff">모두 끄기</button>
       <span class="hint">줄 그림을 보고 역할을 정하세요. 이름은 악보에서 읽은 그대로입니다.</span>
     </div>
+    <div class="solo-bar" id="soloBar" hidden><span id="soloText"></span><button class="btn" type="button" id="soloClear">솔로·음소거 모두 해제</button></div>
     <div class="linelist" id="lineList"></div>
     <p class="hint lines-empty" id="linesEmpty">악보 PDF를 올리면 여기에 악보의 줄(악기)이 차례로 나옵니다. 줄마다 선율로 연주할지, 타악으로 칠지, 끌지를 정합니다.</p>
     <details class="help">
@@ -717,6 +728,11 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <dt>소리</dt>
         <dd>선율 줄: 가야금·거문고·양금·대금·소금·피리·대피리·태평소·생황·해금·아쟁·피아노는 녹음한 소리(가야금·거문고·양금·대금 등은 합성음도 고를 수 있음). 줄 이름이 '대피리'·'저피리'(줄여 '대피'·'저피')면 대피리, '생황'·'생'이면 생황, '현'·'현금'(25현 가야금)이면 가야금 소리로 처음 정합니다. 이름으로 악기를 알 수 없는 줄은 가야금으로 정해 두니 맞게 바꾸세요. 타악 줄: 장구 따·궁·덩, 꽹과리, 꽹과리 막음, 징, 북(합성음 / 녹음 낮고 길게 / 녹음 짧게), 바라, 심벌(크래시), 하이햇, 베이스드럼, 스네어드럼, 북 테(합성) 등을 윗성부·아랫성부에 따로 고릅니다. 줄 이름으로 처음 소리를 정합니다: 북 줄은 윗성부 '북 (합성음)'·아랫성부 장구 궁, 바라는 바라, 심벌·Sym·Cym은 심벌, 심벌(훗)·풋심벌·Hi-hat은 하이햇, 타악 줄의 Bass·B.D.는 베이스드럼, DrumSet은 하이햇·베이스드럼, Snare·S.D.·S.Dr·스네어·작은북은 스네어드럼. 심벌의 굴림(트레몰로) 표시는 녹음한 심벌 롤로 연주합니다.
           <span class="eg">"대고" 줄 → 타악, 윗성부 북 · 아랫성부 북</span></dd>
+        <dt>솔로 · 음소거</dt>
+        <dd><b>솔로 (이 줄만)</b>을 누르면 그 줄만 들리고 나머지 켠 줄은 잠깐 소리가 꺼집니다. 여러 줄을 솔로로 하면 그 줄들만. <b>음소거 (이 줄 빼기)</b>는 그 줄만 잠깐 끕니다. 줄 설정(켜기·음량·악기)은 그대로라 다시 누르거나 [솔로·음소거 모두 해제]를 누르면 원래대로 돌아옵니다. 저장하지 않는 잠깐 설정입니다.
+          <span class="eg">이 대목 대금이 어떻게 가지? → 대금 [솔로] / 대금 빼고 맞춰 불기 → 대금 [음소거]</span></dd>
+        <dt>좌우 위치</dt>
+        <dd>선율 줄만. 소리 다듬기의 '좌우 배치'를 켰을 때 그 줄이 왼쪽·오른쪽 어디서 들릴지 정합니다. 처음에는 악기마다 국악관현악 자리처럼(자동) 정해 둡니다.</dd>
         <dt>음량</dt>
         <dd>0~150%. 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
         <dt>옥타브</dt>
@@ -881,6 +897,27 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             </select></label>
           <label><input type="checkbox" id="optDyn" checked>셈여림 반영</label>
         </div>
+        <details class="soundbox" id="soundBox">
+          <summary>소리 다듬기 <span class="hint" id="soundSum"></span></summary>
+          <div class="sb-grid">
+            <div class="field"><label for="sTranspose">조옮김</label>
+              <select id="sTranspose">
+                <option value="-6">6반음 낮게</option><option value="-5">5반음 낮게</option><option value="-4">4반음 낮게</option><option value="-3">3반음 낮게</option><option value="-2">2반음(온음) 낮게</option><option value="-1">1반음 낮게</option>
+                <option value="0" selected>악보대로</option>
+                <option value="1">1반음 높게</option><option value="2">2반음(온음) 높게</option><option value="3">3반음 높게</option><option value="4">4반음 높게</option><option value="5">5반음 높게</option><option value="6">6반음 높게</option>
+              </select></div>
+            <div class="field"><label for="sTune">기준음 A4 (Hz)</label><input type="number" id="sTune" class="num" min="415" max="466" step="1" value="440"></div>
+            <div class="field"><label for="sFermata">늘임표(페르마타)</label>
+              <select id="sFermata"><option value="0">늘이지 않음</option><option value="1">1박 늘이기</option><option value="2" selected>2박 늘이기</option><option value="3">3박 늘이기</option><option value="4">4박 늘이기</option></select></div>
+            <div class="field"><label for="sReverb">잔향(울림)</label>
+              <select id="sReverb"><option value="0">없음</option><option value="0.12" selected>조금</option><option value="0.22">보통</option><option value="0.34">많이</option></select></div>
+          </div>
+          <div class="checks">
+            <label><input type="checkbox" id="sArtic" checked>스타카토·트릴 연주</label>
+            <label><input type="checkbox" id="sStereo" checked>좌우 배치 (입체 음향)</label>
+          </div>
+          <p class="hint">재생과 음원 저장에 함께 적용됩니다. 조옮김·기준음은 선율 악기에만(타악은 그대로). 좌우 배치는 국악관현악 자리처럼 가야금·거문고는 왼쪽, 아쟁·대금은 오른쪽으로 나눠 들리게 하고, 줄마다 '좌우 위치'로 바꿀 수 있습니다(타악은 가운데). 10분이 넘는 소리는 휴대폰 메모리를 생각해 한 줄(모노)로 만듭니다.</p>
+        </details>
         <div class="field">
           <label for="orderText">연주 순서<span class="pill" id="orderState">자동</span></label>
           <div class="order-row"><input id="orderText" class="num" spellcheck="false" autocomplete="off"><button class="x" id="orderAuto" type="button">자동으로</button></div>
@@ -945,6 +982,12 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
               <span class="eg">메트로놈은 끄고 이것만 켜면 → 칠 때는 악기 소리만, 쉴 때는 박 소리만</span></dd>
             <dt>셈여림 반영</dt>
             <dd>악보의 p, mf, f, 크레셴도 등을 소리 크기에 반영합니다. 끄면 모든 음을 같은 크기로 냅니다. 악센트(&gt;)는 어느 쪽이든 강하게 납니다.</dd>
+            <dt>소리 다듬기</dt>
+            <dd><b>조옮김</b>: 선율 악기를 반음 단위로 올리거나 내립니다(타악은 그대로). <b>기준음 A4</b>: 라(A4) 높이를 Hz로 정합니다. 보통 440, 악기를 442에 맞췄다면 442.
+              <b>늘임표</b>: 악보의 늘임표(𝄐가 있는 마디)에서 울리던 음을 몇 박 더 늘이고 그만큼 쉽니다. <b>잔향</b>: 방에서 울리는 것처럼 소리에 울림을 더합니다.
+              <b>스타카토·트릴 연주</b>: 스타카토 점이 찍힌 선율 음은 절반쯤 짧게 끊고, 물결선 트릴은 바로 위 음(조표·임시표 따름)과 빠르게 오갑니다.
+              <b>좌우 배치</b>: 국악관현악 자리처럼 가야금·거문고·양금은 왼쪽, 아쟁·대금·소금은 오른쪽, 피리는 가운데쯤으로 나눠 들리게 합니다. 줄마다 '좌우 위치'로 바꿀 수 있고, 타악은 가운데입니다. 10분이 넘는 소리는 휴대폰 메모리를 생각해 한 줄(모노)로 만듭니다.
+              모두 재생과 음원 저장에 함께 적용되고, 이 악보의 설정에 저장됩니다.</dd>
             <dt>연주 순서</dt>
             <dd>실제로 칠 마디 순서입니다. 반복 기호를 잘못 읽었으면 직접 고칩니다. 쉼표(,)로 구간을 나누고 붙임표(-)로 범위를 적습니다.
               <span class="eg">1-8, 1-4, 9-16 → 1~8마디, 다시 1~4마디, 이어서 9~16마디</span></dd>
@@ -1023,6 +1066,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 <template id="histTpl">
   <section><h4>10월 31일</h4><ul>
+    <li><b>솔로·음소거</b>: 악기 선택의 줄마다 [솔로 (이 줄만)]·[음소거 (이 줄 빼기)]. 줄 설정은 그대로 두고 잠깐 듣기만 바꿉니다. [솔로·음소거 모두 해제]로 원래대로</li>
+    <li><b>소리 다듬기</b>(연주 칸): 조옮김(반음 단위), 기준음 A4(415~466Hz), 늘임표(페르마타) 길이(늘이지 않음~4박, 울리던 음을 늘임), 잔향(없음·조금·보통·많이), 좌우 배치(입체 음향, 국악관현악 자리처럼. 줄마다 '좌우 위치'로 바꾸기)</li>
+    <li><b>스타카토·트릴</b>: 악보의 스타카토 점은 짧게 끊고, 선율의 트릴(물결선)은 위 음과 빠르게 오가며 연주. MP3도 입체로 저장</li>
     <li><b>악보·마디맵을 넓게</b>: 악보·마디맵 칸을 화면 폭 전체로 넓혀 크게 키워도 잘 보이게. 악보로 보기에는 <b>[화면 가득 보기]</b>(화면 전체에 악보만, 재생·일시정지 단추 포함, Esc나 ✕ 닫기로 돌아옴)</li>
     <li><b>일시정지</b>: 재생 단추·스페이스바로 멈추면 그 자리를 기억했다가 다시 누르면 이어서 재생합니다(처음부터 다시 시작하던 문제). 연주 중에 속도·악기를 바꿔도 그 마디부터 이어서. 처음부터 들으려면 ⏹ 정지</li>
     <li><b>악보 보기</b>: 연주 칸과 마디맵 칸의 [악보로 보기]를 누르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
@@ -1196,7 +1242,7 @@ const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
-  marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false, scoreGeo: null };
+  marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set() };
 let raf = 0, audioUrl = null, lastNow = null;
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
 
@@ -2064,7 +2110,13 @@ function currentMelodic() {
   for (const id of state.lineIds) { const c = state.lineCfg[cfgKey(id)]; if (c.role === 'melody') out[cfgKey(id)] = { inst: c.inst || 'gayageum', oct: c.oct, nong: c.nong !== false }; }
   return out;
 }
-function currentGains() { const out = {}; for (const id of state.lineIds) out[cfgKey(id)] = state.lineCfg[cfgKey(id)].vol; return out; }
+// 솔로(그 줄만)·음소거(그 줄만 빼기)는 잠깐 듣는 용도: 줄 설정(켜기·음량)은 건드리지 않고 소리 만들 때만 반영
+function soloActive() { return state.lineIds.some(id => state.solo.has(cfgKey(id))); }
+function currentGains() {
+  const out = {}, anySolo = soloActive();
+  for (const id of state.lineIds) { const k = cfgKey(id); out[k] = state.mute.has(k) || (anySolo && !state.solo.has(k)) ? 0 : state.lineCfg[k].vol; }
+  return out;
+}
 
 // ---------- 렌더 / 재생 ----------
 function changed() { state.dirty = true; if (state.playing) pause(); explainTempo(); try { prefetchBanks(); } catch (e) {} }
@@ -2123,6 +2175,25 @@ function playOpts() {
   return { from: +$('from').value, to: +$('to').value, repeats: $('optRepeat').checked, countIn: $('optCount').checked, metronome: $('optMetro').checked,
     restCount: $('optRest').value, dyn: $('optDyn').checked, speed: +$('speed').value };
 }
+// 소리 다듬기 칸 (재생·저장 공통)
+function soundOpts() {
+  let tune = +$('sTune').value; if (!(tune >= 415 && tune <= 466)) { tune = 440; $('sTune').value = 440; }
+  const tr = +$('sTranspose').value || 0;
+  return { transpose: tr, tune, shift: tr + 12 * Math.log2(tune / 440), fermata: +$('sFermata').value, reverb: +$('sReverb').value || 0,
+    artic: $('sArtic').checked, stereo: $('sStereo').checked };
+}
+function soundSummary() {
+  const o = soundOpts(), parts = [];
+  if (o.transpose) parts.push(`조옮김 ${o.transpose > 0 ? '+' : ''}${o.transpose}`);
+  if (o.tune !== 440) parts.push(`A=${o.tune}`);
+  parts.push(o.reverb ? `잔향 ${$('sReverb').selectedOptions[0].textContent}` : '잔향 없음');
+  parts.push(o.stereo ? '입체' : '모노');
+  $('soundSum').textContent = '· ' + parts.join(' · ');
+}
+['sTranspose', 'sTune', 'sFermata', 'sReverb', 'sArtic', 'sStereo'].forEach(id => $(id).addEventListener('change', () => { soundSummary(); changed(); renderLineList(); }));
+// 국악관현악 자리처럼 처음 좌우 위치 (-1 왼쪽 ~ 1 오른쪽)
+const PAN_DEFAULT = { gayageum: -0.55, geomungo: -0.35, yanggeum: -0.45, haegeum: -0.2, ajaeng: 0.45, daegeum: 0.15, sogeum: 0.3, piri: -0.05, daepiri: 0.05, taepyeongso: 0.2, saenghwang: -0.15, piano: -0.3 };
+function panOf(c) { if (typeof c.pan === 'number') return c.pan; const k = (c.inst || '').replace(/_syn$/, ''); return PAN_DEFAULT[k] ?? 0; }
 // rit.·accel. 끝 빠르기 칸: 0·음수·아주 큰 수를 넣으면 시간이 거꾸로 가거나 소리가 끝없이 길어지므로 칸의 범위로 맞춘다
 function pctIn(id, def, lo, hi) { const v = +$(id).value; const x = v > 0 ? Math.max(lo, Math.min(hi, v)) : def; if (String(x) !== $(id).value) $(id).value = x; return x; }
 // o를 주면(음원 저장) 재생용 소리는 그대로 두고 따로 만든 소리를 돌려준다
@@ -2134,7 +2205,7 @@ async function buildAudio(onProgress, o = null) {
   for (const v of Object.values(currentMelodic())) { const b = bankOf(v.inst); if (b) await loadBank(b); }
   const failed = Object.values(currentMelodic()).map(v => bankOf(v.inst)).filter(b => b && bankFailed.has(b));
   if (failed.length) showMsg(`${[...new Set(failed)].map(b => INSTRUMENTS[b].name.replace(' (녹음)', '')).join(', ')} 녹음 소리를 받지 못해 합성음으로 연주합니다. 인터넷 연결을 확인하고 다시 재생해 보세요.`);
-  const { from, to } = o;
+  const { from, to } = o, snd = soundOpts();
   const full = (state.manualOrder || playbackOrder(state.bars, { repeats: o.repeats })).filter(k => state.bars[k]);
   let order = full.filter(k => state.bars[k].number >= from && state.bars[k].number <= to);
   if (!order.length) order = state.bars.map((b, i) => i).filter(k => state.bars[k].number >= from && state.bars[k].number <= to);
@@ -2144,21 +2215,31 @@ async function buildAudio(onProgress, o = null) {
     countIn: o.countIn, metronome: o.metronome, restCount: o.restCount,
     dyn: o.dyn && state.marks.dyn.length ? state.marks.dyn : null,
     tempo: tempoItems(), ritF: pctIn('ritF', 80, 30, 100) / 100, accF: pctIn('accF', 120, 100, 200) / 100,
+    shift: snd.shift, fermata: snd.fermata, stacc: snd.artic, trill: snd.artic,
   });
   // 선율 음은 조금씩 나눠 합성해 휴대폰에서도 화면이 멈추지 않게
   const notes = plan.notes;
   const raw = mix(plan, state.sounds, state.custom, null, false);   // 타악 (크기 맞추기는 선율까지 더한 뒤)
+  // 좌우 배치: 타악은 가운데(양쪽 같게), 선율은 줄마다 좌우 위치. 10분 넘는 소리는 메모리 때문에 한 줄로
+  const stereo = snd.stereo && raw.length <= 600 * SR;
+  const rawR = stereo ? raw.slice() : null;
+  if (stereo) for (const nt of notes) { const c = state.lineCfg[nt.line]; nt.pan = c ? panOf(c) : 0; }
   const CH = 120;
   for (let k = 0; k < notes.length; k += CH) {
-    mixNotes(raw, notes.slice(k, k + CH));
-    if (onProgress) onProgress(Math.min(1, (k + CH) / notes.length));
+    mixNotes(raw, notes.slice(k, k + CH), null, rawR);
+    if (onProgress) onProgress(Math.min(snd.reverb ? 0.9 : 1, (k + CH) / notes.length * (snd.reverb ? 0.9 : 1)));
     await new Promise(r => setTimeout(r, 0));
   }
   clearNoteCache();
+  if (snd.reverb > 0) {   // 잔향: 조금씩 나눠 처리(화면 멈춤 없게)
+    const rv = makeReverb(snd.reverb, stereo), N = raw.length, STEP = 32000 * 8;
+    for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (onProgress) onProgress(0.9 + 0.1 * Math.min(1, (i + STEP) / N)); await new Promise(r => setTimeout(r, 0)); }
+  }
   let peak = 0; for (let i = 0; i < raw.length; i++) peak = Math.max(peak, Math.abs(raw[i]));
-  if (peak > 0) { const k = 0.89 / peak; for (let i = 0; i < raw.length; i++) raw[i] *= k; }
+  if (rawR) for (let i = 0; i < rawR.length; i++) peak = Math.max(peak, Math.abs(rawR[i]));
+  if (peak > 0) { const k = 0.89 / peak; for (let i = 0; i < raw.length; i++) raw[i] *= k; if (rawR) for (let i = 0; i < rawR.length; i++) rawR[i] *= k; }
   // 휴대폰 메모리를 아끼려고 소리 데이터는 wav 파일 하나로만 들고 있는다
-  const wavBlob = new Blob([encodeWav(raw)], { type: 'audio/wav' });
+  const wavBlob = new Blob([encodeWav(raw, rawR)], { type: 'audio/wav' });
   if (forSave) return { plan, blob: wavBlob };
   if (audioUrl) URL.revokeObjectURL(audioUrl);
   audioUrl = URL.createObjectURL(wavBlob);
@@ -2330,21 +2411,22 @@ async function encodeMp3FromWav(blob, bitrate = 128, onProgress = () => {}) {
   const lamejs = await loadMp3Encoder();
   const ab = await blob.arrayBuffer();
   const view = new DataView(ab);
-  if (view.getUint32(0, false) !== 0x52494646 || view.getUint32(8, false) !== 0x57415645 || view.getUint16(22, true) !== 1 || view.getUint16(34, true) !== 16) {
+  if (view.getUint32(0, false) !== 0x52494646 || view.getUint32(8, false) !== 0x57415645 || (view.getUint16(22, true) !== 1 && view.getUint16(22, true) !== 2) || view.getUint16(34, true) !== 16) {
     throw new Error('현재 오디오 형식을 MP3로 변환할 수 없습니다. WAV로 저장해 주세요.');
   }
-  const sampleRate = view.getUint32(24, true);
+  const sampleRate = view.getUint32(24, true), ch = view.getUint16(22, true) === 2 ? 2 : 1;
   const dataOffset = 44;
-  const sampleCount = Math.floor((ab.byteLength - dataOffset) / 2);
-  const encoder = new lamejs.Mp3Encoder(1, sampleRate, bitrate);
+  const sampleCount = Math.floor((ab.byteLength - dataOffset) / 2 / ch);
+  const encoder = new lamejs.Mp3Encoder(ch, sampleRate, bitrate);
   const chunks = [];
   const frameSize = 1152;
-  const pcm = new Int16Array(Math.min(frameSize, sampleCount));
+  const pcm = new Int16Array(Math.min(frameSize, sampleCount)), pcmR = new Int16Array(Math.min(frameSize, sampleCount));
   for (let start = 0; start < sampleCount; start += frameSize) {
     const count = Math.min(frameSize, sampleCount - start);
-    const frame = count === pcm.length ? pcm : new Int16Array(count);
-    for (let i = 0; i < count; i++) frame[i] = view.getInt16(dataOffset + (start + i) * 2, true);
-    const encoded = encoder.encodeBuffer(frame);
+    const frame = count === pcm.length ? pcm : new Int16Array(count), frameR = count === pcmR.length ? pcmR : new Int16Array(count);
+    if (ch === 2) for (let i = 0; i < count; i++) { const o = dataOffset + (start + i) * 4; frame[i] = view.getInt16(o, true); frameR[i] = view.getInt16(o + 2, true); }
+    else for (let i = 0; i < count; i++) frame[i] = view.getInt16(dataOffset + (start + i) * 2, true);
+    const encoded = ch === 2 ? encoder.encodeBuffer(frame, frameR) : encoder.encodeBuffer(frame);
     if (encoded && encoded.length) chunks.push(new Uint8Array(encoded));
     if (start % (frameSize * 80) === 0) {
       onProgress(Math.min(0.98, start / Math.max(1, sampleCount)));
@@ -2438,7 +2520,7 @@ function settingsKey() {
 }
 // 줄을 가리키는 열쇠: 더한 악보·파트보는 그 PDF 지문으로(올릴 때마다 바뀌는 번호가 아니라)
 function stableKey(l) { return l.sourceScore ? l.sourceScore.fp + ':' + (l.sourceLineId == null ? 'p' : l.sourceLineId) : 'main:' + cfgKey(l.id); }
-const CFG_FIELDS = ['role', 'inst', 'oct', 'octUser', 'vol', 'R', 'L', 'nong'];
+const CFG_FIELDS = ['role', 'inst', 'oct', 'octUser', 'vol', 'R', 'L', 'nong', 'pan'];
 function readSettings(key) { if (!key) return null; try { const t = localStorage.getItem(SET_KEY + key); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
 function collectSettings() {
   const lines = {};
@@ -2449,6 +2531,7 @@ function collectSettings() {
     // 악기를 모두 꺼 마디가 없을 때는 순서 칸 글을 그대로 (마디 번호로 다시 읽으므로)
     order: state.manualOrder ? (state.manualOrder.every(k => k < state.bars.length) ? orderToText(state.bars, state.manualOrder) : $('orderText').value) : null,
     tempoChanges: state.tempoChEdited ? state.tempoChanges.map(c => ({ ...c })) : null,
+    sound: (({ transpose, tune, fermata, reverb, artic, stereo }) => ({ transpose, tune, fermata, reverb, artic, stereo }))(soundOpts()),
     extras: (state.extras || []).map(x => ({ name: x.file.name, fp: x.sc.fp })) };
 }
 const fmtTime = iso => { try { const d = new Date(iso); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; } catch (e) { return ''; } };
@@ -2492,6 +2575,12 @@ function applyRestSettings(S) {
   } else if (state.tempoChEdited) {   // 저장한 설정에 직접 고친 rit.·accel.이 없으면 악보에서 읽은 대로 (지금 화면에서 고친 것이 남지 않게)
     state.tempoChEdited = false; state.tempoChanges = deriveTempoChanges(state.marks.tempo, state.bars); syncTempoLabels();
   }
+  if (S.sound) {
+    const D = S.sound;
+    if (D.transpose != null) $('sTranspose').value = String(D.transpose); if (D.tune) $('sTune').value = D.tune; if (D.fermata != null) $('sFermata').value = String(D.fermata);
+    if (D.reverb != null) $('sReverb').value = String(D.reverb); if (typeof D.artic === 'boolean') $('sArtic').checked = D.artic; if (typeof D.stereo === 'boolean') $('sStereo').checked = D.stereo;
+  }
+  soundSummary();
   if (S.speed) { $('speed').value = S.speed; $('speedVal').textContent = $('speed').value + '%'; }
   if (S.ritF) $('ritF').value = S.ritF; if (S.accF) $('accF').value = S.accF;
   const P = S.play || {};
@@ -2608,7 +2697,7 @@ let loadSeq = 0;   // 악보를 읽는 중에 다른 악보를 또 올렸을 때
 function resetEmpty(text) {
   stop(); loadSeq++;   // 읽는 중이던 악보가 있으면 버린다
   // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
-  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false, scoreGeo: null });
+  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set() });
   state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
   state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
@@ -2663,7 +2752,7 @@ async function loadFullPdf(files) {
   files = (Array.isArray(files) ? files : [files]).filter(isPdf);
   if (!files.length) return;
   stop();
-  state.sourceScores = []; state.parts = []; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = [];
+  state.sourceScores = []; state.parts = []; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = []; state.solo = new Set(); state.mute = new Set();
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   state.score = null; renderFileLists();
   showMsg('');
@@ -2870,6 +2959,17 @@ function renderLineList() {
         ci.addEventListener('change', () => { c.nong = ci.checked; changed(); });
         cfg.appendChild(nb);
       }
+      {
+        const pv = document.createElement('div'); pv.className = 'wide'; const pid = 'pan-' + key;
+        pv.innerHTML = `<label class="small" for="${pid}">좌우 위치${typeof c.pan === 'number' ? '' : ' (자동)'}</label><div class="vol"><input type="range" id="${pid}" min="-100" max="100" step="10"><span class="num"></span></div>`;
+        const pin = pv.querySelector('input'), pout = pv.querySelector('span');
+        const lab = v => v === 0 ? '가운데' : `${v < 0 ? '왼' : '오른'} ${Math.abs(v)}`;
+        pin.value = Math.round(panOf(c) * 100); pout.textContent = lab(+pin.value);
+        pin.disabled = !$('sStereo').checked; if (pin.disabled) pv.title = '소리 다듬기에서 좌우 배치를 켜면 바꿀 수 있습니다';
+        pin.addEventListener('input', () => { pout.textContent = lab(+pin.value); });
+        pin.addEventListener('change', () => { c.pan = +pin.value / 100; changed(); });
+        cfg.appendChild(pv);
+      }
       cfg.appendChild(selField('옥타브', [['-2', '두 옥타브 낮게'], ['-1', '한 옥타브 낮게'], ['0', '악보대로'], ['1', '한 옥타브 높게'], ['2', '두 옥타브 높게']], String(c.oct), v => { c.oct = +v; c.octUser = true; changed(); renderLineList(); }));
       if (!c.octUser && c.octAuto) {
         const h = document.createElement('p'); h.className = 'hint wide'; h.style.margin = '0';
@@ -2890,9 +2990,26 @@ function renderLineList() {
       inp.addEventListener('change', () => { c.vol = +inp.value / 100; changed(); });
       cfg.appendChild(v);
     }
-    card.append(top, cv, seg, cfg);
+    let sm = null;
+    if (c.role !== 'off') {
+      sm = document.createElement('div'); sm.className = 'sm-row';
+      const mk = (cls, label, set, other, title) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label; b.title = title;
+        b.setAttribute('aria-pressed', String(set.has(key)));
+        b.addEventListener('click', () => { if (set.has(key)) set.delete(key); else { set.add(key); other.delete(key); } soloChanged(); });
+        return b;
+      };
+      sm.append(mk('solo', '솔로 (이 줄만)', state.solo, state.mute, '이 줄만 들립니다. 여러 줄을 솔로로 하면 그 줄들만. 다시 누르면 원래대로'),
+        mk('mute', '음소거 (이 줄 빼기)', state.mute, state.solo, '이 줄만 잠깐 소리를 끕니다. 다시 누르면 원래대로'));
+      const anySolo = soloActive();
+      if (state.mute.has(key) || (anySolo && !state.solo.has(key))) card.classList.add('silenced');
+    }
+    card.append(top, cv, seg, ...(sm ? [sm] : []), cfg);
     box.appendChild(card);
   });
+  { const ns = state.lineIds.filter(id => state.solo.has(cfgKey(id))).length, nm = state.lineIds.filter(id => state.mute.has(cfgKey(id))).length;
+    $('soloBar').hidden = !(ns || nm);
+    $('soloText').textContent = (ns ? `솔로 ${ns}줄: 그 줄만 들립니다.` : '') + (nm ? ` 음소거 ${nm}줄.` : '') + ' 줄 설정(켜기·음량)은 그대로입니다.'; }
   $('linesCount').textContent = `${state.lineIds.length}줄 켬 · 선율 ${state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role === 'melody').length}`;
   drawPreviews().catch(e => console.warn('미리보기', e));
 }
@@ -2912,6 +3029,8 @@ function lineChanged() {
   if (!state.score) { changed(); return; }   // 악보를 올리기 전의 예시 장단
   applySelection();
 }
+function soloChanged() { changed(); renderLineList(); }
+$('soloClear').addEventListener('click', () => { state.solo.clear(); state.mute.clear(); soloChanged(); });
 $('allOn').addEventListener('click', () => { for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; c.role = c.pitched ? 'melody' : 'perc'; if (c.pitched) ensureInst(c); } lineChanged(); renderLineList(); });
 $('allOff').addEventListener('click', () => { for (const l of state.lineList) state.lineCfg[cfgKey(l.id)].role = 'off'; lineChanged(); renderLineList(); });
 const previewCache = { key: null, pages: {} };
@@ -3004,7 +3123,7 @@ async function loadPartPdfs(files) {
   stop(); showMsg('');
   const my = ++loadSeq;
   const existing = state.score?.isComposite ? state.parts.slice() : [];
-  if (!existing.length) { state.score = null; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = []; renderFileLists(); }
+  if (!existing.length) { state.solo = new Set(); state.mute = new Set(); state.score = null; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = []; renderFileLists(); }
   $('fileName').textContent = '총보를 아직 올리지 않았습니다.'; $('fileInfo').textContent = '파트보를 쓰는 중이라 총보는 비워 두었습니다.';
   $('partsFileName').textContent = `${existing.length + pdfs.length}개 파트보 준비 중`;
   try {
@@ -3065,6 +3184,7 @@ state.lineIds = [null];
 state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
 renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); showExampleLine();
 if (viewMode === 'score') setView('score');
+soundSummary();
 // ---------- 업데이트 이력 창 ----------
 function openHistory() {
   const back = document.createElement('div'); back.className = 'edit-back';

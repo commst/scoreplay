@@ -169,7 +169,7 @@ export function renderPlan(bars, order, opts) {
         const ts = cur + clk(e.t.v);
         const d = (e.sus || e.dur).v;
         const dsec = e.t.v + d <= L + 1e-9 ? clk(e.t.v + d) - clk(e.t.v) : d * s;
-        const midis = e.midis.map(m => m + 12 * (mel.oct || 0));
+        const midis = e.midis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0));   // shift: 조옮김(반음) + 기준음 높이(소수)
         if (e.tie) {
           // 마디를 넘는 붙임줄: 앞 음을 늘린다
           const prev = notes.slice(-40).reverse().find(n => n.line === e.line && n.voice === e.voice && n.midis.some(m => midis.includes(m)) && Math.abs(n.t + n.dur - ts) < 0.06);
@@ -177,8 +177,10 @@ export function renderPlan(bars, order, opts) {
           continue;
         }
         const dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
-        notes.push({ t: ts, inst: mel.inst, midis, dur: dsec, gain: (e.accent ? 0.95 : 0.75) * dl * lg, line: e.line, voice: e.voice,
-          trem: !!e.roll, nong: mel.nong !== false,
+        // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
+        const sdur = e.stacc && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
+        notes.push({ t: ts, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? 0.95 : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
+          trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
           graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0)) : null });
         continue;
       }
@@ -199,7 +201,15 @@ export function renderPlan(bars, order, opts) {
     }
     cur += clk(L);
     const next = order[k + 1];
-    if (b.fermata && next === bi + 1) cur += 1.0;
+    // 늘임표(페르마타): 그 마디 끝에 울리고 있는 선율 음을 opts.fermata박만큼 늘이고 그만큼 쉰다 (기본 2박, 0이면 늘이지 않음)
+    if (b.fermata && (next === bi + 1 || next == null)) {
+      const fb = opts.fermata == null ? 2 : +opts.fermata;
+      const extra = fb > 0 ? fb * UNIT_FRAC[rowFor(b.number).unit] * s : 0;
+      if (extra) {
+        for (let q = notes.length - 1; q >= 0 && notes[q].bi === bi; q--) if (notes[q].t + notes[q].dur >= cur - 0.08) notes[q].dur += extra;
+        cur += extra;
+      }
+    }
   });
   return { hits, notes, barTimes, total: cur + (notes.length ? 2.2 : 1.2), t0 };
 }
@@ -396,14 +406,37 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   }
 }
 
-export function encodeWav(buf) {
-  const n = buf.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab);
+export function encodeWav(buf, bufR = null) {
+  const ch = bufR ? 2 : 1, n = buf.length, bytes = n * 2 * ch, ab = new ArrayBuffer(44 + bytes), v = new DataView(ab);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
-  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, SR, true);
-  v.setUint32(28, SR * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
-  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, buf[i])) * 32767, true);
+  w(0, 'RIFF'); v.setUint32(4, 36 + bytes, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, SR, true);
+  v.setUint32(28, SR * 2 * ch, true); v.setUint16(32, 2 * ch, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, bytes, true);
+  const q = x => Math.max(-1, Math.min(1, x)) * 32767;
+  if (bufR) for (let i = 0, o = 44; i < n; i++, o += 4) { v.setInt16(o, q(buf[i]), true); v.setInt16(o + 2, q(bufR[i]), true); }
+  else for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, q(buf[i]), true);
   return new Uint8Array(ab);
+}
+
+// 잔향(울림): 여러 겹의 되울림 지연선(Freeverb 방식). wet = 울림 크기(0~0.4). 소리가 길어 조금씩 나눠 처리할 수 있게 상태를 들고 있다
+export function makeReverb(wet, stereo) {
+  const sc = SR / 44100, mk = (d, fb, damp) => ({ b: new Float32Array(Math.round(d * sc)), i: 0, fb, damp, lp: 0 });
+  const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, 0.8, 0.3));
+  const alls = sp => [556, 441, 341].map(d => mk(d + sp, 0.5, 0));
+  const chans = [{ c: combs(0), a: alls(0) }, { c: combs(23), a: alls(23) }];
+  const run = (C, x) => {
+    let out = 0;
+    for (const f of C.c) { const y = f.b[f.i]; f.lp = y * (1 - f.damp) + f.lp * f.damp; f.b[f.i] = x + f.lp * f.fb; if (++f.i >= f.b.length) f.i = 0; out += y; }
+    for (const f of C.a) { const y = f.b[f.i]; const o = -out + y; f.b[f.i] = out + y * f.fb; if (++f.i >= f.b.length) f.i = 0; out = o; }
+    return out;
+  };
+  const g = wet * 0.18;   // 지연선 여섯 개를 더한 크기를 맞춘다
+  return {
+    process(L, R, i0, i1) {
+      if (stereo && R) for (let i = i0; i < i1; i++) { const x = (L[i] + R[i]) * 0.5; const yl = run(chans[0], x), yr = run(chans[1], x); L[i] += yl * g; R[i] += yr * g; }
+      else for (let i = i0; i < i1; i++) L[i] += run(chans[0], L[i]) * g;
+    },
+  };
 }
 
 // 압축 없는 zip (파일 하나). 다운로드 허용 형식에 wav가 없어 zip으로 감싼다.

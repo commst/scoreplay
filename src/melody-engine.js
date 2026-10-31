@@ -260,7 +260,9 @@ function rawStream(ins, c, rate, trem, need) {
   return r;
 }
 // 녹음 음 하나를 buf의 t초 자리에 바로 더한다
+const OUT = { R: null, pl: 1, pr: 0 };   // 좌우(입체) 섞기: 오른쪽 버퍼와 왼쪽·오른쪽 크기
 function addSampled(buf, ins, bank, midi, dur, gain, t, opt) {
+  const R = OUT.R, pl = OUT.pl, pr = OUT.pr;
   const { c, trem, rate } = pickClip(bank, midi, dur, opt);
   const sus = ins.kind !== 'pluck' || trem;
   const rel = Math.round((sus ? (trem ? 0.12 : ins.kind === 'piano' ? 0.16 : 0.1) : 0.25) * SR);   // 피아노: 건반을 떼면 댐퍼가 0.16초쯤에 소리를 멈춘다
@@ -274,10 +276,11 @@ function addSampled(buf, ins, bank, midi, dur, gain, t, opt) {
   const st = Math.max(0, -i0), m = Math.min(n, buf.length - i0);
   // 구간별로 나눠 더한다 (표본마다 조건을 따지지 않게)
   const a1 = Math.min(m, Math.max(st, rel0));
-  for (let i = st, o = i0 + st; i < a1; i++, o++) buf[o] += y[i] * g;
+  if (R) for (let i = st, o = i0 + st; i < a1; i++, o++) { const v = y[i] * g; buf[o] += v * pl; R[o] += v * pr; }
+  else for (let i = st, o = i0 + st; i < a1; i++, o++) buf[o] += y[i] * g;
   const a2 = Math.min(m, Math.max(a1, n - tail)), inv = 1 / rel;
-  for (let i = a1, o = i0 + a1; i < a2; i++, o++) { const e = 1 - (i - rel0) * inv; if (e <= 0) break; buf[o] += y[i] * g * e; }
-  if (tail) for (let i = Math.max(st, n - tail), o = i0 + i; i < m; i++, o++) { const e = (i >= rel0 ? Math.max(0, 1 - (i - rel0) * inv) : 1) * (n - 1 - i) / tail; buf[o] += y[i] * g * e; }
+  for (let i = a1, o = i0 + a1; i < a2; i++, o++) { const e = 1 - (i - rel0) * inv; if (e <= 0) break; const v = y[i] * g * e; buf[o] += v * pl; if (R) R[o] += v * pr; }
+  if (tail) for (let i = Math.max(st, n - tail), o = i0 + i; i < m; i++, o++) { const e = (i >= rel0 ? Math.max(0, 1 - (i - rel0) * inv) : 1) * (n - 1 - i) / tail; const v = y[i] * g * e; buf[o] += v * pl; if (R) R[o] += v * pr; }
 }
 
 function sampled(ins, bank, midi, dur, vel, opt) {
@@ -322,10 +325,26 @@ export function synthNote(instKey, midi, dur, vel = 0.8, opt = {}) {
 let cacheSize = 0;
 // 소리를 다 만든 뒤 휴대폰 메모리를 돌려준다
 export function clearNoteCache() { RAW.clear(); rawSize = 0; if (mixNotes.cache) mixNotes.cache.clear(); cacheSize = 0; }
-export function mixNotes(buf, notes, onProgress) {
+// 트릴(떤음): 적힌 음과 위 음(trill = 반음 수)을 빠르게 번갈아 친다. 한 번 치는 길이 약 0.09초
+function expandTrills(notes) {
+  if (!notes.some(n => n.trill)) return notes;
+  const out = [];
+  for (const nt of notes) {
+    if (!nt.trill || nt.dur < 0.12) { out.push(nt); continue; }
+    const step = 0.09, n = Math.max(3, Math.round(nt.dur / step)), st = nt.dur / n;
+    for (let i = 0; i < n; i++) out.push({ ...nt, trill: 0, trem: false, nong: false, graces: i ? null : nt.graces, t: nt.t + i * st, dur: Math.min(st * 1.25, nt.dur - i * st + 0.02),
+      midis: i % 2 ? nt.midis.map(m => m + nt.trill) : nt.midis, gain: nt.gain * (i === 0 ? 1 : 0.85) });
+  }
+  return out;
+}
+// bufR를 주면 좌우 두 줄로 섞는다: 음마다 nt.pan(-1 왼쪽 ~ 1 오른쪽, 같은 힘 법칙. 가운데는 양쪽 1)
+export function mixNotes(buf, notes, onProgress, bufR = null) {
   const cache = mixNotes.cache || (mixNotes.cache = new Map());
+  notes = expandTrills(notes);
   let done = 0;
   for (const nt of notes) {
+    if (bufR) { const a = (Math.max(-1, Math.min(1, nt.pan || 0)) + 1) * Math.PI / 4; OUT.R = bufR; OUT.pl = Math.cos(a) * Math.SQRT2; OUT.pr = Math.sin(a) * Math.SQRT2; }
+    else { OUT.R = null; OUT.pl = 1; OUT.pr = 0; }
     const ins = INSTRUMENTS[nt.inst] || INSTRUMENTS.gayageum;
     const voices = nt.midis.length;
     const bank = ins.bank && BANKS[ins.bank];
@@ -350,9 +369,11 @@ export function mixNotes(buf, notes, onProgress) {
     });
     if (onProgress && (++done % 200 === 0)) onProgress(done / notes.length);
   }
+  OUT.R = null; OUT.pl = 1; OUT.pr = 0;
 }
 function add(buf, s, t, g) {
   const i0 = Math.round(t * SR); if (i0 >= buf.length) return;
-  const st = Math.max(0, -i0), m = Math.min(s.length, buf.length - i0);
-  for (let i = st; i < m; i++) buf[i0 + i] += s[i] * g;
+  const st = Math.max(0, -i0), m = Math.min(s.length, buf.length - i0), R = OUT.R;
+  if (R) { const gl = g * OUT.pl, gr = g * OUT.pr; for (let i = st; i < m; i++) { buf[i0 + i] += s[i] * gl; R[i0 + i] += s[i] * gr; } }
+  else for (let i = st; i < m; i++) buf[i0 + i] += s[i] * g;
 }

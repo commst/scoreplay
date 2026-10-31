@@ -1123,6 +1123,14 @@ export function parseScore(pages, opts = {}) {
         if (c.length) c.reduce((b, n) => Math.hypot(n.x - cx(t), n.y - t.oy) < Math.hypot(b.x - cx(t), b.y - t.oy) ? n : b).tremolo = true;
       }
 
+      {
+        const spS = (st.bottom - st.top) / 4 || 2.5;
+        for (const d of sg.filter(g => g.code === 46)) {
+          if (headNotes.some(n => Math.abs(n.y - d.oy) < spS * 0.5 && cx(d) - n.x > spS * 0.6 && cx(d) - n.x < spS * 2.6)) continue;   // 부점(음표 오른쪽 같은 높이의 점)
+          const c = headNotes.filter(n => !n.grace && Math.abs(n.x - cx(d)) < spS * 0.9 && Math.abs(n.y - d.oy) > spS * 0.8 && Math.abs(n.y - d.oy) < spS * 3.2);
+          if (c.length) c.reduce((b, n) => Math.abs(n.y - d.oy) < Math.abs(b.y - d.oy) ? n : b).staccato = true;
+        }
+      }
       for (const a of sg.filter(g => g.code === ACCENT)) {
         const voice = a.oy < st.mid ? 'R' : 'L';
         const c = headNotes.filter(n => n.voice === voice && !n.grace && Math.abs(n.x - cx(a)) < 5);
@@ -1262,6 +1270,8 @@ export function parseScore(pages, opts = {}) {
             const key = keyAt(n.x);
             const alt = d in barAcc ? barAcc[d] : (key[d % 7] || 0);
             n.midi = 12 * (Math.floor(d / 7) + 1) + SEMI[((d % 7) + 7) % 7] + alt;
+            const d1 = d + 1, alt1 = d1 in barAcc ? barAcc[d1] : (key[d1 % 7] || 0);
+            n.upInt = 12 * (Math.floor(d1 / 7) + 1) + SEMI[((d1 % 7) + 7) % 7] + alt1 - n.midi;   // 트릴(떤음)로 오갈 위 음까지의 반음 수
           }
         }
         // 다음 단으로 넘길 상태 (끝의 음자리표·조표)
@@ -1621,10 +1631,12 @@ function timing(m, barLen) {
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
-    if (ex) { ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
+    if (ex) { ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
     if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); }
+    if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
+    if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
     seen.set(key, ev); evs.push(ev);
   }
   evs.sort((a, b) => a.t.v - b.t.v);
