@@ -24,8 +24,8 @@ const env = (t, atk, dec) => (atk > 0 && t < atk ? t / atk : 1) * Math.exp(-t / 
 
 // 북을 "때리는" 소리로: 스피커가 못 내는 아주 낮은 소리(70Hz 아래)는 줄여 자리(최대 크기)를 비우고,
 // 가죽 울림(150Hz~1.5kHz)을 키우고, 채가 닿는 순간의 딱 소리(1.5~5kHz, 몇 ms)를 더한다. 최댓값 1로 맞춤
-function bukPunch(y, mid, click, seed) {
-  let z = biquad(biquad(y, 'hp', 70), 'hp', 70);
+function bukPunch(y, mid, click, seed, hp = 70) {
+  let z = biquad(biquad(y, 'hp', hp), 'hp', hp);
   let m = biquad(biquad(y, 'hp', 150), 'hp', 150); m = biquad(m, 'lp', 1500);
   let pk = 0; for (const v of y) pk = Math.max(pk, Math.abs(v));
   let on = 0; while (on < y.length && Math.abs(y[on]) < pk * 0.1) on++;
@@ -91,7 +91,7 @@ const JG = 2.0, BK = 1.4;
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.8;
 const BUK_MID = 4, BUK_CLICK = 0.6;
-const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.8 * BK, '북녹음': 2.6 * BK, '북짧게': 2.0 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
+const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.8 * BK, '북녹음': 2.6 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -504,6 +504,10 @@ export function decodeRecorded(obj) {
     return z;
   });
   // 북 녹음도 소리가 거의 100Hz 아래라 작은 스피커에서 잘 안 들리고 힘이 없다 → bukPunch (가죽 울림·채 소리 살리기)
-  for (const k of ['북녹음', '북짧게']) if (out[k]) out[k] = out[k].map((y, n) => bukPunch(y, BUK_MID, BUK_CLICK, 26 + n));
+  // 두 녹음이 같은 음색으로 들리지 않게: 낮고 길게는 큰북답게 낮은 울림(55Hz 근처)을 남기고 채 소리는 약하게,
+  // 짧게는 작은북답게 반음 7개 높이고(약 165Hz, 악보 윗부분 음표 = 높은 북) 가죽·채 소리를 더 또렷하게
+  const up = (y, r) => { const n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; };
+  if (out['북녹음']) out['북녹음'] = out['북녹음'].map((y, n) => bukPunch(y, 2.5, 0.4, 26 + n, 35));
+  if (out['북짧게']) out['북짧게'] = out['북짧게'].map((y, n) => bukPunch(up(y, Math.pow(2, 7 / 12)), BUK_MID, 1.0, 28 + n, 110));
   return out;
 }
