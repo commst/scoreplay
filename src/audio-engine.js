@@ -165,6 +165,18 @@ export function renderPlan(bars, order, opts) {
     return w => { const x = Math.max(0, Math.min(N, w / L * N)), k = Math.min(N - 1, Math.floor(x)); return cum[k] + (cum[k + 1] - cum[k]) * (x - k); };
   };
   const dynAt = p => opts.dyn ? dynLevelAt(opts.dyn, p) / 0.75 : 1;
+  // 모듬북처럼 두 성부 모두 북 소리인 줄: 성부보다 오선 위 자리(ev.pos)로 북을 고른다 (자리마다 다른 북)
+  //  가장 많이 친 자리 = 기본 북(아랫성부 소리), 그보다 위로 갈수록 높은 북(2칸 위부터 윗성부 소리), 아래로 가면 더 낮게
+  const BUKS = new Set(['북', '북녹음', '북짧게']), bukRef = {};
+  const keyOf = (line, v) => (line != null ? opts.sounds[line + ':' + v] : undefined) ?? opts.sounds[v];
+  for (const b of bars) for (const e of b.events) {
+    if (e.line == null || e.pos == null || e.tie || (opts.melodic && opts.melodic[e.line] && e.midis)) continue;
+    if (!(BUKS.has(keyOf(e.line, 'R')) && BUKS.has(keyOf(e.line, 'L')))) continue;
+    const c = bukRef[e.line] || (bukRef[e.line] = {}); c[e.pos] = (c[e.pos] || 0) + 1;
+  }
+  for (const l of Object.keys(bukRef)) { const c = bukRef[l]; bukRef[l] = +Object.keys(c).reduce((a, b) => c[b] > c[a] ? b : a); }
+  let hum = 12345;   // 사람이 치는 것처럼 세기·때를 조금씩 흔든다 (늘 같은 결과가 나오게 정해진 난수)
+  const rnd = () => { hum = (hum * 1664525 + 1013904223) >>> 0; return hum / 4294967296 * 2 - 1; };
   // 쉬는 마디: 칠 음이 없는 마디(롤이 이어지는 마디는 제외). 연주 순서에서 연속된 묶음마다 몇 번째인지
   const isRest = bi => !bars[bi].events.length && bars[bi].kind !== 'rollext' && bars[bi].note !== '롤 연장';
   const restInfo = order.map(() => null);
@@ -215,10 +227,22 @@ export function renderPlan(bars, order, opts) {
         continue;
       }
       if (e.tie) continue;
-      const key = (e.line != null ? opts.sounds[e.line + ':' + e.voice] : undefined) ?? opts.sounds[e.voice];
+      let key = (e.line != null ? opts.sounds[e.line + ':' + e.voice] : undefined) ?? opts.sounds[e.voice];
       if (!key || key === 'off' || lg <= 0) continue;
-      const ts = cur + clk(e.t.v);
-      const dl = (opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L)) * lg;
+      let ts = cur + clk(e.t.v);
+      let dl = (opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L)) * lg;
+      let sh = 0;
+      if (BUKS.has(key)) {
+        if (e.line != null && bukRef[e.line] != null && e.pos != null) {
+          const d = bukRef[e.line] - e.pos;   // 기본 북보다 몇 칸 위
+          if (d >= 2) { key = keyOf(e.line, 'R'); sh = Math.max(-6, Math.min(6, 2 * (d - 4))); }
+          else { key = keyOf(e.line, 'L'); sh = Math.max(-6, Math.min(6, 2 * d)); }
+        }
+        // 박 머리는 그대로, 박 사이 음은 조금 여리게 + 세기 ±7%, 때 ±3ms (빠르게 몰아칠 때 기계 소리처럼 들리지 않게)
+        const u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
+        dl *= (onBeat ? 1 : 0.88) * (1 + 0.07 * rnd());
+        if (!e.roll && !e.grace) ts += 0.003 * rnd();
+      }
       if (e.roll) {
         const rd = e.rollDur ? e.rollDur.v : e.dur.v;
         const dur = rd <= L - e.t.v + 1e-9 ? clk(e.t.v + rd) - clk(e.t.v) : rd * s / (tempoItems ? tempoFactorAt(tempoItems, bi + e.t.v / L, resets, ritF, accF) : 1);
@@ -226,8 +250,9 @@ export function renderPlan(bars, order, opts) {
         hits.push([ts, key, (e.accent ? 0.9 : 0.75) * dl, e.voice, { roll: Math.max(0.08, dur) }]);
         continue;
       }
-      for (let gi = 0; gi < e.grace; gi++) hits.push([ts - 0.055 * (e.grace - gi), key, 0.68 * dl, e.voice, { grace: gi + 1, of: e.grace }]);
-      hits.push([ts, key === '꽹과리' && e.accent ? '꽹과리길게' : key, (e.accent ? 1.0 : 0.68) * dl, e.voice, e.accent ? { acc: true } : undefined]);
+      for (let gi = 0; gi < e.grace; gi++) hits.push([ts - 0.055 * (e.grace - gi), key, 0.68 * dl, e.voice, sh ? { grace: gi + 1, of: e.grace, sh } : { grace: gi + 1, of: e.grace }]);
+      const ex = e.accent ? { acc: true } : undefined;
+      hits.push([ts, key === '꽹과리' && e.accent ? '꽹과리길게' : key, (e.accent ? 1.0 : 0.68) * dl, e.voice, sh ? { ...ex, sh } : ex]);
     }
     cur += clk(L);
     const next = order[k + 1];
@@ -244,6 +269,15 @@ export function renderPlan(bars, order, opts) {
   return { hits, notes, barTimes, total: cur + (notes.length ? 2.2 : 1.2), t0 };
 }
 
+// 북 높이 바꾸기(반음 sh개): 녹음을 빠르게/느리게 읽는다. 한 번 만든 것은 다시 쓴다
+const pitchCache = new WeakMap();
+function pitched(y, sh) {
+  let m = pitchCache.get(y); if (!m) pitchCache.set(y, m = new Map());
+  if (m.has(sh)) return m.get(sh);
+  const r = Math.pow(2, sh / 12), n = Math.floor(y.length / r), z = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; }
+  m.set(sh, z); return z;
+}
 export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   custom = custom || {};
   const S = { ...sounds, ...custom };
@@ -269,10 +303,11 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   const vary = {};
   let lastTa = -9, flip = 0;
   // 북·바라·심벌·베이스드럼은 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
-  const fam = k => k === '북녹음' || k === '북짧게' ? 'b' : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : null;
+  // 같은 악기(같은 북)를 다시 치면 앞 소리의 울림을 줄인다. 높이가 다른 북·다른 북 소리끼리는 서로 끊지 않는다
+  const fam = (k, ex) => k === '북녹음' || k === '북짧게' || k === '북' ? k + ':' + ((ex && ex.sh) || 0) : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : null;
   const nextSame = new Float64Array(hits.length).fill(Infinity);
   { const ord = hits.map((_, i) => i).sort((a, b) => hits[a][0] - hits[b][0]), last = {};
-    for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1]); if (!f) continue;
+    for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1], hits[i][4]); if (!f) continue;
       if (last[f] != null && last[f] - hits[i][0] > 0.02) nextSame[i] = last[f];   // 동시에 친 두 성부는 그대로 둔다
       if (last[f] == null || last[f] - hits[i][0] > 0.02) last[f] = hits[i][0]; } }
   for (let hi = 0; hi < hits.length; hi++) {
@@ -297,13 +332,15 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
     let s = S[k];
     if (Array.isArray(s)) { vary[k] = (vary[k] || 0) + 1; s = s[vary[k] % s.length]; }
     if (!s) continue;
+    if (extra && extra.sh) s = pitched(s, extra.sh);
     const i0 = Math.round(t * SR);
     if (i0 < 0) continue;
     let m = Math.min(s.length, n - i0);
     const gain = gg * (GAIN[key] || 1);
     const nx = nextSame[hi];
     if (nx < Infinity) {
-      const keep = Math.round(((nx - t) + 0.06) * SR), fade = Math.round(0.06 * SR);
+      const isBuk = key === '북' || key === '북녹음' || key === '북짧게';   // 북은 다시 쳐도 앞 울림이 조금 남는다
+      const fs = isBuk ? 0.12 : 0.06, keep = Math.round(((nx - t) + fs) * SR), fade = Math.round(fs * SR);
       if (keep < m) { m = keep; const f0 = m - fade;
         for (let i = 0; i < m; i++) buf[i0 + i] += s[i] * gain * (i < f0 ? 1 : (m - i) / fade);
         continue; }

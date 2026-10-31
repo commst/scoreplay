@@ -999,7 +999,7 @@ export function parseScore(pages, opts = {}) {
 
       const stemsOf = g => stems.filter(v => g.x0 - 1.2 <= v[0] && v[0] <= g.x1 + 1.2 && v[1] - 3 <= g.oy && g.oy <= v[2] + 3);
       const makeNote = (g, isRest, forceStem = null, forceDots = null) => {
-        const n = { voice: g.oy < st.mid ? 'R' : 'L', x: cx(g), y: g.oy, rest: isRest, grace: g.size < smallSize, accent: false, tied: false, roll: false, tuplet: false, dur: ZERO };
+        const n = { voice: g.oy < st.mid ? 'R' : 'L', x: cx(g), y: g.oy, pos: staffSp > 0 ? Math.round((g.oy - st.mid) / (staffSp / 2)) : 0, rest: isRest, grace: g.size < smallSize, accent: false, tied: false, roll: false, tuplet: false, dur: ZERO };
         if (isRest) {
           n.dur = { [REST_Q]: F(1, 4), [REST_8]: F(1, 8), [REST_16]: F(1, 16), [REST_32]: F(1, 32), [REST_HALF]: F(1, 2), [REST_WHOLE]: F(1) }[g.code];
           if (g.code === REST_WHOLE) n.wholeRest = true;
@@ -1633,6 +1633,7 @@ function timing(m, barLen) {
     const ex = seen.get(key);
     if (ex) { ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
+    if (n.pos != null) ev.pos = n.pos;   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
     if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); }
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
