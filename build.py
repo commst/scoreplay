@@ -9,7 +9,7 @@ strip = lambda s: re.sub(r'^import .*\n', '', re.sub(r'^export ', '', s, flags=r
 banks = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(ROOT, 'banks', '*.json')))
 meta = {n: json.load(open(os.path.join(ROOT, 'banks', n + '.json'))) for n in banks}
 ranges = {n: [min(c[1] for c in m), max(c[1] for c in m)] for n, m in meta.items()}
-parser = '\n'.join(strip(src(f)) for f in ['outline-templates.js', 'outline-glyphs.js', 'score-parser.js'])
+parser = '\n'.join(strip(src(f)) for f in ['outline-templates.js', 'outline-glyphs.js', 'score-parser.js', 'musicxml.js'])
 import datetime
 # 판 번호(한국 시각). 화면 아래에 보이고, 웹 주소에서는 version.json과 견줘 새 판 알림을 띄운다
 VER = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')

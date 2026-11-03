@@ -670,10 +670,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <section class="drop" id="drop">
       <div class="file">
         <strong id="fileName">총보를 아직 추가하지 않았습니다.</strong>
-        <span id="fileInfo">총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.</span>
+        <span id="fileInfo">총보 PDF(또는 MusicXML)를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.</span>
       </div>
       <label class="btn primary" for="pdfInput">총보 추가</label>
-      <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
+      <input type="file" id="pdfInput" accept="application/pdf,.pdf,.musicxml,.mxl,.xml,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" multiple hidden>
     </section>
     <ul id="fullFileList" class="flist" aria-label="올린 총보"></ul>
     <div class="extra" id="extraBox">
@@ -681,7 +681,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <div class="file"><strong>악보 추가</strong>
           <span id="extraInfo">총보를 먼저 올리면 총보에 없는 악기를 추가할 수 있습니다. 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있습니다.</span></div>
         <label class="btn primary" for="extraInput">악보 추가</label>
-        <input type="file" id="extraInput" accept="application/pdf,.pdf" multiple hidden>
+        <input type="file" id="extraInput" accept="application/pdf,.pdf,.musicxml,.mxl,.xml,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" multiple hidden>
       </div>
       <ul id="extraFileList" class="flist" aria-label="추가한 악보"></ul>
     </div>
@@ -695,7 +695,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <span id="partsFileInfo">PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.</span>
       </div>
       <label class="btn primary" for="partsInput">파트보 추가</label>
-      <input type="file" id="partsInput" accept="application/pdf,.pdf" multiple hidden>
+      <input type="file" id="partsInput" accept="application/pdf,.pdf,.musicxml,.mxl,.xml,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" multiple hidden>
     </section>
     <ul id="partsFileList" class="flist" aria-live="polite" aria-label="올린 파트보"></ul>
     </section>
@@ -741,6 +741,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
   <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
+      <dt>MusicXML 올리기</dt>
+      <dd>PDF 말고 <b>MusicXML</b>(.musicxml, .xml, 압축된 .mxl) 파일도 총보·파트보·악보 추가 칸에 그대로 올릴 수 있습니다. 뮤즈스코어·도리코·시벨리우스·피날레에서 '내보내기 → MusicXML'로 만든 파일입니다. 음 높이·길이·빠르기·셈여림·도돌이표·연습 번호가 파일에 그대로 들어 있어 PDF처럼 잘못 읽는 일이 없습니다. 파트(악기)마다 한 줄이고, 피아노처럼 오선이 둘인 파트는 윗줄·아랫줄로 나뉩니다. 쪽 그림이 없어 악보로 보기는 안 되고 마디맵으로 봅니다. PDF와 섞어 올려도 됩니다.</dd>
       <dt>1. 올리기</dt>
       <dd>총보 PDF를 올리면 악보를 읽은 뒤 <b>악기 선택</b> 칸에 악보 줄이 위에서부터 차례로 나옵니다. 줄마다 악보에 적힌 이름과 그 줄의 첫 단 그림이 보입니다. 이름이 잘리거나 없으면 그림으로 확인하세요. 같은 카드의 <b>악보 추가</b>로 총보에 없는 악기(피아노·건반 등)의 악보를 더 올려 함께 연주할 수 있습니다. 총보에 있는 악기를 파트보로 바꾸고 싶으면, 악기 선택에서 그 줄을 <b>끄기</b>로 하고 그 악기의 파트보를 악보 추가로 올리면 됩니다(총보의 줄 대신 파트보 줄이 연주됨).</dd>
       <dt>2. 줄마다 역할 정하기</dt>
@@ -1145,6 +1147,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>MusicXML 올리기</b>: PDF와 함께 MusicXML(.musicxml·.xml·.mxl) 파일도 총보·파트보·악보 추가 칸에 올릴 수 있습니다. 음 높이·길이·빠르기·셈여림·도돌이표·연습 번호를 그대로 읽어 인식 오류가 없음(악보로 보기는 PDF만)</li>
     <li><b>내 파트만 크게 보기</b>: 악보로 보기의 '보기'에서 켠 줄 하나를 고르면 그 줄 오선만 잘라 위아래로 이어 보여 줍니다. 연주 위치 표시·마디 누르기·음 고치기도 그대로</li>
     <li><b>테누토</b>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</li>
     <li><b>MIDI·MusicXML 저장</b>: 연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</li>
@@ -3656,6 +3659,264 @@ async function analyzePdf(pdfjs, data) {
   return { ...r, partName: score.partName, title: score.title, pages: score.pages.length, numPages: score.numPages, maestroCount: score.maestroCount, lines: score.lines };
 }
 
+// MusicXML(.musicxml·.xml·.mxl) 읽기: 뮤즈스코어·도리코·시벨리우스·피날레에서 내보낸 악보 파일을
+// PDF를 읽은 것과 같은 모양(마디 목록·이벤트·빠르기·셈여림·도돌이표·연습 번호)으로 바꾼다. 음 높이·길이가 파일에 그대로 있어 인식 오류가 없다.
+
+// ---------- 작은 XML 해석기 (브라우저·Node 공통, 외부 도구 없이) ----------
+function mxParseXml(text) {
+  const root = { name: '#root', attrs: {}, children: [], text: '' };
+  const stack = [root];
+  const re = /<!\[CDATA\[([\s\S]*?)\]\]>|<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!DOCTYPE[\s\S]*?(?:\[[\s\S]*?\])?\s*>|<\/([^\s>]+)\s*>|<([^\s/>!?]+)((?:\s+[^\s=/>]+\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>|([^<]+)/g;
+  const ent = s => s.replace(/&(lt|gt|amp|quot|apos|#\d+|#x[0-9a-f]+);/gi, (m, e) => e === 'lt' ? '<' : e === 'gt' ? '>' : e === 'amp' ? '&' : e === 'quot' ? '"' : e === 'apos' ? "'" : String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)));
+  let m;
+  while ((m = re.exec(text))) {
+    const top = stack[stack.length - 1];
+    if (m[1] != null) top.text += m[1];
+    else if (m[2]) { if (stack.length > 1) stack.pop(); }
+    else if (m[3]) {
+      const attrs = {}; const ar = /([^\s=/>]+)\s*=\s*("([^"]*)"|'([^']*)')/g; let a;
+      while ((a = ar.exec(m[4] || ''))) attrs[a[1]] = ent(a[3] != null ? a[3] : a[4]);
+      const el = { name: m[3], attrs, children: [], text: '' };
+      top.children.push(el);
+      if (!m[5]) stack.push(el);
+    } else if (m[6] != null) top.text += ent(m[6]);
+  }
+  return root;
+}
+const mxKids = (el, name) => el ? el.children.filter(c => c.name === name) : [];
+const mxKid = (el, name) => el ? el.children.find(c => c.name === name) : null;
+const mxTxt = (el, name) => { const c = name ? mxKid(el, name) : el; return c ? c.text.trim() : ''; };
+const mxNum = (el, name, d = null) => { const t = mxTxt(el, name); return t !== '' && !isNaN(+t) ? +t : d; };
+
+// ---------- .mxl(압축) 풀기 ----------
+async function mxInflateRaw(bytes) {
+  if (typeof DecompressionStream === 'undefined') {
+    try { const zlib = await import('node:zlib'); return new Uint8Array(zlib.inflateRawSync(bytes)); } catch (e) { throw new Error('이 브라우저는 압축된 MusicXML(.mxl)을 풀 수 없습니다. 압축하지 않은 .musicxml로 내보내 주세요.'); }
+  }
+  const ds = new DecompressionStream('deflate-raw');
+  const out = new Response(new Blob([bytes]).stream().pipeThrough(ds));
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function mxUnzip(bytes) {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), files = {};
+  let eocd = -1; for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('압축 파일(.mxl)을 열 수 없습니다.');
+  const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
+  for (let k = 0; k < n; k++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(bytes.subarray(p + 46, p + 46 + nl));
+    const lnl = dv.getUint16(lho + 26, true), lel = dv.getUint16(lho + 28, true), start = lho + 30 + lnl + lel;
+    const raw = bytes.subarray(start, start + csize);
+    files[name] = { method, raw };
+    p += 46 + nl + el + cl;
+  }
+  const get = async name => { const f = files[name]; if (!f) return null; return f.method === 0 ? f.raw : await mxInflateRaw(f.raw); };
+  return { names: Object.keys(files), get };
+}
+const mxDecodeText = bytes => {
+  let enc = 'utf-8';
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) enc = 'utf-16le'; else if (bytes[0] === 0xfe && bytes[1] === 0xff) enc = 'utf-16be';
+  return new TextDecoder(enc).decode(bytes);
+};
+function isMusicXmlName(name) { return /\.(musicxml|mxl|xml)$/i.test(name || ''); }
+
+// ---------- 읽기 ----------
+const MX_STEP = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const mxF = (n, d = 1) => new Fr(n, d);
+async function loadMusicXml(bytes, fileName = '') {
+  let text;
+  if (bytes[0] === 0x50 && bytes[1] === 0x4b) {   // ZIP = .mxl
+    const z = await mxUnzip(bytes);
+    const c = await z.get('META-INF/container.xml');
+    let path = null;
+    if (c) { const r = mxKid(mxKid(mxParseXml(mxDecodeText(c)), 'container'), 'rootfiles'); const rf = r && mxKid(r, 'rootfile'); path = rf && rf.attrs['full-path']; }
+    if (!path) path = z.names.find(n => /\.(musicxml|xml)$/i.test(n) && !/^META-INF\//.test(n));
+    const b = path && await z.get(path); if (!b) throw new Error('압축 파일(.mxl) 안에서 악보를 찾지 못했습니다.');
+    text = mxDecodeText(b);
+  } else text = mxDecodeText(bytes);
+  const doc = mxParseXml(text);
+  const sp = mxKid(doc, 'score-partwise');
+  if (!sp) throw new Error(mxKid(doc, 'score-timewise') ? '마디 단위(timewise) MusicXML은 아직 읽지 못합니다. 악보 프로그램에서 보통 MusicXML로 다시 내보내 주세요.' : 'MusicXML 악보가 아닙니다.');
+  const title = mxTxt(mxKid(sp, 'work'), 'work-title') || mxTxt(sp, 'movement-title') || (mxKids(mxKid(sp, 'credit'), 'credit-words')[0] || { text: '' }).text.trim() || fileName.replace(/\.(musicxml|mxl|xml)$/i, '');
+  const names = {};
+  for (const p of mxKids(mxKid(sp, 'part-list'), 'score-part')) names[p.attrs.id] = mxTxt(p, 'part-name') || mxTxt(p, 'part-abbreviation') || mxTxt(mxKid(p, 'score-instrument'), 'instrument-name') || p.attrs.id;
+  const parts = mxKids(sp, 'part').map(p => mxReadPart(p, names[p.attrs.id] || p.attrs.id));
+  // 모든 파트의 마디 수를 같게 (짧은 파트는 쉬는 마디로 채움)
+  const n = Math.max(0, ...parts.map(p => p.measures.length));
+  for (const p of parts) while (p.measures.length < n) { const last = p.measures[p.measures.length - 1]; p.measures.push({ ...mxBlankMeasure(last ? last.timesig : [4, 4]), number: p.measures.length + 1 }); }
+  // 빠르기·빠르기 말(rit. 등)·연습 번호·도돌이 지시는 보통 맨 위 파트에만 적는다 → 모든 줄에 함께 쓴다
+  const glob = Array.from({ length: n }, (_, i) => {
+    const withT = parts.find(p => p.measures[i] && p.measures[i].tempo.length);
+    const words = []; const seenW = new Set();
+    for (const p of parts) for (const w of (p.measures[i] ? p.measures[i].words : [])) if (/^(rit|rall|allarg|slent|accel|string|a tempo|in tempo|tempo i|tempo primo)|점점\s*(느리게|빠르게)|D\.\s?S|D\.\s?C|dal\s*segno|da\s*capo|^fine|to\s*coda/i.test(w.text) && !seenW.has(w.text)) { seenW.add(w.text); words.push(w); }
+    const reh = [...new Set(parts.flatMap(p => p.measures[i] ? p.measures[i].rehearsal : []))];
+    const flags = {}; for (const p of parts) { const f = p.measures[i] && p.measures[i].flags; if (f) for (const k of ['segno', 'coda', 'ds', 'dc', 'fine', 'toCoda', 'repeatStart', 'repeatEnd']) if (f[k]) flags[k] = true; if (f && f.volta && !flags.volta) flags.volta = f.volta; }
+    return { tempo: withT ? withT.measures[i].tempo : [], words, rehearsal: reh, flags };
+  });
+  // 줄: 파트의 오선마다 하나 (큰보표 = 윗줄·아랫줄)
+  const lines = [];
+  parts.forEach((p, pi) => {
+    for (let s = 1; s <= p.staves; s++) {
+      const label = p.staves > 1 ? `${p.name} (${p.staves === 2 ? (s === 1 ? '윗줄' : '아랫줄') : s + '번째 줄'})` : p.name;
+      lines.push({ id: lines.length, name: p.name, label, clef: p.perc ? 'perc' : 'pitched', oneLine: false, first: null, count: n, part: pi, staff: s });
+    }
+  });
+  if (!lines.length) throw new Error('MusicXML에 파트가 없습니다.');
+  const sc = { xml: true, xmlParts: parts, xmlGlobal: glob, title, partName: lines.length === 1 ? lines[0].name : '', lines: lines.length > 1 ? lines : [], xmlLines: lines, isFull: lines.length > 1,
+    numPages: 0, maestroCount: 1, pages: [], layouts: [], doc: null, fileName };
+  return sc;
+}
+function mxBlankMeasure(ts) { return { timesig: ts, len: mxF(ts[0], ts[1]), notes: [], dyn: [], tempo: [], words: [], rehearsal: [], flags: {} }; }
+
+function mxReadPart(p, name) {
+  let div = 1, ts = [4, 4], staves = 1, transpose = 0, perc = false;
+  const measures = [];
+  for (const me of mxKids(p, 'measure')) {
+    const at = mxKid(me, 'attributes');
+    const M = { ...mxBlankMeasure(ts), number: measures.length + 1, implicit: me.attrs.implicit === 'yes' };
+    let cur = 0, maxT = 0, lastStart = 0; const graceBuf = {};
+    let tsChanged = false;
+    const step = el => {
+      if (el.name === 'attributes') {
+        div = mxNum(el, 'divisions', div);
+        const t = mxKid(el, 'time'); if (t && mxNum(t, 'beats') && mxNum(t, 'beat-type')) { const nts = [parseInt(mxTxt(t, 'beats')) || 4, mxNum(t, 'beat-type')]; if (nts.join('/') !== ts.join('/') || !measures.length) tsChanged = true; ts = nts; }
+        staves = Math.max(staves, mxNum(el, 'staves', 1));
+        const tr = mxKid(el, 'transpose'); if (tr) transpose = mxNum(tr, 'chromatic', 0) + 12 * mxNum(tr, 'octave-change', 0);
+        for (const c of mxKids(el, 'clef')) if (mxTxt(c, 'sign') === 'percussion') perc = true;
+      } else if (el.name === 'backup') cur -= mxNum(el, 'duration', 0);
+      else if (el.name === 'forward') { cur += mxNum(el, 'duration', 0); maxT = Math.max(maxT, cur); }
+      else if (el.name === 'note') {
+        const chord = !!mxKid(el, 'chord'), grace = !!mxKid(el, 'grace'), rest = !!mxKid(el, 'rest');
+        const d = grace ? 0 : mxNum(el, 'duration', 0);
+        const start = chord ? lastStart : cur;
+        const voice = mxTxt(el, 'voice') || '1', staff = mxNum(el, 'staff', 1);
+        let midi = null;
+        const pt = mxKid(el, 'pitch'), un = mxKid(el, 'unpitched');
+        if (pt) midi = (mxNum(pt, 'octave', 4) + 1) * 12 + MX_STEP[mxTxt(pt, 'step')] + mxNum(pt, 'alter', 0) + transpose;
+        if (un) perc = true;
+        const disp = un ? (mxNum(un, 'display-octave', 4) + 1) * 7 + 'CDEFGAB'.indexOf(mxTxt(un, 'display-step')) : null;   // 타악 음표 높이(성부 나누기용)
+        const nots = mxKids(el, 'notations');
+        const has = (grp, n) => nots.some(x => mxKids(x, grp).some(g => mxKid(g, n)));
+        const tieStop = mxKids(el, 'tie').some(t => t.attrs.type === 'stop') || nots.some(x => mxKids(x, 'tied').some(t => t.attrs.type === 'stop'));
+        if (grace) { if (midi != null && !rest) (graceBuf[voice + '|' + staff] = graceBuf[voice + '|' + staff] || []).push(Math.round(midi)); }
+        else if (!rest) M.notes.push({ t: start, d, midi: midi != null ? Math.round(midi) : null, voice, staff, stem: mxTxt(el, 'stem'), disp, chord,
+          accent: has('articulations', 'accent') || has('articulations', 'strong-accent'), stacc: has('articulations', 'staccato') || has('articulations', 'staccatissimo'),
+          ten: has('articulations', 'tenuto'), trill: has('ornaments', 'trill-mark') || has('ornaments', 'wavy-line'), trem: has('ornaments', 'tremolo'),
+          xh: mxTxt(el, 'notehead') === 'x', tieStop, graces: graceBuf[voice + '|' + staff] || null });
+        if (!grace && !rest && graceBuf[voice + '|' + staff]) delete graceBuf[voice + '|' + staff];
+        if (nots.some(x => mxKid(x, 'fermata')) || mxKid(el, 'fermata')) M.flags.fermata = true;
+        if (!chord && !grace) { lastStart = cur; cur += d; maxT = Math.max(maxT, cur); }
+      } else if (el.name === 'direction') {
+        const off = cur + mxNum(el, 'offset', 0), staff = mxNum(el, 'staff', 1);
+        for (const dt of mxKids(el, 'direction-type')) {
+          for (const dy of mxKids(dt, 'dynamics')) for (const c of dy.children) if (DYN_LEVEL[c.name] != null || /^(sfz|sf|fz|sffz|fp|sfp|rfz)$/.test(c.name)) M.dyn.push({ t: off, staff, label: c.name });
+          const w = mxKid(dt, 'wedge'); if (w) M.dyn.push({ t: off, staff, wedge: w.attrs.type });
+          const mt = mxKid(dt, 'metronome');
+          if (mt) { const bu = mxTxt(mt, 'beat-unit'), pm = parseFloat(mxTxt(mt, 'per-minute')); if (pm > 0) M.tempo.push({ t: off, unit: bu, dotted: !!mxKid(mt, 'beat-unit-dot'), bpm: pm }); }
+          for (const wd of mxKids(dt, 'words')) M.words.push({ t: off, text: wd.text.trim() });
+          for (const r of mxKids(dt, 'rehearsal')) M.rehearsal.push(r.text.trim());
+          if (mxKid(dt, 'segno')) M.flags.segno = true;
+          if (mxKid(dt, 'coda')) M.flags.coda = true;
+        }
+        const snd = mxKid(el, 'sound');
+        if (snd) { if (snd.attrs.tempo && !mxKids(el, 'direction-type').some(dt => mxKid(dt, 'metronome'))) M.tempo.push({ t: off, unit: 'quarter', bpm: +snd.attrs.tempo, fromSound: true });
+          if (snd.attrs.dalsegno) M.flags.ds = true; if (snd.attrs.dacapo === 'yes') M.flags.dc = true; if (snd.attrs.fine) M.flags.fine = true; if (snd.attrs.tocoda) M.flags.toCoda = true; }
+      } else if (el.name === 'sound') {
+        if (el.attrs.tempo) M.tempo.push({ t: cur, unit: 'quarter', bpm: +el.attrs.tempo, fromSound: true });
+      } else if (el.name === 'barline') {
+        const rp = mxKid(el, 'repeat'); if (rp) { if (rp.attrs.direction === 'forward') M.flags.repeatStart = true; else M.flags.repeatEnd = true; }
+        const en = mxKid(el, 'ending'); if (en && en.attrs.type === 'start') M.flags.volta = (en.attrs.number || '1').split(/[,\s]+/).map(Number).filter(x => x > 0);
+        if (mxKid(el, 'segno')) M.flags.segno = true; if (mxKid(el, 'coda')) M.flags.coda = true;
+      }
+    };
+    for (const el of me.children) step(el);
+    M.div = div; M.ts = ts.slice(); M.tsChanged = tsChanged;
+    const tsLen = mxF(ts[0], ts[1]);
+    // 못갖춘마디(implicit) 등 박자표보다 짧은 마디는 실제 길이로
+    const contentLen = div > 0 ? mxF(Math.round(maxT), div * 4) : tsLen;
+    M.len = M.implicit && contentLen.v > 0 && contentLen.lt(tsLen) ? contentLen : tsLen;
+    M.timesig = ts.slice();
+    measures.push(M);
+  }
+  return { name, measures, staves, perc };
+}
+
+// 줄 하나를 마디 목록으로 (PDF 해석 결과와 같은 모양)
+function analyzeXmlLine(sc, line = null) {
+  const L = sc.xmlLines[line == null ? 0 : line]; const P = sc.xmlParts[L.part];
+  const bars = [], dyn = [], tempo = [], rehearsal = [];
+  let prevTs = null;
+  // 성부 나누기: 오선 안에서 먼저 나온 성부(보통 1·5) = 윗성부, 나머지 = 아랫성부. 타악은 줄기 방향(위 = 윗성부), 없으면 높이
+  const voiceOrder = [];
+  P.measures.forEach((M, bi) => {
+    const W = M.div * 4, Gm = (sc.xmlGlobal && sc.xmlGlobal[bi]) || { tempo: [], words: [], rehearsal: [], flags: {} };
+    const ev = [];
+    for (const n of M.notes) {
+      if (n.staff !== L.staff) continue;
+      if (!voiceOrder.includes(n.voice)) voiceOrder.push(n.voice);
+      let v = voiceOrder.indexOf(n.voice) === 0 ? 'R' : 'L';
+      if (P.perc) v = n.stem === 'down' ? 'L' : n.stem === 'up' ? 'R' : (n.disp != null && n.disp < 35 ? 'L' : 'R');   // 35 = B4
+      const t = mxF(Math.round(n.t), W), d = mxF(Math.max(1, Math.round(n.d)), W);
+      if (n.chord && n.midi != null) { const host = ev.find(e => e.voice === v && e.t.eq(t) && e.midis && !e.tie === !n.tieStop); if (host) { if (!host.midis.includes(n.midi)) host.midis.push(n.midi); continue; } }
+      if (n.chord && n.midi == null && ev.some(e => e.voice === v && e.t.eq(t))) continue;
+      const e = { voice: v, t, dur: d, accent: n.accent, grace: n.graces ? n.graces.length : 0, roll: n.trem || (P.perc && n.trill) };
+      if (n.midi != null && !P.perc) { e.midis = [n.midi]; if (n.graces) e.graceMidis = n.graces; if (n.trill) { e.trill = true; e.trillInt = 2; } }
+      if (n.tieStop && n.midi != null) e.tie = true;
+      if (n.stacc) e.stacc = true; if (n.ten) e.ten = true; if (n.xh) e.xh = true;
+      if (n.disp != null) e.pos = 35 - n.disp;
+      ev.push(e);
+    }
+    ev.sort((a, b) => a.t.v - b.t.v);
+    const tsKey = M.timesig.join('/');
+    const tempoMarks = [];
+    const seenT = new Set();
+    const TM = Gm.tempo.length ? Gm.tempo : M.tempo;
+    for (const tm of TM.filter(x => !x.fromSound || !TM.some(y => !y.fromSound))) {
+      const UNIT = { whole: [1, 1], half: [1, 2], quarter: [1, 4], eighth: [1, 8], '16th': [1, 16] }[tm.unit] || [1, 4];
+      const k = tm.bpm + tm.unit + tm.dotted; if (seenT.has(k)) continue; seenT.add(k);
+      const sym = UNIT[1] === 8 ? '♪' : UNIT[1] === 2 ? '2분' : '♩';
+      tempoMarks.push({ unit: UNIT, dotted: !!tm.dotted, bpm: Math.round(tm.bpm), text: `${sym}${tm.dotted ? '.' : ''}=${Math.round(tm.bpm)}` });
+    }
+    const labels = [];
+    const f = { ...M.flags, ...Gm.flags };
+    const wordsAll = [...Gm.words, ...M.words.filter(w => !Gm.words.some(g => g.text === w.text))];
+    for (const w of wordsAll) {
+      const t = w.text, p0 = bi + (W ? w.t / (M.len.v * W) : 0);
+      if (/^(rit|rall|allarg|slent)|점점\s*느리게/i.test(t)) { tempo.push({ kind: 'rit', p0, p1: p0 + 2, dashed: false }); labels.push('rit.'); }
+      else if (/^(accel|string)|점점\s*빠르게/i.test(t)) { tempo.push({ kind: 'accel', p0, p1: p0 + 2, dashed: false }); labels.push('accel.'); }
+      else if (/^(a tempo|in tempo|tempo i\b|tempo primo)/i.test(t)) { tempo.push({ kind: 'atempo', p0, p1: p0 }); labels.push('a tempo'); }
+      else if (/^cresc|점점\s*세게/i.test(t)) dyn.push({ kind: 'ramp', p0, p1: p0 + 2, dir: 1, dashed: false });
+      else if (/^(dim|decresc)|점점\s*여리게/i.test(t)) dyn.push({ kind: 'ramp', p0, p1: p0 + 2, dir: -1, dashed: false });
+      else if (/D\.\s?S\.?|dal\s*segno/i.test(t)) f.ds = true;
+      else if (/D\.\s?C\.?|da\s*capo/i.test(t)) f.dc = true;
+      else if (/^fine\.?$/i.test(t)) f.fine = true;
+      else if (/to\s*coda/i.test(t)) f.toCoda = true;
+    }
+    for (const r of (Gm.rehearsal.length ? Gm.rehearsal : M.rehearsal)) if (r && r.length <= 6) rehearsal.push({ idx: bi, number: bi + 1, text: r });
+    // 셈여림은 이 줄 오선 것 (오선 번호를 안 적은 파일은 모두)
+    let wedge = null;
+    for (const dmk of M.dyn) {
+      if (dmk.staff !== L.staff && P.staves > 1) continue;
+      const p0 = bi + (W ? dmk.t / (M.len.v * W) : 0);
+      if (dmk.label) { const lv = DYN_LEVEL[dmk.label]; if (lv != null) dyn.push({ kind: 'mark', p0, level: lv, label: dmk.label }); }
+      else if (dmk.wedge === 'crescendo' || dmk.wedge === 'diminuendo') wedge = { kind: 'ramp', p0, p1: p0 + 1, dir: dmk.wedge === 'crescendo' ? 1 : -1, dashed: true, open: true };
+      if (wedge) dyn.push(wedge), wedge = null;
+      if (dmk.wedge === 'stop') { const w = [...dyn].reverse().find(x => x.kind === 'ramp' && x.open); if (w) { w.p1 = Math.max(w.p0 + 0.1, p0); delete w.open; } }
+    }
+    if (f.segno) labels.push('Segno'); if (f.ds) labels.push('D.S.'); if (f.dc) labels.push('D.C.'); if (f.fine) labels.push('Fine'); if (f.toCoda) labels.push('To Coda');
+    if (f.volta) labels.push(f.volta.join(',') + '.');
+    bars.push({ segno: !!f.segno, codaStart: !!f.coda && !f.toCoda, volta: f.volta || null, ds: !!f.ds, dc: !!f.dc, fine: !!f.fine, toCoda: !!f.toCoda, labels,
+      number: bi + 1, timesig: M.timesig.slice(), barLen: M.len, src: bi, repeatStart: !!f.repeatStart, repeatEnd: !!f.repeatEnd, sectionStart: false, fermata: !!f.fermata,
+      note: ev.length ? '' : '쉼', kind: ev.length ? 'normal' : 'rest', warnings: [], tempoMarks, timesigChange: prevTs != null && prevTs !== tsKey, tsInferred: false, events: ev });
+    prevTs = tsKey;
+  });
+  // 셈여림 꺾쇠: 끝(stop)이 없으면 다음 셈여림까지(최대 2마디)
+  for (const d of dyn) if (d.kind === 'ramp') { delete d.open; const t = dyn.find(x => x.kind === 'mark' && x.p0 > d.p0 + 0.01 && x.p0 <= d.p1 + 1); d.target = t ? t.level : null; }
+  dyn.sort((a, b) => a.p0 - b.p0); tempo.sort((a, b) => a.p0 - b.p0);
+  return { bars, marks: { dyn, tempo }, mismatches: [], scanned: false, geo: null, rehearsal };
+}
+
 
 // 소리 합성과 렌더링. DOM 없이 동작한다 (Node에서도 시험 가능).
 const SR = 32000;
@@ -5170,7 +5431,7 @@ function buildScoreView() {
   svKey = key; svCurrent = -1;
   if (svIO) { svIO.disconnect(); svIO = null; }
   svPages.clear(); wrap.textContent = ''; svHl = null; svCur = null; svEhl = null;
-  if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? '이 악보는 마디 위치를 읽지 못해 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요.' : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
+  if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? (state.score.xml || (state.sourceScores || []).some(x => x && x.xml) ? 'MusicXML 악보는 쪽 그림이 없어 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요. (같은 곡의 PDF를 올리면 악보로 볼 수 있습니다)' : '이 악보는 마디 위치를 읽지 못해 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요.') : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
   const pages = [...new Set(G.geo.filter(Boolean).map(g => g.page))].sort((a, b) => a - b);
   const sc = G.sc, myKey = key;
   wrap.appendChild(tipNode('div', 'sv-empty', '악보를 펼치는 중…'));
@@ -6355,20 +6616,26 @@ function showMsg(t) { $('msg').hidden = !t; $('msg').textContent = t || ''; }
 async function readPdf(file, onPage) {
   const data = new Uint8Array(await file.arrayBuffer());
   const fp = scoreFingerprint(data);   // pdf.js가 data를 넘겨받기 전에
+  // MusicXML(.musicxml·.xml·.mxl): 음 높이·길이가 파일에 그대로 있어 인식 없이 바로 읽는다 (PDF는 아래처럼)
+  if (isMusicXmlName(file.name) || (data[0] === 0x3c && !(data[0] === 0x25 && data[1] === 0x50))) {
+    const sc = await loadMusicXml(data, file.name);
+    sc.fp = fp; sc.fileName = file.name;
+    return sc;
+  }
   try { await pdfjsReady; } catch (e) { throw new Error('악보 PDF를 읽는 도구(pdf.js)를 인터넷에서 받지 못했습니다. 인터넷 연결을 확인하고 페이지를 새로 고쳐 주세요. (' + (e && e.message ? e.message : e) + ')'); }
   const sc = await loadScore(pdfjsLib, data, onPage || (() => {}));
   sc.fp = fp; sc.fileName = file.name;
   return sc;
 }
-const isPdf = f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name);
-const stemOf = f => f.name.replace(/\.pdf$/i, '');
+const isPdf = f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name) || isMusicXmlName(f.name);   // PDF와 MusicXML 모두
+const stemOf = f => f.name.replace(/\.(pdf|musicxml|mxl|xml)$/i, '');
 let uidSeq = 0;
 // 줄 하나 = 파트보 한 장(줄 1개) 또는 총보의 한 줄. 더한 악보·파트보는 고유 id로 구분해 빼도 다른 줄 설정이 그대로 남는다
 function linesOfSource(x, prefix) {
   const sc = x.sc;
   if (sc.isFull && sc.lines.length > 1) return sc.lines.map((l, k) => ({ ...l, id: `${prefix}${x.uid}_${k}`, label: `${x.label} · ${l.label || (k + 1) + '번째 줄'}`, sourceScore: sc, sourceLineId: k, sourceFileName: x.file.name }));
   const L0 = sc.layouts.find(L => L.staves.length);
-  return [{ id: `${prefix}${x.uid}`, label: x.label, clef: L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false,
+  return [{ id: `${prefix}${x.uid}`, label: x.label, clef: sc.xml ? sc.xmlLines[0].clef : L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false,
     first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null,
     sourceScore: sc, sourceLineId: null, sourceFileName: x.file.name }];
 }
@@ -6424,7 +6691,7 @@ function syncLineIds() {
 function fullLineList() {
   const sc = state.score, L0 = sc.layouts.find(L => L.staves.length);
   const base = sc.isFull && sc.lines.length > 1 ? sc.lines
-    : [{ id: null, label: sc.partName || state.title, clef: L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false, first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null }];
+    : [{ id: null, label: sc.partName || state.title, clef: sc.xml ? sc.xmlLines[0].clef : L0 ? L0.clefs[0] : 'perc', oneLine: L0 ? !!L0.staves[0].oneLine : false, first: L0 ? { page: sc.layouts.indexOf(L0), top: L0.staves[0].top, bottom: L0.staves[0].bottom, x0: L0.staves[0].x0 } : null }];
   return [...base, ...(state.extras || []).flatMap(x => linesOfSource(x, 'x'))];
 }
 async function loadFullPdf(files) {
@@ -6464,6 +6731,9 @@ async function loadFullPdf(files) {
       if (isMel) melodyGiven = true;
     }
     cfgNewLines(state.lineList.filter(l => l.sourceScore), true);
+    // MusicXML은 일부러 고른 파일이고 줄 이름이 영어(Soprano 등)여서 악기를 몰라 모두 꺼지기 쉽다 → 켠 줄이 없으면 선율 줄을 모두 켠다(이름으로 모르는 악기는 피아노 소리)
+    if (sc.xml && !state.lineList.some(l => state.lineCfg[cfgKey(l.id)].role !== 'off'))
+      for (const l of state.lineList) { if (l.sourceScore) continue; const c = state.lineCfg[cfgKey(l.id)]; if (l.clef === 'pitched' && !PERC_NAME.test(l.label || '')) { c.role = 'melody'; if (!c.inst) c.inst = 'piano'; } }
     // 장구가 없으면 첫 타악 줄 하나는 켠다
     if (!state.lineList.some(l => state.lineCfg[cfgKey(l.id)].role === 'perc')) {
       const p = state.lineList.find(l => l.clef !== 'pitched'); if (p) state.lineCfg[cfgKey(p.id)].role = 'perc';
@@ -6523,7 +6793,7 @@ function applySelection(first = false) {
     const k = cfgKey(id), item = state.lineList.find(l => cfgKey(l.id) === k);
     const sourceScore = item?.sourceScore || sc;
     const sourceLineId = item && Object.prototype.hasOwnProperty.call(item, 'sourceLineId') ? item.sourceLineId : id;
-    if (!state.lineRaw[k]) state.lineRaw[k] = analyzeLine(sourceScore, sourceLineId);
+    if (!state.lineRaw[k]) state.lineRaw[k] = sourceScore.xml ? analyzeXmlLine(sourceScore, sourceLineId) : analyzeLine(sourceScore, sourceLineId);
     if (!state.lineRes[k]) state.lineRes[k] = applyEdits(state.lineRaw[k], sourceScore, sourceLineId == null ? 'p' : String(sourceLineId));
     return { id, key: k, r: state.lineRes[k], sc: sourceScore };
   });
@@ -6599,7 +6869,8 @@ function applySelection(first = false) {
   if (!state.tempoChEdited) state.tempoChanges = deriveTempoChanges(master.r.marks.tempo, bars);
   syncTempoLabels();
   $('fileName').textContent = state.sourceScores.length > 1 ? `${state.sourceScores.length}개 파트보 · ${state.title || ''}` : (sc.title ? sc.title + ' · ' : '') + (state.fileName || '');
-  $('fileInfo').textContent = `${state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages}쪽 · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 추가한 악보 ${state.extras.length}개` : '');
+  const pgN = state.sourceScores.length > 1 ? state.sourceScores.reduce((n, x) => n + x.numPages, 0) : sc.numPages;
+  $('fileInfo').textContent = `${pgN ? pgN + '쪽' : 'MusicXML'} · ${bars.length}마디를 읽었습니다.` + (sc.isFull ? ` · 총보 ${sc.lines.length}줄 중 ${ids.length}줄 켬` : state.sourceScores.length > 1 ? ` · 파트보 ${ids.length}개 켬` : '') + (state.extras && state.extras.length ? ` · 추가한 악보 ${state.extras.length}개` : '');
   if (master.r.mismatches.length) showMsg(`악보에 인쇄된 마디 번호와 읽은 마디 수가 ${master.r.mismatches.length}곳에서 다릅니다(처음: ${master.r.mismatches[0][1]}마디 근처). 그 뒤 마디는 번호가 밀렸을 수 있습니다.`);
   const prevLast = prevBars.length ? prevBars[prevBars.length - 1].number : null, curTo = +$('to').value || 0;
   if (first || curTo > lastBar() || (prevLast && curTo >= prevLast) || (!prevLast && curTo <= 1) || +$('from').value > lastBar()) {
@@ -7012,7 +7283,7 @@ const partsDrop = $('partsDrop');
 function wirePdfDrop(zone, handler) {
   ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
-  zone.addEventListener('drop', e => { const files = [...e.dataTransfer.files].filter(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name)); if (files.length) handler(files); });
+  zone.addEventListener('drop', e => { const files = [...e.dataTransfer.files].filter(isPdf); if (files.length) handler(files); });
 }
 wirePdfDrop(drop, files => loadFullPdf(files));
 wirePdfDrop($('extraBox'), files => loadExtraPdfs(files));
@@ -7104,7 +7375,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 15:55';
+const APP_VERSION = '2026-11-03 16:08';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
