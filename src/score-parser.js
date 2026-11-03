@@ -2122,7 +2122,44 @@ export function analyzeLine(score, line = null) {
     }
     return g;
   });
-  return { bars, marks, mismatches, scanned: res.scanned, geo };
+  return { bars, marks, mismatches, scanned: res.scanned, geo, rehearsal: findRehearsal(score, bars, geo) };
+}
+
+// 연습 번호(리허설 마크): 단 맨 위 오선 바로 위, 마디 왼쪽 끝에 있는 네모 칸 안의 짧은 글(A, B, 1, 25, 가 …)
+// 마디마다 하나만, 같은 글이 이어서 나오면(한 단에 여러 줄 적힌 경우) 한 번만
+function findRehearsal(score, bars, geo) {
+  const out = [], seen = new Set(), boxCache = new Map();
+  const boxesOf = pi => {
+    if (boxCache.has(pi)) return boxCache.get(pi);
+    const pg = score.pages[pi]; let list = [];
+    if (pg) {
+      const rects = pg.drawings.filter(d => d.type === 's' && ((d.items.length === 1 && d.items[0].op === 're') ||
+        (d.items.length >= 4 && d.items.length <= 5 && d.items.every(i => i.op === 'l' && (Math.abs(i.p[0] - i.q[0]) < 0.1 || Math.abs(i.p[1] - i.q[1]) < 0.1)))) &&
+        d.rect.width > 5 && d.rect.height > 6 && d.rect.height < 30 && d.rect.width < 60).map(d => d.rect);
+      for (const r of rects) {
+        const gs = pg.glyphs.filter(g => g.code > 32 && g.ox + (g.x1 - g.x0) / 2 > r.x0 && g.ox + (g.x1 - g.x0) / 2 < r.x1 && g.oy - g.size * 0.3 > r.y0 - 1 && g.oy - g.size * 0.3 < r.y1 + 1).sort((a, b) => a.ox - b.ox);
+        const text = gs.map(g => g.uni && !/[\uE000-\uF8FF]/.test(g.uni) ? g.uni : String.fromCharCode(g.code)).join('').replace(/\s+/g, '').trim();
+        // 글자 모양: A·B·AA, 1~3자리 숫자, 한글(가·나, 2악장). 다른 글이 겹쳐 섞인 것('5모0' 등)은 뺀다
+        if (text && text.length <= 4 && /^([A-Za-z]{1,2}|\d{1,3}|[가-힣]{1,4}|\d[가-힣]{1,3})$/.test(text)) list.push({ ...r, text });
+      }
+    }
+    boxCache.set(pi, list); return list;
+  };
+  bars.forEach((b, k) => {
+    const g = geo[k]; if (!g) return;
+    const L = score.layouts && score.layouts[g.page]; if (!L || !L.staves || !L.staves[g.staff]) return;
+    const sys = L.systems && L.systems.find(s => s.includes(g.staff)); const top = sys ? L.staves[sys[0]].top : L.staves[g.staff].top;
+    const w = g.x1 - g.x0;
+    const hit = boxesOf(g.page).find(r => r.y1 <= top + 3 && r.y0 >= top - 50 && r.x0 >= g.x0 - 12 && r.x0 <= g.x0 + Math.max(10, w * 0.3));
+    if (!hit) return;
+    // 네모 칸에 넣은 마디 번호(그 마디 번호와 같은 숫자)는 연습 번호가 아니다 — 마디 번호로 바로 갈 수 있으므로 빼서 목록을 짧게
+    if (/^\d+$/.test(hit.text) && Math.abs(+hit.text - b.number) <= 1) return;
+    // 한 단의 여러 줄·이어진 마디에 같은 글이 반복되면 한 번만 (8마디 안)
+    if (out.some(o => o.idx === k || (o.text === hit.text && b.number - o.number <= 8 && b.number >= o.number))) return;
+    const key = hit.text + '|' + b.number; if (seen.has(key)) return; seen.add(key);
+    out.push({ idx: k, number: b.number, text: hit.text });
+  });
+  return out;
 }
 
 export async function analyzePdf(pdfjs, data) {

@@ -460,6 +460,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .soundbox .sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 12px; margin: 10px 0 6px; }
 .soundbox .checks { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; margin: 4px 0; }
 .sm-row { display: flex; gap: 6px; }
+.reh-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 6px 0 2px; }
+.reh-lab { font-size: 13px; color: var(--muted); font-weight: 600; }
+.reh-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+.reh-btns button { min-width: 34px; padding: 4px 8px; border: 1.5px solid var(--ink); border-radius: 4px; background: var(--card); color: var(--ink); font: 700 13px/1.2 var(--font-body); cursor: pointer; }
+.reh-btns button:hover { background: var(--accent-soft); }
+.reh-btns button small { font-weight: 500; color: var(--muted); margin-left: 3px; font-size: 11px; }
+.ramp-set { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
+.ramp-set input { width: 52px; }
 .pair-chk { font-size: 13px; } .pair-chk .hint { font-size: 12px; }
 .sm-row button { flex: 1; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--muted); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
 .sm-row button.solo[aria-pressed="true"] { background: #e0a100; border-color: #e0a100; color: #fff; }
@@ -919,9 +927,19 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <span>부터</span><input type="number" id="to" min="1" value="8" class="num"><span>까지</span>
           <button class="x" id="rangeAll" type="button">전곡</button>
         </div>
+        <div class="reh-row" id="rehRow" hidden>
+          <span class="reh-lab">연습 번호</span>
+          <span class="reh-btns" id="rehBtns"></span>
+          <select id="rehMode" class="mini" aria-label="연습 번호를 누르면">
+            <option value="play">누르면 그 자리부터 재생</option>
+            <option value="range">누르면 다음 번호 전까지 구간으로</option>
+          </select>
+        </div>
         <div class="opts">
           <label><input type="checkbox" id="optRepeat" checked>도돌이표대로 반복</label>
           <label><input type="checkbox" id="optLoop">구간 계속 반복</label>
+          <label><input type="checkbox" id="optRamp">반복할 때마다 빠르게</label>
+          <span class="ramp-set" id="rampSet" hidden>처음 <input type="number" id="rampStart" class="num mini" min="30" max="100" step="5" value="70" aria-label="처음 속도 %">% · 한 번에 +<input type="number" id="rampStep" class="num mini" min="1" max="30" step="1" value="5" aria-label="한 번에 올릴 %">% → 연습 속도까지</span>
           <label><input type="checkbox" id="optCount" checked>카운트인</label>
           <label><input type="checkbox" id="optMetro">메트로놈</label>
           <label>쉬는 마디 박 짚기
@@ -1005,6 +1023,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <dd>켜면 악보의 도돌이표, 1·2번 괄호, D.S.·코다를 따라 실제 연주 순서대로 칩니다. 끄면 반복 없이 처음부터 끝까지 한 번씩 지나갑니다(1·2번 괄호는 마지막 괄호만).</dd>
             <dt>구간 계속 반복</dt>
             <dd>정한 범위를 끝까지 연주하면 처음으로 돌아가 멈출 때까지 계속 반복합니다. 같은 가락을 여러 번 따라 칠 때 씁니다. 재생에만 적용되고 wav 파일은 한 번 분량으로 저장됩니다. 카운트인을 켜 두면 반복할 때마다 카운트인도 다시 나옵니다.</dd>
+            <dt>연습 번호</dt>
+            <dd>악보에 네모 칸으로 적힌 연습 번호(A, B, C …, 2악장 등)를 찾아 마디 칸 아래에 단추로 보여 줍니다(작은 숫자는 마디 번호). 단추를 누르면 그 마디부터 재생합니다. 옆 상자에서 '다음 번호 전까지 구간으로'를 고르면 누른 번호부터 다음 번호 앞까지를 연주 범위로 정하고 재생합니다(구간 계속 반복과 함께 쓰면 그 대목만 반복 연습). 네모 칸에 넣은 마디 번호는 연습 번호로 치지 않습니다. 연습 번호를 못 찾은 악보에서는 이 줄이 보이지 않습니다.</dd>
+            <dt>반복할 때마다 빠르게</dt>
+            <dd>어려운 대목을 느리게 시작해 점점 빠르게 익힐 때 씁니다. 켜면 구간 계속 반복도 함께 켜지고, 처음에는 연습 속도의 '처음 %'(기본 70%)로 연주하다가 한 바퀴 돌 때마다 '한 번에 +%'(기본 5%)씩 빨라져 연습 속도(100%)에 이르면 그 빠르기로 계속 반복합니다. 음 높이는 그대로입니다. 연주 칸 위에 지금 몇 번째 반복인지, 몇 %인지 보입니다. 정지(⏹)하면 처음 %로 돌아갑니다.</dd>
             <dt>카운트인</dt>
             <dd>연주 시작 전에 한 마디 동안 박에 맞춰 "똑, 딱, 딱, 딱" 클릭을 들려줍니다. 첫 박은 높은 소리입니다. 같이 칠 때 들어갈 타이밍을 잡는 용도입니다.
               <span class="eg">12/8, ♩.=84 → 점4분 4번 클릭 후 연주 시작</span></dd>
@@ -1104,6 +1126,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>연습 번호</b>: 악보의 네모 칸 연습 번호(A, B, C …, 2악장)를 연주 칸에 단추로. 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 구간으로 정해 재생</li>
+    <li><b>반복할 때마다 빠르게</b>: 구간 계속 반복과 함께 켜면 처음 %(기본 70%)에서 시작해 한 바퀴마다 +%(기본 5%)씩 빨라져 연습 속도까지. 음 높이는 그대로, 지금 몇 번째·몇 %인지 표시</li>
     <li><b>타악 성부 짝 맞추기</b>: 윗성부나 아랫성부 소리를 고르면 다른 쪽도 짝 소리로 바뀝니다(꽹과리 → 꽹과리, 장구 궁 → 장구 따 등). 줄마다 '윗성부·아랫성부 함께 바꾸기'를 끄면 따로 고를 수 있음</li>
     <li><b>팀파니·윈드차임 녹음</b>: 줄 이름이 팀파니·Timp.면 팀파니 녹음으로 음표 높이대로(굴림 표시는 녹음한 굴림으로), 윈드차임·윈드벨·W.Chimes면 윈드차임(한 번 훑는 소리). 다른 타악기와 들리는 크기를 맞춤</li>
     <li><b>악보로 보기에서 음 고치기</b>: [✎ 음 고치기]를 켜고 마디를 누르면 마디맵의 ✎ 수정과 같은 창이 열립니다. 마우스를 올린 마디는 점선 칸으로, 고친 마디는 ✎로 표시. 화면 가득 보기에서도 됩니다</li>
@@ -2148,6 +2172,7 @@ document.addEventListener('keydown', ev => {
   }
 });
 function renderBars() {
+  try { renderRehearsal(); } catch (e) { console.warn(e); }
   const box = $('bars'); box.textContent = '';
   const frag = document.createDocumentFragment();
   for (const b of state.bars) {
@@ -2312,7 +2337,13 @@ $('orderText').addEventListener('change', () => {
   refreshOrder(); changed();
 });
 $('orderAuto').addEventListener('click', () => { state.manualOrder = null; refreshOrder(); changed(); });
-$('optLoop').addEventListener('change', () => { audio.loop = $('optLoop').checked; });
+$('optLoop').addEventListener('change', () => { audio.loop = $('optLoop').checked; if (!audio.loop && $('optRamp').checked) { $('optRamp').checked = false; $('rampSet').hidden = true; } rampApply(); });
+$('optRamp').addEventListener('change', () => {
+  const on = $('optRamp').checked; $('rampSet').hidden = !on;
+  if (on && !$('optLoop').checked) { $('optLoop').checked = true; audio.loop = true; }
+  rampBegin(false);
+});
+['rampStart', 'rampStep'].forEach(id => $(id).addEventListener('change', () => { if (!state.playing) rampBegin(false); }));
 $('speed').addEventListener('input', () => { $('speedVal').textContent = $('speed').value + '%'; changed(); });
 for (const id of ['from', 'to']) $(id).addEventListener('change', () => { clampRange(); changed(); updateOut(); });
 $('rangeAll').addEventListener('click', () => { $('from').value = 1; $('to').value = lastBar(); changed(); updateOut(); });
@@ -2433,6 +2464,7 @@ function tempoBlocked(range) {
 // 읽은 마디가 없으면(스캔한 PDF 등) 빈 소리를 만들지 않는다
 function noBars() { if (state.bars.length) return false; showMsg('재생할 마디가 없습니다. 악보를 읽지 못했거나 켜 둔 악기가 없습니다. 다른 PDF를 올리거나 악기 선택에서 줄을 켜 주세요.'); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return true; }
 let building = false, playTok = 0, pendingBar = null, cancelPlay = false;   // cancelPlay: 소리를 만드는 중에 정지(⏹·다른 악보 올리기 등)를 누르면 다 만든 뒤 재생하지 않는다
+let rampCur = 100, rampLap = 1, rampLastT = 0, rampReset = true;   // 반복할 때마다 빠르게 (아래 rampBegin)
 async function play(offset = 0) {
   if (building) return;
   resumeAt = null;   // 소리를 만드는 중에 마디·스페이스바를 또 누르면 같은 소리를 두 번 만들지 않게
@@ -2457,6 +2489,7 @@ async function play(offset = 0) {
   stop(true);
   if (audio.src !== state.rendered.url) audio.src = state.rendered.url;
   audio.loop = $('optLoop').checked;
+  rampBegin(!rampReset, offset); rampReset = false;   // 일시정지·마디 누르기로 이어 재생하면 지금 빠르기 단계 그대로, 정지 뒤에는 처음 %부터
   // 앞의 재생이 정지·새 재생으로 끊기면(AbortError) 그 실패는 무시한다: 마디를 눌러 처음부터 만든 뒤 그 마디로 옮길 때
   // 앞 재생의 실패가 늦게 와서 '재생 버튼을 한 번 더 눌러 주세요'가 뜨고 재생 표시가 꺼지던 문제
   const tok = ++playTok;
@@ -2488,23 +2521,41 @@ function resume() {
 }
 function togglePlay() { if (state.playing) pause(); else resume(); }
 function stop(silent) {
-  if (!silent) { resumeAt = null; if (building) cancelPlay = true; }
+  if (!silent) { resumeAt = null; rampReset = true; if (building) cancelPlay = true; }
   try { audio.pause(); } catch (e) {}
   cancelAnimationFrame(raf);
   state.playing = false; setPlayIcon(false);
   if (!silent) { svShow(-1); tick.html = null; lastNow = null; $('nowText').innerHTML = '<b>정지</b>'; document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now')); }   // lastNow도 지워야 같은 마디부터 다시 재생할 때 노란 표시가 나온다
 }
+// 반복할 때마다 빠르게: 소리는 연습 속도로 한 번 만들고, 재생 빠르기(playbackRate, 음 높이는 그대로)를 반복마다 올린다
+const rampOn = () => $('optRamp').checked && $('optLoop').checked;
+function rampPct(id, def, lo, hi) { const v = Math.round(+$(id).value); return v >= lo && v <= hi ? v : def; }
+function rampApply() {
+  try { audio.preservesPitch = true; audio.webkitPreservesPitch = true; audio.mozPreservesPitch = true; } catch (e) {}
+  audio.playbackRate = rampOn() ? rampCur / 100 : 1;
+}
+function rampBegin(keep, at) {   // keep: 일시정지 뒤 이어서 재생할 때는 지금 단계 유지. at: 재생을 시작할 자리(초) — 앞 재생 자리와 견줘 한 바퀴로 잘못 세지 않게
+  if (!keep || !rampOn()) { rampCur = rampOn() ? rampPct('rampStart', 70, 30, 100) : 100; rampLap = 1; }
+  rampLastT = at != null ? at : (audio.currentTime || 0); rampApply();
+}
+function rampTick(t) {
+  if (!rampOn()) { if (audio.playbackRate !== 1) audio.playbackRate = 1; return ''; }
+  if (t + 0.5 < rampLastT) { rampLap++; rampCur = Math.min(100, rampCur + rampPct('rampStep', 5, 1, 30)); rampApply(); }   // 처음으로 돌아왔다 = 한 바퀴
+  rampLastT = t;
+  return ` <span class="pill num">${rampLap}번째 · ${rampCur}%</span>`;
+}
 function tick() {
   if (!state.playing || !state.rendered) return;
   const { plan } = state.rendered;
   const t = audio.currentTime || 0;
+  const rampTxt = rampTick(t);
   const bt = plan.barTimes;
   let k = -1; for (let i = 0; i < bt.length; i++) { if (bt[i].abs <= t + 0.01) k = i; else break; }
   const cur = k >= 0 ? bt[k] : null;
   const n = cur ? cur.number : null;
   const restTxt = cur && cur.rest ? ` <span class="pill num">쉼 ${cur.rest.k}/${cur.rest.n}마디</span>` : '';
   // 화면은 글자가 바뀔 때만 다시 쓴다 (1초에 60번 다시 그리지 않게)
-  const html = cur ? `<b class="num">${n}</b>마디${restTxt} <span class="num" style="color:var(--muted)">· ${fmt(t)} / ${fmt(plan.total)}</span>` : '<b>카운트인</b>';
+  const html = (cur ? `<b class="num">${n}</b>마디${restTxt} <span class="num" style="color:var(--muted)">· ${fmt(t)} / ${fmt(plan.total)}</span>` : '<b>카운트인</b>') + rampTxt;
   if (html !== tick.html) { $('nowText').innerHTML = html; tick.html = html; }
   const w = Math.min(100, t / plan.total * 100).toFixed(1) + '%';
   if (w !== tick.w) { $('trackFill').style.width = w; tick.w = w; }
@@ -2536,6 +2587,24 @@ $('track').addEventListener('click', ev => {
   const r = $('track').getBoundingClientRect();
   play(Math.max(0, (ev.clientX - r.left) / r.width) * state.rendered.plan.total);
 });
+// 연습 번호 단추 (A, B, 2악장 …): 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 연주 구간으로
+function renderRehearsal() {
+  const list = state.score ? (state.rehearsal || []) : [], box = $('rehBtns');
+  $('rehRow').hidden = !list.length; box.textContent = '';
+  list.forEach((h, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = h.text;
+    if (!/^\d+$/.test(h.text)) { const sm = document.createElement('small'); sm.textContent = h.number; b.appendChild(sm); }
+    b.title = `${h.text}: ${h.number}마디`;
+    b.addEventListener('click', () => {
+      if ($('rehMode').value === 'range') {
+        const nx = list[i + 1], to = nx ? Math.max(h.number, nx.number - 1) : lastBar();
+        stop(); $('from').value = h.number; $('to').value = to; changed(); updateOut(); if (saveLinked) syncSaveFromPlay(); scheduleAutoSave();
+        if (!tempoBlocked()) { unlockAudio(); play(0); }
+      } else playFromBar(h.number);
+    });
+    box.appendChild(b);
+  });
+}
 function playFromBar(n) {
   const to = +$('to').value;
   if (n < +$('from').value || n > to) { $('from').value = n; $('to').value = lastBar(); changed(); updateOut(); if (saveLinked) syncSaveFromPlay(); scheduleAutoSave(); }
@@ -2688,7 +2757,7 @@ function collectSettings() {
   for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; if (!c) continue; const o = { name: l.label || '' }; for (const f of CFG_FIELDS) if (c[f] !== undefined) o[f] = c[f]; lines[stableKey(l)] = o; }
   return { format: 'hapju-settings', v: 1, title: state.title || '', file: state.fileName || '', saved: new Date().toISOString(), lastBar: lastBar(),
     lines, tempoRows: state.tempoRows.map(r => ({ ...r })), speed: +$('speed').value, ritF: $('ritF').value, accF: $('accF').value,
-    play: { ...playOpts(), loop: $('optLoop').checked, rest: $('optRest').value }, save: { ...saveOpts(), linked: saveLinked, format: $('saveFormat').value },
+    play: { ...playOpts(), loop: $('optLoop').checked, rest: $('optRest').value, ramp: $('optRamp').checked, rampStart: +$('rampStart').value || 70, rampStep: +$('rampStep').value || 5 }, save: { ...saveOpts(), linked: saveLinked, format: $('saveFormat').value },
     // 악기를 모두 꺼 마디가 없을 때는 순서 칸 글을 그대로 (마디 번호로 다시 읽으므로)
     order: state.manualOrder ? (state.manualOrder.every(k => k < state.bars.length) ? orderToText(state.bars, state.manualOrder) : $('orderText').value) : null,
     tempoChanges: state.tempoChEdited ? state.tempoChanges.map(c => ({ ...c })) : null,
@@ -2760,7 +2829,8 @@ function applyRestSettings(S) {
   if (badRange) { $('from').value = 1; $('to').value = LB; }
   else { if (P.from) $('from').value = P.from; if (P.to) $('to').value = Math.min(P.to, LB); }
   const ck = (id, v) => { if (typeof v === 'boolean') $(id).checked = v; };
-  ck('optRepeat', P.repeats); ck('optCount', P.countIn); ck('optMetro', P.metronome); ck('optDyn', P.dyn); ck('optLoop', P.loop);
+  ck('optRepeat', P.repeats); ck('optCount', P.countIn); ck('optMetro', P.metronome); ck('optDyn', P.dyn); ck('optLoop', P.loop); ck('optRamp', P.ramp && P.loop);
+  if (P.rampStart) $('rampStart').value = P.rampStart; if (P.rampStep) $('rampStep').value = P.rampStep; $('rampSet').hidden = !$('optRamp').checked;
   if (P.restCount) $('optRest').value = P.restCount;
   clampRange(); audio.loop = $('optLoop').checked;
   state.manualOrder = null;
@@ -2872,7 +2942,7 @@ let loadSeq = 0;   // 악보를 읽는 중에 다른 악보를 또 올렸을 때
 function resetEmpty(text) {
   stop(); loadSeq++;   // 읽는 중이던 악보가 있으면 버린다
   // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
-  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set() });
+  Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set(), rehearsal: [] });
   state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
   state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
@@ -3040,7 +3110,7 @@ function applySelection(first = false) {
     if (ids.length) showMsg(sc.maestroCount === 0
       ? '이 PDF에서는 악보 기호를 찾을 수 없습니다. 스캔하거나 사진으로 만든 PDF이거나, 아직 지원하지 않는 프로그램으로 만든 악보일 수 있습니다. Finale·Sibelius·MuseScore·Encore에서 PDF로 저장한 악보를 올려 주세요(\'악보 올리기\' 아래 \'읽을 수 있는 악보 PDF\' 참고).'
       : '오선을 찾지 못했습니다. 이 악보 형식은 아직 지원하지 않습니다.');
-    state.bars = []; state.scoreGeo = null;
+    state.bars = []; state.scoreGeo = null; state.rehearsal = [];
     // 악보를 읽지 못했으면(스캔 PDF 등) 연주 범위 칸을 비워 둔다 (예전에는 1~1마디로 보여 범위가 잘못된 것처럼 보였음). 악기를 모두 끈 것이면 범위는 그대로
     if (ids.length) for (const id of ['from', 'to', 'sFrom', 'sTo']) $(id).value = '';
     renderBars(); return;
@@ -3077,6 +3147,10 @@ function applySelection(first = false) {
     state.scoreGeo = pickG ? { sc: pickG.sc, geo: pickG.r.geo, key: pickG.key } : null;
   }
   state.marks = { dyn: [], tempo: master.r.marks.tempo };
+  // 연습 번호: 켠 줄들에서 찾은 것을 모은다(줄마다 빠지는 것이 있어서). 마디 수가 기준 줄과 같은 줄만
+  { const reh = new Map();
+    for (const x of results) if (x.r.bars.length === bars.length) for (const h of x.r.rehearsal || []) if (!reh.has(h.idx) && ![...reh.values()].some(o => o.text === h.text && Math.abs(o.number - h.number) <= 8)) reh.set(h.idx, { ...h, number: bars[h.idx] ? bars[h.idx].number : h.number });
+    state.rehearsal = [...reh.values()].sort((a, b) => a.idx - b.idx); }
   // 악기를 켜고 끌 때마다 직접 고친 연주 순서·템포가 지워지던 문제: 마디 수가 그대로면 유지
   const keepOrderText = !first && state.manualOrder ? $('orderText').value : null;
   state.manualOrder = null;
