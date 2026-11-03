@@ -208,6 +208,12 @@ button { cursor: pointer; }
 .sv-page canvas { display: block; width: 100%; height: 100%; }
 .sv-page .sv-pno { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #888; pointer-events: none; }
 .sv-hl { position: absolute; border-radius: 4px; background: rgba(255, 196, 0, .18); outline: 2px solid #e0a100; pointer-events: none; transition: left .12s, top .12s, width .12s, height .12s; z-index: 2; }
+.sv-edit-hint { margin: 0 0 8px; padding: 7px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); font-size: 13px; }
+#svEdit[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); }
+.sv-editing .sv-page { cursor: cell; }
+.sv-ehl { position: absolute; border-radius: 4px; outline: 2px dashed var(--accent); background: rgba(80, 120, 220, .10); pointer-events: none; z-index: 2; }
+.sv-ehl b { position: absolute; left: 0; bottom: 100%; margin-bottom: 2px; padding: 0 5px; border-radius: 4px; background: var(--accent); color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
+.sv-mark { position: absolute; transform: translate(-30%, -70%); padding: 0 3px; border-radius: 4px; background: var(--accent); color: #fff; font: 700 10px/14px var(--font-body); pointer-events: none; z-index: 2; }
 .sv-cur { position: absolute; width: 2px; margin-left: -1px; background: #d22; box-shadow: 0 0 0 1px #fff8; pointer-events: none; z-index: 3; }
 .sv-hl b { position: absolute; left: 0; top: -18px; padding: 0 5px; border-radius: 4px; background: #e0a100; color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
 /* 화면 가득 보기: 악보 칸을 화면 전체로 */
@@ -566,7 +572,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .score-card > .flist:empty { display: none; }
 .score-card .extra { margin: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 14px 18px; }
 .score-card .extra.over { background: var(--accent-soft); }
-@media (max-width: 640px) { .score-card .extra { padding: 14px; } .score-card > .flist { margin: 0 14px 10px; } }
+.score-card .extra-head .file { flex: 1 1 260px; }
+@media (max-width: 640px) { .score-card .extra { padding: 14px; } .score-card .extra label.btn { width: 100%; } .score-card > .flist { margin: 0 14px 10px; } }
 .extra-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .extra-head .file { flex: 1 1 220px; min-width: 0; }
 .extra-head .file strong { display: block; font-weight: 600; font-size: 14px; }
@@ -638,14 +645,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <h2 class="step-h" id="stepLoad"><span class="sn">1</span>악보 올리기</h2>
     <div class="uploads">
     <section class="up" aria-labelledby="fullUploadTitle">
-    <h3 id="fullUploadTitle">총보 하나</h3>
+    <h3 id="fullUploadTitle">총보 업로드</h3>
     <div class="score-card">
     <section class="drop" id="drop">
       <div class="file">
-        <strong id="fileName">예시 장단 (직접 만든 8마디)</strong>
+        <strong id="fileName">총보를 아직 추가하지 않았습니다.</strong>
         <span id="fileInfo">총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.</span>
       </div>
-      <label class="btn primary" for="pdfInput">총보 고르기</label>
+      <label class="btn primary" for="pdfInput">총보 추가</label>
       <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple hidden>
     </section>
     <ul id="fullFileList" class="flist" aria-label="올린 총보"></ul>
@@ -653,7 +660,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <div class="extra-head">
         <div class="file"><strong>악보 추가</strong>
           <span id="extraInfo">총보를 먼저 올리면 총보에 없는 악기를 추가할 수 있습니다. 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있습니다.</span></div>
-        <label class="btn" for="extraInput">악보 추가</label>
+        <label class="btn primary" for="extraInput">악보 추가</label>
         <input type="file" id="extraInput" accept="application/pdf,.pdf" multiple hidden>
       </div>
       <ul id="extraFileList" class="flist" aria-label="추가한 악보"></ul>
@@ -661,7 +668,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     </div>
     </section>
     <section class="up" aria-labelledby="partsUploadTitle">
-    <h3 id="partsUploadTitle">파트보 여러 개</h3>
+    <h3 id="partsUploadTitle">파트보 업로드</h3>
     <section class="drop" id="partsDrop">
       <div class="file">
         <strong id="partsFileName">파트보를 아직 추가하지 않았습니다.</strong>
@@ -1062,7 +1069,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <dt>마디 위 표시</dt>
           <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. ‖: :‖는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
           <dt>음 수정 (✎)</dt>
-          <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
+          <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). <b>악보로 보기</b>에서는 <b>[✎ 음 고치기]</b>를 켜고 고칠 마디를 누르면 같은 창이 열립니다(켜 둔 동안은 마디를 눌러도 재생하지 않음, 고친 마디에는 ✎ 표시). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
             고친 내용은 이 기기에 바로 저장되어 같은 악보 PDF를 다시 올리면 자동으로 적용되고, 고친 마디는 번호 옆에 ✎가 붙습니다. 음마다 [↺ 되돌리기], 마디마다 [이 마디 모두 되돌리기], 악보 전체는 [수정 모두 되돌리기]로 되돌리고, 방금 한 수정은 Ctrl+Z로 취소합니다.
             [수정 내보내기]로 파일을 받아 두었다가 다른 기기에서 같은 악보를 올린 뒤 [수정 가져오기]로 불러올 수 있습니다. 휴대폰 브라우저는 오래 쓰지 않으면 저장 내용을 지우기도 하니 많이 고쳤다면 내보내 두세요.</dd>
           <dt>노란 테두리</dt>
@@ -1074,8 +1081,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <button type="button" class="btn sv-only-full" id="svPlay">▶ 재생 · 일시정지</button>
           <label class="chk"><input type="checkbox" id="svFollow" checked>연주 위치 따라가기</label>
           <button type="button" class="btn" id="svFull">화면 가득 보기</button>
+          <button type="button" class="btn" id="svEdit" aria-pressed="false" title="켜면 마디를 눌렀을 때 재생 대신 그 마디의 음정·음 길이를 고치는 창이 열립니다">✎ 음 고치기</button>
           <span class="zoom">크기 <button type="button" id="svZoomOut" aria-label="작게">−</button><span id="svZoomVal">100%</span><button type="button" id="svZoomIn" aria-label="크게">+</button></span>
         </div>
+        <p class="sv-edit-hint" id="svEditHint" hidden>✎ 음 고치기 중: 고칠 마디를 누르면 음정·음 길이를 고치는 창이 열립니다. 다 고쳤으면 [✎ 음 고치기]를 다시 눌러 끄세요(끄면 마디를 눌러 그 마디부터 재생).</p>
         <div class="sv-wrap" id="svWrap"></div>
       </div>
       <div class="bar-view-settings map-only" role="group" aria-label="마디 미리보기 표시 방식">
@@ -1094,7 +1103,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
-    <li><b>악보 추가</b>: '피아노 악보 더하기'를 '악보 추가'로 바꾸고 총보 고르기와 한 카드로 묶음. 총보에 없는 악기를 추가할 수 있고, 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있다는 설명을 넣음</li>
+    <li><b>악보로 보기에서 음 고치기</b>: [✎ 음 고치기]를 켜고 마디를 누르면 마디맵의 ✎ 수정과 같은 창이 열립니다. 마우스를 올린 마디는 점선 칸으로, 고친 마디는 ✎로 표시. 화면 가득 보기에서도 됩니다</li>
+    <li>올리기 칸 이름: '총보 하나' → '총보 업로드', '파트보 여러 개' → '파트보 업로드', '총보 고르기' → '총보 추가'. 처음 문구는 '총보를 아직 추가하지 않았습니다.' [악보 추가] 단추를 [총보 추가]와 같은 색·크기로</li>
+    <li><b>악보 추가</b>: '피아노 악보 더하기'를 '악보 추가'로 바꾸고 총보 추가와 한 카드로 묶음. 총보에 없는 악기를 추가할 수 있고, 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있다는 설명을 넣음</li>
     <li>악센트(&gt;) 음을 더 세게: 타악 약 +5dB, 선율 약 +4dB(예전 +3dB·+2dB)</li>
     <li>줄 이름으로 정하는 처음 소리: 꽹과리(쇠)는 윗성부·아랫성부 모두 꽹과리('꽹과리 / 징'처럼 다른 악기와 한 줄이어도 꽹과리), 대고는 베이스드럼, 제금은 바라</li>
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
@@ -1721,6 +1732,7 @@ function setFull(on) {
   svKey = null; buildScoreView(); if (k >= 0) { svCurrent = -1; svShow(k, true); }
 }
 $('svFull').addEventListener('click', () => setFull(!$('scoreView').classList.contains('sv-full')));
+$('svEdit').addEventListener('click', () => setSvEdit(!svEditing));
 $('svPlay').addEventListener('click', () => togglePlay());
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('scoreView').classList.contains('sv-full') && editorBar == null) setFull(false); });
 const SV_ZOOMS = [1, 1.25, 1.5, 2, 2.5, 3];
@@ -1745,7 +1757,7 @@ function buildScoreView() {
   if (key === svKey && wrap.firstChild) return;
   svKey = key; svCurrent = -1;
   if (svIO) { svIO.disconnect(); svIO = null; }
-  svPages.clear(); wrap.textContent = ''; svHl = null; svCur = null;
+  svPages.clear(); wrap.textContent = ''; svHl = null; svCur = null; svEhl = null;
   if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? '이 악보는 마디 위치를 읽지 못해 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요.' : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
   const pages = [...new Set(G.geo.filter(Boolean).map(g => g.page))].sort((a, b) => a - b);
   const sc = G.sc, myKey = key;
@@ -1754,7 +1766,7 @@ function buildScoreView() {
   Promise.all(pages.map(pi => sc.doc.getPage(pi + 1).then(pg => pg.getViewport({ scale: 1 })).catch(() => null))).then(vps => {
     if (svKey !== myKey) return;
     wrap.textContent = '';
-    svLayout(pages, vps, sc, myKey);
+    svLayout(pages, vps, sc, myKey); svMarks();
     if (svCurrent >= 0) { const k = svCurrent; svCurrent = -1; svShow(k, true); }
   });
 }
@@ -1767,6 +1779,8 @@ function svLayout(pages, vps, sc, myKey) {
     d.style.width = (svZoom * 100) + '%'; d.style.aspectRatio = `${vp.width} / ${vp.height}`;
     d.appendChild(tipNode('span', 'sv-pno', `${pi + 1}쪽`));
     d.addEventListener('click', ev => svClick(pi, d, ev));
+    d.addEventListener('mousemove', ev => svHover(pi, d, ev));
+    d.addEventListener('mouseleave', () => { if (svEhl && svEhl.parentNode === d) svEhl.hidden = true; });
     wrap.appendChild(d); svPages.set(pi, { el: d, canvas: null, w: vp.width, h: vp.height, busy: false });
     if (svIO) svIO.observe(d); else svRender(pi);
   });
@@ -1834,13 +1848,52 @@ function svCursor(k, f) {
   svCur.style.left = (x / P.w * 100) + '%'; svCur.style.top = (r.y0 / P.h * 100) + '%'; svCur.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
 }
 // 악보를 누르면 그 자리의 마디부터 재생
-function svClick(pi, el, ev) {
-  const P = svPages.get(pi), G = state.scoreGeo; if (!P || !P.w || !G) return;
+// 누른 곳과 같은 가로 자리의 마디 중 위아래로 가장 가까운 단 (단 사이 빈 곳을 눌러도 가까운 단으로, 너무 멀면 무시)
+function svHit(pi, el, ev) {
+  const P = svPages.get(pi), G = state.scoreGeo; if (!P || !P.w || !G) return -1;
   const b = el.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width * P.w, y = (ev.clientY - b.top) / b.height * P.h;
-  // 누른 곳과 같은 가로 자리의 마디 중 위아래로 가장 가까운 단 (단 사이 빈 곳을 눌러도 가까운 단으로, 너무 멀면 무시)
   let best = -1, bd = 60;
   G.geo.forEach((g, k) => { if (!g || g.page !== pi) return; const r = svRect(k); if (!r || x < r.x0 || x > r.x1) return; const d = y < r.y0 ? r.y0 - y : y > r.y1 ? y - r.y1 : 0; if (d < bd) { bd = d; best = k; } });
-  if (best >= 0 && state.bars[best]) playFromBar(state.bars[best].number);
+  return best;
+}
+function svClick(pi, el, ev) {
+  const best = svHit(pi, el, ev);
+  if (best < 0 || !state.bars[best]) return;
+  if (svEditing) {   // 음 고치기: 마디맵의 ✎ 수정과 같은 창
+    if (!state.score) { showMsg('예시 장단은 고칠 수 없습니다. 악보 PDF를 올리면 마디마다 음을 고칠 수 있습니다.'); return; }
+    if (state.playing) pause();
+    openEditor(state.bars[best].number); return;
+  }
+  playFromBar(state.bars[best].number);
+}
+// 음 고치기 중: 마우스가 가리키는 마디를 점선 칸으로
+let svEditing = false, svEhl = null;
+function svHover(pi, el, ev) {
+  if (!svEditing) return;
+  const k = svHit(pi, el, ev), r = k >= 0 && svRect(k), P = svPages.get(pi);
+  if (!r || !P) { if (svEhl) svEhl.hidden = true; return; }
+  if (!svEhl) { svEhl = document.createElement('div'); svEhl.className = 'sv-ehl'; svEhl.appendChild(document.createElement('b')); }
+  if (svEhl.parentNode !== el) el.appendChild(svEhl);
+  svEhl.hidden = false;
+  svEhl.style.left = (r.x0 / P.w * 100) + '%'; svEhl.style.width = ((r.x1 - r.x0) / P.w * 100) + '%';
+  svEhl.style.top = (r.y0 / P.h * 100) + '%'; svEhl.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
+  svEhl.firstChild.textContent = `✎ ${state.bars[k].number}마디 고치기`;
+}
+function setSvEdit(on) {
+  svEditing = on; $('svEdit').setAttribute('aria-pressed', String(on)); $('svEditHint').hidden = !on;
+  $('scoreView').classList.toggle('sv-editing', on);
+  if (!on && svEhl) svEhl.hidden = true;
+}
+// 고친 마디에 ✎ 표시 (마디맵의 번호 옆 ✎와 같은 뜻)
+function svMarks() {
+  if (viewMode !== 'score' || !state.scoreGeo) return;
+  for (const m of document.querySelectorAll('#svWrap .sv-mark')) m.remove();
+  state.bars.forEach((b, k) => {
+    if (!b.events.some(e => e.edited)) return;
+    const r = svRect(k), P = r && svPages.get(r.page); if (!P || !P.w) return;
+    const m = tipNode('span', 'sv-mark', '✎'); m.style.left = (r.x0 / P.w * 100) + '%'; m.style.top = (r.y0 / P.h * 100) + '%'; m.title = `${b.number}마디: 고친 음이 있음`;
+    P.el.appendChild(m);
+  });
 }
 
 // ---------- 마디별 음 수정 (음정·음 길이) ----------
@@ -2146,7 +2199,7 @@ function renderBars() {
   for (const b of state.bars) for (const l of (b.labels || [])) cnt[l] = (cnt[l] || 0) + 1;
   const keys = Object.keys(cnt);
   add('악상기호', keys.length ? keys.map(k => cnt[k] > 1 ? `${k}×${cnt[k]}` : k).join(' ') : '없음');
-  if (viewMode === 'score') buildScoreView();
+  if (viewMode === 'score') { buildScoreView(); svMarks(); }
   $('warnList').textContent = '';
   for (const b of warnBars.slice(0, 6)) { const d = document.createElement('div'); d.className = 'msg'; d.textContent = `${b.number}마디: ${b.warnings.join(' / ')}`; $('warnList').appendChild(d); }
   updateOut();
@@ -2803,7 +2856,7 @@ function resetEmpty(text) {
   state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
   showExampleLine();
-  $('fileName').textContent = text ? text + ' 예시 장단으로 돌아왔습니다.' : '예시 장단 (직접 만든 8마디)';
+  $('fileName').textContent = text ? text + ' 예시 장단으로 돌아왔습니다.' : '총보를 아직 추가하지 않았습니다.';
   $('fileInfo').textContent = '총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
