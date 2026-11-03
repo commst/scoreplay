@@ -1112,6 +1112,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
+    <li>악보로 보기에서 음을 고치고 창을 닫으면 악보가 사라질 수 있던 문제: 고친 음 때문에 기준 줄이 바뀌면 악보를 처음부터 다시 펼치거나(추가한 악보가 있으면) 다른 PDF를 보여 주던 것. 이제 고쳐도 같은 악보를 그대로 둠</li>
     <li>꽹과리 막음 소리가 아랫성부 음표마다 나던 것: 이제 윗성부의 X 머리 음표에서만 막음 소리. 윗성부를 모두 X 머리로 적은 악보는 X가 보통 꽹과리 표기라 막음으로 치지 않음</li>
     </ul>
   </section>
@@ -1754,7 +1755,7 @@ function svRect(k) {
 }
 function buildScoreView() {
   const wrap = $('svWrap'), G = state.scoreGeo;
-  const key = G ? G.sc.fp + '|' + G.geo.length + '|' + svZoom + '|' + G.geo.map(g => g ? g.page : '-').join('') : 'none';
+  const key = G ? (G.sc.fp || G.sc.title) + '|' + svZoom + '|' + [...new Set(G.geo.filter(Boolean).map(g => g.page))].join(',') : 'none';   // 음을 고쳐 마디 위치만 조금 바뀌어도 쪽을 다시 그리지 않는다
   if (key === svKey && wrap.firstChild) return;
   svKey = key; svCurrent = -1;
   if (svIO) { svIO.disconnect(); svIO = null; }
@@ -3012,7 +3013,8 @@ function applySelection(first = false) {
     const cnt = {}; for (const x of ok) cnt[x.r.bars.length] = (cnt[x.r.bars.length] || 0) + 1;
     const top = Math.max(0, ...Object.values(cnt));
     const modeN = Math.max(0, ...Object.keys(cnt).filter(n => cnt[n] === top).map(Number));
-    const warnN = x => x.r.bars.reduce((s, b) => s + (b.warnings.length ? 1 : 0), 0);
+    // 경고 수는 직접 고치기 전(원래 읽은) 결과로 센다: 음을 고쳐 경고가 생기면 기준 줄이 바뀌어 악보 보기·마디 번호가 흔들리던 문제
+    const warnN = x => (state.lineRaw[x.key] || x.r).bars.reduce((s, b) => s + (b.warnings.length ? 1 : 0), 0);
     return ok.sort((a, b) => (top > 1 ? (b.r.bars.length === modeN) - (a.r.bars.length === modeN) : 0) || b.r.bars.length - a.r.bars.length || warnN(a) - warnN(b) || String(a.id).localeCompare(String(b.id), 'ko', { numeric: true }))[0];
   })();
   if (!master) {
@@ -3049,7 +3051,13 @@ function applySelection(first = false) {
   for (const b of bars) if (b.events.length && (b.note === '쉼' || b.note === '롤 연장')) b.note = '';
   const prevBars = state.bars;
   state.bars = bars;
-  state.scoreGeo = master.r.geo && master.sc && master.sc.doc ? { sc: master.sc, geo: master.r.geo } : null;   // 악보 보기: 기준 줄의 마디 위치
+  // 악보 보기: 기준 줄의 마디 위치. 추가한 악보가 기준 줄이 되면 다른 PDF가 보이므로, 마디 수가 같으면 올린 총보의 줄을 쓰고, 앞서 쓰던 줄이 그대로 맞으면 그 줄을 계속 쓴다
+  {
+    const okGeo = x => x && x.r.geo && x.sc && x.sc.doc && x.r.bars.length === master.r.bars.length;
+    const prev = state.scoreGeo && results.find(x => x.key === state.scoreGeo.key && x.sc === state.scoreGeo.sc);
+    const pickG = okGeo(prev) ? prev : results.find(x => okGeo(x) && x.sc === sc && x.key === master.key) || results.find(x => okGeo(x) && x.sc === sc) || (okGeo(master) ? master : null);
+    state.scoreGeo = pickG ? { sc: pickG.sc, geo: pickG.r.geo, key: pickG.key } : null;
+  }
   state.marks = { dyn: [], tempo: master.r.marks.tempo };
   // 악기를 켜고 끌 때마다 직접 고친 연주 순서·템포가 지워지던 문제: 마디 수가 그대로면 유지
   const keepOrderText = !first && state.manualOrder ? $('orderText').value : null;
