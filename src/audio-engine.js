@@ -107,7 +107,7 @@ const KG = 2.8;
 const BUK_MID = 4, BUK_CLICK = 0.6;
 const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.6 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG,
   // 11월 1일 넣은 녹음: 녹음 크기가 제각각이라 들리는 크기로 맞춤 (봉고 ≈ 장구 따, 탬버린·트라이앵글 ≈ 심벌·바라, 카바사는 조금 작게)
-  '봉고': 1.6, '봉고높게': 1.6, '카바사': 2.25, '탬버린': 1.5, '트라이앵글': 0.85 };
+  '봉고': 1.6, '봉고높게': 1.6, '카바사': 2.25, '탬버린': 1.5, '트라이앵글': 0.85, '윈드차임': 0.5 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
@@ -438,6 +438,8 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   const pick = k => { let s = S[k]; if (Array.isArray(s)) { vary[k] = (vary[k] || 0) + 1; s = s[vary[k] % s.length]; } return s; };
   // 녹음한 굴림 타가 있으면 그것으로 (직접 넣은 따 소리가 있으면 그 소리로)
   if ((key === '따' || key === '덩') && Array.isArray(S['굴림타']) && !custom['따']) { bounceRoll(buf, S, key, t, dur, gain, pick, S['굴림타']); return; }
+  // 윈드차임: 한 번 훑는 소리 자체가 굴림이라 그대로 한 번
+  if (key === '윈드차임') { const s = pick(key); if (s) put(s, i0, gain); return; }
   // 심벌 롤: 녹음한 롤(점점 커졌다 울리는 소리)을 길이에 맞춰
   if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌']) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9); return; }
   // 꽹과리: 녹음한 '개르르르'를 길이에 맞춰 (길면 이어 붙임)

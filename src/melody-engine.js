@@ -26,6 +26,8 @@ export const INSTRUMENTS = {
   ajaeng_syn: { name: '아쟁 (합성음)', kind: 'bow', harm: null, breath: 0.12, atk: 0.09, vib: [5, 20], formant: [[500, 250, 1.6], [1500, 500, 1.0]] },
   piano: { name: '피아노 (녹음)', kind: 'piano', bank: 'piano' },
   piano_syn: { name: '피아노 (합성음)', kind: 'piano' },
+  // 팀파니: 녹음은 한 번 친 소리(약 E3) 하나와 굴림 하나뿐 → 음높이는 녹음을 빠르게·느리게 읽어 맞춘다. 녹음을 못 받으면 낮은 뜯는 소리로
+  timpani: { name: '팀파니 (녹음)', kind: 'pluck', bank: 'timpani', bright: 0.2, decay: 2.2, ring: 1.4, click: 0.3 },
 };
 
 // 줄 이름으로 악기 짐작
@@ -41,6 +43,7 @@ export function guessInstrument(name = '') {
   if (/피리/.test(name)) return 'piri';
   if (/해금/.test(name)) return 'haegeum';
   if (/아쟁/.test(name)) return 'ajaeng';
+  if (/팀파니|팀파|timp/i.test(name)) return 'timpani';
   if (/piano|피아노|pno|syn|신디|keyboard|건반/i.test(name)) return 'piano';   // 신디사이저·건반 줄은 피아노 소리로
   if (/생황|^생\.?$/.test(name)) return 'saenghwang';
   // 녹음이 없는 악기는 가장 비슷한 소리로: 콘트라베이스·첼로(활로 켜는 낮은 현) → 아쟁
