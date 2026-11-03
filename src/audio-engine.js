@@ -139,6 +139,15 @@ export function tempoFactorAt(items, p, resets = [], ritF = 0.8, accF = 1.2) {
 
 // 악센트(>) 세기: 보통 음보다 타악 약 +5dB(0.68 → 1.2), 선율 약 +4dB(0.75 → 1.2). 예전에는 타악 +3dB, 선율 +2dB라 잘 드러나지 않았음
 const ACC_PERC = 1.2, ACC_MEL = 1.2;
+// 사람처럼 연주: 음마다 정해진(같은 악보면 늘 같은) 작은 흔들림. -1~1 두 개
+function humanRnd(bi, t, line, voice) {
+  let h = 2166136261 ^ (bi * 1000003) ^ Math.round(t * 960);
+  const str = String(line) + (voice || '');
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16;
+  const a = ((h >>> 0) % 10007) / 10006 * 2 - 1, b = (((h >>> 0) >>> 12) % 9973) / 9972 * 2 - 1;
+  return [a, b];
+}
 export const UNIT_FRAC = { q: 1 / 4, dq: 3 / 8, e: 1 / 8, h: 1 / 2 };
 export const DEFAULT_BPM = 80;
 
@@ -229,10 +238,16 @@ export function renderPlan(bars, order, opts) {
           if (prev) prev.dur += dsec;
           continue;
         }
-        const dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
+        let dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
+        let tsH = ts;
+        if (opts.human) {   // 세기 ±6%, 박 사이 음은 조금 여리게, 치는 때 ±8ms (첫 음은 그대로 두어 카운트인과 어긋나지 않게)
+          const [ha, hb] = humanRnd(bi, e.t.v, e.line, e.voice), u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
+          dl *= (1 + 0.06 * ha) * (onBeat || e.accent ? 1 : 0.93);
+          if (ts > t0 + 0.02) tsH = ts + 0.008 * hb;
+        }
         // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
         const sdur = e.stacc && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
-        notes.push({ t: ts, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
+        notes.push({ t: tsH, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
           graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
         continue;
@@ -254,6 +269,10 @@ export function renderPlan(bars, order, opts) {
         const u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
         dl *= (onBeat || e.accent ? 1 : 0.88) * (1 + 0.07 * rnd());
         if (!e.roll && !e.grace) ts += 0.003 * rnd();
+      } else if (opts.human && !e.roll) {   // 다른 타악기도 사람처럼: 세기 ±6%, 박 사이 조금 여리게, 때 ±4ms
+        const [ha, hb] = humanRnd(bi, e.t.v, e.line, e.voice), u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
+        dl *= (1 + 0.06 * ha) * (onBeat || e.accent ? 1 : 0.93);
+        if (!e.grace && ts > t0 + 0.02) ts += 0.004 * hb;
       }
       if (e.roll) {
         const rd = e.rollDur ? e.rollDur.v : e.dur.v;

@@ -919,6 +919,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <div class="now" id="nowText"><b>정지</b></div>
             <div class="bar-track" id="track"><i id="trackFill"></i></div>
           </div>
+          <button class="btn" id="exportMidiBtn" type="button" title="켠 줄을 연주 순서대로 MIDI 파일로 (다른 프로그램·전자 악기에서 열기)">MIDI 저장</button>
+          <button class="btn" id="exportXmlBtn" type="button" title="켠 줄을 MusicXML 악보 파일로 (뮤즈스코어·도리코·시벨리우스에서 열어 고치기)">MusicXML 저장</button>
           <button class="btn" id="exportJsonBtn" type="button">인식 결과 JSON 저장</button>
           <button class="btn" id="saveJump" type="button">음원 저장…</button>
         </div>
@@ -968,8 +970,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <div class="checks">
             <label><input type="checkbox" id="sArtic" checked>스타카토·트릴 연주</label>
             <label><input type="checkbox" id="sStereo" checked>좌우 배치 (입체 음향)</label>
+            <label><input type="checkbox" id="sHuman" checked>사람처럼 연주 (세기·박을 살짝 흔들기)</label>
           </div>
-          <p class="hint">재생과 음원 저장에 함께 적용됩니다. 조옮김·기준음은 선율 악기에만(타악은 그대로). 좌우 배치는 국악관현악 자리처럼 가야금·거문고는 왼쪽, 아쟁·대금은 오른쪽으로 나눠 들리게 하고, 줄마다 '좌우 위치'로 바꿀 수 있습니다(타악은 가운데). 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.</p>
+          <p class="hint">재생과 음원 저장에 함께 적용됩니다. 사람처럼 연주는 음마다 세기를 조금씩(±6%), 치는 때를 아주 조금씩(선율 ±8ms, 타악 ±4ms) 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게 합니다(같은 악보는 늘 같은 결과). 조옮김·기준음은 선율 악기에만(타악은 그대로). 좌우 배치는 국악관현악 자리처럼 가야금·거문고는 왼쪽, 아쟁·대금은 오른쪽으로 나눠 들리게 하고, 줄마다 '좌우 위치'로 바꿀 수 있습니다(타악은 가운데). 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.</p>
         </details>
         <div class="field">
           <label for="orderText">연주 순서<span class="pill" id="orderState">자동</span></label>
@@ -1014,6 +1017,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
+            <dt>MIDI 저장 · MusicXML 저장</dt>
+            <dd>읽은 악보를 다른 프로그램에서 쓸 수 있는 파일로 내보냅니다(켠 줄만). <b>MIDI</b>는 연주 순서(도돌이표대로 반복 설정)대로 펼친 전곡을 줄마다 한 트랙으로, 타악은 드럼 채널로 담습니다. 빠르기 표·박자표는 들어가고 rit.·accel.·연습 속도는 넣지 않습니다. <b>MusicXML</b>은 악보에 적힌 순서대로 줄마다 한 파트(윗성부·아랫성부는 1·2성부, 도돌이 세로줄 표시 포함)로 담아 뮤즈스코어·도리코·시벨리우스·피날레에서 열어 고칠 수 있습니다. 음 이름은 내림표(♭) 쪽으로 적고 조표는 넣지 않으니 열어서 조표를 정해 주세요. 옥타브·조옮김 설정은 들리는 높이대로 반영됩니다.</dd>
             <dt>재생 · 진행 막대</dt>
             <dd>재생 버튼으로 시작하고 다시 누르면 멈춥니다. 진행 막대를 누르면 그 위치로 건너뜁니다. 지금 연주 중인 마디는 마디 지도에서 노란색으로 표시됩니다.</dd>
             <dt>마디 ○부터 ○까지</dt>
@@ -1126,6 +1131,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>MIDI·MusicXML 저장</b>: 연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</li>
+    <li><b>사람처럼 연주</b>(소리 다듬기, 기본 켬): 음마다 세기와 치는 때를 아주 조금씩 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게</li>
     <li><b>연습 번호</b>: 악보의 네모 칸 연습 번호(A, B, C …, 2악장)를 연주 칸에 단추로. 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 구간으로 정해 재생</li>
     <li><b>반복할 때마다 빠르게</b>: 구간 계속 반복과 함께 켜면 처음 %(기본 70%)에서 시작해 한 바퀴마다 +%(기본 5%)씩 빨라져 연습 속도까지. 음 높이는 그대로, 지금 몇 번째·몇 %인지 표시</li>
     <li><b>타악 성부 짝 맞추기</b>: 윗성부나 아랫성부 소리를 고르면 다른 쪽도 짝 소리로 바뀝니다(꽹과리 → 꽹과리, 장구 궁 → 장구 따 등). 줄마다 '윗성부·아랫성부 함께 바꾸기'를 끄면 따로 고를 수 있음</li>
@@ -2365,7 +2372,7 @@ function soundOpts() {
   let tune = +$('sTune').value; if (!(tune >= 415 && tune <= 466)) { tune = 440; $('sTune').value = 440; }
   const tr = +$('sTranspose').value || 0;
   return { transpose: tr, tune, shift: tr + 12 * Math.log2(tune / 440), fermata: +$('sFermata').value, reverb: +$('sReverb').value || 0,
-    artic: $('sArtic').checked, stereo: $('sStereo').checked };
+    artic: $('sArtic').checked, stereo: $('sStereo').checked, human: $('sHuman').checked };
 }
 function soundSummary() {
   const o = soundOpts(), parts = [];
@@ -2373,9 +2380,10 @@ function soundSummary() {
   if (o.tune !== 440) parts.push(`A=${o.tune}`);
   parts.push(o.reverb ? `잔향 ${$('sReverb').selectedOptions[0].textContent}` : '잔향 없음');
   parts.push(o.stereo ? '입체' : '모노');
+  if (!o.human) parts.push('기계처럼');
   $('soundSum').textContent = '· ' + parts.join(' · ');
 }
-['sTranspose', 'sTune', 'sFermata', 'sReverb', 'sArtic', 'sStereo'].forEach(id => $(id).addEventListener('change', () => { soundSummary(); changed(); renderLineList(); }));
+['sTranspose', 'sTune', 'sFermata', 'sReverb', 'sArtic', 'sStereo', 'sHuman'].forEach(id => $(id).addEventListener('change', () => { soundSummary(); changed(); renderLineList(); }));
 // 국악관현악 자리처럼 처음 좌우 위치 (-1 왼쪽 ~ 1 오른쪽)
 const PAN_DEFAULT = { gayageum: -0.55, geomungo: -0.35, yanggeum: -0.45, haegeum: -0.2, ajaeng: 0.45, daegeum: 0.15, sogeum: 0.3, piri: -0.05, daepiri: 0.05, taepyeongso: 0.2, saenghwang: -0.15, piano: -0.3, timpani: 0.4 };
 function panOf(c) { if (typeof c.pan === 'number') return c.pan; const k = (c.inst || '').replace(/_syn$/, ''); return PAN_DEFAULT[k] ?? 0; }
@@ -2400,7 +2408,7 @@ async function buildAudio(onProgress, o = null) {
     countIn: o.countIn, metronome: o.metronome, restCount: o.restCount,
     dyn: o.dyn && state.marks.dyn.length ? state.marks.dyn : null,
     tempo: tempoItems(), ritF: pctIn('ritF', 80, 30, 100) / 100, accF: pctIn('accF', 120, 100, 200) / 100,
-    shift: snd.shift, fermata: snd.fermata, stacc: snd.artic, trill: snd.artic,
+    shift: snd.shift, fermata: snd.fermata, stacc: snd.artic, trill: snd.artic, human: snd.human,
   });
   // 선율 음은 조금씩 나눠 합성해 휴대폰에서도 화면이 멈추지 않게
   const notes = plan.notes;
@@ -2761,7 +2769,7 @@ function collectSettings() {
     // 악기를 모두 꺼 마디가 없을 때는 순서 칸 글을 그대로 (마디 번호로 다시 읽으므로)
     order: state.manualOrder ? (state.manualOrder.every(k => k < state.bars.length) ? orderToText(state.bars, state.manualOrder) : $('orderText').value) : null,
     tempoChanges: state.tempoChEdited ? state.tempoChanges.map(c => ({ ...c })) : null,
-    sound: (({ transpose, tune, fermata, reverb, artic, stereo }) => ({ transpose, tune, fermata, reverb, artic, stereo }))(soundOpts()),
+    sound: (({ transpose, tune, fermata, reverb, artic, stereo, human }) => ({ transpose, tune, fermata, reverb, artic, stereo, human }))(soundOpts()),
     extras: (state.extras || []).map(x => ({ name: x.file.name, fp: x.sc.fp })) };
 }
 const fmtTime = iso => { try { const d = new Date(iso); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; } catch (e) { return ''; } };
@@ -2818,7 +2826,7 @@ function applyRestSettings(S) {
   if (S.sound) {
     const D = S.sound;
     if (D.transpose != null) $('sTranspose').value = String(D.transpose); if (D.tune) $('sTune').value = D.tune; if (D.fermata != null) $('sFermata').value = String(D.fermata);
-    if (D.reverb != null) $('sReverb').value = String(D.reverb); if (typeof D.artic === 'boolean') $('sArtic').checked = D.artic; if (typeof D.stereo === 'boolean') $('sStereo').checked = D.stereo;
+    if (D.reverb != null) $('sReverb').value = String(D.reverb); if (typeof D.artic === 'boolean') $('sArtic').checked = D.artic; if (typeof D.stereo === 'boolean') $('sStereo').checked = D.stereo; if (typeof D.human === 'boolean') $('sHuman').checked = D.human;
     if (state.score) renderLineList();   // 좌우 위치 막대(입체를 끄면 못 바꿈)를 불러온 설정에 맞춘다
   }
   soundSummary();
@@ -3387,6 +3395,189 @@ $('exportJsonBtn').addEventListener('click', () => {
   a.href = url; a.download = `${base}_인식결과.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+// ---------- 내보내기: MIDI · MusicXML ----------
+// 읽은 결과(켠 줄)를 다른 프로그램(뮤즈스코어·도리코·시벨리우스 등)에서 열어 고치거나 다시 쓸 수 있게
+const GM_PROG = { gayageum: 107, gayageum_syn: 107, geomungo: 107, geomungo_syn: 107, yanggeum: 15, yanggeum_syn: 15, daegeum: 77, daegeum_syn: 77, sogeum: 72, sogeum_syn: 72,
+  piri: 68, piri_syn: 68, daepiri: 69, saenghwang: 20, taepyeongso: 111, taepyeongso_syn: 111, haegeum: 110, haegeum_syn: 110, ajaeng: 42, ajaeng_syn: 42, piano: 0, piano_syn: 0, timpani: 47 };
+const GM_DRUM = { 따: 38, 궁: 45, 덩: 38, 꽹과리: 56, 꽹과리막음: 56, 북: 41, 북녹음: 41, 북짧게: 47, 북테: 37, 징: 52, 바라: 55, 심벌: 49, 하이햇: 42, 베이스드럼: 36, 스네어: 38,
+  봉고높게: 60, 봉고: 61, 탬버린: 54, 트라이앵글: 81, 카바사: 69, 윈드차임: 84, 클릭: 76 };
+function exportLines() {   // 켠 줄 (역할·소리 설정과 함께)
+  return state.lineIds.map(id => { const k = cfgKey(id), c = state.lineCfg[k]; return { key: k, c, name: lineLabel(id) || '줄' }; }).filter(x => x.c && x.c.role !== 'off');
+}
+function quarterBpm(row) { const bpm = row && row.bpm > 0 ? row.bpm : DEFAULT_BPM; return bpm * (UNIT_FRAC[row ? row.unit : 'q'] / 0.25); }
+function rowAt(n) { let r = null; for (const x of [...state.tempoRows].sort((a, b) => a.start - b.start)) if (x.start <= n) r = x; return r || state.tempoRows[0]; }
+function fileBase() { return (state.title || '악보').replace(/[\\/:*?"<>|]/g, '_').trim() || '악보'; }
+function downloadBytes(data, name, type) {
+  const url = URL.createObjectURL(new Blob([data], { type })), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+// MIDI: 연주 순서(도돌이표대로 반복 설정을 따름)대로 펼친 전곡. 줄마다 한 트랙, 타악은 10번 채널(GM 드럼). 빠르기 표·박자표 반영(rit.·accel.·연습 속도는 넣지 않음)
+function buildMidi() {
+  const TPQ = 480, W = TPQ * 4, lines = exportLines();
+  const order = (state.manualOrder || playbackOrder(state.bars, { repeats: $('optRepeat').checked })).filter(k => state.bars[k]);
+  const meta = [], tracks = lines.map(() => []);
+  let tick = 0, lastQ = null, lastTs = null;
+  const shift = (soundOpts().transpose || 0);
+  const open = lines.map(() => new Map());   // 붙임줄로 이을 음: midi → 음
+  order.forEach(bi => {
+    const b = state.bars[bi], L = Math.round(b.barLen.v * W);
+    const q = quarterBpm(rowAt(b.number)); if (q !== lastQ) { meta.push([tick, 'tempo', Math.round(60e6 / q)]); lastQ = q; }
+    const ts = b.timesig.join('/'); if (ts !== lastTs) { meta.push([tick, 'ts', b.timesig]); lastTs = ts; }
+    lines.forEach((ln, li) => {
+      for (const e of b.events) {
+        if (e.line !== ln.key) continue;
+        const t0 = tick + Math.round(e.t.v * W);
+        if (ln.c.role === 'melody' && e.midis) {
+          const ms = e.midis.map(m => Math.max(0, Math.min(127, Math.round(m + 12 * (ln.c.oct || 0) + shift))));
+          const dur = Math.max(1, Math.round((e.sus || e.dur).v * W));
+          for (const m of ms) {
+            const prev = open[li].get(m);
+            if (e.tie && prev && Math.abs(prev.end - t0) < 3) { prev.end = t0 + dur; continue; }
+            if (e.tie) continue;
+            const nt = { start: t0, end: t0 + dur, m, v: e.accent ? 112 : 80 }; tracks[li].push(nt); open[li].set(m, nt);
+          }
+        } else if (ln.c.role === 'perc' && !e.tie) {
+          const key = ln.c[e.voice === 'L' ? 'L' : 'R']; const m = GM_DRUM[key]; if (!m || key === 'off') continue;
+          const dur = Math.max(30, Math.min(Math.round(e.dur.v * W), TPQ));
+          tracks[li].push({ start: t0, end: t0 + dur, m, v: e.accent ? 115 : key === '꽹과리막음' ? 60 : 84, drum: true });
+        }
+      }
+    });
+    tick += L;
+  });
+  const vlq = n => { const out = [n & 0x7f]; while ((n >>= 7)) out.unshift((n & 0x7f) | 0x80); return out; };
+  const str = s => [...new TextEncoder().encode(s)];
+  const chunk = (id, body) => [...str(id), (body.length >>> 24) & 255, (body.length >>> 16) & 255, (body.length >>> 8) & 255, body.length & 255, ...body];
+  const trackBytes = evs => {   // evs: [tick, bytes[]] — 같은 tick이면 끄기 먼저
+    evs.sort((a, b) => a[0] - b[0] || (a[2] || 0) - (b[2] || 0));
+    const out = []; let last = 0;
+    for (const [t, bytes] of evs) { out.push(...vlq(Math.max(0, t - last)), ...bytes); last = Math.max(last, t); }
+    out.push(0, 0xff, 0x2f, 0); return out;
+  };
+  const head = [0, 1, 0, lines.length + 1, (TPQ >> 8) & 255, TPQ & 255];
+  const t0 = [[0, [0xff, 0x03, ...vlq(str(state.title || '').length), ...str(state.title || '')]]];
+  for (const [t, kind, v] of meta) {
+    if (kind === 'tempo') t0.push([t, [0xff, 0x51, 3, (v >> 16) & 255, (v >> 8) & 255, v & 255]]);
+    else t0.push([t, [0xff, 0x58, 4, v[0], Math.round(Math.log2(v[1])), 24, 8]]);
+  }
+  let file = [...chunk('MThd', head), ...chunk('MTrk', trackBytes(t0))];
+  let ch = 0;
+  lines.forEach((ln, li) => {
+    const perc = ln.c.role === 'perc', c = perc ? 9 : (ch === 9 ? ++ch : ch) % 16; if (!perc) ch++;
+    const name = str(ln.name);
+    const evs = [[0, [0xff, 0x03, ...vlq(name.length), ...name]]];
+    if (!perc) evs.push([0, [0xc0 | c, GM_PROG[ln.c.inst] ?? 0]]);
+    evs.push([0, [0xb0 | c, 7, Math.max(0, Math.min(127, Math.round(100 * Math.min(1.27, ln.c.vol ?? 1))))]]);
+    for (const n of tracks[li]) { evs.push([n.start, [0x90 | c, n.m, n.v], 1]); evs.push([n.end, [0x80 | c, n.m, 0], 0]); }
+    file = file.concat(chunk('MTrk', trackBytes(evs)));
+  });
+  return new Uint8Array(file);
+}
+// MusicXML: 악보에 적힌 순서(도돌이표는 표시만)대로, 켠 줄마다 한 파트. 윗성부 = 1성부, 아랫성부 = 2성부
+function buildMusicXml() {
+  const DIV = 96, W = DIV * 4, lines = exportLines(), esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const STEPS = [['C', 0], ['C', 1], ['D', 0], ['D', 1], ['E', 0], ['F', 0], ['F', 1], ['G', 0], ['G', 1], ['A', 0], ['A', 1], ['B', 0]];
+  const FLAT = [['C', 0], ['D', -1], ['D', 0], ['E', -1], ['E', 0], ['F', 0], ['G', -1], ['G', 0], ['A', -1], ['A', 0], ['B', -1], ['B', 0]];
+  const TYPES = [[384, 'whole'], [192, 'half'], [96, 'quarter'], [48, 'eighth'], [24, '16th'], [12, '32nd'], [6, '64th']];
+  const typeOf = d => {
+    for (const [v, n] of TYPES) { if (d === v) return { type: n }; if (d === v * 1.5) return { type: n, dots: 1 }; if (d === v * 1.75) return { type: n, dots: 2 }; }
+    for (const [v, n] of TYPES) if (d * 3 === v * 2) return { type: n, tup: true };
+    return {};
+  };
+  const shift = soundOpts().transpose || 0;
+  let out = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">\n<score-partwise version="3.1">\n`;
+  out += `<work><work-title>${esc(state.title || '')}</work-title></work>\n<identification><encoding><software>합주연습기</software><encoding-date>${new Date().toISOString().slice(0, 10)}</encoding-date></encoding></identification>\n<part-list>\n`;
+  lines.forEach((ln, i) => { out += `<score-part id="P${i + 1}"><part-name>${esc(ln.name)}</part-name>${ln.c.role === 'melody' ? `<midi-instrument id="P${i + 1}-I1"><midi-program>${(GM_PROG[ln.c.inst] ?? 0) + 1}</midi-program></midi-instrument>` : ''}</score-part>\n`; });
+  out += `</part-list>\n`;
+  lines.forEach((ln, li) => {
+    const perc = ln.c.role === 'perc';
+    const allM = state.bars.flatMap(b => b.events.filter(e => e.line === ln.key && e.midis).flatMap(e => e.midis));
+    const avg = allM.length ? allM.reduce((a, b) => a + b, 0) / allM.length + 12 * (ln.c.oct || 0) + shift : 72;
+    const flats = allM.length && state.bars.some(b => b.events.some(e => e.line === ln.key && e.midis)) ? true : false;
+    out += `<part id="P${li + 1}">\n`;
+    let lastTs = null, lastQ = null;
+    const lastNote = new Map();   // 붙임줄 시작 표시를 붙일 앞 음 (midi → 음 객체)
+    state.bars.forEach((b, bi) => {
+      const L = Math.round(b.barLen.v * W); let m = `<measure number="${b.number}">\n`;
+      if (b.repeatStart) m += `<barline location="left"><bar-style>heavy-light</bar-style><repeat direction="forward"/></barline>\n`;
+      // 박자표는 마디 길이로 (적힌 박자표와 실제 마디 길이가 다른 마디: 못갖춘마디·박자 바뀌기 직전 등)
+      let bt = b.timesig[1], bs = b.barLen.v * bt; if (Math.abs(bs - Math.round(bs)) > 1e-6) { bt = 16; bs = b.barLen.v * 16; } bs = Math.round(bs);
+      const ts = bs + '/' + bt;
+      if (ts !== lastTs || bi === 0) {
+        m += `<attributes>${bi === 0 ? `<divisions>${DIV}</divisions><key><fifths>0</fifths></key>` : ''}<time><beats>${bs}</beats><beat-type>${bt}</beat-type></time>`;
+        if (bi === 0) m += perc ? `<clef><sign>percussion</sign></clef>` : avg < 55 ? `<clef><sign>F</sign><line>4</line></clef>` : `<clef><sign>G</sign><line>2</line></clef>`;
+        m += `</attributes>\n`; lastTs = ts;
+      }
+      const q = quarterBpm(rowAt(b.number));
+      if (li === 0 && q !== lastQ) { const r = rowAt(b.number); m += `<direction placement="above"><direction-type><words>${esc(r && r.text ? r.text : '♩=' + Math.round(q))}</words></direction-type><sound tempo="${Math.round(q * 100) / 100}"/></direction>\n`; lastQ = q; }
+      else if (q !== lastQ) lastQ = q;
+      const objs = [];
+      ['R', 'L'].forEach((v, vi) => {
+        const evs = b.events.filter(e => e.line === ln.key && (e.voice === v || (!e.voice && v === 'R')) && !(e.grace && !e.midis && false)).sort((a, c) => a.t.v - c.t.v);
+        if (vi === 1 && !evs.length) return;
+        if (vi === 1) objs.push({ backup: L });
+        let pos = 0;
+        const rest = d => { if (d > 0) objs.push({ rest: true, d, voice: vi + 1 }); };
+        evs.forEach((e, k) => {
+          const st = Math.max(pos, Math.round(e.t.v * W)); if (st >= L) return;
+          rest(st - pos);
+          const nx = evs.slice(k + 1).find(o => Math.round(o.t.v * W) > st);
+          let d = Math.round((perc ? e.dur : (e.sus || e.dur)).v * W); d = Math.max(1, Math.min(d, (nx ? Math.round(nx.t.v * W) : L) - st, L - st));
+          if (perc || !e.midis) objs.push({ d, voice: vi + 1, perc: true, low: v === 'L', accent: e.accent, xh: e.xh, stacc: e.stacc });
+          else {
+            const ms = e.midis.map(x => Math.round(x + 12 * (ln.c.oct || 0) + shift));
+            ms.forEach((mm, j) => {
+              const o = { d, voice: vi + 1, midi: mm, chord: j > 0, accent: e.accent, stacc: e.stacc, trill: e.trill, tieStop: !!e.tie };
+              if (e.tie) { const p = lastNote.get(mm); if (p) p.tieStart = true; }
+              objs.push(o); lastNote.set(mm, o);
+            });
+          }
+          pos = st + d;
+        });
+        rest(L - pos);
+        if (!evs.length && vi === 0) { objs.pop(); objs.push({ rest: true, d: L, voice: 1, whole: true }); }
+      });
+      // 음 객체 → XML
+      const noteXml = o => {
+        if (o.backup) return `<backup><duration>${o.backup}</duration></backup>\n`;
+        const ty = o.whole ? {} : typeOf(o.d);
+        let x = '<note>';
+        if (o.chord) x += '<chord/>';
+        if (o.rest) x += o.whole ? '<rest measure="yes"/>' : '<rest/>';
+        else if (o.perc) x += `<unpitched><display-step>${o.low ? 'F' : 'C'}</display-step><display-octave>${o.low ? 4 : 5}</display-octave></unpitched>`;
+        else { const sp = (flats ? FLAT : STEPS)[((o.midi % 12) + 12) % 12], oct = Math.floor(o.midi / 12) - 1 + (flats && sp[0] === 'C' && sp[1] < 0 ? 1 : 0); x += `<pitch><step>${sp[0]}</step>${sp[1] ? `<alter>${sp[1]}</alter>` : ''}<octave>${oct}</octave></pitch>`; }
+        x += `<duration>${o.d}</duration>`;
+        if (o.tieStop) x += '<tie type="stop"/>'; if (o.tieStart) x += '<tie type="start"/>';
+        x += `<voice>${o.voice}</voice>`;
+        if (ty.type) x += `<type>${ty.type}</type>` + '<dot/>'.repeat(ty.dots || 0);
+        if (ty.tup) x += '<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>';
+        if (o.perc && !o.rest) x += `<stem>${o.low ? 'down' : 'up'}</stem>` + (o.xh ? '<notehead>x</notehead>' : '');
+        const nots = [];
+        if (o.tieStop) nots.push('<tied type="stop"/>'); if (o.tieStart) nots.push('<tied type="start"/>');
+        const art = (o.accent ? '<accent/>' : '') + (o.stacc ? '<staccato/>' : '');
+        if (art) nots.push(`<articulations>${art}</articulations>`);
+        if (o.trill) nots.push('<ornaments><trill-mark/></ornaments>');
+        if (nots.length) x += `<notations>${nots.join('')}</notations>`;
+        return x + '</note>\n';
+      };
+      m += objs.map(noteXml).join('');
+      if (b.repeatEnd) m += `<barline location="right"><bar-style>light-heavy</bar-style><repeat direction="backward"/></barline>\n`;
+      out += m + `</measure>\n`;
+    });
+    out += `</part>\n`;
+  });
+  return out + `</score-partwise>\n`;
+}
+$('exportMidiBtn').addEventListener('click', () => {
+  if (!state.score || !state.bars.length) { showMsg('악보를 먼저 올려 주세요. 예시 장단은 내보낼 수 없습니다.'); return; }
+  if (!exportLines().length) { showMsg('켠 줄이 없습니다. 악기 선택에서 내보낼 줄을 켜 주세요.'); return; }
+  try { downloadBytes(buildMidi(), fileBase() + '.mid', 'audio/midi'); } catch (e) { console.error(e); showMsg('MIDI 파일을 만들지 못했습니다.'); }
+});
+$('exportXmlBtn').addEventListener('click', () => {
+  if (!state.score || !state.bars.length) { showMsg('악보를 먼저 올려 주세요. 예시 장단은 내보낼 수 없습니다.'); return; }
+  if (!exportLines().length) { showMsg('켠 줄이 없습니다. 악기 선택에서 내보낼 줄을 켜 주세요.'); return; }
+  try { downloadBytes(buildMusicXml(), fileBase() + '.musicxml', 'application/vnd.recordare.musicxml+xml'); } catch (e) { console.error(e); showMsg('MusicXML 파일을 만들지 못했습니다.'); }
 });
 $('pdfInput').addEventListener('change', e => { if (e.target.files.length) loadFullPdf([...e.target.files]); e.target.value = ''; });
 $('extraInput').addEventListener('change', e => { if (e.target.files.length) loadExtraPdfs([...e.target.files]); e.target.value = ''; });
