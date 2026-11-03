@@ -764,13 +764,21 @@ function findTempoMarks(glyphs) {
   }
   for (const r of runs) {
     // '♩=70~73'의 물결표가 다른 글꼴로 찍혀 빠지면 숫자 사이가 벌어진다 → 그 자리를 '~'로
-    const s = r.map((g, k) => (k && isDigit(g.code) && isDigit(r[k - 1].code) && g.x0 - r[k - 1].x1 > 2.5 ? '~' : '') + String.fromCharCode(g.code)).join('');
-    const m = s.match(/([qehx])\s*([.k]?)\s*=\s*(?:c(?:a|irca)?\.?\s*)?(\d+)(?:\s*[-~]\s*(\d+))?/);   // '♩ = c. 108'(약 108)도
+    let s = r.map((g, k) => (k && isDigit(g.code) && isDigit(r[k - 1].code) && g.x0 - r[k - 1].x1 > 2.5 ? '~' : '') + String.fromCharCode(g.code)).join('');
+    // 숫자를 다른(일반) 글꼴로 이어 쓴 경우: '♪= C'(Engraver) + 'a 60'(Times) → 같은 줄 바로 뒤 글자를 붙여 읽는다
+    if (/=\s*[A-Za-z.\s]*$/.test(s)) {
+      let last = r[r.length - 1].x1; const y0 = r[0].oy;
+      for (const h of glyphs.filter(h => !h.font.includes('Engraver') && !MUSIC_FONT.test(h.font) && Math.abs(h.oy - y0) < 2 && h.ox >= last - 1).sort((a, b) => a.ox - b.ox)) {
+        if (h.x0 - last > 8 || s.length > 24) break; s += String.fromCharCode(h.code); last = h.x1;
+      }
+    }
+    const m = s.match(/([qehx])\s*([.k]?)\s*=\s*(?:[cC](?:a|irca)?\.?\s*)?(\d+)(?:\s*[-~]\s*(\d+))?/);   // '♩ = c. 108'·'♪= Ca 60'(약 60)도
     if (!m) continue;
     const unit = { q: [1, 4], e: [1, 8], h: [1, 2], x: [1, 16] }[m[1]];
     const dotted = !!m[2];
     const lo = +m[3], hi = m[4] ? +m[4] : lo;
-    marks.push({ x: r[0].ox, y: r[0].oy, unit, dotted, bpm: Math.round((lo + hi) / 2), text: `${dotted ? '♩.' : '♩'}=${m[3]}${m[4] ? '-' + m[4] : ''}` });
+    const sym = { q: '♩', e: '♪', h: '2분', x: '16분' }[m[1]];
+    marks.push({ x: r[0].ox, y: r[0].oy, unit, dotted, bpm: Math.round((lo + hi) / 2), text: `${sym}${dotted ? '.' : ''}=${m[3]}${m[4] ? '-' + m[4] : ''}` });
   }
   // 악보 글꼴 음표(q, e, h) 뒤에 일반 글꼴 "=숫자"
   const plain = glyphs.filter(g => !MUSIC_FONT.test(g.font));
