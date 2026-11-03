@@ -782,8 +782,12 @@ function findTempoMarks(glyphs) {
   }
   // 악보 글꼴 음표(q, e, h) 뒤에 일반 글꼴 "=숫자"
   const plain = glyphs.filter(g => !MUSIC_FONT.test(g.font));
+  // 음표 글자가 악보 글꼴로 표시되지 않은 경우(Ghostscript로 바꾼 Finale PDF의 'TTE…t00' 글꼴 등): 'q'·'e'·'h' 한 글자 바로 뒤에 다른 글꼴의 '=숫자'가 오면 음표로 본다
+  const looseNote = g => !MUSIC_FONT.test(g.font) && [113, 101, 104].includes(g.code) && !/Times|Arial|Helvet|Gulim|Batang|Dotum|Malgun|Gothic|Myeong|Serif|Sans|Roman/i.test(g.font)
+    && !glyphs.some(h => h !== g && h.font === g.font && Math.abs(h.oy - g.oy) < 2 && h.code > 32 && Math.abs(h.ox - g.ox) < g.size * 1.2)
+    && glyphs.some(h => h.code === 61 && h.font !== g.font && Math.abs(h.oy - g.oy) < 3 && h.ox > g.ox && h.x0 - g.x1 < 8);
   for (const g of glyphs) {
-    if (!MUSIC_FONT.test(g.font) || ![113, 101, 104].includes(g.code)) continue;
+    if (!(MUSIC_FONT.test(g.font) || looseNote(g)) || ![113, 101, 104].includes(g.code)) continue;
     if (marks.some(mk => Math.abs(mk.y - g.oy) < 3 && Math.abs(mk.x - g.ox) < 30)) continue;
     // 점: 악보 글꼴의 점, 또는 바로 붙여 쓴 일반 글꼴 '.'(Sibelius가 '♩.=48'의 점을 글자 글꼴로 찍기도 함)
     const dotted = glyphs.some(h => (h.code === 107 || h.code === 46) && Math.abs(h.oy - g.oy) < 3 && h.ox > g.ox && (MUSIC_FONT.test(h.font) ? h.ox - g.x1 < 5 : h.x0 - g.x1 < 2.5));
