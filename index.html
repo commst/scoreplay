@@ -214,6 +214,9 @@ button { cursor: pointer; }
 .sv-page canvas { display: block; width: 100%; height: 100%; }
 .sv-page .sv-pno { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #888; pointer-events: none; }
 .sv-hl { position: absolute; border-radius: 4px; background: rgba(255, 196, 0, .18); outline: 2px solid #e0a100; pointer-events: none; transition: left .12s, top .12s, width .12s, height .12s; z-index: 2; }
+.sv-part { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.sv-part select { max-width: 180px; }
+.sv-strip { margin-bottom: 4px; }
 .sv-edit-hint { margin: 0 0 8px; padding: 7px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); font-size: 13px; }
 #svEdit[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); }
 .sv-editing .sv-page { cursor: cell; }
@@ -1116,6 +1119,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
         <div class="sv-tools">
           <button type="button" class="btn sv-only-full" id="svPlay">▶ 재생 · 일시정지</button>
           <label class="chk"><input type="checkbox" id="svFollow" checked>연주 위치 따라가기</label>
+          <label class="sv-part">보기 <select id="svPartSel" aria-label="악보 보기에서 볼 줄"><option value="">총보 전체</option></select></label>
           <button type="button" class="btn" id="svFull">화면 가득 보기</button>
           <button type="button" class="btn" id="svEdit" aria-pressed="false" title="켜면 마디를 눌렀을 때 재생 대신 그 마디의 음정·음 길이를 고치는 창이 열립니다">✎ 음 고치기</button>
           <span class="zoom">크기 <button type="button" id="svZoomOut" aria-label="작게">−</button><span id="svZoomVal">100%</span><button type="button" id="svZoomIn" aria-label="크게">+</button></span>
@@ -5103,6 +5107,20 @@ function setFull(on) {
 }
 $('svFull').addEventListener('click', () => setFull(!$('scoreView').classList.contains('sv-full')));
 $('svEdit').addEventListener('click', () => setSvEdit(!svEditing));
+// 내 파트만 크게 보기: 켠 줄 중 하나를 고르면 그 줄 오선만 잘라 이어 보여 준다
+function renderPartSel() {
+  const sel = $('svPartSel'); if (!sel) return;
+  const opts = state.score && state.scoreGeo ? state.lineIds.map(id => cfgKey(id)).filter(k => { const r = state.lineRes[k]; return r && r.geo && r.bars.length === state.bars.length; }) : [];
+  if (svPart && !opts.includes(svPart)) svPart = null;
+  const want = [''].concat(opts).join('|');
+  if (sel.dataset.opts !== want) {
+    sel.textContent = ''; sel.appendChild(new Option('총보 전체', ''));
+    for (const k of opts) { const id = state.lineIds.find(i => cfgKey(i) === k); sel.appendChild(new Option(`${lineLabel(id) || '줄'}만`, k)); }
+    sel.dataset.opts = want;
+  }
+  sel.value = svPart || ''; sel.closest('label').hidden = !opts.length;
+}
+$('svPartSel').addEventListener('change', () => { svPart = $('svPartSel').value || null; const k = svCurrent; svKey = null; buildScoreView(); if (k >= 0) { svCurrent = -1; svShow(k, true); } });
 $('svPlay').addEventListener('click', () => togglePlay());
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('scoreView').classList.contains('sv-full') && editorBar == null) setFull(false); });
 const SV_ZOOMS = [1, 1.25, 1.5, 2, 2.5, 3];
@@ -5114,16 +5132,37 @@ function setZoom(dir) {
 $('svZoomOut').addEventListener('click', () => setZoom(-1)); $('svZoomIn').addEventListener('click', () => setZoom(1));
 $('svZoomVal').textContent = Math.round(svZoom * 100) + '%';
 // 마디 칸(쪽 좌표): 기준 줄이 있는 단 전체 높이 × 마디 가로
+// 내 파트만 보기: svPart = 고른 줄의 열쇠(cfgKey). 그 줄의 마디 위치로 그 오선만 잘라 이어 보여 준다
+let svPart = null;
+function svPartRes() {
+  if (!svPart || !state.scoreGeo) return null;
+  const r = state.lineRes[svPart], item = state.lineList.find(l => cfgKey(l.id) === svPart);
+  const sc = (item && item.sourceScore) || state.score;
+  if (!r || !r.geo || r.bars.length !== state.bars.length || !sc || !sc.doc || sc !== state.scoreGeo.sc) return null;
+  return { sc, geo: r.geo };
+}
+function svGeo() { return svPartRes() || state.scoreGeo; }
+// 마디 칸(쪽 좌표): 기준 줄이 있는 단 전체 높이 × 마디 가로 (내 파트만 보기면 그 오선 높이만)
 function svRect(k) {
-  const G = state.scoreGeo, g = G && G.geo[k]; if (!g) return null;
+  const G = svGeo(), g = G && G.geo[k]; if (!g) return null;
   const L = G.sc.layouts[g.page]; if (!L || !L.staves[g.staff]) return null;
+  if (svPartRes()) { const st = L.staves[g.staff]; return { page: g.page, staff: g.staff, x0: g.x0, x1: g.x1, y0: st.top - 12, y1: st.bottom + 12 }; }
   const sys = (L.systems && L.sysOf && L.systems[L.sysOf[g.staff]]) || [g.staff];
   const top = Math.min(...sys.map(i => L.staves[i].top)), bottom = Math.max(...sys.map(i => L.staves[i].bottom));
-  return { page: g.page, x0: g.x0, x1: g.x1, y0: top - 10, y1: bottom + 10 };
+  return { page: g.page, staff: g.staff, x0: g.x0, x1: g.x1, y0: top - 10, y1: bottom + 10 };
 }
+// 쪽(또는 잘라 낸 띠) 칸: { el, page, ox, oy, w, h } — 칸 안 자리 = (쪽 좌표 - ox·oy) / w·h
+function svPanelOf(r) {
+  if (!r) return null;
+  if (!svPartRes()) return svPages.get(r.page) || null;
+  for (const P of svPages.values()) if (P.page === r.page && P.staff === r.staff) return P;
+  return null;
+}
+const svPct = (v, o, len) => ((v - o) / len * 100) + '%';
 function buildScoreView() {
-  const wrap = $('svWrap'), G = state.scoreGeo;
-  const key = G ? (G.sc.fp || G.sc.title) + '|' + svZoom + '|' + [...new Set(G.geo.filter(Boolean).map(g => g.page))].join(',') : 'none';   // 음을 고쳐 마디 위치만 조금 바뀌어도 쪽을 다시 그리지 않는다
+  renderPartSel();
+  const wrap = $('svWrap'), G = svGeo(), part = !!svPartRes();
+  const key = G ? (G.sc.fp || G.sc.title) + '|' + svZoom + '|' + (part ? 'part:' + svPart + ':' + [...new Set(G.geo.filter(Boolean).map(g => g.page + '.' + g.staff))].join(',') : [...new Set(G.geo.filter(Boolean).map(g => g.page))].join(',')) : 'none';   // 음을 고쳐 마디 위치만 조금 바뀌어도 쪽을 다시 그리지 않는다
   if (key === svKey && wrap.firstChild) return;
   svKey = key; svCurrent = -1;
   if (svIO) { svIO.disconnect(); svIO = null; }
@@ -5136,7 +5175,8 @@ function buildScoreView() {
   Promise.all(pages.map(pi => sc.doc.getPage(pi + 1).then(pg => pg.getViewport({ scale: 1 })).catch(() => null))).then(vps => {
     if (svKey !== myKey) return;
     wrap.textContent = '';
-    svLayout(pages, vps, sc, myKey); svMarks();
+    if (part) svLayoutPart(G, vps, pages); else svLayout(pages, vps, sc, myKey);
+    svMarks();
     if (svCurrent >= 0) { const k = svCurrent; svCurrent = -1; svShow(k, true); }
   });
 }
@@ -5151,14 +5191,68 @@ function svLayout(pages, vps, sc, myKey) {
     d.addEventListener('click', ev => svClick(pi, d, ev));
     d.addEventListener('mousemove', ev => svHover(pi, d, ev));
     d.addEventListener('mouseleave', () => { if (svEhl && svEhl.parentNode === d) svEhl.hidden = true; });
-    wrap.appendChild(d); svPages.set(pi, { el: d, canvas: null, w: vp.width, h: vp.height, busy: false });
+    wrap.appendChild(d); svPages.set(pi, { el: d, canvas: null, page: pi, ox: 0, oy: 0, w: vp.width, h: vp.height, busy: false });
     if (svIO) svIO.observe(d); else svRender(pi);
   });
 }
+// 내 파트만: 그 줄의 오선(단마다 하나)을 쪽에서 잘라 위아래로 이어 붙인다. 띠 = 오선 위 30점 ~ 아래 24점(셈여림·가사 포함), 가로는 오선 왼쪽 끝 ~ 오른쪽 끝
+function svLayoutPart(G, vps, pages) {
+  const wrap = $('svWrap');
+  svIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting) svRender(+e.target.dataset.panel); }, { root: wrap, rootMargin: '800px 0px' }) : null;
+  const seen = new Set(), strips = [];
+  G.geo.forEach(g => { if (!g) return; const id = g.page + '.' + g.staff; if (seen.has(id)) return; seen.add(id);
+    const L = G.sc.layouts[g.page], st = L && L.staves[g.staff]; if (!st) return;
+    const vp = vps[pages.indexOf(g.page)] || { width: 595, height: 842 };
+    // 위아래 오선과 겹치지 않게: 바로 위 오선 아래 끝·바로 아래 오선 위 끝 사이 가운데까지만
+    const above = L.staves.filter(o => o !== st && o.bottom < st.top && o.x1 > st.x0 && o.x0 < st.x1).reduce((m, o) => Math.max(m, o.bottom), -Infinity);
+    const below = L.staves.filter(o => o !== st && o.top > st.bottom && o.x1 > st.x0 && o.x0 < st.x1).reduce((m, o) => Math.min(m, o.top), Infinity);
+    const x0 = Math.max(0, st.x0 - 6), x1 = Math.min(vp.width, st.x1 + 6);
+    const y0 = Math.max(0, st.top - 30, above > -Infinity ? (above + st.top) / 2 : 0), y1 = Math.min(vp.height, st.bottom + 24, below < Infinity ? (below + st.bottom) / 2 : vp.height);
+    strips.push({ page: g.page, staff: g.staff, ox: x0, oy: y0, w: x1 - x0, h: y1 - y0 }); });
+  strips.forEach((sp, i) => {
+    const d = document.createElement('div'); d.className = 'sv-page sv-strip'; d.dataset.panel = i;
+    d.style.width = (svZoom * 100) + '%'; d.style.aspectRatio = `${sp.w} / ${sp.h}`;
+    if (i === 0 || strips[i - 1].page !== sp.page) d.appendChild(tipNode('span', 'sv-pno', `${sp.page + 1}쪽`));
+    d.addEventListener('click', ev => svClick(i, d, ev));
+    d.addEventListener('mousemove', ev => svHover(i, d, ev));
+    d.addEventListener('mouseleave', () => { if (svEhl && svEhl.parentNode === d) svEhl.hidden = true; });
+    wrap.appendChild(d); svPages.set(i, { el: d, canvas: null, busy: false, ...sp });
+    if (svIO) svIO.observe(d); else svRender(i);
+  });
+}
+// 쪽 그림 저장(띠 여러 개를 같은 쪽에서 자를 때 다시 그리지 않게, 최근 3쪽만)
+const svPageCache = new Map();
+async function svPageCanvas(sc, pi, cssW, myKey) {
+  const ck = pi + '|' + Math.round(cssW);
+  if (svPageCache.has(ck)) { const c = svPageCache.get(ck); svPageCache.delete(ck); svPageCache.set(ck, c); return c; }
+  const pg = await sc.doc.getPage(pi + 1); if (svKey !== myKey) return null;
+  const vp1 = pg.getViewport({ scale: 1 });
+  const s = Math.min(3000 / vp1.width, Math.max(0.5, cssW * Math.min(3, window.devicePixelRatio || 1) / vp1.width));
+  const vp = pg.getViewport({ scale: s });
+  const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+  const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+  await pg.render({ canvasContext: cx, viewport: vp }).promise;
+  c._s = s; svPageCache.set(ck, c);
+  while (svPageCache.size > 3) svPageCache.delete(svPageCache.keys().next().value);
+  return c;
+}
 // 쪽 그림은 보이는 쪽 근처만 그리고, 멀리 떨어진 쪽 그림은 지워 휴대폰 메모리를 아낀다
 async function svRender(pi) {
-  const P = svPages.get(pi), G = state.scoreGeo; if (!P || P.canvas || P.busy || !G) return;
+  const P = svPages.get(pi), G = svGeo(); if (!P || P.canvas || P.busy || !G) return;
   P.busy = true; const myKey = svKey;
+  if (P.staff != null) {   // 내 파트만: 쪽 그림에서 띠를 잘라 옮긴다
+    try {
+      const vpW = await G.sc.doc.getPage(P.page + 1).then(pg => pg.getViewport({ scale: 1 }).width);
+      const src = await svPageCanvas(G.sc, P.page, (P.el.clientWidth || 600) * vpW / P.w, myKey); if (!src || svKey !== myKey) return;
+      const s = src._s, c = document.createElement('canvas'); c.width = Math.ceil(P.w * s); c.height = Math.ceil(P.h * s);
+      c.getContext('2d').drawImage(src, P.ox * s, P.oy * s, P.w * s, P.h * s, 0, 0, c.width, c.height);
+      P.el.insertBefore(c, P.el.firstChild); P.canvas = c;
+      const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
+      if (drawn.length > 40) { drawn.sort((a, b) => Math.abs(b[0] - pi) - Math.abs(a[0] - pi)); for (const [qi, q] of drawn.slice(0, drawn.length - 40)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; } }
+    } catch (e) { console.warn('악보 보기', e); }
+    finally { P.busy = false; }
+    return;
+  }
   try {
     const pg = await G.sc.doc.getPage(pi + 1); if (svKey !== myKey) return;
     const vp1 = pg.getViewport({ scale: 1 }), cssW = P.el.clientWidth || 600;
@@ -5171,7 +5265,7 @@ async function svRender(pi) {
     P.el.insertBefore(c, P.el.firstChild); P.canvas = c;
     const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
     if (drawn.length > 6) {   // 지금 쪽에서 먼 것부터 지운다
-      const G2 = state.scoreGeo, ref = svCurrent >= 0 && G2 && G2.geo[svCurrent] ? G2.geo[svCurrent].page : pi;
+      const G2 = svGeo(), ref = svCurrent >= 0 && G2 && G2.geo[svCurrent] ? G2.geo[svCurrent].page : pi;
       drawn.sort((a, b) => Math.abs(b[0] - ref) - Math.abs(a[0] - ref));
       for (const [qi, q] of drawn.slice(0, drawn.length - 6)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; }
     }
@@ -5179,17 +5273,17 @@ async function svRender(pi) {
   finally { P.busy = false; }
 }
 function svPlace(k, scroll) {
-  const r = svRect(k), P = r && svPages.get(r.page); if (!P || !P.w) { if (svHl) svHl.hidden = true; return; }
+  const r = svRect(k), P = svPanelOf(r); if (!P || !P.w) { if (svHl) svHl.hidden = true; return; }
   if (!svHl) { svHl = document.createElement('div'); svHl.className = 'sv-hl'; svHl.appendChild(document.createElement('b')); }
   if (svHl.parentNode !== P.el) P.el.appendChild(svHl);
   svHl.hidden = false;
-  svHl.style.left = (r.x0 / P.w * 100) + '%'; svHl.style.width = ((r.x1 - r.x0) / P.w * 100) + '%';
-  svHl.style.top = (r.y0 / P.h * 100) + '%'; svHl.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
+  svHl.style.left = svPct(r.x0, P.ox, P.w); svHl.style.width = ((r.x1 - r.x0) / P.w * 100) + '%';
+  svHl.style.top = svPct(r.y0, P.oy, P.h); svHl.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
   svHl.firstChild.textContent = `${state.bars[k] ? state.bars[k].number : ''}마디`;
   if (scroll && $('svFollow').checked) {
     // 악보 칸 안에서만 움직인다(화면 전체는 그대로). 지금 단이 칸 위쪽 1/4쯤에 오게
-    const wrap = $('svWrap'), y = P.el.offsetTop + r.y0 / P.h * P.el.offsetHeight, x = P.el.offsetLeft + r.x0 / P.w * P.el.offsetWidth;
-    const yb = P.el.offsetTop + r.y1 / P.h * P.el.offsetHeight;
+    const wrap = $('svWrap'), y = P.el.offsetTop + (r.y0 - P.oy) / P.h * P.el.offsetHeight, x = P.el.offsetLeft + (r.x0 - P.ox) / P.w * P.el.offsetWidth;
+    const yb = P.el.offsetTop + (r.y1 - P.oy) / P.h * P.el.offsetHeight;
     const far = Math.abs(y - wrap.scrollTop) > wrap.clientHeight * 1.5;   // 멀리 떨어진 곳(다른 쪽·도돌이표로 돌아감)은 바로 옮긴다
     if (y < wrap.scrollTop + 10 || yb > wrap.scrollTop + wrap.clientHeight - 10) wrap.scrollTo({ top: Math.max(0, y - wrap.clientHeight * 0.22), behavior: far ? 'auto' : 'smooth' });
     if (x < wrap.scrollLeft || x + 40 > wrap.scrollLeft + wrap.clientWidth) wrap.scrollTo({ left: Math.max(0, x - 30), behavior: far ? 'auto' : 'smooth' });
@@ -5199,14 +5293,14 @@ function svShow(k, scroll) {
   if (viewMode !== 'score') return;
   if (k == null || k < 0) { svCurrent = -1; if (svHl) svHl.hidden = true; if (svCur) svCur.hidden = true; return; }
   if (k === svCurrent && svHl && !svHl.hidden) return;
-  svCurrent = k; const r = svRect(k); if (r) svRender(r.page);
+  svCurrent = k; const r = svRect(k), P0 = svPanelOf(r); if (P0) svRender([...svPages.entries()].find(([, q]) => q === P0)[0]);
   svPlace(k, scroll);
 }
 // 재생 선: 피날레처럼 마디 안에서 음표를 따라 움직인다 (음표 자리를 모르면 마디를 고르게)
 function svCursor(k, f) {
   if (k !== svCurrent) svShow(k, true);
-  const r = svRect(k), P = r && svPages.get(r.page); if (!P || !P.w) return;
-  const g = state.scoreGeo.geo[k];
+  const r = svRect(k), P = svPanelOf(r); if (!P || !P.w) return;
+  const g = svGeo().geo[k];
   let pts = g.pts && g.pts.length ? g.pts.slice() : [[0, r.x0 + 6]];
   if (pts[0][0] > 0) pts.unshift([0, Math.max(r.x0 + 4, pts[0][1] - 12)]);
   pts.push([1, Math.max(pts[pts.length - 1][1] + 2, r.x1 - 4)]);
@@ -5215,15 +5309,15 @@ function svCursor(k, f) {
   if (!svCur) svCur = document.createElement('div'), svCur.className = 'sv-cur';
   if (svCur.parentNode !== P.el) P.el.appendChild(svCur);
   svCur.hidden = false;
-  svCur.style.left = (x / P.w * 100) + '%'; svCur.style.top = (r.y0 / P.h * 100) + '%'; svCur.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
+  svCur.style.left = svPct(x, P.ox, P.w); svCur.style.top = svPct(r.y0, P.oy, P.h); svCur.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
 }
 // 악보를 누르면 그 자리의 마디부터 재생
 // 누른 곳과 같은 가로 자리의 마디 중 위아래로 가장 가까운 단 (단 사이 빈 곳을 눌러도 가까운 단으로, 너무 멀면 무시)
 function svHit(pi, el, ev) {
-  const P = svPages.get(pi), G = state.scoreGeo; if (!P || !P.w || !G) return -1;
-  const b = el.getBoundingClientRect(), x = (ev.clientX - b.left) / b.width * P.w, y = (ev.clientY - b.top) / b.height * P.h;
+  const P = svPages.get(pi), G = svGeo(); if (!P || !P.w || !G) return -1;
+  const b = el.getBoundingClientRect(), x = P.ox + (ev.clientX - b.left) / b.width * P.w, y = P.oy + (ev.clientY - b.top) / b.height * P.h;
   let best = -1, bd = 60;
-  G.geo.forEach((g, k) => { if (!g || g.page !== pi) return; const r = svRect(k); if (!r || x < r.x0 || x > r.x1) return; const d = y < r.y0 ? r.y0 - y : y > r.y1 ? y - r.y1 : 0; if (d < bd) { bd = d; best = k; } });
+  G.geo.forEach((g, k) => { if (!g || g.page !== P.page || (P.staff != null && g.staff !== P.staff)) return; const r = svRect(k); if (!r || x < r.x0 || x > r.x1) return; const d = y < r.y0 ? r.y0 - y : y > r.y1 ? y - r.y1 : 0; if (d < bd) { bd = d; best = k; } });
   return best;
 }
 function svClick(pi, el, ev) {
@@ -5245,8 +5339,8 @@ function svHover(pi, el, ev) {
   if (!svEhl) { svEhl = document.createElement('div'); svEhl.className = 'sv-ehl'; svEhl.appendChild(document.createElement('b')); }
   if (svEhl.parentNode !== el) el.appendChild(svEhl);
   svEhl.hidden = false;
-  svEhl.style.left = (r.x0 / P.w * 100) + '%'; svEhl.style.width = ((r.x1 - r.x0) / P.w * 100) + '%';
-  svEhl.style.top = (r.y0 / P.h * 100) + '%'; svEhl.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
+  svEhl.style.left = svPct(r.x0, P.ox, P.w); svEhl.style.width = ((r.x1 - r.x0) / P.w * 100) + '%';
+  svEhl.style.top = svPct(r.y0, P.oy, P.h); svEhl.style.height = ((r.y1 - r.y0) / P.h * 100) + '%';
   svEhl.firstChild.textContent = `✎ ${state.bars[k].number}마디 고치기`;
 }
 function setSvEdit(on) {
@@ -5260,8 +5354,8 @@ function svMarks() {
   for (const m of document.querySelectorAll('#svWrap .sv-mark')) m.remove();
   state.bars.forEach((b, k) => {
     if (!b.events.some(e => e.edited)) return;
-    const r = svRect(k), P = r && svPages.get(r.page); if (!P || !P.w) return;
-    const m = tipNode('span', 'sv-mark', '✎'); m.style.left = (r.x0 / P.w * 100) + '%'; m.style.top = (r.y0 / P.h * 100) + '%'; m.title = `${b.number}마디: 고친 음이 있음`;
+    const r = svRect(k), P = svPanelOf(r); if (!P || !P.w) return;
+    const m = tipNode('span', 'sv-mark', '✎'); m.style.left = svPct(r.x0, P.ox, P.w); m.style.top = svPct(r.y0, P.oy, P.h); m.title = `${b.number}마디: 고친 음이 있음`;
     P.el.appendChild(m);
   });
 }
@@ -7007,7 +7101,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 15:47';
+const APP_VERSION = '2026-11-03 15:54';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
