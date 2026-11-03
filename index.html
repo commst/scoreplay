@@ -638,30 +638,47 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 
 /* ===== 디자인 3 (11월): 파스텔 · 위 막대 + 왼쪽 탭 + 가운데 악보 + 아래 연주 막대 ===== */
-:root, :root[data-theme], :root:not(#light-only) {
+:root:not(#_) {
   --paper: #e9eef8; --card: #f7f6fd; --card-2: #fcfbff; --ink: #1e2433; --muted: #5b6476; --line: #d5dbec; --line-2: #c3cbe0;
   --accent: #3d5a99; --accent-ink: #ffffff; --accent-soft: #e1e8f8;
   --chae: #c9574a; --buk: #3d5a99; --now: #fbe7a1; --warn: #9a5d0c; --warn-bg: #fff3cf;
   --fam-wind: #5fb487; --fam-string: #8197e0; --fam-perc: #ea8f7a; --fam-etc: #cfae70;
   --dock: #46557a; --dock-2: #5d6c92; --dock-line: #7685aa; --dock-soft: #d2d9ea; --hi: #f6d66b; --hi-ink: #2a3350;
   --tbh: 57px; --dockh: 112px;
+  --top-bg: #f3f4fc; --chip: #e4e9f6; --btn-bg: #ffffff; --drop-bg: #f3f1fc; --drop-line: #b8c5e8; --sw-off: #c5cad8; --ok-ink: #2e6b3f; --scrim: rgba(30, 36, 51, .36);
+  --hero-bg: linear-gradient(135deg, #dde5fb 0%, #ebe3fa 55%, #f8e9ef 100%); --hero-ink: #2e3a6b; --hero-sub: #44506a; --hero-card: rgba(255, 255, 255, .6); --hero-card-line: rgba(61, 90, 153, .16);
+  --save-bg: #ffffff; --save-ink: #2e3a57;
   color-scheme: light;
 }
+.fam-tag { color: color-mix(in srgb, var(--fam, var(--fam-etc)) 45%, var(--ink)); background: color-mix(in srgb, var(--fam, var(--fam-etc)) 20%, transparent); }
+/* 어두운 화면 모드: 같은 배치를 어두운 남색 바탕으로 */
+@media (prefers-color-scheme: dark) { :root:not(#_):not([data-theme="light"]) {
+  --paper: #131926; --card: #1a2131; --card-2: #1f2738; --ink: #e6e9f2; --muted: #a4acc0; --line: #2e374b; --line-2: #3c465f;
+  --accent: #9db2ee; --accent-ink: #141a2b; --accent-soft: #283352;
+  --chae: #f08c78; --buk: #9db2ee; --now: #4d4223; --warn: #f0b45f; --warn-bg: #3a2f19;
+  --fam-wind: #63c393; --fam-string: #92a6ec; --fam-perc: #f09e89; --fam-etc: #d8b87c;
+  --dock: #2d3756; --dock-2: #414e78; --dock-line: #5b6a96; --dock-soft: #c3cbe0; --hi: #f3d36a; --hi-ink: #252c45;
+  --top-bg: #171e2c; --chip: #252f47; --btn-bg: #222a3c; --drop-bg: #1c2334; --drop-line: #3d4a6e; --sw-off: #4a5370; --ok-ink: #82d39d; --scrim: rgba(0, 0, 0, .55);
+  --hero-bg: linear-gradient(135deg, #222c4a 0%, #29284a 55%, #33293c 100%); --hero-ink: #dfe5ff; --hero-sub: #b9c1d8; --hero-card: rgba(255, 255, 255, .06); --hero-card-line: rgba(157, 178, 238, .2);
+  --save-bg: #e6e9f2; --save-ink: #252c45;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"]:not(#_) { color-scheme: dark; }
 body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
 .app2 { min-height: 100vh; }
 .app2 > .msg { margin: 8px 16px 0; }
 #mini { display: none !important; }
 
 /* 위 막대 */
-.topbar { position: sticky; top: 0; z-index: 46; display: flex; align-items: center; gap: 10px; padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); min-height: 56px; background: #f3f4fc; border-bottom: 1px solid var(--line); }
+.topbar { position: sticky; top: 0; z-index: 46; display: flex; align-items: center; gap: 10px; padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); min-height: 56px; background: var(--top-bg); border-bottom: 1px solid var(--line); }
 .tb-logo { font: 700 20px/1 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; flex: none; }
-.tb-song { display: flex; align-items: baseline; gap: 8px; min-width: 0; max-width: min(46vw, 560px); padding: 6px 12px; border: 0; border-radius: 8px; background: #e4e9f6; text-align: left; color: var(--ink); }
+.tb-song { display: flex; align-items: baseline; gap: 8px; min-width: 0; max-width: min(46vw, 560px); padding: 6px 12px; border: 0; border-radius: 8px; background: var(--chip); text-align: left; color: var(--ink); }
 .tb-song b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .tb-song span { font-size: 13px; color: var(--muted); white-space: nowrap; flex: none; }
 .tb-song:hover { background: var(--accent-soft); }
 .tb-gap { flex: 1; }
-.tb-state { font-size: 12.5px; color: #2e6b3f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
-.tb-btn { padding: 7px 12px; font-size: 14px; background: #ffffff; white-space: nowrap; }
+.tb-state { font-size: 12.5px; color: var(--ok-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.tb-btn { padding: 7px 12px; font-size: 14px; background: var(--btn-bg); white-space: nowrap; }
 
 /* 몸: 왼쪽 설정 칸 + 가운데 */
 .shell { display: grid; grid-template-columns: 380px minmax(0, 1fr); align-items: start; }
@@ -686,7 +703,7 @@ body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
 .export-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .stage { min-width: 0; padding: 16px max(20px, env(safe-area-inset-right)) 20px 20px; }
 .stage .bars-panel { background: var(--card-2); }
-.btn { background: #ffffff; }
+.btn { background: var(--btn-bg); }
 .btn.primary { background: var(--accent); }
 
 /* 아래 연주 막대 */
@@ -722,7 +739,7 @@ body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
 .dock-speed { display: flex; align-items: center; gap: 6px; flex: none; }
 .dock-speed b { min-width: 46px; text-align: center; }
 .dock-lab { color: var(--dock-soft); font-size: 13px; }
-.dock-save { flex: none; height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #ffffff; color: #2e3a57; font-weight: 700; white-space: nowrap; }
+.dock-save { flex: none; height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--save-bg); color: var(--save-ink); font-weight: 700; white-space: nowrap; }
 .dock :focus-visible { outline-color: var(--hi); }
 
 /* 악보 파일 창 · 첫 화면 */
@@ -738,26 +755,26 @@ body.welcome .lv-head { display: none; }
 body.welcome .lv-demo { display: flex; justify-content: center; }
 body.welcome .lv-demo .btn { padding: 10px 18px; }
 body:not(.welcome) .load-view .hero { display: none; }
-body.files-open .load-view, body.help-open .help-view { display: block; position: fixed; inset: 0; z-index: 70; overflow: auto; overscroll-behavior: contain; background: rgba(30, 36, 51, .36); padding: max(16px, 4vh) 12px 24px; }
+body.files-open .load-view, body.help-open .help-view { display: block; position: fixed; inset: 0; z-index: 70; overflow: auto; overscroll-behavior: contain; background: var(--scrim); padding: max(16px, 4vh) 12px 24px; }
 body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 0 auto; background: var(--card); border-radius: 16px; padding: 16px 18px 20px; box-shadow: 0 16px 48px rgba(30, 36, 51, .28); display: grid; gap: 14px; }
 .load-view .step-h .sn { display: none; }
 .help-view #fullHelp { border: 0; padding: 0; background: none; }
 .help-view #fullHelp > summary { display: none; }
 .help-view .app-foot { margin-top: 8px; }
-.hero { border-bottom: 0; margin: 4px 0 0; background: linear-gradient(135deg, #dde5fb 0%, #ebe3fa 55%, #f8e9ef 100%); color: var(--ink); }
-.hero h1 { color: #2e3a6b; }
-.hero .lede { color: #44506a; }
-.hero .caution { color: var(--ink); background: rgba(255, 255, 255, .55); border-left-color: #e2b13a; }
-.hero-mark { color: #3d5a99; opacity: .10; }
-.hero-steps li { background: rgba(255, 255, 255, .6); border-color: rgba(61, 90, 153, .16); color: #44506a; }
+.hero { border-bottom: 0; margin: 4px 0 0; background: var(--hero-bg); color: var(--ink); }
+.hero h1 { color: var(--hero-ink); }
+.hero .lede { color: var(--hero-sub); }
+.hero .caution { color: var(--ink); background: var(--hero-card); border-left-color: #e2b13a; }
+.hero-mark { color: var(--accent); opacity: .12; }
+.hero-steps li { background: var(--hero-card); border-color: var(--hero-card-line); color: var(--hero-sub); }
 .hero-steps b { color: var(--ink); }
-.hero-steps .hs-n { background: var(--accent); color: #fff; }
+.hero-steps .hs-n { background: var(--accent); color: var(--accent-ink); }
 /* 악보·마디맵 전환: 작게 */
 .stage .bars-panel > .row:first-child { display: none; }
-.stage .view-switch { display: inline-grid; width: auto; grid-auto-flow: column; grid-template-columns: none; border: 0; border-radius: 9px; background: #e4e9f6; padding: 3px; margin: 0 0 8px; gap: 2px; }
+.stage .view-switch { display: inline-grid; width: auto; grid-auto-flow: column; grid-template-columns: none; border: 0; border-radius: 9px; background: var(--chip); padding: 3px; margin: 0 0 8px; gap: 2px; }
 .stage .view-switch button { padding: 7px 16px; border-radius: 7px; font-size: 14px; background: transparent; color: var(--ink); border: 0 !important; }
-.stage .view-switch button[aria-pressed="true"] { background: var(--accent); color: #fff; }
-.drop { background: #f3f1fc; border-color: #b8c5e8; }
+.stage .view-switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.drop { background: var(--drop-bg); border-color: var(--drop-line); }
 
 /* 태블릿 가로 */
 @media (max-width: 1180px) { .shell { grid-template-columns: 340px minmax(0, 1fr); } .tb-state { display: none; } }
@@ -810,7 +827,7 @@ body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 
 .lfold .lname { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lchev::after { content: '▸'; color: var(--muted); font-size: 12px; }
 .lcard.open .lchev::after { content: '▾'; }
-.lsw { width: 42px; height: 24px; flex: none; border: 0; border-radius: 12px; background: #c5cad8; position: relative; padding: 0; cursor: pointer; }
+.lsw { width: 42px; height: 24px; flex: none; border: 0; border-radius: 12px; background: var(--sw-off); position: relative; padding: 0; cursor: pointer; }
 .lsw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; transition: left .15s; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
 .lsw[aria-checked="true"] { background: var(--accent); }
 .lsw[aria-checked="true"]::after { left: 21px; }
@@ -849,7 +866,6 @@ body.all-panes { padding-bottom: 0; }
 </head>
 <body>
 
-<script>document.documentElement.setAttribute('data-theme', 'light');</script>
 <div class="app2" id="app2">
   <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 카카오톡·파일 앱·메일에서 html 파일을 누르면 미리보기로 열려 버튼이 동작하지 않습니다. 컴퓨터에서는 파일을 내려받아 두 번 누르면 브라우저에서 열리고, 안드로이드는 파일을 저장한 뒤 [다른 앱으로 열기] → Chrome을 고르세요. 아이폰·아이패드는 파일로는 열 수 없어 웹 주소(링크)로 열어야 합니다.</span>
     <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
@@ -1431,7 +1447,7 @@ body.all-panes { padding-bottom: 0; }
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
-    <li>휴대폰·컴퓨터가 어두운 화면 모드일 때 새 화면의 글자와 단추가 흰색으로 바뀌어 거의 보이지 않던 문제: 어두운 모드와 상관없이 늘 밝은 화면으로</li>
+    <li>휴대폰·컴퓨터가 어두운 화면 모드일 때 새 화면의 글자와 단추가 흰색으로 바뀌어 거의 보이지 않던 문제: 이제 기기 설정을 따라 밝은 모드는 파스텔, 어두운 모드는 어두운 남색 화면으로 보입니다(모든 글자의 밝기 대비 확인)</li>
     <li>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</li>
     <li>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</li>
     <li>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</li>
@@ -7768,7 +7784,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 19:34';
+const APP_VERSION = '2026-11-03 19:45';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
