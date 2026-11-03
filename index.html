@@ -1122,6 +1122,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
+    <li>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</li>
     <li>'♪= Ca 60'처럼 음표는 악보 글꼴, 숫자는 일반 글꼴로 이어 적은 빠르기를 못 읽던 문제(소금협주곡 '길'). 8분음표 빠르기가 ♩로 보이던 표시도 ♪로</li>
     <li>'♩ = c. 108'처럼 빠르기 숫자 앞에 c.(약)가 붙거나 괄호로 감싼 표시를 못 읽던 문제(Flowers of K 피아노 파트보). 영어로만 'Piano'라고 적힌 파트보·큰보표 악보도 피아노로 알아봄</li>
     <li>파트보 이름(악기) 인식: '가'로 시작하는 글자를 한글로 치지 않아 '가야금'이 '야금', '꽹가리'가 '꽹리', 곡 제목 '연변목가'가 '연변목'으로 읽히던 문제. 파트 이름이 쪽 맨 위에서 조금 아래(첫 오선 위)에 있으면 못 읽던 문제(연변목가 장고·북 파트보). 파트 이름 자리에 적힌 긴 연주 안내 글은 이름으로 쓰지 않음</li>
@@ -4668,9 +4669,9 @@ function renderTempo() {
       const v = Math.max(2, Math.min(lastBar(), Math.round(+sIn.value) || r.start));
       // 다른 구간과 같은 시작 마디가 되면 두 구간이 겹쳐 어느 빠르기로 연주할지 알 수 없다
       if (v !== r.start && state.tempoRows.some(o => o !== r && o.start === v)) { sIn.value = r.start; showMsg(`${v}마디에서 시작하는 빠르기 구간이 이미 있습니다. 다른 마디를 넣거나 그 구간의 숫자를 고쳐 주세요.`); return; }
-      r.start = v; r.text = ''; changed(); renderTempo();
+      r.start = v; r.text = ''; r.edited = true; changed(); renderTempo();
     });
-    sel.addEventListener('change', () => { r.unit = sel.value; propagateEq(); renderTempo(); changed(); });
+    sel.addEventListener('change', () => { r.unit = sel.value; r.edited = true; propagateEq(); renderTempo(); changed(); });
     bIn.addEventListener('input', () => {
       r.bpm = +bIn.value || null; r.manual = true; bIn.classList.toggle('need', !(r.bpm > 0));
       // 뒤쪽의 '♩=♪' 같은 박 단위 바꿈 구간은 이 빠르기를 따라 다시 계산
@@ -5985,7 +5986,17 @@ function applyRestSettings(S) {
   const LB = state.bars.length ? lastBar() : Infinity;   // 악기를 모두 꺼 마디가 없을 때는 저장한 템포 구간·범위를 자르지 않는다
   if (Array.isArray(S.tempoRows) && S.tempoRows.length) {
     const rows = S.tempoRows.filter(r => r.start >= 1 && r.start <= LB).map(r => ({ ...r }));
-    if (rows.length && rows.some(r => r.start === 1)) state.tempoRows = rows;
+    if (rows.length && rows.some(r => r.start === 1)) {
+      // 저장한 뒤 새 판에서 악보의 빠르기를 더 읽게 됐으면(예: 예전엔 '?'였던 첫 빠르기) 새로 읽은 값을 쓰고, 직접 고친 구간만 저장한 값으로 덮는다
+      const det = state.tempoRows.map(r => ({ ...r })), sig = r => `${r.start}|${r.unit}|${r.bpm ?? ''}`;
+      const touched = r => r.manual || r.edited || !r.auto;
+      const changedParse = rows.some(r => !touched(r) && !det.some(d => sig(d) === sig(r))) || det.some(d => d.auto && d.bpm > 0 && !rows.some(r => r.start === d.start));
+      if (changedParse && det.length && state.bars.length) {
+        const out = det;
+        for (const r of rows.filter(touched)) { const i = out.findIndex(d => d.start === r.start); if (i >= 0) out[i] = r; else out.push(r); }
+        state.tempoRows = out.sort((a, b) => a.start - b.start);
+      } else state.tempoRows = rows;
+    }
   }
   if (Array.isArray(S.tempoChanges)) {
     state.tempoChanges = S.tempoChanges.filter(c => c && TCH_LABEL[c.kind] && c.bar >= 1 && c.bar <= LB).map(c => ({ ...c }));
@@ -6660,7 +6671,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 14:21';
+const APP_VERSION = '2026-11-03 14:32';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
