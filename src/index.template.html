@@ -632,7 +632,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 
 
 /* ===== 디자인 3 (11월): 파스텔 · 위 막대 + 왼쪽 탭 + 가운데 악보 + 아래 연주 막대 ===== */
-:root, :root[data-theme] {
+:root, :root[data-theme], :root:not(#light-only) {
   --paper: #e9eef8; --card: #f7f6fd; --card-2: #fcfbff; --ink: #1e2433; --muted: #5b6476; --line: #d5dbec; --line-2: #c3cbe0;
   --accent: #3d5a99; --accent-ink: #ffffff; --accent-soft: #e1e8f8;
   --chae: #c9574a; --buk: #3d5a99; --now: #fbe7a1; --warn: #9a5d0c; --warn-bg: #fff3cf;
@@ -841,6 +841,7 @@ body.all-panes .sidebar { position: static; height: auto; overflow: visible; }
 body.all-panes { padding-bottom: 0; }
 </style>
 
+<script>document.documentElement.setAttribute('data-theme', 'light');</script>
 <div class="app2" id="app2">
   <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 카카오톡·파일 앱·메일에서 html 파일을 누르면 미리보기로 열려 버튼이 동작하지 않습니다. 컴퓨터에서는 파일을 내려받아 두 번 누르면 브라우저에서 열리고, 안드로이드는 파일을 저장한 뒤 [다른 앱으로 열기] → Chrome을 고르세요. 아이폰·아이패드는 파일로는 열 수 없어 웹 주소(링크)로 열어야 합니다.</span>
     <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
@@ -1422,6 +1423,7 @@ body.all-panes { padding-bottom: 0; }
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
+    <li>휴대폰·컴퓨터가 어두운 화면 모드일 때 새 화면의 글자와 단추가 흰색으로 바뀌어 거의 보이지 않던 문제: 어두운 모드와 상관없이 늘 밝은 화면으로</li>
     <li>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</li>
     <li>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</li>
     <li>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</li>
