@@ -2025,9 +2025,9 @@ export async function loadScore(pdfjs, data, onPage) {
   const { layouts, lines } = assignLines(pages);
   const isFull = layouts.some(L => L.systems.some(g => g.length > 1));
   const title = (() => {
-    let g = pages[0]?.glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < 120 && g.code > 0xAC00) || [];
+    let g = pages[0]?.glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < 120 && g.code >= 0xAC00) || [];   // '가'(0xAC00)도 한글 (예전에는 빠져 '연변목가'가 '연변목'으로)
     // 표지 쪽: 제목이 쪽 위쪽 1/3 안의 큰 글자로 따로 있다
-    if (!g.length && pages[0]) g = pages[0].glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < pages[0].height * 0.35 && g.code > 0xAC00 && g.size >= 18);
+    if (!g.length && pages[0]) g = pages[0].glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < pages[0].height * 0.35 && g.code >= 0xAC00 && g.size >= 18);
     if (!g.length) {
       // 한글이 없는 제목(영문 등): 맨 위의 가장 큰 글자 줄
       const all = (pages[0]?.glyphs || []).filter(g => !isMusicFont(g.font) && !g.font.includes('Engraver') && g.oy < 130 && g.code >= 32);
@@ -2045,9 +2045,16 @@ export async function loadScore(pdfjs, data, onPage) {
   // 왼쪽 위 작은 글자 = 파트 이름 (예: 장구, 쇠, 모듬북)
   const partName = (() => {
     const pg = pages[0]; if (!pg) return '';
-    const g = pg.glyphs.filter(g => !isMusicFont(g.font) && g.oy < 110 && g.ox < pg.width * 0.3 && g.code > 0xAC00).sort((a, b) => a.oy - b.oy || a.ox - b.ox);
+    // 첫 오선 위(쪽 위쪽)까지 본다: 예전에는 위에서 110점까지만 봐서 조금 아래 적힌 이름(연변목가 장고 파트보 116점)을 놓쳤다. '가'(0xAC00)도 한글
+    const L0 = layouts[0], top0 = L0 && L0.staves && L0.staves.length ? Math.min(...L0.staves.map(t => t.top)) : 110;
+    const lim = Math.max(110, Math.min(top0 - 6, pg.height * 0.3));
+    const near = g => !isMusicFont(g.font) && g.ox < pg.width * 0.3 && g.code >= 0xAC00 && g.code <= 0xD7A3;
+    const g = pg.glyphs.filter(g => near(g) && g.oy < lim).sort((a, b) => a.oy - b.oy || a.ox - b.ox);
     if (!g.length) return '';
-    const y = g[0].oy; let s = ''; for (const x of g.filter(x => Math.abs(x.oy - y) < 2)) if (!s.endsWith(x.uni)) s += x.uni; return s;
+    const y = g[0].oy; let s = ''; for (const x of g.filter(x => Math.abs(x.oy - y) < 2).sort((a, b) => a.ox - b.ox)) if (!s.endsWith(x.uni)) s += x.uni;
+    // 110점 아래에서 찾은 것이 빠르기 말(…게)이거나 너무 길면 이름이 아니다
+    if (s.length > 6 || (y >= 110 && /게$|빠르|느리|보통|여유|조금|천천/.test(s))) return '';   // 긴 글(연주 안내 등)은 이름이 아니다
+    return s;
   })();
   const musicCount = pages.reduce((a, p) => a + p.glyphs.filter(isMaestro).length, 0);
   // 글꼴 탓에 첫 글자만 남은 악기 이름(예: Ghostscript로 만든 Finale PDF의 '소', '피', '거')을 채운다
