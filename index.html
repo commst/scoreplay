@@ -636,18 +636,241 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .set-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .set-row .chk { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
 
+
+/* ===== 디자인 3 (11월): 파스텔 · 위 막대 + 왼쪽 탭 + 가운데 악보 + 아래 연주 막대 ===== */
+:root, :root[data-theme] {
+  --paper: #e9eef8; --card: #f7f6fd; --card-2: #fcfbff; --ink: #1e2433; --muted: #5b6476; --line: #d5dbec; --line-2: #c3cbe0;
+  --accent: #3d5a99; --accent-ink: #ffffff; --accent-soft: #e1e8f8;
+  --chae: #c9574a; --buk: #3d5a99; --now: #fbe7a1; --warn: #9a5d0c; --warn-bg: #fff3cf;
+  --fam-wind: #5fb487; --fam-string: #8197e0; --fam-perc: #ea8f7a; --fam-etc: #cfae70;
+  --dock: #46557a; --dock-2: #5d6c92; --dock-line: #7685aa; --dock-soft: #d2d9ea; --hi: #f6d66b; --hi-ink: #2a3350;
+  --tbh: 57px; --dockh: 112px;
+  color-scheme: light;
+}
+body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
+.app2 { min-height: 100vh; }
+.app2 > .msg { margin: 8px 16px 0; }
+#mini { display: none !important; }
+
+/* 위 막대 */
+.topbar { position: sticky; top: 0; z-index: 46; display: flex; align-items: center; gap: 10px; padding: 8px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left)); min-height: 56px; background: #f3f4fc; border-bottom: 1px solid var(--line); }
+.tb-logo { font: 700 20px/1 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; flex: none; }
+.tb-song { display: flex; align-items: baseline; gap: 8px; min-width: 0; max-width: min(46vw, 560px); padding: 6px 12px; border: 0; border-radius: 8px; background: #e4e9f6; text-align: left; color: var(--ink); }
+.tb-song b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tb-song span { font-size: 13px; color: var(--muted); white-space: nowrap; flex: none; }
+.tb-song:hover { background: var(--accent-soft); }
+.tb-gap { flex: 1; }
+.tb-state { font-size: 12.5px; color: #2e6b3f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.tb-btn { padding: 7px 12px; font-size: 14px; background: #ffffff; white-space: nowrap; }
+
+/* 몸: 왼쪽 설정 칸 + 가운데 */
+.shell { display: grid; grid-template-columns: 380px minmax(0, 1fr); align-items: start; }
+.sidebar { position: sticky; top: var(--tbh); height: calc(100vh - var(--tbh) - var(--dockh)); height: calc(100dvh - var(--tbh) - var(--dockh)); overflow: auto; overscroll-behavior: contain; background: var(--card); border-right: 1px solid var(--line); }
+.sheet-grab, .sheet-close, .sheet-back { display: none; }
+.tabs2 { position: sticky; top: 0; z-index: 3; display: flex; gap: 2px; padding: 6px 10px 0; background: var(--card); border-bottom: 1px solid var(--line); }
+.tab2 { flex: 1; min-width: 0; height: 42px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--muted); font-weight: 500; font-size: 15px; white-space: nowrap; }
+.tab2[aria-selected="true"] { border-bottom-color: var(--accent); color: var(--accent); font-weight: 700; }
+.pane2 { display: none; flex-direction: column; gap: 12px; padding: 12px; }
+.pane2.on, body.all-panes .pane2 { display: flex; }
+.pane2 > .panel, .pane2 > section { padding: 14px; gap: 12px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line); }
+.pane2 .step-h { font: 700 16px/1.3 var(--font-body); }
+.pane2 .step-h .sn { display: none; }
+.pane2 .main, .pane2 .side { display: contents; }
+.pane2 .savebox { border: 0; padding: 0; background: none; margin: 0; }
+.pane2 .setbox { border: 0; padding: 0; background: none; margin: 0; }
+.pane2 .soundbox { border: 0; padding: 0; background: none; }
+.pane2 .soundbox > summary { display: none; }
+.pane2 .edit-tools[hidden] { display: flex !important; }
+.pane2 .opts { display: grid; gap: 8px; }
+.pane2 .linelist { grid-template-columns: minmax(0, 1fr); }
+.export-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.stage { min-width: 0; padding: 16px max(20px, env(safe-area-inset-right)) 20px 20px; }
+.stage .bars-panel { background: var(--card-2); }
+.btn { background: #ffffff; }
+.btn.primary { background: var(--accent); }
+
+/* 아래 연주 막대 */
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; display: flex; flex-direction: column; gap: 6px; padding: 8px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: var(--dock); color: #ffffff; box-shadow: 0 -2px 12px rgba(40, 50, 80, .22); }
+.dock-tabs { display: none; }
+.dock .reh-row { order: 1; margin: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; color: var(--dock-soft); }
+.dock .reh-row::-webkit-scrollbar { display: none; }
+.dock .reh-row[hidden] { display: none; }
+.dock .reh-lab { color: var(--dock-soft); font-size: 12.5px; white-space: nowrap; }
+.dock .reh-btns { flex-wrap: nowrap; }
+.dock .reh-btns button { border: 1px solid var(--dock-line); background: transparent; color: #ffffff; padding: 3px 8px; white-space: nowrap; }
+.dock .reh-btns button:hover, .dock .reh-btns button.on, .dock .reh-btns button[aria-pressed="true"] { background: var(--hi); border-color: var(--hi); color: var(--hi-ink); }
+.dock .reh-btns button small { color: inherit; opacity: .75; }
+.dock select, .dock input { background: var(--dock-2) !important; color: #ffffff !important; border: 1px solid var(--dock-2) !important; }
+.dock-row { order: 2; display: flex; align-items: center; gap: 12px; min-width: 0; flex-wrap: wrap; row-gap: 8px; }
+.dock .transport { flex: 1 1 260px; min-width: 0; display: flex; flex-wrap: nowrap; align-items: center; gap: 12px; }
+.dock .play { width: 52px; height: 52px; background: var(--hi); color: var(--hi-ink); box-shadow: 0 0 0 4px rgba(246, 214, 107, .22); }
+.dock .pos { flex: 1 1 auto; min-width: 0; gap: 5px; }
+.dock .pos .now { color: #ffffff; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dock .pos .now b { font-size: 17px; }
+.dock .pos .now span[style] { color: var(--dock-soft) !important; }
+.dock .bar-track { background: var(--dock-2); }
+.dock .bar-track i { background: var(--hi); }
+.dock-stop { flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--dock-2); color: #ffffff; display: inline-grid; place-items: center; }
+.dock-stop svg { width: 14px; height: 14px; fill: currentColor; }
+.dock-range .range { padding: 0; border: 0; background: none; gap: 6px; font-size: 13px; color: var(--dock-soft); flex-wrap: nowrap; }
+.dock-range .range input { width: 60px; padding: 5px 6px; }
+.dock-range .range label { color: var(--dock-soft); }
+.dock-range .range .x { color: #ffffff; border: 1px solid var(--dock-line); background: transparent; border-radius: 6px; padding: 4px 8px; white-space: nowrap; }
+.dock-btn { height: 36px; padding: 0 12px; border: 1px solid var(--dock-line); border-radius: 8px; background: transparent; color: #ffffff; white-space: nowrap; font-size: 14px; }
+.dock-btn[aria-pressed="true"] { border-color: var(--hi); color: var(--hi); background: rgba(246, 214, 107, .12); font-weight: 600; }
+.dock-btn.sq { width: 32px; padding: 0; font-size: 18px; line-height: 1; }
+.dock-speed { display: flex; align-items: center; gap: 6px; flex: none; }
+.dock-speed b { min-width: 46px; text-align: center; }
+.dock-lab { color: var(--dock-soft); font-size: 13px; }
+.dock-save { flex: none; height: 38px; padding: 0 14px; border: 0; border-radius: 8px; background: #ffffff; color: #2e3a57; font-weight: 700; white-space: nowrap; }
+.dock :focus-visible { outline-color: var(--hi); }
+
+/* 악보 파일 창 · 첫 화면 */
+.load-view, .help-view { display: none; }
+.lv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.lv-title { font: 700 19px/1.2 var(--font-display); }
+.lv-demo { display: none; }
+body.welcome .shell, body.welcome .dock, body.welcome .tb-song, body.welcome #filesBtn { display: none; }
+body.welcome { padding-bottom: 24px; }
+body.welcome .load-view { display: block; padding: 20px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+body.welcome .lv-inner { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
+body.welcome .lv-head { display: none; }
+body.welcome .lv-demo { display: flex; justify-content: center; }
+body.welcome .lv-demo .btn { padding: 10px 18px; }
+body:not(.welcome) .load-view .hero { display: none; }
+body.files-open .load-view, body.help-open .help-view { display: block; position: fixed; inset: 0; z-index: 70; overflow: auto; overscroll-behavior: contain; background: rgba(30, 36, 51, .36); padding: max(16px, 4vh) 12px 24px; }
+body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 0 auto; background: var(--card); border-radius: 16px; padding: 16px 18px 20px; box-shadow: 0 16px 48px rgba(30, 36, 51, .28); display: grid; gap: 14px; }
+.load-view .step-h .sn { display: none; }
+.help-view #fullHelp { border: 0; padding: 0; background: none; }
+.help-view #fullHelp > summary { display: none; }
+.help-view .app-foot { margin-top: 8px; }
+.hero { border-bottom: 0; margin: 4px 0 0; background: linear-gradient(135deg, #dde5fb 0%, #ebe3fa 55%, #f8e9ef 100%); color: var(--ink); }
+.hero h1 { color: #2e3a6b; }
+.hero .lede { color: #44506a; }
+.hero .caution { color: var(--ink); background: rgba(255, 255, 255, .55); border-left-color: #e2b13a; }
+.hero-mark { color: #3d5a99; opacity: .10; }
+.hero-steps li { background: rgba(255, 255, 255, .6); border-color: rgba(61, 90, 153, .16); color: #44506a; }
+.hero-steps b { color: var(--ink); }
+.hero-steps .hs-n { background: var(--accent); color: #fff; }
+/* 악보·마디맵 전환: 작게 */
+.stage .bars-panel > .row:first-child { display: none; }
+.stage .view-switch { display: inline-grid; width: auto; grid-auto-flow: column; grid-template-columns: none; border: 0; border-radius: 9px; background: #e4e9f6; padding: 3px; margin: 0 0 8px; gap: 2px; }
+.stage .view-switch button { padding: 7px 16px; border-radius: 7px; font-size: 14px; background: transparent; color: var(--ink); border: 0 !important; }
+.stage .view-switch button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.drop { background: #f3f1fc; border-color: #b8c5e8; }
+
+/* 태블릿 가로 */
+@media (max-width: 1180px) { .shell { grid-template-columns: 340px minmax(0, 1fr); } .tb-state { display: none; } }
+
+/* 태블릿 세로 · 휴대폰: 설정은 아래 서랍 */
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .stage { padding: 10px 10px 14px; }
+  .sidebar { position: fixed; left: 0; right: 0; top: auto; bottom: var(--dockh); z-index: 44; height: min(76vh, calc(100vh - var(--dockh) - var(--tbh) - 8px)); height: min(76dvh, calc(100dvh - var(--dockh) - var(--tbh) - 8px)); border: 0; border-radius: 16px 16px 0 0; box-shadow: 0 -8px 28px rgba(30, 36, 51, .22); transform: translateY(110%); visibility: hidden; transition: transform .22s ease, visibility 0s linear .22s; }
+  body.sheet-open .sidebar { transform: none; visibility: visible; transition: transform .22s ease; }
+  body.all-panes .sidebar { position: static; transform: none; visibility: visible; height: auto; }
+  .sheet-grab { display: block; width: 40px; height: 4px; margin: 8px auto 2px; border-radius: 2px; background: var(--line-2); }
+  .sheet-close { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border: 0; background: none; color: var(--muted); font-size: 16px; }
+  body.sheet-open .sheet-back { display: block; position: fixed; inset: 0; bottom: var(--dockh); z-index: 43; background: rgba(30, 36, 51, .25); }
+  .dock { gap: 7px; padding-top: 8px; }
+  .dock-tabs { order: 3; display: flex; gap: 6px; }
+  .dtab { flex: 1; height: 36px; border: 0; border-radius: 8px; background: var(--dock-2); color: #ffffff; font-size: 14px; }
+  .dtab.on { background: var(--hi); color: var(--hi-ink); font-weight: 700; }
+  .dock-stop { order: 0; }
+  .dock .transport { order: 1; flex: 1 1 calc(100% - 52px); }
+  .dock-range { order: 2; }
+  .dock-speed { order: 4; margin-left: auto; }
+  #dockLoop { order: 3; }
+  .dock-save { display: none; }
+  .tb-btn#histBtn { display: none; }
+  .tb-song { max-width: none; flex: 1; }
+  .tb-gap { display: none; }
+}
+@media (max-width: 560px) {
+  .tb-logo { font-size: 17px; }
+  .tb-song span { display: none; }
+  .tb-btn { padding: 6px 10px; font-size: 13px; }
+  .dock { padding-left: 10px; padding-right: 10px; }
+  .dock-row { gap: 8px; }
+  .dock .play { width: 50px; height: 50px; }
+  .dock-range .range input { width: 52px; }
+  .dock-range .range > label, .dock-range .range > span:last-of-type { display: none; }
+  .dock-range .range > span:first-of-type { font-size: 0; } .dock-range .range > span:first-of-type::after { content: '~'; font-size: 13px; }
+  .dock-lab { display: none; }
+  #dockLoop { font-size: 0; width: 38px; padding: 0; } #dockLoop::after { content: '⟲'; font-size: 18px; }
+  #helpBtn { font-size: 0; width: 34px; padding: 6px 0; } #helpBtn::after { content: '?'; font-size: 15px; font-weight: 700; }
+  .dock .reh-lab { display: none; }
+}
+@media (max-width: 380px) { .dock-range .range .x { display: none; } }
+@media (prefers-reduced-motion: reduce) { .sidebar { transition: none !important; } }
+/* 악기 줄: 접기·펼치기 */
+.lcard { position: relative; }
+.lcard .top { align-items: center; }
+.lfold { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 2px 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.lfold .lname { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lchev::after { content: '▸'; color: var(--muted); font-size: 12px; }
+.lcard.open .lchev::after { content: '▾'; }
+.lsw { width: 42px; height: 24px; flex: none; border: 0; border-radius: 12px; background: #c5cad8; position: relative; padding: 0; cursor: pointer; }
+.lsw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; transition: left .15s; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.lsw[aria-checked="true"] { background: var(--accent); }
+.lsw[aria-checked="true"]::after { left: 21px; }
+.lcard.off { opacity: .72; }
+.expand-all { width: 100%; }
+body:not(.all-panes) .lcard.open .lsw { position: absolute; top: 14px; right: 14px; }
+body:not(.all-panes) .lcard.open .top { padding-right: 52px; }
+body:not(.all-panes) .lcard:not(.open) { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "top sm sw" "cfg cfg cfg"; align-items: center; gap: 8px 8px; padding: 10px 12px; }
+body:not(.all-panes) .lcard:not(.open) > .top { grid-area: top; min-width: 0; }
+body:not(.all-panes) .lcard:not(.open) > .lsw { grid-area: sw; }
+body:not(.all-panes) .lcard:not(.open) > .sm-row { grid-area: sm; display: flex; gap: 4px; margin: 0; }
+body:not(.all-panes) .lcard:not(.open) > .cfg { grid-area: cfg; display: flex; align-items: center; gap: 8px; margin: 0; }
+body:not(.all-panes) .lcard:not(.open) > .cfg:empty { display: none; }
+body:not(.all-panes) .lcard:not(.open) > canvas,
+body:not(.all-panes) .lcard:not(.open) > .seg,
+body:not(.all-panes) .lcard:not(.open) .lmeta,
+body:not(.all-panes) .lcard:not(.open) .cfg > :not(.k-snd):not(.k-vol),
+body:not(.all-panes) .lcard:not(.open) .cfg label.small { display: none !important; }
+body:not(.all-panes) .lcard:not(.open) .cfg .k-snd { flex: 1 1 0; min-width: 0; }
+body:not(.all-panes) .lcard:not(.open) .cfg .k-snd select { width: 100%; min-width: 0; padding: 4px 6px; font-size: 13px; }
+body:not(.all-panes) .lcard:not(.open) .cfg .k-vol { flex: 0 0 132px; }
+body:not(.all-panes) .lcard:not(.open) .cfg .k-vol .vol { display: flex; align-items: center; gap: 6px; }
+body:not(.all-panes) .lcard:not(.open) .cfg .k-vol input { flex: 1; min-width: 0; }
+body:not(.all-panes) .lcard:not(.open) .cfg .k-vol .num { font-size: 12px; min-width: 36px; text-align: right; }
+body:not(.all-panes) .lcard:not(.open) .sm-row button { width: 28px; height: 26px; padding: 0; font-size: 0; border-radius: 6px; }
+body:not(.all-panes) .lcard:not(.open) .sm-row button.solo::after { content: 'S'; font-size: 11px; font-weight: 700; }
+body:not(.all-panes) .lcard:not(.open) .sm-row button.mute::after { content: 'M'; font-size: 11px; font-weight: 700; }
+@media (max-width: 400px) { body:not(.all-panes) .lcard:not(.open) .cfg { flex-wrap: wrap; } body:not(.all-panes) .lcard:not(.open) .cfg .k-vol { flex: 1 1 100%; } }
+.pane2 h2, .pane2 section, .pane2 .savebox { scroll-margin-top: 60px; }
+/* 시험용(#allpanes): 모든 칸을 차례로 펼쳐 보인다 */
+body.all-panes .load-view { display: block; }
+body.all-panes .dock { position: static; }
+body.all-panes .sidebar { position: static; height: auto; overflow: visible; }
+body.all-panes { padding-bottom: 0; }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="app2" id="app2">
   <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 카카오톡·파일 앱·메일에서 html 파일을 누르면 미리보기로 열려 버튼이 동작하지 않습니다. 컴퓨터에서는 파일을 내려받아 두 번 누르면 브라우저에서 열리고, 안드로이드는 파일을 저장한 뒤 [다른 앱으로 열기] → Chrome을 고르세요. 아이폰·아이패드는 파일로는 열 수 없어 웹 주소(링크)로 열어야 합니다.</span>
     <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
   <div class="msg openext" id="updateBar" role="status" hidden><span id="updateText">새 판이 나왔습니다. 새로 고치면 최신 판으로 바뀝니다(저장한 설정은 그대로 남습니다).</span>
     <span class="openext-btns"><button class="btn primary" id="updateGo" type="button">새로 고침</button><button class="btn" id="updateLater" type="button">나중에</button></span></div>
   <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
     <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
-  <header class="hero">
+  <header class="topbar" id="topbar">
+    <span class="tb-logo">합주연습기</span>
+    <button class="tb-song" id="tbSong" type="button" title="악보 파일 보기"><b id="tbSongName">예시 장단</b><span id="tbSongInfo"></span></button>
+    <span class="tb-gap"></span>
+    <span class="tb-state" id="tbState" aria-live="polite"></span>
+    <button class="btn tb-btn" id="filesBtn" type="button">악보 파일</button>
+    <button class="btn tb-btn" id="helpBtn" type="button">사용법</button>
+    <button class="btn tb-btn" id="histBtn" type="button">업데이트 이력</button>
+  </header>
+  <div class="msg" id="msg" hidden></div>
+
+  <div class="load-view" id="loadView" role="dialog" aria-modal="false" aria-labelledby="stepLoad">
+    <div class="lv-inner">
+      <div class="lv-head"><span class="lv-title">악보 파일</span><button class="btn" id="filesClose" type="button">닫기</button></div>
+      <header class="hero">
     <svg class="hero-mark" viewBox="0 0 120 150" aria-hidden="true"><path d="M30 18 L104 4 L104 108" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><path d="M30 18 L30 122" fill="none" stroke="currentColor" stroke-width="7"/><path d="M30 18 L104 4 L104 24 L30 38 Z" fill="currentColor"/><ellipse cx="18" cy="124" rx="18" ry="13" transform="rotate(-20 18 124)" fill="currentColor"/><ellipse cx="92" cy="110" rx="18" ry="13" transform="rotate(-20 92 110)" fill="currentColor"/></svg>
     <h1>합주연습기</h1>
     <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 늘봄에서 녹음한 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
@@ -658,10 +881,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
       <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
     </ol>
-    <button class="hist-btn" id="histBtn" type="button">업데이트 이력 보기</button>
   </header>
-
-  <section class="step" aria-labelledby="stepLoad">
+      <section class="step" aria-labelledby="stepLoad">
     <h2 class="step-h" id="stepLoad"><span class="sn">1</span>악보 올리기</h2>
     <div class="uploads">
     <section class="up" aria-labelledby="fullUploadTitle">
@@ -718,33 +939,22 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <p>정간보는 읽지 못합니다. PDF를 크게 확대했을 때 음표 가장자리가 흐려지거나 계단처럼 깨지면 스캔한 그림 PDF입니다(악보 프로그램으로 만든 PDF는 아무리 확대해도 선명합니다).</p>
     </details>
     <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 파일은 여러 개를 한꺼번에 고를 수 있고(총보 칸에 여러 개를 고르면 줄이 가장 많은 것을 총보로, 나머지는 추가한 악보로 씁니다), 목록의 ✕로 뺄 수 있습니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
-    <section class="setbox" id="setBox" aria-labelledby="setTitle" hidden>
-      <div class="setbox-head">
-        <h3 id="setTitle">이 악보의 설정</h3>
-        <span class="set-state" id="setState" aria-live="polite"></span>
-      </div>
-      <p class="hint">템포 표, 연습 속도, 줄마다 켜기·끄기·악기 소리·음량·옥타브, 연주 범위·카운트인 같은 재생 옵션, 음원 저장 옵션을 이 악보에 묶어 이 브라우저에 저장합니다. 음정·길이 수정은 따로 늘 자동 저장됩니다.</p>
-      <div class="set-row">
-        <label class="chk"><input type="checkbox" id="setAutoSave" checked>바꿀 때마다 자동 저장</label>
-        <label class="chk"><input type="checkbox" id="setAutoLoad" checked>악보를 열면 저장한 설정 자동으로 불러오기</label>
-      </div>
-      <div class="set-row">
-        <button class="btn" id="setSaveNow" type="button">지금 저장</button>
-        <button class="btn" id="setLoadNow" type="button">저장한 설정 불러오기</button>
-        <button class="btn" id="setExport" type="button">설정 파일로 내보내기</button>
-        <label class="btn" for="setImport">설정 파일 가져오기</label><input type="file" id="setImport" accept="application/json,.json" hidden>
-        <button class="x" id="setClear" type="button">저장한 설정 지우기</button>
-      </div>
-    </section>
+    
   </section>
-  <div class="msg" id="msg" hidden></div>
-  <details class="help panel" id="fullHelp">
+      <div class="lv-demo"><button class="btn" id="demoBtn" type="button">예시 장단으로 먼저 들어 보기</button></div>
+    </div>
+  </div>
+
+  <div class="help-view" id="helpView" role="dialog" aria-labelledby="helpTitle">
+    <div class="hv-inner">
+      <div class="lv-head"><span class="lv-title" id="helpTitle">사용법</span><button class="btn" id="helpClose" type="button">닫기</button></div>
+      <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
       <dt>MusicXML 올리기</dt>
       <dd>PDF 말고 <b>MusicXML</b>(.musicxml, .xml, 압축된 .mxl) 파일도 총보·파트보·악보 추가 칸에 그대로 올릴 수 있습니다. 뮤즈스코어·도리코·시벨리우스·피날레에서 '내보내기 → MusicXML'로 만든 파일입니다. 음 높이·길이·빠르기·셈여림·도돌이표·연습 번호가 파일에 그대로 들어 있어 PDF처럼 잘못 읽는 일이 없습니다. 파트(악기)마다 한 줄이고, 피아노처럼 오선이 둘인 파트는 윗줄·아랫줄로 나뉩니다. 쪽 그림이 없어 악보로 보기는 안 되고 마디맵으로 봅니다. PDF와 섞어 올려도 됩니다.</dd>
       <dt>1. 올리기</dt>
-      <dd>총보 PDF를 올리면 악보를 읽은 뒤 <b>악기 선택</b> 칸에 악보 줄이 위에서부터 차례로 나옵니다. 줄마다 악보에 적힌 이름과 그 줄의 첫 단 그림이 보입니다. 이름이 잘리거나 없으면 그림으로 확인하세요. 같은 카드의 <b>악보 추가</b>로 총보에 없는 악기(피아노·건반 등)의 악보를 더 올려 함께 연주할 수 있습니다. 총보에 있는 악기를 파트보로 바꾸고 싶으면, 악기 선택에서 그 줄을 <b>끄기</b>로 하고 그 악기의 파트보를 악보 추가로 올리면 됩니다(총보의 줄 대신 파트보 줄이 연주됨).</dd>
+      <dd>총보 PDF를 올리면 악보를 읽은 뒤 왼쪽 <b>[악기]</b> 탭(휴대폰·태블릿은 아래 [악기] 단추)에 악보 줄이 위에서부터 차례로 나옵니다. 줄마다 악보에 적힌 이름과 그 줄의 첫 단 그림이 보입니다. 이름이 잘리거나 없으면 그림으로 확인하세요. 같은 카드의 <b>악보 추가</b>로 총보에 없는 악기(피아노·건반 등)의 악보를 더 올려 함께 연주할 수 있습니다. 총보에 있는 악기를 파트보로 바꾸고 싶으면, [악기] 탭에서 그 줄을 <b>끄기</b>로 하고 그 악기의 파트보를 악보 추가로 올리면 됩니다(총보의 줄 대신 파트보 줄이 연주됨).</dd>
       <dt>2. 줄마다 역할 정하기</dt>
       <dd><b>선율</b>은 음높이까지 읽어 고른 악기 소리로 가락을 연주하고, <b>타악</b>은 리듬만 읽어 장구·북 같은 소리로 칩니다. <b>끄기</b>는 듣지 않습니다.
         <span class="eg">가야금 연습 → 가야금 줄: 선율 / 장구 줄: 타악 / 나머지: 끄기</span>
@@ -759,8 +969,16 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <dd>가야금·거문고·양금·대금·소금·피리·대피리·태평소·생황·해금·아쟁·피아노와 장구·꽹과리·징·바라와 심벌·하이햇·베이스드럼·스네어드럼은 녹음한 소리를 씁니다(북·북 테는 합성음, 북은 녹음도 고를 수 있음). 긴 음에는 녹음한 농현·요성을 넣을 수 있고(줄마다 켜고 끄기), 추성·퇴성 같은 시김새는 악보 기호를 읽지 못해 나오지 않습니다. 음높이는 음자리표·조표·임시표로 읽습니다. 소리가 악보와 다르게 들리는 마디가 있으면 마디 번호를 알려 주세요.</dd>
     </dl>
   </details>
+      <footer class="app-foot"><span id="appVer"></span> · <button class="hist-link" id="histBtn2" type="button">업데이트 이력</button></footer>
+    </div>
+  </div>
 
-  <section class="panel" id="linesPanel" aria-labelledby="tLines">
+  <div class="shell" id="shell">
+    <aside class="sidebar" id="sidebar" aria-label="설정">
+      <div class="sheet-grab" id="sheetGrab" aria-hidden="true"></div>
+      <nav class="tabs2" role="tablist" aria-label="설정 칸"><button class="tab2" type="button" role="tab" data-tab="inst" id="tab-inst" aria-controls="pane-inst">악기</button><button class="tab2" type="button" role="tab" data-tab="tempo" id="tab-tempo" aria-controls="pane-tempo">빠르기</button><button class="tab2" type="button" role="tab" data-tab="play" id="tab-play" aria-controls="pane-play">연주</button><button class="tab2" type="button" role="tab" data-tab="save" id="tab-save" aria-controls="pane-save">저장</button><button class="sheet-close" id="sheetClose" type="button" aria-label="서랍 닫기">✕</button></nav>
+      <div class="pane2" id="pane-inst" role="tabpanel" data-pane="inst" aria-labelledby="tab-inst">
+      <section class="panel" id="linesPanel" aria-labelledby="tLines">
     <div class="row" style="justify-content:space-between">
       <h2 class="step-h" id="tLines"><span class="sn">2</span>악기 선택</h2>
       <span class="hint" id="linesCount"></span>
@@ -768,6 +986,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <div class="row" id="lineFilters">
       <button class="btn" type="button" id="allOn">모두 켜기</button>
       <button class="btn" type="button" id="allOff">모두 끄기</button>
+      <button class="btn expand-all" type="button" id="expandAll" aria-pressed="false" hidden>▾ 켠 악기 설정 모두 펼치기</button>
       <span class="hint">줄 그림을 보고 역할을 정하세요. 이름은 악보에서 읽은 그대로입니다.</span>
     </div>
     <div class="fam-legend" id="famLegend" aria-label="악기 갈래 색"><span style="--c: var(--fam-wind)">관악</span><span style="--c: var(--fam-string)">현악</span><span style="--c: var(--fam-perc)">타악</span><span style="--c: var(--fam-etc)">건반·그 밖</span></div>
@@ -798,9 +1017,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       </dl>
     </details>
   </section>
-
-  <div class="main">
-    <div class="side">
+      </div>
+      <div class="pane2" id="pane-tempo" role="tabpanel" data-pane="tempo" aria-labelledby="tab-tempo">
       <section class="panel" aria-labelledby="tTempo">
         <h2 class="step-h" id="tTempo"><span class="sn">3</span>빠르기</h2>
         <table class="tempo">
@@ -901,7 +1119,6 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           </dl>
         </details>
       </section>
-
       <section class="panel" aria-labelledby="tSpeed">
         <h2 id="tSpeed">연습 속도</h2>
         <div class="speed"><input type="range" id="speed" min="50" max="150" step="5" value="100"><span class="num" id="speedVal">100%</span></div>
@@ -916,40 +1133,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           </dl>
         </details>
       </section>
-
-    </div>
-
-    <div class="side">
+      </div>
+      <div class="pane2" id="pane-play" role="tabpanel" data-pane="play" aria-labelledby="tab-play">
       <section class="panel" aria-labelledby="tPlay">
-        <h2 class="step-h" id="tPlay"><span class="sn">4</span>연주</h2>
-        <div class="view-switch" role="group" aria-label="연주하면서 볼 화면">
-          <button type="button" id="viewScore2" aria-pressed="false">악보로 보기</button>
-          <button type="button" id="viewMap2" aria-pressed="true">마디맵으로 보기</button>
-        </div>
-        <div class="transport">
-          <button class="play" id="playBtn" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
-          <div class="pos">
-            <div class="now" id="nowText"><b>정지</b></div>
-            <div class="bar-track" id="track"><i id="trackFill"></i></div>
-          </div>
-          <button class="btn" id="exportMidiBtn" type="button" title="켠 줄을 연주 순서대로 MIDI 파일로 (다른 프로그램·전자 악기에서 열기)">MIDI 저장</button>
-          <button class="btn" id="exportXmlBtn" type="button" title="켠 줄을 MusicXML 악보 파일로 (뮤즈스코어·도리코·시벨리우스에서 열어 고치기)">MusicXML 저장</button>
-          <button class="btn" id="exportJsonBtn" type="button">인식 결과 JSON 저장</button>
-          <button class="btn" id="saveJump" type="button">음원 저장…</button>
-        </div>
-        <div class="range">
-          <label for="from">마디</label><input type="number" id="from" min="1" value="1" class="num">
-          <span>부터</span><input type="number" id="to" min="1" value="8" class="num"><span>까지</span>
-          <button class="x" id="rangeAll" type="button">전곡</button>
-        </div>
-        <div class="reh-row" id="rehRow" hidden>
-          <span class="reh-lab">연습 번호</span>
-          <span class="reh-btns" id="rehBtns"></span>
-          <select id="rehMode" class="mini" aria-label="연습 번호를 누르면">
-            <option value="play">누르면 그 자리부터 재생</option>
-            <option value="range">누르면 다음 번호 전까지 구간으로</option>
-          </select>
-        </div>
+        <h2 class="step-h" id="tPlay">재생할 때</h2>
         <div class="opts">
           <label><input type="checkbox" id="optRepeat" checked>도돌이표대로 반복</label>
           <label><input type="checkbox" id="optLoop">구간 계속 반복</label>
@@ -965,7 +1152,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             </select></label>
           <label><input type="checkbox" id="optDyn" checked>셈여림 반영</label>
         </div>
-        <details class="soundbox" id="soundBox">
+      </section>
+      <section class="panel" aria-labelledby="tSoundH">
+        <h2 class="step-h" id="tSoundH">소리 다듬기</h2>
+        <details class="soundbox" id="soundBox" open>
           <summary>소리 다듬기 <span class="hint" id="soundSum"></span></summary>
           <div class="sb-grid">
             <div class="field"><label for="sTranspose">조옮김</label>
@@ -987,11 +1177,65 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           </div>
           <p class="hint">재생과 음원 저장에 함께 적용됩니다. 사람처럼 연주는 음마다 세기를 조금씩(±6%), 치는 때를 아주 조금씩(선율 ±8ms, 타악 ±4ms) 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게 합니다(같은 악보는 늘 같은 결과). 조옮김·기준음은 선율 악기에만(타악은 그대로). 좌우 배치는 국악관현악 자리처럼 가야금·거문고는 왼쪽, 아쟁·대금은 오른쪽으로 나눠 들리게 하고, 줄마다 '좌우 위치'로 바꿀 수 있습니다(타악은 가운데). 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.</p>
         </details>
+      </section>
+      <section class="panel" aria-labelledby="tOrderH">
+        <h2 class="step-h" id="tOrderH">연주 순서</h2>
         <div class="field">
           <label for="orderText">연주 순서<span class="pill" id="orderState">자동</span></label>
           <div class="order-row"><input id="orderText" class="num" spellcheck="false" autocomplete="off"><button class="x" id="orderAuto" type="button">자동으로</button></div>
           <p class="hint" id="orderHint">도돌이표, 1·2번 괄호, D.S.·D.C.·코다를 따라 정한 순서입니다. 틀렸으면 직접 고쳐 주세요. 예: 1-8, 1-4, 9-16</p>
         </div>
+        <details class="help">
+          <summary>설명 보기</summary>
+          <dl>
+            <dt>MIDI 저장 · MusicXML 저장</dt>
+            <dd>읽은 악보를 다른 프로그램에서 쓸 수 있는 파일로 내보냅니다(켠 줄만). <b>MIDI</b>는 연주 순서(도돌이표대로 반복 설정)대로 펼친 전곡을 줄마다 한 트랙으로, 타악은 드럼 채널로 담습니다. 빠르기 표·박자표는 들어가고 rit.·accel.·연습 속도는 넣지 않습니다. <b>MusicXML</b>은 악보에 적힌 순서대로 줄마다 한 파트(윗성부·아랫성부는 1·2성부, 도돌이 세로줄 표시 포함)로 담아 뮤즈스코어·도리코·시벨리우스·피날레에서 열어 고칠 수 있습니다. 음 이름은 내림표(♭) 쪽으로 적고 조표는 넣지 않으니 열어서 조표를 정해 주세요. 옥타브·조옮김 설정은 들리는 높이대로 반영됩니다.</dd>
+            <dt>재생 · 진행 막대</dt>
+            <dd>재생 버튼으로 시작하고 다시 누르면 멈춥니다. 진행 막대를 누르면 그 위치로 건너뜁니다. 지금 연주 중인 마디는 마디 지도에서 노란색으로 표시됩니다.</dd>
+            <dt>마디 ○부터 ○까지</dt>
+            <dd>그 범위만 연주하고 저장합니다. <b>전곡</b>을 누르면 처음부터 끝까지로 돌아갑니다.
+              <span class="eg">어려운 25~32마디만 → 25부터 32까지</span></dd>
+            <dt>도돌이표대로 반복</dt>
+            <dd>켜면 악보의 도돌이표, 1·2번 괄호, D.S.·코다를 따라 실제 연주 순서대로 칩니다. 끄면 반복 없이 처음부터 끝까지 한 번씩 지나갑니다(1·2번 괄호는 마지막 괄호만).</dd>
+            <dt>구간 계속 반복</dt>
+            <dd>정한 범위를 끝까지 연주하면 처음으로 돌아가 멈출 때까지 계속 반복합니다. 같은 가락을 여러 번 따라 칠 때 씁니다. 재생에만 적용되고 wav 파일은 한 번 분량으로 저장됩니다. 카운트인을 켜 두면 반복할 때마다 카운트인도 다시 나옵니다.</dd>
+            <dt>연습 번호</dt>
+            <dd>악보에 네모 칸으로 적힌 연습 번호(A, B, C …, 2악장 등)를 찾아 마디 칸 아래에 단추로 보여 줍니다(작은 숫자는 마디 번호). 단추를 누르면 그 마디부터 재생합니다. 옆 상자에서 '다음 번호 전까지 구간으로'를 고르면 누른 번호부터 다음 번호 앞까지를 연주 범위로 정하고 재생합니다(구간 계속 반복과 함께 쓰면 그 대목만 반복 연습). 네모 칸에 넣은 마디 번호는 연습 번호로 치지 않습니다. 연습 번호를 못 찾은 악보에서는 이 줄이 보이지 않습니다.</dd>
+            <dt>반복할 때마다 빠르게</dt>
+            <dd>어려운 대목을 느리게 시작해 점점 빠르게 익힐 때 씁니다. 켜면 구간 계속 반복도 함께 켜지고, 처음에는 연습 속도의 '처음 %'(기본 70%)로 연주하다가 한 바퀴 돌 때마다 '한 번에 +%'(기본 5%)씩 빨라져 연습 속도(100%)에 이르면 그 빠르기로 계속 반복합니다. 음 높이는 그대로입니다. 아래 연주 막대에 지금 몇 번째 반복인지, 몇 %인지 보입니다. 정지(⏹)하면 처음 %로 돌아갑니다.</dd>
+            <dt>카운트인</dt>
+            <dd>연주 시작 전에 한 마디 동안 박에 맞춰 "똑, 딱, 딱, 딱" 클릭을 들려줍니다. 첫 박은 높은 소리입니다. 같이 칠 때 들어갈 타이밍을 잡는 용도입니다.
+              <span class="eg">12/8, ♩.=84 → 점4분 4번 클릭 후 연주 시작</span></dd>
+            <dt>메트로놈</dt>
+            <dd>연주하는 동안 내내 박마다 클릭을 깔아 줍니다. 마디 첫 박은 높은 소리입니다. 박은 템포 구간의 기준 음표 단위로 칩니다. 빠르기가 흔들리지 않게 연습할 때 켜세요.</dd>
+            <dt>쉬는 마디 박 짚기</dt>
+            <dd>칠 음이 하나도 없는 마디(여러 마디 쉼표, 빈 마디, 총보에서 고른 줄이 쉬는 마디)에서만 나무 막대 소리로 박을 짚어 줍니다. 악기 소리, 메트로놈 클릭과 다른 소리라 쉬는 구간이 바로 구분됩니다. 마디 첫 박은 높은 소리, 나머지 박은 낮은 소리입니다.
+              <b>박만</b>은 기준 음표마다 한 번, <b>분박까지</b>는 박 사이를 8분음표 단위로 쪼개 작은 "착" 소리를 더합니다(점4분 박은 셋, 4분 박은 둘로 쪼갬). 쉬는 동안 연주 칸에 "쉼 3/8마디"처럼 몇 번째 쉬는 마디인지도 보여 줍니다. 저장하는 파일에도 들어갑니다.
+              <span class="eg">12/8 쉬는 마디 → 박만: 딱·똑·똑·똑 / 분박까지: 딱 착 착 똑 착 착 똑 착 착 똑 착 착</span>
+              <span class="eg">메트로놈은 끄고 이것만 켜면 → 칠 때는 악기 소리만, 쉴 때는 박 소리만</span></dd>
+            <dt>셈여림 반영</dt>
+            <dd>악보의 p, mf, f, 크레셴도 등을 소리 크기에 반영합니다. 끄면 모든 음을 같은 크기로 냅니다. 악센트(&gt;)는 어느 쪽이든 강하게 납니다.</dd>
+            <dt>소리 다듬기</dt>
+            <dd><b>조옮김</b>: 선율 악기를 반음 단위로 올리거나 내립니다(타악은 그대로). <b>기준음 A4</b>: 라(A4) 높이를 Hz로 정합니다. 보통 440, 악기를 442에 맞췄다면 442.
+              <b>늘임표</b>: 악보의 늘임표(𝄐가 있는 마디)에서 울리던 음을 몇 박 더 늘이고 그만큼 쉽니다. <b>잔향</b>: 방에서 울리는 것처럼 소리에 울림을 더합니다.
+              <b>스타카토·트릴 연주</b>: 스타카토 점이 찍힌 선율 음은 절반쯤 짧게 끊고, 물결선 트릴은 바로 위 음(조표·임시표 따름)과 빠르게 오갑니다.
+              <b>좌우 배치</b>: 국악관현악 자리처럼 가야금·거문고·양금은 왼쪽, 아쟁·대금·소금은 오른쪽, 피리는 가운데쯤으로 나눠 들리게 합니다. 줄마다 '좌우 위치'로 바꿀 수 있고, 타악은 가운데입니다. 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.
+              모두 재생과 음원 저장에 함께 적용되고, 이 악보의 설정에 저장됩니다.</dd>
+            <dt>연주 순서</dt>
+            <dd>실제로 칠 마디 순서입니다. 반복 기호를 잘못 읽었으면 직접 고칩니다. 쉼표(,)로 구간을 나누고 붙임표(-)로 범위를 적습니다.
+              <span class="eg">1-8, 1-4, 9-16 → 1~8마디, 다시 1~4마디, 이어서 9~16마디</span></dd>
+            <dt>MP3 · WAV 저장</dt>
+            <dd>[저장] 탭의 <b>음원 저장</b>에서 저장할 마디 범위(몇 마디부터 몇 마디까지), 카운트인, 메트로놈, 쉬는 마디 박 짚기, 도돌이표 반복, 셈여림, 속도를 정해 소리 파일로 만듭니다. 처음에는 재생 설정을 그대로 따라가고, 저장 칸을 직접 바꾸면 그때부터 따로 정해집니다([재생 설정 가져오기]로 다시 맞춤). 저장해도 재생 중인 소리는 바뀌지 않습니다. 켜 둔 줄과 악기 소리·음량은 줄 설정을 따릅니다. 파일 이름에 마디 범위·속도·카운트인 여부가 붙습니다. 기본은 MP3(128kbps, 작은 용량)이고 '형식'에서 WAV(무압축)로 바꿀 수 있습니다. MP3 변환기는 처음 한 번 인터넷에서 받아 옵니다. 휴대폰에 넣어 두고 들으며 연습할 수 있습니다.</dd>
+          </dl>
+        </details>
+      </section>
+      <div hidden><div class="view-switch" role="group" aria-label="연주하면서 볼 화면">
+          <button type="button" id="viewScore2" aria-pressed="false">악보로 보기</button>
+          <button type="button" id="viewMap2" aria-pressed="true">마디맵으로 보기</button>
+        </div></div>
+      </div>
+      <div class="pane2" id="pane-save" role="tabpanel" data-pane="save" aria-labelledby="tab-save">
+      <section class="panel">
         <section class="savebox" id="saveBox" aria-labelledby="saveTitle">
           <div class="savebox-head">
             <h3 id="saveTitle">음원 저장</h3>
@@ -1027,55 +1271,46 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
           <p class="hint" id="saveSummary"></p>
           <p class="hint" id="saveHint">wav 파일은 zip으로 묶여 저장됩니다. 압축을 풀면 wav가 나옵니다.</p>
         </section>
-        <details class="help">
-          <summary>설명 보기</summary>
-          <dl>
-            <dt>MIDI 저장 · MusicXML 저장</dt>
-            <dd>읽은 악보를 다른 프로그램에서 쓸 수 있는 파일로 내보냅니다(켠 줄만). <b>MIDI</b>는 연주 순서(도돌이표대로 반복 설정)대로 펼친 전곡을 줄마다 한 트랙으로, 타악은 드럼 채널로 담습니다. 빠르기 표·박자표는 들어가고 rit.·accel.·연습 속도는 넣지 않습니다. <b>MusicXML</b>은 악보에 적힌 순서대로 줄마다 한 파트(윗성부·아랫성부는 1·2성부, 도돌이 세로줄 표시 포함)로 담아 뮤즈스코어·도리코·시벨리우스·피날레에서 열어 고칠 수 있습니다. 음 이름은 내림표(♭) 쪽으로 적고 조표는 넣지 않으니 열어서 조표를 정해 주세요. 옥타브·조옮김 설정은 들리는 높이대로 반영됩니다.</dd>
-            <dt>재생 · 진행 막대</dt>
-            <dd>재생 버튼으로 시작하고 다시 누르면 멈춥니다. 진행 막대를 누르면 그 위치로 건너뜁니다. 지금 연주 중인 마디는 마디 지도에서 노란색으로 표시됩니다.</dd>
-            <dt>마디 ○부터 ○까지</dt>
-            <dd>그 범위만 연주하고 저장합니다. <b>전곡</b>을 누르면 처음부터 끝까지로 돌아갑니다.
-              <span class="eg">어려운 25~32마디만 → 25부터 32까지</span></dd>
-            <dt>도돌이표대로 반복</dt>
-            <dd>켜면 악보의 도돌이표, 1·2번 괄호, D.S.·코다를 따라 실제 연주 순서대로 칩니다. 끄면 반복 없이 처음부터 끝까지 한 번씩 지나갑니다(1·2번 괄호는 마지막 괄호만).</dd>
-            <dt>구간 계속 반복</dt>
-            <dd>정한 범위를 끝까지 연주하면 처음으로 돌아가 멈출 때까지 계속 반복합니다. 같은 가락을 여러 번 따라 칠 때 씁니다. 재생에만 적용되고 wav 파일은 한 번 분량으로 저장됩니다. 카운트인을 켜 두면 반복할 때마다 카운트인도 다시 나옵니다.</dd>
-            <dt>연습 번호</dt>
-            <dd>악보에 네모 칸으로 적힌 연습 번호(A, B, C …, 2악장 등)를 찾아 마디 칸 아래에 단추로 보여 줍니다(작은 숫자는 마디 번호). 단추를 누르면 그 마디부터 재생합니다. 옆 상자에서 '다음 번호 전까지 구간으로'를 고르면 누른 번호부터 다음 번호 앞까지를 연주 범위로 정하고 재생합니다(구간 계속 반복과 함께 쓰면 그 대목만 반복 연습). 네모 칸에 넣은 마디 번호는 연습 번호로 치지 않습니다. 연습 번호를 못 찾은 악보에서는 이 줄이 보이지 않습니다.</dd>
-            <dt>반복할 때마다 빠르게</dt>
-            <dd>어려운 대목을 느리게 시작해 점점 빠르게 익힐 때 씁니다. 켜면 구간 계속 반복도 함께 켜지고, 처음에는 연습 속도의 '처음 %'(기본 70%)로 연주하다가 한 바퀴 돌 때마다 '한 번에 +%'(기본 5%)씩 빨라져 연습 속도(100%)에 이르면 그 빠르기로 계속 반복합니다. 음 높이는 그대로입니다. 연주 칸 위에 지금 몇 번째 반복인지, 몇 %인지 보입니다. 정지(⏹)하면 처음 %로 돌아갑니다.</dd>
-            <dt>카운트인</dt>
-            <dd>연주 시작 전에 한 마디 동안 박에 맞춰 "똑, 딱, 딱, 딱" 클릭을 들려줍니다. 첫 박은 높은 소리입니다. 같이 칠 때 들어갈 타이밍을 잡는 용도입니다.
-              <span class="eg">12/8, ♩.=84 → 점4분 4번 클릭 후 연주 시작</span></dd>
-            <dt>메트로놈</dt>
-            <dd>연주하는 동안 내내 박마다 클릭을 깔아 줍니다. 마디 첫 박은 높은 소리입니다. 박은 템포 구간의 기준 음표 단위로 칩니다. 빠르기가 흔들리지 않게 연습할 때 켜세요.</dd>
-            <dt>쉬는 마디 박 짚기</dt>
-            <dd>칠 음이 하나도 없는 마디(여러 마디 쉼표, 빈 마디, 총보에서 고른 줄이 쉬는 마디)에서만 나무 막대 소리로 박을 짚어 줍니다. 악기 소리, 메트로놈 클릭과 다른 소리라 쉬는 구간이 바로 구분됩니다. 마디 첫 박은 높은 소리, 나머지 박은 낮은 소리입니다.
-              <b>박만</b>은 기준 음표마다 한 번, <b>분박까지</b>는 박 사이를 8분음표 단위로 쪼개 작은 "착" 소리를 더합니다(점4분 박은 셋, 4분 박은 둘로 쪼갬). 쉬는 동안 연주 칸에 "쉼 3/8마디"처럼 몇 번째 쉬는 마디인지도 보여 줍니다. 저장하는 파일에도 들어갑니다.
-              <span class="eg">12/8 쉬는 마디 → 박만: 딱·똑·똑·똑 / 분박까지: 딱 착 착 똑 착 착 똑 착 착 똑 착 착</span>
-              <span class="eg">메트로놈은 끄고 이것만 켜면 → 칠 때는 악기 소리만, 쉴 때는 박 소리만</span></dd>
-            <dt>셈여림 반영</dt>
-            <dd>악보의 p, mf, f, 크레셴도 등을 소리 크기에 반영합니다. 끄면 모든 음을 같은 크기로 냅니다. 악센트(&gt;)는 어느 쪽이든 강하게 납니다.</dd>
-            <dt>소리 다듬기</dt>
-            <dd><b>조옮김</b>: 선율 악기를 반음 단위로 올리거나 내립니다(타악은 그대로). <b>기준음 A4</b>: 라(A4) 높이를 Hz로 정합니다. 보통 440, 악기를 442에 맞췄다면 442.
-              <b>늘임표</b>: 악보의 늘임표(𝄐가 있는 마디)에서 울리던 음을 몇 박 더 늘이고 그만큼 쉽니다. <b>잔향</b>: 방에서 울리는 것처럼 소리에 울림을 더합니다.
-              <b>스타카토·트릴 연주</b>: 스타카토 점이 찍힌 선율 음은 절반쯤 짧게 끊고, 물결선 트릴은 바로 위 음(조표·임시표 따름)과 빠르게 오갑니다.
-              <b>좌우 배치</b>: 국악관현악 자리처럼 가야금·거문고·양금은 왼쪽, 아쟁·대금·소금은 오른쪽, 피리는 가운데쯤으로 나눠 들리게 합니다. 줄마다 '좌우 위치'로 바꿀 수 있고, 타악은 가운데입니다. 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.
-              모두 재생과 음원 저장에 함께 적용되고, 이 악보의 설정에 저장됩니다.</dd>
-            <dt>연주 순서</dt>
-            <dd>실제로 칠 마디 순서입니다. 반복 기호를 잘못 읽었으면 직접 고칩니다. 쉼표(,)로 구간을 나누고 붙임표(-)로 범위를 적습니다.
-              <span class="eg">1-8, 1-4, 9-16 → 1~8마디, 다시 1~4마디, 이어서 9~16마디</span></dd>
-            <dt>MP3 · WAV 저장</dt>
-            <dd><b>음원 저장</b> 칸에서 저장할 마디 범위(몇 마디부터 몇 마디까지), 카운트인, 메트로놈, 쉬는 마디 박 짚기, 도돌이표 반복, 셈여림, 속도를 정해 소리 파일로 만듭니다. 처음에는 재생 설정을 그대로 따라가고, 저장 칸을 직접 바꾸면 그때부터 따로 정해집니다([재생 설정 가져오기]로 다시 맞춤). 저장해도 재생 중인 소리는 바뀌지 않습니다. 켜 둔 줄과 악기 소리·음량은 줄 설정을 따릅니다. 파일 이름에 마디 범위·속도·카운트인 여부가 붙습니다. 기본은 MP3(128kbps, 작은 용량)이고 '형식'에서 WAV(무압축)로 바꿀 수 있습니다. MP3 변환기는 처음 한 번 인터넷에서 받아 옵니다. 휴대폰에 넣어 두고 들으며 연습할 수 있습니다.</dd>
-          </dl>
-        </details>
       </section>
-
-    </div>
-  </div>
-
-    <section class="panel bars-panel" aria-labelledby="tBars">
+      <section class="panel" aria-labelledby="tExportH">
+        <h2 class="step-h" id="tExportH">다른 프로그램으로 내보내기</h2>
+        <div class="row export-row"><button class="btn" id="exportMidiBtn" type="button" title="켠 줄을 연주 순서대로 MIDI 파일로 (다른 프로그램·전자 악기에서 열기)">MIDI 저장</button><button class="btn" id="exportXmlBtn" type="button" title="켠 줄을 MusicXML 악보 파일로 (뮤즈스코어·도리코·시벨리우스에서 열어 고치기)">MusicXML 저장</button><button class="btn" id="exportJsonBtn" type="button">인식 결과 JSON 저장</button></div>
+        <p class="hint">켠 줄만 담습니다. MIDI는 전자 악기·다른 프로그램에서, MusicXML은 뮤즈스코어·도리코·시벨리우스에서 열어 고칠 수 있습니다.</p>
+      </section>
+      <section class="panel" id="setPanel">
+        <section class="setbox" id="setBox" aria-labelledby="setTitle" hidden>
+      <div class="setbox-head">
+        <h3 id="setTitle">이 악보의 설정</h3>
+        <span class="set-state" id="setState" aria-live="polite"></span>
+      </div>
+      <p class="hint">템포 표, 연습 속도, 줄마다 켜기·끄기·악기 소리·음량·옥타브, 연주 범위·카운트인 같은 재생 옵션, 음원 저장 옵션을 이 악보에 묶어 이 브라우저에 저장합니다. 음정·길이 수정은 따로 늘 자동 저장됩니다.</p>
+      <div class="set-row">
+        <label class="chk"><input type="checkbox" id="setAutoSave" checked>바꿀 때마다 자동 저장</label>
+        <label class="chk"><input type="checkbox" id="setAutoLoad" checked>악보를 열면 저장한 설정 자동으로 불러오기</label>
+      </div>
+      <div class="set-row">
+        <button class="btn" id="setSaveNow" type="button">지금 저장</button>
+        <button class="btn" id="setLoadNow" type="button">저장한 설정 불러오기</button>
+        <button class="btn" id="setExport" type="button">설정 파일로 내보내기</button>
+        <label class="btn" for="setImport">설정 파일 가져오기</label><input type="file" id="setImport" accept="application/json,.json" hidden>
+        <button class="x" id="setClear" type="button">저장한 설정 지우기</button>
+      </div>
+    </section>
+      </section>
+      <section class="panel" id="editPanel" aria-labelledby="tEditH">
+        <h2 class="step-h" id="tEditH">음 고친 내용</h2>
+        <div class="edit-tools" id="editTools" hidden>
+        <p class="hint" id="editStatus">마디의 ✎ 수정 버튼으로 음정과 음 길이를 고칠 수 있습니다. 고친 내용은 자동 저장됩니다.</p>
+        <button class="btn" type="button" id="editExport">수정 내보내기</button>
+        <label class="btn" for="editImport">수정 가져오기</label><input type="file" id="editImport" accept="application/json,.json" hidden>
+        <button class="btn" type="button" id="editClearAll">수정 모두 되돌리기</button>
+      </div>
+      </section>
+      </div>
+    </aside>
+    <div class="sheet-back" id="sheetBack"></div>
+    <main class="stage" id="stage">
+      <section class="panel bars-panel" aria-labelledby="tBars">
       <div class="row" style="justify-content:space-between">
         <h2 id="tBars">마디맵</h2>
       </div>
@@ -1088,19 +1323,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       <div class="warnlist" id="warnList"></div>
       <div class="bar-actions">
         <p class="hint" id="barsHint">마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.</p>
-        <button class="btn stop-near-bars" id="barsStopBtn" type="button" aria-label="재생 정지">⏹ 정지</button>
+        
       </div>
-      <div class="edit-tools" id="editTools" hidden>
-        <p class="hint" id="editStatus">마디의 ✎ 수정 버튼으로 음정과 음 길이를 고칠 수 있습니다. 고친 내용은 자동 저장됩니다.</p>
-        <button class="btn" type="button" id="editExport">수정 내보내기</button>
-        <label class="btn" for="editImport">수정 가져오기</label><input type="file" id="editImport" accept="application/json,.json" hidden>
-        <button class="btn" type="button" id="editClearAll">수정 모두 되돌리기</button>
-      </div>
+      
       <details class="help">
         <summary>설명 보기</summary>
         <dl>
           <dt>악보로 보기 · 마디맵으로 보기</dt>
-          <dd>위의 큰 단추(연주 칸에도 있음)로 두 가지 보기를 고릅니다. <b>마디맵으로 보기</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보로 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
+          <dd>위의 [악보 / 마디맵] 단추로 두 가지 보기를 고릅니다. <b>마디맵으로 보기</b>는 마디마다 칸으로 리듬을 보여 주고, <b>악보로 보기</b>는 올린 악보 PDF를 그대로 보여 줍니다.
             악보 보기에서는 연주하는 동안 지금 마디가 노란 칸, 지금 위치가 빨간 선으로 음표를 따라 움직이고, 다음 단·다음 쪽으로 넘어가면 악보 칸이 따라 내려갑니다(화면 전체는 움직이지 않음). '연주 위치 따라가기'를 끄면 악보를 직접 넘겨 볼 수 있습니다.
             악보를 누르면 그 마디부터 재생하고, [−]·[+]로 크기를 바꿉니다(휴대폰에서 총보가 작으면 키워 보세요). <b>[화면 가득 보기]</b>를 누르면 화면 전체에 악보만 보이고, 위쪽 단추로 재생·일시정지합니다(✕ 닫기나 Esc로 돌아옴). 고른 보기와 크기는 이 기기에 기억됩니다.
             총보는 켠 줄 가운데 기준 줄이 있는 단 전체를 표시합니다. 예시 장단과 마디 위치를 읽지 못한 악보는 악보 보기를 할 수 없습니다.</dd>
@@ -1140,13 +1370,49 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
       </div>
       <div class="bars" id="bars"></div>
     </section>
-  <footer class="app-foot"><span id="appVer"></span> · <button class="hist-link" id="histBtn2" type="button">업데이트 이력</button></footer>
+    </main>
+  </div>
+
+  <footer class="dock" id="dock" aria-label="연주">
+    <nav class="dock-tabs" aria-label="설정 서랍"><button class="dtab" type="button" data-tab="inst">악기</button><button class="dtab" type="button" data-tab="tempo">빠르기</button><button class="dtab" type="button" data-tab="play">연주</button><button class="dtab" type="button" data-tab="save">저장</button></nav>
+    <div class="reh-row" id="rehRow" hidden>
+          <span class="reh-lab">연습 번호</span>
+          <span class="reh-btns" id="rehBtns"></span>
+          <select id="rehMode" class="mini" aria-label="연습 번호를 누르면">
+            <option value="play">누르면 그 자리부터 재생</option>
+            <option value="range">누르면 다음 번호 전까지 구간으로</option>
+          </select>
+        </div>
+    <div class="dock-row">
+      <button class="dock-stop" id="barsStopBtn" type="button" aria-label="재생 정지"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg></button>
+      <div class="transport">
+          <button class="play" id="playBtn" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
+          <div class="pos">
+            <div class="now" id="nowText"><b>정지</b></div>
+            <div class="bar-track" id="track"><i id="trackFill"></i></div>
+          </div>
+        </div>
+      <div class="dock-range"><div class="range">
+          <label for="from">마디</label><input type="number" id="from" min="1" value="1" class="num">
+          <span>부터</span><input type="number" id="to" min="1" value="8" class="num"><span>까지</span>
+          <button class="x" id="rangeAll" type="button">전곡</button>
+        </div></div>
+      <button class="dock-btn" id="dockLoop" type="button" aria-pressed="false">⟲ 구간 반복</button>
+      <div class="dock-speed" role="group" aria-label="연습 속도"><span class="dock-lab">속도</span><button class="dock-btn sq" id="dockSpdDown" type="button" aria-label="느리게">−</button><b class="num" id="dockSpd">100%</b><button class="dock-btn sq" id="dockSpdUp" type="button" aria-label="빠르게">+</button></div>
+      <button class="dock-save" id="saveJump" type="button">음원 저장</button>
+    </div>
+  </footer>
 </div>
 
 
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>화면 새 배치</b>: 위에는 곡 이름과 [악보 파일]·[사용법], 왼쪽에는 [악기]·[빠르기]·[연주]·[저장] 네 칸을 탭으로, 가운데는 악보·마디맵, 아래에는 늘 보이는 연주 막대(정지·재생·지금 마디·구간·구간 반복·속도 −/+·음원 저장·연습 번호). 전체 색은 밝은 파스텔, 연주 막대만 차분한 남색으로</li>
+    <li><b>휴대폰·태블릿 세로</b>: 설정 칸은 연주 막대의 [악기]·[빠르기]·[연주]·[저장] 단추로 여는 아래 서랍으로. 악보를 가리지 않고 한 손으로 쓸 수 있게</li>
+    <li><b>첫 화면</b>: 악보를 올리기 전에는 큰 올리기 화면. 올린 뒤에는 위의 [악보 파일](또는 곡 이름)로 총보·악보 추가·파트보를 보고 바꿉니다. 화면에 파일을 끌어 오면 이 창이 열림</li>
+    <li><b>악기 줄 접기</b>: 줄마다 이름·켜기 스위치·솔로(S)·음소거(M)와, 켠 줄은 소리·음량만 한 줄로. 이름을 누르면 역할·첫 단 그림·옥타브·좌우·농현까지 펼침. [켠 악기 설정 모두 펼치기]로 한꺼번에 펼치고 접기</li>
+    <li>빠르기 숫자를 못 읽어 재생이 막히면 [빠르기] 칸을 열어 노란 칸으로 바로 데려감. [음원 저장] 단추는 [저장] 칸을 엶</li>
     <li><b>MusicXML 올리기</b>: PDF와 함께 MusicXML(.musicxml·.xml·.mxl) 파일도 총보·파트보·악보 추가 칸에 올릴 수 있습니다. 음 높이·길이·빠르기·셈여림·도돌이표·연습 번호를 그대로 읽어 인식 오류가 없음(악보로 보기는 PDF만)</li>
     <li><b>내 파트만 크게 보기</b>: 악보로 보기의 '보기'에서 켠 줄 하나를 고르면 그 줄 오선만 잘라 위아래로 이어 보여 줍니다. 연주 위치 표시·마디 누르기·음 고치기도 그대로</li>
     <li><b>테누토</b>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</li>
@@ -5801,7 +6067,7 @@ function renderEditor() {
     for (const w of cb.warnings.filter(w => w.startsWith('수정한'))) sec.append(tipNode('div', 'ed-warn', '⚠ ' + w));
     if (has) { dlg.append(sec); any = true; }
   }
-  if (!any) dlg.append(tipNode('p', 'hint', '켜 둔 줄에서 이 마디에 고칠 음이 없습니다. 악기 선택에서 고칠 줄을 켜 주세요.'));
+  if (!any) dlg.append(tipNode('p', 'hint', '켜 둔 줄에서 이 마디에 고칠 음이 없습니다. [악기] 탭에서 고칠 줄을 켜 주세요.'));
   const foot = tipNode('div', 'ed-foot');
   const btn = (label, fn, cls = 'btn') => { const b = tipNode('button', cls, label); b.type = 'button'; b.addEventListener('click', fn); return b; };
   foot.append(btn('▶ 이 마디부터 듣기', () => { const k = n; closeEditor(); playFromBar(k); }));
@@ -6152,12 +6418,12 @@ function tempoBlocked(range) {
   showMsg(`템포를 인식하지 못했습니다. 빠르기 표의 노란 칸(${where}부터)에 BPM 숫자를 넣은 뒤 다시 재생해 주세요.`);
   $('nowText').innerHTML = '<b>템포를 입력해 주세요</b>';
   const i = rows.indexOf(miss[0]), el = $(`tb-${i}`);
-  $('tTempo').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  goPane('tempo', $('tTempo'));
   if (el) { el.classList.add('tempo-alert'); setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) {} }, 350); el.addEventListener('input', () => { el.classList.remove('tempo-alert'); if (!document.querySelector('#tempoBody input.need')) showMsg(''); }, { once: true }); }
   return true;
 }
 // 읽은 마디가 없으면(스캔한 PDF 등) 빈 소리를 만들지 않는다
-function noBars() { if (state.bars.length) return false; showMsg('재생할 마디가 없습니다. 악보를 읽지 못했거나 켜 둔 악기가 없습니다. 다른 PDF를 올리거나 악기 선택에서 줄을 켜 주세요.'); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return true; }
+function noBars() { if (state.bars.length) return false; showMsg('재생할 마디가 없습니다. 악보를 읽지 못했거나 켜 둔 악기가 없습니다. 다른 PDF를 올리거나 [악기] 탭에서 줄을 켜 주세요.'); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return true; }
 let building = false, playTok = 0, pendingBar = null, cancelPlay = false;   // cancelPlay: 소리를 만드는 중에 정지(⏹·다른 악보 올리기 등)를 누르면 다 만든 뒤 재생하지 않는다
 let rampCur = 100, rampLap = 1, rampLastT = 0, rampReset = true;   // 반복할 때마다 빠르게 (아래 rampBegin)
 async function play(offset = 0) {
@@ -6397,7 +6663,7 @@ $('sAll').addEventListener('click', () => { $('sFrom').value = 1; $('sTo').value
 $('sSync').addEventListener('click', () => { saveLinked = true; syncSaveFromPlay(); });
 // 재생 설정을 바꾸면, 저장 칸을 따로 고치기 전까지는 함께 바뀐다
 for (const id of ['from', 'to', 'optRepeat', 'optCount', 'optMetro', 'optRest', 'optDyn', 'speed', 'rangeAll']) $(id).addEventListener(id === 'rangeAll' ? 'click' : 'change', () => { if (saveLinked) syncSaveFromPlay(); });
-$('saveJump').addEventListener('click', () => { const b = $('saveBox'); b.scrollIntoView({ block: 'center', behavior: 'smooth' }); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1200); });
+$('saveJump').addEventListener('click', () => { const b = $('saveBox'); goPane('save', b); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1200); });
 $('saveBtn').addEventListener('click', async () => {
   if (noBars()) return;
   const o = saveOpts();
@@ -6670,7 +6936,7 @@ function renderFileLists() {
   for (const x of state.extras || []) ex.appendChild(fileRow(x.file.name, x.label !== stemOf(x.file) ? x.label : '', () => removeExtra(x.uid), '추가한 악보'));
   const hasFull = !!(sc && !sc.isComposite);
   $('extraBox').classList.toggle('disabled', !hasFull);
-  $('extraInfo').textContent = hasFull ? '총보에 없는 악기를 추가할 수 있습니다. 총보에 있는 악기를 [2 악기 선택]에서 끄고 그 악기의 파트보를 여기에 올리면 파트보로 대체할 수도 있습니다. 여러 개를 한꺼번에 골라도 됩니다.' : '총보를 먼저 올리면 총보에 없는 악기를 추가할 수 있습니다. 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있습니다.';
+  $('extraInfo').textContent = hasFull ? '총보에 없는 악기를 추가할 수 있습니다. 총보에 있는 악기를 [악기] 탭에서 끄고 그 악기의 파트보를 여기에 올리면 파트보로 대체할 수도 있습니다. 여러 개를 한꺼번에 골라도 됩니다.' : '총보를 먼저 올리면 총보에 없는 악기를 추가할 수 있습니다. 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있습니다.';
   const pl = $('partsFileList'); pl.textContent = '';
   for (const x of (sc && sc.isComposite ? state.parts : [])) pl.appendChild(fileRow(x.file.name, x.label !== stemOf(x.file) ? x.label : '', () => removePart(x.uid), '파트보'));
 }
@@ -6912,28 +7178,35 @@ function familyOf(l, c) {
   if (inst === 'timpani') return 'perc';
   return FAM_WIND.has(inst) ? 'wind' : FAM_STRING.has(inst) ? 'string' : 'etc';
 }
+// 악기 줄 접기·펼치기: 접힌 줄은 이름·켜기·솔로/음소거·소리·음량만, 펼치면 모든 설정
+const openLines = new Set();
+function setLineRole(key, c, r) { if (c.role === r) return; if (c.role !== 'off') c.lastRole = c.role; c.role = r; if (r === 'melody') { ensureInst(c); autoOct(key); } lineChanged(); renderLineList(); }
 function renderLineList() {
   const box = $('lineList'); box.textContent = '';
   $('linesPanel').hidden = false; $('linesEmpty').hidden = true; $('lineFilters').hidden = false;
   state.lineList.forEach((l, idx) => {
     const key = cfgKey(l.id), c = state.lineCfg[key];
-    const card = document.createElement('div'); card.className = 'lcard ' + (c.role === 'off' ? '' : c.role);
-    const fam = familyOf(l, c); card.dataset.fam = fam;
+    const card = document.createElement('div'); card.className = 'lcard ' + (c.role === 'off' ? 'off' : c.role) + (openLines.has(key) ? ' open' : '');
+    const fam = familyOf(l, c); card.dataset.fam = fam; card.dataset.key = key;
     const top = document.createElement('div'); top.className = 'top';
-    top.innerHTML = `<span class="no">${idx + 1}번</span><span class="fam-tag">${FAM_NAME[fam]}</span><span class="lname"></span><span class="lmeta"></span>`;
+    top.innerHTML = `<button type="button" class="lfold" aria-expanded="${openLines.has(key)}"><span class="no">${idx + 1}번</span><span class="fam-tag">${FAM_NAME[fam]}</span><span class="lname"></span><span class="lchev" aria-hidden="true"></span></button><span class="lmeta"></span>`;
     top.querySelector('.lname').textContent = l.label || `${idx + 1}번째 줄`;
+    top.querySelector('.lfold').addEventListener('click', () => { if (openLines.has(key)) openLines.delete(key); else openLines.add(key); renderLineList(); });
+    const sw = document.createElement('button'); sw.type = 'button'; sw.className = 'lsw'; sw.setAttribute('role', 'switch'); sw.setAttribute('aria-checked', String(c.role !== 'off'));
+    { sw.setAttribute('aria-label', `${l.label || idx + 1 + '번째 줄'} ${c.role === 'off' ? '켜기' : '끄기'}`);
+      sw.addEventListener('click', () => setLineRole(key, c, c.role !== 'off' ? 'off' : (c.lastRole && (c.lastRole !== 'melody' || c.pitched) ? c.lastRole : (c.pitched && !PERC_NAME.test(l.label || '') ? 'melody' : 'perc')))); }
     top.querySelector('.lmeta').textContent = l.clef === 'pitched' ? '선율 악보' : (l.oneLine ? '타악 · 1줄' : '타악 악보');
     const cv = document.createElement('canvas'); cv.dataset.line = key; cv.width = 10; cv.height = 10; if (!l.first) cv.hidden = true;
     const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', '역할');
     for (const [r, t] of [['melody', '선율'], ['perc', '타악'], ['off', '끄기']]) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-pressed', String(c.role === r));
       if (r === 'melody' && !c.pitched) { b.disabled = true; b.title = '음높이를 읽을 수 없는 타악 악보입니다'; }
-      b.addEventListener('click', () => { if (c.role === r) return; c.role = r; if (r === 'melody') { ensureInst(c); autoOct(key); } lineChanged(); renderLineList(); });
+      b.addEventListener('click', () => setLineRole(key, c, r));
       seg.appendChild(b);
     }
     const cfg = document.createElement('div'); cfg.className = 'cfg';
     if (c.role === 'melody') {
-      cfg.appendChild(selField('악기 소리', INST_OPTIONS, c.inst, v => { c.inst = v; c.instDefaulted = false; autoOct(key); changed(); renderLineList(); }));
+      cfg.appendChild(selField('악기 소리', INST_OPTIONS, c.inst, v => { c.inst = v; c.instDefaulted = false; autoOct(key); changed(); renderLineList(); }, 'k-snd'));
       if (c.instDefaulted) { const h = document.createElement('p'); h.className = 'hint wide'; h.style.margin = '0'; h.textContent = '줄 이름으로 악기를 알 수 없어 가야금 소리로 정했습니다. 맞는 악기로 바꿔 주세요.'; cfg.appendChild(h); }
       if (INSTRUMENTS[c.inst] && !/^yanggeum/.test(c.inst) && (INSTRUMENTS[c.inst].bank || INSTRUMENTS[c.inst].kind === 'pluck')) {   // 양금은 농현을 하지 않는다
         const nb = document.createElement('label'); nb.className = 'wide chk';
@@ -6963,7 +7236,7 @@ function renderLineList() {
       // 한쪽 성부 소리를 고르면 다른 쪽도 짝 소리로 (꽹과리 → 꽹과리, 장구 궁 → 장구 따 …). '함께 바꾸기'를 끄면 따로
       const fR = selField('윗성부', PERC_OPTIONS, c.R, v => { c.R = v; if (!c.pairOff && SOUND_PAIR_R2L[v]) { c.L = SOUND_PAIR_R2L[v]; fL.querySelector('select').value = c.L; } changed(); });
       const fL = selField('아랫성부', PERC_OPTIONS, c.L, v => { c.L = v; if (!c.pairOff && SOUND_PAIR_L2R[v]) { c.R = SOUND_PAIR_L2R[v]; fR.querySelector('select').value = c.R; } changed(); });
-      cfg.appendChild(fR); cfg.appendChild(fL);
+      fR.classList.add('k-snd'); fL.classList.add('k-snd'); cfg.appendChild(fR); cfg.appendChild(fL);
       const pl = document.createElement('label'); pl.className = 'chk wide pair-chk';
       pl.innerHTML = '<input type="checkbox"> 윗성부·아랫성부 함께 바꾸기 <span class="hint">(끄면 따로 고름)</span>';
       const pc = pl.querySelector('input'); pc.checked = !c.pairOff;
@@ -6971,7 +7244,7 @@ function renderLineList() {
       cfg.appendChild(pl);
     }
     if (c.role !== 'off') {
-      const v = document.createElement('div'); v.className = 'wide';
+      const v = document.createElement('div'); v.className = 'wide k-vol';
       const id = 'vol-' + key;
       v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="150" step="5"><span class="num"></span></div>`;
       const inp = v.querySelector('input'), out = v.querySelector('span');
@@ -6994,17 +7267,20 @@ function renderLineList() {
       const anySolo = soloActive();
       if (state.mute.has(key) || (anySolo && !state.solo.has(key))) card.classList.add('silenced');
     }
-    card.append(top, cv, seg, ...(sm ? [sm] : []), cfg);
+    card.append(top, sw, cv, seg, ...(sm ? [sm] : []), cfg);
     box.appendChild(card);
   });
   { const ns = state.lineIds.filter(id => state.solo.has(cfgKey(id))).length, nm = state.lineIds.filter(id => state.mute.has(cfgKey(id))).length;
     $('soloBar').hidden = !(ns || nm);
     $('soloText').textContent = (ns ? `솔로 ${ns}줄: 그 줄만 들립니다.` : '') + (nm ? ` 음소거 ${nm}줄.` : '') + ' 줄 설정(켜기·음량)은 그대로입니다.'; }
+  { const onKeys = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => cfgKey(l.id));
+    const allOpen = onKeys.length > 0 && onKeys.every(k => openLines.has(k)), eb = $('expandAll');
+    eb.hidden = !onKeys.length || state.lineList.length < 2; eb.textContent = allOpen ? '▴ 모두 접기' : '▾ 켠 악기 설정 모두 펼치기'; eb.setAttribute('aria-pressed', String(allOpen)); }
   $('linesCount').textContent = `${state.lineIds.length}줄 켬 · 선율 ${state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role === 'melody').length}`;
   drawPreviews().catch(e => console.warn('미리보기', e));
 }
-function selField(label, options, value, onChange) {
-  const f = document.createElement('div');
+function selField(label, options, value, onChange, cls) {
+  const f = document.createElement('div'); if (cls) f.className = cls;
   const id = 'sf-' + Math.random().toString(36).slice(2, 8);
   f.innerHTML = `<label class="small" for="${id}"></label>`;
   f.querySelector('label').textContent = label;
@@ -7022,6 +7298,11 @@ function lineChanged() {
 function soloChanged() { changed(); renderLineList(); saveSummary(); }
 $('soloClear').addEventListener('click', () => { state.solo.clear(); state.mute.clear(); soloChanged(); });
 $('allOn').addEventListener('click', () => { for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; c.role = c.pitched && !PERC_NAME.test(l.label || '') ? 'melody' : 'perc'; if (c.role === 'melody') ensureInst(c); } lineChanged(); renderLineList(); });   // 높은음자리표로 적은 북·심벌 등 타악 줄은 타악으로
+$('expandAll').addEventListener('click', () => {
+  const onKeys = state.lineList.filter(l => state.lineCfg[cfgKey(l.id)].role !== 'off').map(l => cfgKey(l.id));
+  if (onKeys.length && onKeys.every(k => openLines.has(k))) openLines.clear(); else onKeys.forEach(k => openLines.add(k));
+  renderLineList();
+});
 $('allOff').addEventListener('click', () => { for (const l of state.lineList) state.lineCfg[cfgKey(l.id)].role = 'off'; lineChanged(); renderLineList(); });
 const previewCache = { key: null, pages: {} };
 async function drawPreviews() {
@@ -7268,12 +7549,12 @@ function buildMusicXml() {
 }
 $('exportMidiBtn').addEventListener('click', () => {
   if (!state.score || !state.bars.length) { showMsg('악보를 먼저 올려 주세요. 예시 장단은 내보낼 수 없습니다.'); return; }
-  if (!exportLines().length) { showMsg('켠 줄이 없습니다. 악기 선택에서 내보낼 줄을 켜 주세요.'); return; }
+  if (!exportLines().length) { showMsg('켠 줄이 없습니다. [악기] 탭에서 내보낼 줄을 켜 주세요.'); return; }
   try { downloadBytes(buildMidi(), fileBase() + '.mid', 'audio/midi'); } catch (e) { console.error(e); showMsg('MIDI 파일을 만들지 못했습니다.'); }
 });
 $('exportXmlBtn').addEventListener('click', () => {
   if (!state.score || !state.bars.length) { showMsg('악보를 먼저 올려 주세요. 예시 장단은 내보낼 수 없습니다.'); return; }
-  if (!exportLines().length) { showMsg('켠 줄이 없습니다. 악기 선택에서 내보낼 줄을 켜 주세요.'); return; }
+  if (!exportLines().length) { showMsg('켠 줄이 없습니다. [악기] 탭에서 내보낼 줄을 켜 주세요.'); return; }
   try { downloadBytes(buildMusicXml(), fileBase() + '.musicxml', 'application/vnd.recordare.musicxml+xml'); } catch (e) { console.error(e); showMsg('MusicXML 파일을 만들지 못했습니다.'); }
 });
 $('pdfInput').addEventListener('change', e => { if (e.target.files.length) loadFullPdf([...e.target.files]); e.target.value = ''; });
@@ -7358,6 +7639,116 @@ state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum
 renderTempo(); renderBars(); refreshOrder(); renderFileLists(); syncSaveFromPlay(); showExampleLine();
 if (viewMode === 'score') setView('score');
 soundSummary();
+// ---------- 화면 배치 (11월): 위 막대 · 왼쪽 탭(좁은 화면은 아래 서랍) · 아래 연주 막대 ----------
+const NARROW = window.matchMedia('(max-width: 900px)');
+const TAB_KEY = 'hapju.tab';
+let curTab = (() => { try { return localStorage.getItem(TAB_KEY) || 'inst'; } catch (e) { return 'inst'; } })();
+if (!['inst', 'tempo', 'play', 'save'].includes(curTab)) curTab = 'inst';
+if (/[#&]allpanes\b/.test(location.hash)) document.body.classList.add('all-panes');   // 시험용: 모든 칸을 펼쳐 보이기
+function showTab(t, open) {
+  curTab = t;
+  try { localStorage.setItem(TAB_KEY, t); } catch (e) {}
+  document.querySelectorAll('.tab2').forEach(b => { const on = b.dataset.tab === t; b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+  document.querySelectorAll('.pane2').forEach(p => p.classList.toggle('on', p.dataset.pane === t));
+  if (open && NARROW.matches) setSheet(true);
+  document.querySelectorAll('.dtab').forEach(b => b.classList.toggle('on', document.body.classList.contains('sheet-open') && b.dataset.tab === t));
+  const sb = $('sidebar'); if (sb && !NARROW.matches) sb.scrollTop = 0;
+}
+function setSheet(on) {
+  document.body.classList.toggle('sheet-open', !!on);
+  document.querySelectorAll('.dtab').forEach(b => b.classList.toggle('on', !!on && b.dataset.tab === curTab));
+}
+document.querySelectorAll('.tab2').forEach(b => {
+  b.addEventListener('click', () => showTab(b.dataset.tab));
+  b.addEventListener('keydown', ev => {
+    const tabs = [...document.querySelectorAll('.tab2')], i = tabs.indexOf(b);
+    const j = ev.key === 'ArrowRight' ? (i + 1) % tabs.length : ev.key === 'ArrowLeft' ? (i + tabs.length - 1) % tabs.length : -1;
+    if (j >= 0) { ev.preventDefault(); showTab(tabs[j].dataset.tab); tabs[j].focus(); }
+  });
+});
+document.querySelectorAll('.dtab').forEach(b => b.addEventListener('click', () => {
+  if (document.body.classList.contains('sheet-open') && curTab === b.dataset.tab) setSheet(false); else showTab(b.dataset.tab, true);
+}));
+$('sheetBack').addEventListener('click', () => setSheet(false));
+$('sheetClose').addEventListener('click', () => setSheet(false));
+NARROW.addEventListener('change', () => { if (!NARROW.matches) setSheet(false); });
+showTab(curTab);
+// 다른 곳에서 칸으로 데려갈 때: 탭을 바꾸고(좁은 화면은 서랍을 열고) 그 자리로
+function goPane(t, el) {
+  showTab(t, true);
+  if (el) setTimeout(() => { try { el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} }, NARROW.matches ? 240 : 30);
+}
+
+// 위 막대·연주 막대 높이를 CSS 변수로 (서랍·옆 칸 높이 계산)
+const setBarVars = () => {
+  const r = document.documentElement.style;
+  r.setProperty('--tbh', ($('topbar').offsetHeight || 57) + 'px');
+  r.setProperty('--dockh', (document.body.classList.contains('welcome') ? 0 : ($('dock').offsetHeight || 112)) + 'px');
+};
+if ('ResizeObserver' in window) { const ro = new ResizeObserver(setBarVars); ro.observe($('topbar')); ro.observe($('dock')); }
+window.addEventListener('resize', setBarVars);
+
+// 첫 화면(악보를 아직 안 올림)과 악보 파일 창
+let demoChosen = false;
+function hasRealScore() { return !!(state.score || (state.parts && state.parts.length) || (state.sourceScores && state.sourceScores.length)); }
+function updateTopbar() {
+  const real = hasRealScore();
+  document.body.classList.toggle('welcome', !real && !demoChosen && !document.body.classList.contains('all-panes'));
+  if (real) document.body.classList.remove('files-open-first');
+  const name = real ? (state.title || state.fileName || '악보') : '예시 장단';
+  $('tbSongName').textContent = name;
+  const n = state.lineList ? state.lineList.length : 0, bars = state.bars && state.bars.length ? lastBar() : 0;
+  $('tbSongInfo').textContent = real ? [n ? `${n}줄` : '', bars ? `${bars}마디` : ''].filter(Boolean).join(' · ') : (bars ? `${bars}마디` : '');
+  setBarVars();
+}
+const _renderBarsV1 = renderBars;
+renderBars = function () { const r = _renderBarsV1.apply(this, arguments); try { updateTopbar(); } catch (e) {} return r; };
+function setFiles(on) {
+  document.body.classList.toggle('files-open', !!on);
+  if (on) { setSheet(false); setTimeout(() => { try { $('filesClose').focus(); } catch (e) {} }, 0); }
+}
+function setHelpView(on) { document.body.classList.toggle('help-open', !!on); if (on) { setSheet(false); $('fullHelp').open = true; setTimeout(() => $('helpClose').focus(), 0); } }
+$('filesBtn').addEventListener('click', () => setFiles(true));
+$('tbSong').addEventListener('click', () => setFiles(true));
+$('filesClose').addEventListener('click', () => setFiles(false));
+$('loadView').addEventListener('click', ev => { if (ev.target === $('loadView') && document.body.classList.contains('files-open')) setFiles(false); });
+$('helpBtn').addEventListener('click', () => setHelpView(true));
+$('helpClose').addEventListener('click', () => setHelpView(false));
+$('helpView').addEventListener('click', ev => { if (ev.target === $('helpView')) setHelpView(false); });
+$('demoBtn').addEventListener('click', () => { demoChosen = true; updateTopbar(); });
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Escape') return;
+  if (document.querySelector('.edit-back')) return;   // 음 고치기·이력 창이 먼저
+  if (document.body.classList.contains('files-open')) { setFiles(false); ev.preventDefault(); }
+  else if (document.body.classList.contains('help-open')) { setHelpView(false); ev.preventDefault(); }
+  else if (document.body.classList.contains('sheet-open')) { setSheet(false); ev.preventDefault(); }
+});
+// 악보 화면에 파일을 끌어 오면 악보 파일 창을 연다(올리기 상자에 놓을 수 있게)
+document.addEventListener('dragenter', ev => {
+  if (document.body.classList.contains('welcome') || document.body.classList.contains('files-open')) return;
+  if (ev.dataTransfer && [...(ev.dataTransfer.types || [])].includes('Files')) setFiles(true);
+});
+// 이 악보의 설정 저장 상태를 위 막대에도
+new MutationObserver(() => { $('tbState').textContent = $('setState').textContent; }).observe($('setState'), { childList: true, subtree: true, characterData: true });
+
+// 연주 막대: 구간 반복 · 속도
+const syncLoopBtn = () => $('dockLoop').setAttribute('aria-pressed', $('optLoop').checked ? 'true' : 'false');
+$('dockLoop').addEventListener('click', () => { $('optLoop').click(); syncLoopBtn(); });
+$('optLoop').addEventListener('change', syncLoopBtn);
+const optRampEl = $('optRamp'); if (optRampEl) optRampEl.addEventListener('change', () => setTimeout(syncLoopBtn, 0));
+syncLoopBtn();
+const syncSpd = () => { $('dockSpd').textContent = $('speed').value + '%'; };
+const stepSpd = d => {
+  const sp = $('speed'), v = Math.max(+sp.min || 50, Math.min(+sp.max || 150, (+sp.value || 100) + d));
+  if (v === +sp.value) return;
+  sp.value = v; sp.dispatchEvent(new Event('input', { bubbles: true })); sp.dispatchEvent(new Event('change', { bubbles: true })); syncSpd();
+};
+$('dockSpdDown').addEventListener('click', () => stepSpd(-5));
+$('dockSpdUp').addEventListener('click', () => stepSpd(5));
+$('speed').addEventListener('input', syncSpd); $('speed').addEventListener('change', syncSpd);
+new MutationObserver(syncSpd).observe($('speedVal'), { childList: true, subtree: true, characterData: true });
+syncSpd();
+updateTopbar();
 // ---------- 업데이트 이력 창 ----------
 function openHistory() {
   const back = document.createElement('div'); back.className = 'edit-back';
@@ -7375,7 +7766,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 16:08';
+const APP_VERSION = '2026-11-03 17:57';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
