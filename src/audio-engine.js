@@ -137,6 +137,8 @@ export function tempoFactorAt(items, p, resets = [], ritF = 0.8, accF = 1.2) {
   return f;
 }
 
+// 악센트(>) 세기: 보통 음보다 타악 약 +5dB(0.68 → 1.2), 선율 약 +4dB(0.75 → 1.2). 예전에는 타악 +3dB, 선율 +2dB라 잘 드러나지 않았음
+const ACC_PERC = 1.2, ACC_MEL = 1.2;
 export const UNIT_FRAC = { q: 1 / 4, dq: 3 / 8, e: 1 / 8, h: 1 / 2 };
 export const DEFAULT_BPM = 80;
 
@@ -177,6 +179,13 @@ export function renderPlan(bars, order, opts) {
     const c = bukRef[e.line] || (bukRef[e.line] = {}); c[e.pos] = (c[e.pos] || 0) + 1;
   }
   for (const l of Object.keys(bukRef)) { const c = bukRef[l]; bukRef[l] = +Object.keys(c).reduce((a, b) => c[b] > c[a] ? b : a); }
+  // 꽹과리 막음: 윗성부에 X 머리 음표가 있을 때만. 단, 윗성부를 모두(9할 넘게) X 머리로 적은 악보는 X가 그냥 꽹과리 표기라 막음으로 치지 않는다
+  const kkX = {};
+  for (const b of bars) for (const e of b.events) {
+    if (e.line == null || e.voice !== 'R' || e.tie || keyOf(e.line, 'R') !== '꽹과리') continue;
+    const c = kkX[e.line] || (kkX[e.line] = [0, 0]); c[0]++; if (e.xh) c[1]++;
+  }
+  const kkMute = l => { const c = kkX[l]; return !!c && c[1] > 0 && c[1] <= c[0] * 0.9; };
   let hum = 12345;   // 사람이 치는 것처럼 세기·때를 조금씩 흔든다 (늘 같은 결과가 나오게 정해진 난수)
   const rnd = () => { hum = (hum * 1664525 + 1013904223) >>> 0; return hum / 4294967296 * 2 - 1; };
   // 쉬는 마디: 칠 음이 없는 마디(롤이 이어지는 마디는 제외). 연주 순서에서 연속된 묶음마다 몇 번째인지
@@ -223,7 +232,7 @@ export function renderPlan(bars, order, opts) {
         const dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
         // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
         const sdur = e.stacc && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
-        notes.push({ t: ts, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? 0.95 : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
+        notes.push({ t: ts, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
           graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
         continue;
@@ -234,6 +243,7 @@ export function renderPlan(bars, order, opts) {
       let ts = cur + clk(e.t.v);
       let dl = (opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L)) * lg;
       let sh = 0;
+      if (key === '꽹과리' && e.voice === 'R' && e.xh && kkMute(e.line)) key = '꽹과리막음';
       if (BUKS.has(key)) {
         if (e.line != null && bukRef[e.line] != null && e.pos != null) {
           const d = bukRef[e.line] - e.pos;   // 기본 북보다 몇 칸 위
@@ -242,19 +252,19 @@ export function renderPlan(bars, order, opts) {
         }
         // 박 머리는 그대로, 박 사이 음은 조금 여리게 + 세기 ±7%, 때 ±3ms (빠르게 몰아칠 때 기계 소리처럼 들리지 않게)
         const u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
-        dl *= (onBeat ? 1 : 0.88) * (1 + 0.07 * rnd());
+        dl *= (onBeat || e.accent ? 1 : 0.88) * (1 + 0.07 * rnd());
         if (!e.roll && !e.grace) ts += 0.003 * rnd();
       }
       if (e.roll) {
         const rd = e.rollDur ? e.rollDur.v : e.dur.v;
         const dur = rd <= L - e.t.v + 1e-9 ? clk(e.t.v + rd) - clk(e.t.v) : rd * s / (tempoItems ? tempoFactorAt(tempoItems, bi + e.t.v / L, resets, ritF, accF) : 1);
         // 롤(굴림)은 한 덩어리로 넘기고 mix에서 사람이 굴리는 것처럼 만든다
-        hits.push([ts, key, (e.accent ? 0.9 : 0.75) * dl, e.voice, { roll: Math.max(0.08, dur) }]);
+        hits.push([ts, key, (e.accent ? 1.05 : 0.75) * dl, e.voice, { roll: Math.max(0.08, dur) }]);
         continue;
       }
       for (let gi = 0; gi < e.grace; gi++) hits.push([ts - 0.055 * (e.grace - gi), key, 0.68 * dl, e.voice, sh ? { grace: gi + 1, of: e.grace, sh } : { grace: gi + 1, of: e.grace }]);
       const ex = e.accent ? { acc: true } : undefined;
-      hits.push([ts, key === '꽹과리' && e.accent ? '꽹과리길게' : key, (e.accent ? 1.0 : 0.68) * dl, e.voice, sh ? { ...ex, sh } : ex]);
+      hits.push([ts, key === '꽹과리' && e.accent ? '꽹과리길게' : key, (e.accent ? ACC_PERC : 0.68) * dl, e.voice, sh ? { ...ex, sh } : ex]);
     }
     cur += clk(L);
     const next = order[k + 1];

@@ -142,7 +142,7 @@ function convertEncore(glyphs, drawings) {
       case 163: out.push({ ...g, font: 'EncoreTuplet,BoldItalic', code: 51, uni: '3' }); break;              // 잇단음표 3
       case 192: {                                                                                           // X 머리: 같은 자리 머리가 2분·온음표면 그 길이
         const mate = glyphs.find(h => /Anastasia/i.test(h.font) && (h.code === 250 || h.code === 119) && Math.abs(h.ox - g.ox) < 1.5 && Math.abs(h.oy - g.oy) < g.size * 1.2);
-        out.push({ ...g, code: mate ? mate.code : 207 }); break;
+        out.push({ ...g, code: mate ? mate.code : 207, xh: true }); break;
       }
       case 246: out.push({ ...g, code: 207 }); break;                                                       // 다른 성부 머리 → 보통 머리
       case 231: out.push({ ...g, code: 190 }); break;                                                       // 트레몰로(사선 2개)
@@ -240,6 +240,7 @@ export async function extractPages(doc, OPS, onPage) {
               code: cp >= 0xF000 && cp < 0xF100 ? cp - 0xF000 : cp, uni: g.unicode || '', font: st.font, raw: g.unicode ? g.unicode.codePointAt(0) : 0,
               size: vs, ox: x, oy: y, x0: x, x1: x + advPage, y0: y - 0.8 * vs, y1: y + 0.2 * vs,
             });
+            if (/MaestroPercussion/i.test(st.font) && [120, 121].includes(g.unicode ? g.unicode.codePointAt(0) : (g.originalCharCode || 0))) glyphs[glyphs.length - 1].xh = true;   // X 머리 표시 (꽹과리 막음 등)
             let tx = adv + st.cs + (g.isSpace ? st.ws : 0);
             tm = mmul(tm, [1, 0, 0, 1, tx * st.hs, 0]);
           }
@@ -313,6 +314,7 @@ export async function extractPages(doc, OPS, onPage) {
       if (!tab) continue;
       const c = tab.get(g.raw);
       if (c != null) g.code = c; else if (g.raw >= 0xE000 && g.raw <= 0xF8FF) g.code = 0;
+      if (tab === SMUFL_PUA && g.raw >= 0xE0A7 && g.raw <= 0xE0A9) g.xh = true;   // SMuFL X 머리
       if (tab === SMUFL_PUA) { const o = { 0xE052: -1, 0xE053: 1, 0xE051: -2, 0xE054: 2, 0xE064: -1, 0xE065: 1, 0xE063: -2, 0xE066: 2 }[g.raw]; if (o) g.clefOct = o; }
       if (!/\(MusicFont\)/.test(g.font)) g.font += ' (MusicFont)';
     }
@@ -999,7 +1001,7 @@ export function parseScore(pages, opts = {}) {
 
       const stemsOf = g => stems.filter(v => g.x0 - 1.2 <= v[0] && v[0] <= g.x1 + 1.2 && v[1] - 3 <= g.oy && g.oy <= v[2] + 3);
       const makeNote = (g, isRest, forceStem = null, forceDots = null) => {
-        const n = { voice: g.oy < st.mid ? 'R' : 'L', x: cx(g), y: g.oy, pos: staffSp > 0 ? Math.round((g.oy - st.mid) / (staffSp / 2)) : 0, rest: isRest, grace: g.size < smallSize, accent: false, tied: false, roll: false, tuplet: false, dur: ZERO };
+        const n = { voice: g.oy < st.mid ? 'R' : 'L', x: cx(g), y: g.oy, pos: staffSp > 0 ? Math.round((g.oy - st.mid) / (staffSp / 2)) : 0, xh: !!g.xh, rest: isRest, grace: g.size < smallSize, accent: false, tied: false, roll: false, tuplet: false, dur: ZERO };
         if (isRest) {
           n.dur = { [REST_Q]: F(1, 4), [REST_8]: F(1, 8), [REST_16]: F(1, 16), [REST_32]: F(1, 32), [REST_HALF]: F(1, 2), [REST_WHOLE]: F(1) }[g.code];
           if (g.code === REST_WHOLE) n.wholeRest = true;
@@ -1631,9 +1633,10 @@ function timing(m, barLen) {
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
-    if (ex) { ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
+    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
-    if (n.pos != null) ev.pos = n.pos;   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
+    if (n.pos != null) ev.pos = n.pos;
+    if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
     if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); }
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
