@@ -30,7 +30,7 @@ const FERMATA = 85, TRILL_EXT = 126, TREMOLO3 = 190;
 const isDigit = c => c >= 48 && c <= 57;
 // SMuFL·MScore 글꼴의 글자 자리(U+E000~) → Maestro 코드 (tools/gen_outline_templates.py의 MAP과 같은 대응, MuseScore 2.0.3 글꼴에서 뽑음)
 const MSCORE_PUA = new Map([[48, 48], [49, 49], [50, 50], [51, 51], [52, 52], [53, 53], [54, 54], [55, 55], [56, 56], [57, 57], [102, 102], [109, 109], [112, 112], [114, 114], [115, 115], [122, 122], [57498, 99], [57499, 67], [57600, 183], [57601, 238], [57606, 183], [57607, 206], [57609, 228], [57610, 197], [57611, 168], [57612, 168], [57614, 35], [57619, 110], [57620, 98], [57626, 186], [57628, 220], [57639, 46], [57642, 119], [57643, 119], [57644, 250], [57645, 207], [57648, 207], [57652, 207], [57656, 207], [57657, 119], [57658, 250], [57659, 207], [57660, 207], [57688, 85], [57689, 85], [57719, 37], [57720, 222], [57744, 106], [57745, 114], [57746, 114], [57748, 74], [57751, 82], [57752, 82], [57754, 66], [57756, 63], [57758, 38], [57760, 214], [57815, 38], [57816, 38], [57819, 63], [58528, 62], [58529, 62], [58530, 46], [58531, 46]]);
-const SMUFL_PUA = new Map([[57415, 37], [57416, 222], [57424, 38], [57426, 38], [57427, 38], [57436, 66], [57442, 63], [57444, 63], [57449, 214], [57450, 214], [57472, 48], [57473, 49], [57474, 50], [57475, 51], [57476, 52], [57477, 53], [57478, 54], [57479, 55], [57480, 56], [57481, 57], [57482, 99], [57483, 67], [57504, 119], [57506, 119], [57507, 250], [57508, 207], [57511, 119], [57512, 250], [57513, 207], [57523, 207], [57534, 207], [57563, 207], [57601, 207], [57831, 46], [57890, 190], [57920, 106], [57921, 74], [57922, 114], [57923, 82], [57924, 114], [57925, 82], [57952, 98], [57953, 110], [57954, 35], [57955, 220], [57956, 186], [58528, 62], [58529, 62], [58530, 46], [58531, 46], [58560, 85], [58561, 85], [58594, 183], [58595, 183], [58596, 238], [58597, 206], [58598, 228], [58599, 197], [58600, 168], [58601, 168], [58624, 212], [58625, 199], [58656, 112], [58657, 109], [58658, 102], [58659, 114], [58660, 115], [58661, 122]]);
+const SMUFL_PUA = new Map([[57415, 37], [57416, 222], [57424, 38], [57426, 38], [57427, 38], [57436, 66], [57442, 63], [57444, 63], [57449, 214], [57450, 214], [57472, 48], [57473, 49], [57474, 50], [57475, 51], [57476, 52], [57477, 53], [57478, 54], [57479, 55], [57480, 56], [57481, 57], [57482, 99], [57483, 67], [57504, 119], [57506, 119], [57507, 250], [57508, 207], [57511, 119], [57512, 250], [57513, 207], [57523, 207], [57534, 207], [57563, 207], [57601, 207], [57831, 46], [57890, 190], [57920, 106], [57921, 74], [57922, 114], [57923, 82], [57924, 114], [57925, 82], [57952, 98], [57953, 110], [57954, 35], [57955, 220], [57956, 186], [58528, 62], [58529, 62], [58530, 46], [58531, 46], [58532, 45], [58533, 45], [58560, 85], [58561, 85], [58594, 183], [58595, 183], [58596, 238], [58597, 206], [58598, 228], [58599, 197], [58600, 168], [58601, 168], [58624, 212], [58625, 199], [58656, 112], [58657, 109], [58658, 102], [58659, 114], [58660, 115], [58661, 122]]);
 // Adobe Symbol 글꼴의 글자 자리 (유니코드 → 코드)
 const SYMBOL_UNI = new Map([...'ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ'].map((ch, i) => [ch.codePointAt(0), 0x41 + i])
   .concat([...'αβχδεφγηιϕκλμνοπθρστυϖωξψζ'].map((ch, i) => [ch.codePointAt(0), 0x61 + i]))
@@ -1144,6 +1144,11 @@ export function parseScore(pages, opts = {}) {
           const c = headNotes.filter(n => !n.grace && Math.abs(n.x - cx(d)) < spS * 0.9 && Math.abs(n.y - d.oy) > spS * 0.8 && Math.abs(n.y - d.oy) < spS * 3.2);
           if (c.length) c.reduce((b, n) => Math.abs(n.y - d.oy) < Math.abs(b.y - d.oy) ? n : b).staccato = true;
         }
+        // 테누토(음표 위·아래의 짧은 가로줄 '-', 악보 글꼴): 음 길이를 꽉 채워 조금 무게 있게
+        for (const d of sg.filter(g => g.code === 45 && isMusicFont(g.font))) {
+          const c = headNotes.filter(n => !n.grace && Math.abs(n.x - cx(d)) < spS * 0.9 && Math.abs(n.y - d.oy) > spS * 0.5 && Math.abs(n.y - d.oy) < spS * 3.2);
+          if (c.length) c.reduce((b, n) => Math.abs(n.y - d.oy) < Math.abs(b.y - d.oy) ? n : b).tenuto = true;
+        }
       }
       for (const a of sg.filter(g => g.code === ACCENT)) {
         const voice = a.oy < st.mid ? 'R' : 'L';
@@ -1645,13 +1650,14 @@ function timing(m, barLen) {
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
-    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
+    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
     if (n.pos != null) ev.pos = n.pos;
     if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
     if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); }
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
+    if (n.tenuto) ev.ten = true;   // 테누토: 길이를 꽉 채우고 조금 무게 있게
     if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
     seen.set(key, ev); evs.push(ev);
   }

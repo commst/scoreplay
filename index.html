@@ -1139,6 +1139,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>테누토</b>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</li>
     <li><b>MIDI·MusicXML 저장</b>: 연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</li>
     <li><b>사람처럼 연주</b>(소리 다듬기, 기본 켬): 음마다 세기와 치는 때를 아주 조금씩 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게</li>
     <li><b>연습 번호</b>: 악보의 네모 칸 연습 번호(A, B, C …, 2악장)를 연주 칸에 단추로. 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 구간으로 정해 재생</li>
@@ -1153,6 +1154,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
+    <li>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</li>
     <li>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</li>
     <li>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</li>
     <li>'♪= Ca 60'처럼 음표는 악보 글꼴, 숫자는 일반 글꼴로 이어 적은 빠르기를 못 읽던 문제(소금협주곡 '길'). 8분음표 빠르기가 ♩로 보이던 표시도 ♪로</li>
@@ -1502,7 +1504,7 @@ const FERMATA = 85, TRILL_EXT = 126, TREMOLO3 = 190;
 const isDigit = c => c >= 48 && c <= 57;
 // SMuFL·MScore 글꼴의 글자 자리(U+E000~) → Maestro 코드 (tools/gen_outline_templates.py의 MAP과 같은 대응, MuseScore 2.0.3 글꼴에서 뽑음)
 const MSCORE_PUA = new Map([[48, 48], [49, 49], [50, 50], [51, 51], [52, 52], [53, 53], [54, 54], [55, 55], [56, 56], [57, 57], [102, 102], [109, 109], [112, 112], [114, 114], [115, 115], [122, 122], [57498, 99], [57499, 67], [57600, 183], [57601, 238], [57606, 183], [57607, 206], [57609, 228], [57610, 197], [57611, 168], [57612, 168], [57614, 35], [57619, 110], [57620, 98], [57626, 186], [57628, 220], [57639, 46], [57642, 119], [57643, 119], [57644, 250], [57645, 207], [57648, 207], [57652, 207], [57656, 207], [57657, 119], [57658, 250], [57659, 207], [57660, 207], [57688, 85], [57689, 85], [57719, 37], [57720, 222], [57744, 106], [57745, 114], [57746, 114], [57748, 74], [57751, 82], [57752, 82], [57754, 66], [57756, 63], [57758, 38], [57760, 214], [57815, 38], [57816, 38], [57819, 63], [58528, 62], [58529, 62], [58530, 46], [58531, 46]]);
-const SMUFL_PUA = new Map([[57415, 37], [57416, 222], [57424, 38], [57426, 38], [57427, 38], [57436, 66], [57442, 63], [57444, 63], [57449, 214], [57450, 214], [57472, 48], [57473, 49], [57474, 50], [57475, 51], [57476, 52], [57477, 53], [57478, 54], [57479, 55], [57480, 56], [57481, 57], [57482, 99], [57483, 67], [57504, 119], [57506, 119], [57507, 250], [57508, 207], [57511, 119], [57512, 250], [57513, 207], [57523, 207], [57534, 207], [57563, 207], [57601, 207], [57831, 46], [57890, 190], [57920, 106], [57921, 74], [57922, 114], [57923, 82], [57924, 114], [57925, 82], [57952, 98], [57953, 110], [57954, 35], [57955, 220], [57956, 186], [58528, 62], [58529, 62], [58530, 46], [58531, 46], [58560, 85], [58561, 85], [58594, 183], [58595, 183], [58596, 238], [58597, 206], [58598, 228], [58599, 197], [58600, 168], [58601, 168], [58624, 212], [58625, 199], [58656, 112], [58657, 109], [58658, 102], [58659, 114], [58660, 115], [58661, 122]]);
+const SMUFL_PUA = new Map([[57415, 37], [57416, 222], [57424, 38], [57426, 38], [57427, 38], [57436, 66], [57442, 63], [57444, 63], [57449, 214], [57450, 214], [57472, 48], [57473, 49], [57474, 50], [57475, 51], [57476, 52], [57477, 53], [57478, 54], [57479, 55], [57480, 56], [57481, 57], [57482, 99], [57483, 67], [57504, 119], [57506, 119], [57507, 250], [57508, 207], [57511, 119], [57512, 250], [57513, 207], [57523, 207], [57534, 207], [57563, 207], [57601, 207], [57831, 46], [57890, 190], [57920, 106], [57921, 74], [57922, 114], [57923, 82], [57924, 114], [57925, 82], [57952, 98], [57953, 110], [57954, 35], [57955, 220], [57956, 186], [58528, 62], [58529, 62], [58530, 46], [58531, 46], [58532, 45], [58533, 45], [58560, 85], [58561, 85], [58594, 183], [58595, 183], [58596, 238], [58597, 206], [58598, 228], [58599, 197], [58600, 168], [58601, 168], [58624, 212], [58625, 199], [58656, 112], [58657, 109], [58658, 102], [58659, 114], [58660, 115], [58661, 122]]);
 // Adobe Symbol 글꼴의 글자 자리 (유니코드 → 코드)
 const SYMBOL_UNI = new Map([...'ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ'].map((ch, i) => [ch.codePointAt(0), 0x41 + i])
   .concat([...'αβχδεφγηιϕκλμνοπθρστυϖωξψζ'].map((ch, i) => [ch.codePointAt(0), 0x61 + i]))
@@ -2616,6 +2618,11 @@ function parseScore(pages, opts = {}) {
           const c = headNotes.filter(n => !n.grace && Math.abs(n.x - cx(d)) < spS * 0.9 && Math.abs(n.y - d.oy) > spS * 0.8 && Math.abs(n.y - d.oy) < spS * 3.2);
           if (c.length) c.reduce((b, n) => Math.abs(n.y - d.oy) < Math.abs(b.y - d.oy) ? n : b).staccato = true;
         }
+        // 테누토(음표 위·아래의 짧은 가로줄 '-', 악보 글꼴): 음 길이를 꽉 채워 조금 무게 있게
+        for (const d of sg.filter(g => g.code === 45 && isMusicFont(g.font))) {
+          const c = headNotes.filter(n => !n.grace && Math.abs(n.x - cx(d)) < spS * 0.9 && Math.abs(n.y - d.oy) > spS * 0.5 && Math.abs(n.y - d.oy) < spS * 3.2);
+          if (c.length) c.reduce((b, n) => Math.abs(n.y - d.oy) < Math.abs(b.y - d.oy) ? n : b).tenuto = true;
+        }
       }
       for (const a of sg.filter(g => g.code === ACCENT)) {
         const voice = a.oy < st.mid ? 'R' : 'L';
@@ -3117,13 +3124,14 @@ function timing(m, barLen) {
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
-    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
+    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
     if (n.pos != null) ev.pos = n.pos;
     if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
     if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); }
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
+    if (n.tenuto) ev.ten = true;   // 테누토: 길이를 꽉 채우고 조금 무게 있게
     if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
     seen.set(key, ev); evs.push(ev);
   }
@@ -3877,20 +3885,21 @@ function renderPlan(bars, order, opts) {
         const dsec = e.t.v + d <= L + 1e-9 ? clk(e.t.v + d) - clk(e.t.v) : d * s;
         const midis = e.midis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0));   // shift: 조옮김(반음) + 기준음 높이(소수)
         if (e.tie) {
-          // 마디를 넘는 붙임줄: 앞 음을 늘린다
-          const prev = notes.slice(-40).reverse().find(n => n.line === e.line && n.voice === e.voice && n.midis.some(m => midis.includes(m)) && Math.abs(n.t + n.dur - ts) < 0.06);
-          if (prev) prev.dur += dsec;
-          continue;
+          // 마디를 넘는 붙임줄: 앞 음을 늘린다. 붙임줄 곡선 높이로 성부를 정해 앞 음과 성부가 다르게 읽히기도 하므로 성부는 따지지 않는다.
+          // 이을 앞 음이 없으면(이음줄을 붙임줄로 읽은 경우 등) 버리지 않고 새 음으로 친다 (예전에는 그 음이 통째로 빠졌다)
+          const prev = notes.slice(-60).reverse().find(n => n.line === e.line && n.midis.some(m => midis.includes(m)) && Math.abs(n.t + n.dur - ts) < 0.06);
+          if (prev) { prev.dur += dsec; continue; }
         }
         let dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
         let tsH = ts;
+        if (e.ten && opts.stacc !== false) dl *= 1.06;   // 테누토: 조금 무게 있게 (길이는 원래대로 꽉)
         if (opts.human) {   // 세기 ±6%, 박 사이 음은 조금 여리게, 치는 때 ±8ms (첫 음은 그대로 두어 카운트인과 어긋나지 않게)
           const [ha, hb] = humanRnd(bi, e.t.v, e.line, e.voice), u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
           dl *= (1 + 0.06 * ha) * (onBeat || e.accent ? 1 : 0.93);
           if (ts > t0 + 0.02) tsH = ts + 0.008 * hb;
         }
         // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
-        const sdur = e.stacc && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
+        const sdur = e.stacc && !e.ten && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
         notes.push({ t: tsH, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
           graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
@@ -3902,6 +3911,7 @@ function renderPlan(bars, order, opts) {
       let ts = cur + clk(e.t.v);
       let dl = (opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L)) * lg;
       let sh = 0;
+      if (e.ten && opts.stacc !== false) dl *= 1.08;   // 타악 테누토: 조금 세게
       if (key === '꽹과리' && e.voice === 'R' && e.xh && kkMute(e.line)) key = '꽹과리막음';
       if (BUKS.has(key)) {
         if (e.line != null && bukRef[e.line] != null && e.pos != null) {
@@ -6752,8 +6762,7 @@ function buildMidi() {
           const dur = Math.max(1, Math.round((e.sus || e.dur).v * W));
           for (const m of ms) {
             const prev = open[li].get(m);
-            if (e.tie && prev && Math.abs(prev.end - t0) < 3) { prev.end = t0 + dur; continue; }
-            if (e.tie) continue;
+            if (e.tie && prev && Math.abs(prev.end - t0) < 3) { prev.end = t0 + dur; continue; }   // 이을 앞 음이 없으면 새 음으로
             const nt = { start: t0, end: t0 + dur, m, v: e.accent ? 112 : 80 }; tracks[li].push(nt); open[li].set(m, nt);
           }
         } else if (ln.c.role === 'perc' && !e.tie) {
@@ -6847,8 +6856,9 @@ function buildMusicXml() {
           else {
             const ms = e.midis.map(x => Math.round(x + 12 * (ln.c.oct || 0) + shift));
             ms.forEach((mm, j) => {
-              const o = { d, voice: vi + 1, midi: mm, chord: j > 0, accent: e.accent, stacc: e.stacc, trill: e.trill, tieStop: !!e.tie };
-              if (e.tie) { const p = lastNote.get(mm); if (p) p.tieStart = true; }
+              const pv = e.tie ? lastNote.get(mm) : null;   // 이을 앞 음이 있을 때만 붙임줄
+              const o = { d, voice: vi + 1, midi: mm, chord: j > 0, accent: e.accent, stacc: e.stacc, ten: e.ten, trill: e.trill, tieStop: !!pv };
+              if (pv) pv.tieStart = true;
               objs.push(o); lastNote.set(mm, o);
             });
           }
@@ -6874,7 +6884,7 @@ function buildMusicXml() {
         if (o.perc && !o.rest) x += `<stem>${o.low ? 'down' : 'up'}</stem>` + (o.xh ? '<notehead>x</notehead>' : '');
         const nots = [];
         if (o.tieStop) nots.push('<tied type="stop"/>'); if (o.tieStart) nots.push('<tied type="start"/>');
-        const art = (o.accent ? '<accent/>' : '') + (o.stacc ? '<staccato/>' : '');
+        const art = (o.accent ? '<accent/>' : '') + (o.stacc ? '<staccato/>' : '') + (o.ten ? '<tenuto/>' : '');
         if (art) nots.push(`<articulations>${art}</articulations>`);
         if (o.trill) nots.push('<ornaments><trill-mark/></ornaments>');
         if (nots.length) x += `<notations>${nots.join('')}</notations>`;
@@ -6997,7 +7007,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 15:33';
+const APP_VERSION = '2026-11-03 15:47';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

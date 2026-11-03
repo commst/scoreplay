@@ -233,20 +233,21 @@ export function renderPlan(bars, order, opts) {
         const dsec = e.t.v + d <= L + 1e-9 ? clk(e.t.v + d) - clk(e.t.v) : d * s;
         const midis = e.midis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0));   // shift: 조옮김(반음) + 기준음 높이(소수)
         if (e.tie) {
-          // 마디를 넘는 붙임줄: 앞 음을 늘린다
-          const prev = notes.slice(-40).reverse().find(n => n.line === e.line && n.voice === e.voice && n.midis.some(m => midis.includes(m)) && Math.abs(n.t + n.dur - ts) < 0.06);
-          if (prev) prev.dur += dsec;
-          continue;
+          // 마디를 넘는 붙임줄: 앞 음을 늘린다. 붙임줄 곡선 높이로 성부를 정해 앞 음과 성부가 다르게 읽히기도 하므로 성부는 따지지 않는다.
+          // 이을 앞 음이 없으면(이음줄을 붙임줄로 읽은 경우 등) 버리지 않고 새 음으로 친다 (예전에는 그 음이 통째로 빠졌다)
+          const prev = notes.slice(-60).reverse().find(n => n.line === e.line && n.midis.some(m => midis.includes(m)) && Math.abs(n.t + n.dur - ts) < 0.06);
+          if (prev) { prev.dur += dsec; continue; }
         }
         let dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
         let tsH = ts;
+        if (e.ten && opts.stacc !== false) dl *= 1.06;   // 테누토: 조금 무게 있게 (길이는 원래대로 꽉)
         if (opts.human) {   // 세기 ±6%, 박 사이 음은 조금 여리게, 치는 때 ±8ms (첫 음은 그대로 두어 카운트인과 어긋나지 않게)
           const [ha, hb] = humanRnd(bi, e.t.v, e.line, e.voice), u = UNIT_FRAC[rowFor(b.number).unit], onBeat = Math.abs(e.t.v / u - Math.round(e.t.v / u)) < 1e-6;
           dl *= (1 + 0.06 * ha) * (onBeat || e.accent ? 1 : 0.93);
           if (ts > t0 + 0.02) tsH = ts + 0.008 * hb;
         }
         // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
-        const sdur = e.stacc && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
+        const sdur = e.stacc && !e.ten && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
         notes.push({ t: tsH, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
           graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
@@ -258,6 +259,7 @@ export function renderPlan(bars, order, opts) {
       let ts = cur + clk(e.t.v);
       let dl = (opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L)) * lg;
       let sh = 0;
+      if (e.ten && opts.stacc !== false) dl *= 1.08;   // 타악 테누토: 조금 세게
       if (key === '꽹과리' && e.voice === 'R' && e.xh && kkMute(e.line)) key = '꽹과리막음';
       if (BUKS.has(key)) {
         if (e.line != null && bukRef[e.line] != null && e.pos != null) {

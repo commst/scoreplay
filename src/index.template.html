@@ -1131,6 +1131,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>테누토</b>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</li>
     <li><b>MIDI·MusicXML 저장</b>: 연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</li>
     <li><b>사람처럼 연주</b>(소리 다듬기, 기본 켬): 음마다 세기와 치는 때를 아주 조금씩 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게</li>
     <li><b>연습 번호</b>: 악보의 네모 칸 연습 번호(A, B, C …, 2악장)를 연주 칸에 단추로. 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 구간으로 정해 재생</li>
@@ -1145,6 +1146,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
+    <li>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</li>
     <li>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</li>
     <li>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</li>
     <li>'♪= Ca 60'처럼 음표는 악보 글꼴, 숫자는 일반 글꼴로 이어 적은 빠르기를 못 읽던 문제(소금협주곡 '길'). 8분음표 빠르기가 ♩로 보이던 표시도 ♪로</li>
@@ -3433,8 +3435,7 @@ function buildMidi() {
           const dur = Math.max(1, Math.round((e.sus || e.dur).v * W));
           for (const m of ms) {
             const prev = open[li].get(m);
-            if (e.tie && prev && Math.abs(prev.end - t0) < 3) { prev.end = t0 + dur; continue; }
-            if (e.tie) continue;
+            if (e.tie && prev && Math.abs(prev.end - t0) < 3) { prev.end = t0 + dur; continue; }   // 이을 앞 음이 없으면 새 음으로
             const nt = { start: t0, end: t0 + dur, m, v: e.accent ? 112 : 80 }; tracks[li].push(nt); open[li].set(m, nt);
           }
         } else if (ln.c.role === 'perc' && !e.tie) {
@@ -3528,8 +3529,9 @@ function buildMusicXml() {
           else {
             const ms = e.midis.map(x => Math.round(x + 12 * (ln.c.oct || 0) + shift));
             ms.forEach((mm, j) => {
-              const o = { d, voice: vi + 1, midi: mm, chord: j > 0, accent: e.accent, stacc: e.stacc, trill: e.trill, tieStop: !!e.tie };
-              if (e.tie) { const p = lastNote.get(mm); if (p) p.tieStart = true; }
+              const pv = e.tie ? lastNote.get(mm) : null;   // 이을 앞 음이 있을 때만 붙임줄
+              const o = { d, voice: vi + 1, midi: mm, chord: j > 0, accent: e.accent, stacc: e.stacc, ten: e.ten, trill: e.trill, tieStop: !!pv };
+              if (pv) pv.tieStart = true;
               objs.push(o); lastNote.set(mm, o);
             });
           }
@@ -3555,7 +3557,7 @@ function buildMusicXml() {
         if (o.perc && !o.rest) x += `<stem>${o.low ? 'down' : 'up'}</stem>` + (o.xh ? '<notehead>x</notehead>' : '');
         const nots = [];
         if (o.tieStop) nots.push('<tied type="stop"/>'); if (o.tieStart) nots.push('<tied type="start"/>');
-        const art = (o.accent ? '<accent/>' : '') + (o.stacc ? '<staccato/>' : '');
+        const art = (o.accent ? '<accent/>' : '') + (o.stacc ? '<staccato/>' : '') + (o.ten ? '<tenuto/>' : '');
         if (art) nots.push(`<articulations>${art}</articulations>`);
         if (o.trill) nots.push('<ornaments><trill-mark/></ornaments>');
         if (nots.length) x += `<notations>${nots.join('')}</notations>`;
