@@ -851,6 +851,42 @@ body:not(.all-panes) .lcard:not(.open) .sm-row button.solo::after { content: 'S'
 body:not(.all-panes) .lcard:not(.open) .sm-row button.mute::after { content: 'M'; font-size: 11px; font-weight: 700; }
 @media (max-width: 400px) { body:not(.all-panes) .lcard:not(.open) .cfg { flex-wrap: wrap; } body:not(.all-panes) .lcard:not(.open) .cfg .k-vol { flex: 1 1 100%; } }
 .pane2 h2, .pane2 section, .pane2 .savebox { scroll-margin-top: 60px; }
+/* 안내 글: 창·서랍 위에도 보이게 위에 띄움, 누르면 닫힘 */
+.app2 > #msg { position: relative; margin: 10px 16px 0; padding: 10px 40px 10px 14px; cursor: pointer; }
+.app2 > #msg::after { content: '✕'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+body.welcome .app2 > #msg { max-width: 1120px; margin: 12px auto 0; }
+/* 창이나 서랍이 떠 있을 때는 그 위에 보이게 */
+body.files-open .app2 > #msg, body.help-open .app2 > #msg, body.sheet-open .app2 > #msg { position: fixed; z-index: 90; top: calc(var(--tbh) + 8px); left: 50%; transform: translateX(-50%); width: min(760px, calc(100vw - 24px)); margin: 0; box-shadow: 0 8px 24px rgba(20, 26, 40, .22); }
+/* 악보로 보기: 악보 칸이 화면 남은 높이를 다 쓰게 */
+#scoreView { scroll-margin-top: calc(var(--tbh) + 6px); }
+body.sv-mode .score-view:not(.sv-full) .sv-wrap { height: calc(100vh - var(--tbh) - var(--dockh) - 72px); height: calc(100dvh - var(--tbh) - var(--dockh) - 72px); min-height: 260px; }
+@media (max-width: 900px) {
+  body.sv-mode .stage .summary, body.sv-mode .stage .bar-actions, body.sv-mode .stage .bars-panel > details.help, body.sv-mode .stage .warnlist { display: none; }
+  .sv-tools { gap: 6px 8px; margin: 4px 0 6px; }
+  .sv-tools .btn { padding: 6px 10px; font-size: 13px; }
+  .sv-tools .zoom { font-size: 0; } .sv-tools .zoom > * { font-size: 13px; }
+  .sv-tools .sv-part select { max-width: 9.5em; }
+  body.sv-mode .score-view:not(.sv-full) .sv-wrap { height: calc(100dvh - var(--tbh) - var(--dockh) - 96px); }
+}
+/* 휴대폰 가로처럼 낮은 화면: 연주 막대를 두 줄로 줄이고 설정 서랍은 왼쪽에서 */
+@media (max-width: 900px) and (max-height: 540px) {
+  .topbar { min-height: 46px; padding-top: 4px; padding-bottom: 4px; }
+  .dock { gap: 5px; padding-top: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+  .dock-row { flex-wrap: nowrap; gap: 8px; }
+  .dock .transport { flex: 1 1 auto; min-width: 120px; }
+  .dock .play { width: 44px; height: 44px; }
+  .dock-stop { width: 34px; height: 34px; }
+  .dock-range { order: 2; } #dockLoop { order: 3; } .dock-speed { order: 4; margin-left: 0; }
+  .dock-range .range > label, .dock-range .range > span:last-of-type, .dock-lab { display: none; }
+  .dock-range .range > span:first-of-type { font-size: 0; } .dock-range .range > span:first-of-type::after { content: '~'; font-size: 13px; }
+  .dock-range .range input { width: 52px; }
+  #dockLoop { font-size: 0; width: 36px; padding: 0; } #dockLoop::after { content: '⟲'; font-size: 18px; }
+  .dock .reh-lab { display: none; }
+  .dtab { height: 30px; font-size: 13px; }
+  .sidebar { top: 0; bottom: var(--dockh); left: 0; right: auto; width: min(440px, 62vw); height: auto !important; z-index: 48; border-radius: 0 16px 0 0; transform: translateX(-105%); }
+  body.sheet-open .sheet-back { z-index: 47; bottom: var(--dockh); }
+  .sheet-grab { display: none; }
+}
 /* 시험용(#allpanes): 모든 칸을 차례로 펼쳐 보인다 */
 body.all-panes .load-view { display: block; }
 body.all-panes .dock { position: static; }
@@ -1131,7 +1167,7 @@ body.all-panes { padding-bottom: 0; }
       <section class="panel" aria-labelledby="tSpeed">
         <h2 id="tSpeed">연습 속도</h2>
         <div class="speed"><input type="range" id="speed" min="50" max="150" step="5" value="100"><span class="num" id="speedVal">100%</span></div>
-        <p class="hint">위 템포 전체에 곱해집니다. 처음에는 70%쯤으로 천천히 맞춰 보세요.</p>
+        <p class="hint">위 빠르기 표 전체에 곱해집니다. 아래 연주 막대의 속도 −·+와 같은 값입니다. 처음에는 70%쯤으로 천천히 맞춰 보세요.</p>
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
@@ -1219,7 +1255,7 @@ body.all-panes { padding-bottom: 0; }
             <dd>연주하는 동안 내내 박마다 클릭을 깔아 줍니다. 마디 첫 박은 높은 소리입니다. 박은 템포 구간의 기준 음표 단위로 칩니다. 빠르기가 흔들리지 않게 연습할 때 켜세요.</dd>
             <dt>쉬는 마디 박 짚기</dt>
             <dd>칠 음이 하나도 없는 마디(여러 마디 쉼표, 빈 마디, 총보에서 고른 줄이 쉬는 마디)에서만 나무 막대 소리로 박을 짚어 줍니다. 악기 소리, 메트로놈 클릭과 다른 소리라 쉬는 구간이 바로 구분됩니다. 마디 첫 박은 높은 소리, 나머지 박은 낮은 소리입니다.
-              <b>박만</b>은 기준 음표마다 한 번, <b>분박까지</b>는 박 사이를 8분음표 단위로 쪼개 작은 "착" 소리를 더합니다(점4분 박은 셋, 4분 박은 둘로 쪼갬). 쉬는 동안 연주 칸에 "쉼 3/8마디"처럼 몇 번째 쉬는 마디인지도 보여 줍니다. 저장하는 파일에도 들어갑니다.
+              <b>박만</b>은 기준 음표마다 한 번, <b>분박까지</b>는 박 사이를 8분음표 단위로 쪼개 작은 "착" 소리를 더합니다(점4분 박은 셋, 4분 박은 둘로 쪼갬). 쉬는 동안 아래 연주 막대에 "쉼 3/8마디"처럼 몇 번째 쉬는 마디인지도 보여 줍니다. 저장하는 파일에도 들어갑니다.
               <span class="eg">12/8 쉬는 마디 → 박만: 딱·똑·똑·똑 / 분박까지: 딱 착 착 똑 착 착 똑 착 착 똑 착 착</span>
               <span class="eg">메트로놈은 끄고 이것만 켜면 → 칠 때는 악기 소리만, 쉴 때는 박 소리만</span></dd>
             <dt>셈여림 반영</dt>
@@ -1439,6 +1475,18 @@ body.all-panes { padding-bottom: 0; }
     <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
     </ul>
     <h5 class="bug">버그 수정</h5><ul class="bug">
+    <li>첫 화면이나 악보 파일·사용법·이력 창이 떠 있을 때 스페이스바를 누르면 뒤에서 재생되던 문제</li>
+    <li>올리기 상자 밖에 파일을 떨어뜨리면 브라우저가 그 파일을 열어 지금 화면이 사라지던 문제(이제 안내만). PDF·MusicXML이 아닌 파일을 놓으면 안내</li>
+    <li>악보 파일 창에서 마지막 악보를 빼면 첫 화면이 창 안에 갇히던 문제</li>
+    <li>긴 안내 글(마디 번호가 다르다는 경고 등)이 악보·마디맵 단추를 가려 누를 수 없던 문제</li>
+    <li>마디 범위에서 시작을 끝보다 뒤로 적으면 순서에 따라 엉뚱한 범위가 되던 문제: 방금 고친 칸은 그대로 두고 다른 칸을 맞춤. 2.5처럼 소수는 반올림(음원 저장 범위도 같음)</li>
+    <li>반복할 때마다 빠르게의 처음 %·한 번에 +%에 범위 밖 숫자를 넣으면 칸에는 그대로 남던 문제(30~100%, 1~30%로 맞춤)</li>
+    <li>다른 프로그램의 설정 파일이나 깨진 파일을 가져오면 안내가 곧바로 '자동 저장됨'에 덮여 보이지 않던 문제</li>
+    <li>펼쳐 둔 악기 줄이 다른 악보를 올려도 같은 자리 줄이 펼쳐진 채 나오던 문제</li>
+    <li>휴대폰을 가로로 눕히면 설정 서랍이 손가락 두 마디 높이로 작아지던 문제: 낮은 화면에서는 연주 막대를 두 줄로 줄이고 서랍을 왼쪽에서 엶</li>
+    <li>휴대폰에서 악보로 보기를 누르면 악보가 화면 아래쪽에 조금만 보이던 문제: 악보 칸이 남은 화면을 다 쓰고 바로 그 자리로 이동</li>
+    <li>키보드로 연 창을 닫으면 초점이 사라지던 문제(연 단추로 돌아감)</li>
+    <li>예시 장단으로 돌아왔을 때 안내 문구에서 MusicXML이 빠지던 것, 도움말의 옛 자리 이름('연주 칸' 등) 고침</li>
     <li>휴대폰·컴퓨터가 어두운 화면 모드일 때 새 화면의 글자와 단추가 흰색으로 바뀌어 거의 보이지 않던 문제: 이제 기기 설정을 따라 밝은 모드는 파스텔, 어두운 모드는 어두운 남색 화면으로 보입니다(모든 글자의 밝기 대비 확인)</li>
     <li>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</li>
     <li>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</li>
@@ -2052,6 +2100,7 @@ function setView(mode) {
   if (viewMode !== 'score' && $('scoreView').classList.contains('sv-full')) setFull(false);
   $('bars').hidden = viewMode === 'score'; $('scoreView').hidden = viewMode !== 'score';
   document.querySelectorAll('.map-only').forEach(e => { e.hidden = viewMode === 'score'; });
+  document.body.classList.toggle('sv-mode', viewMode === 'score');
   $('barsHint').textContent = viewMode === 'score' ? '악보에서 마디를 누르면 그 마디부터 재생합니다. 연주 중인 마디는 노란 칸으로 표시됩니다.' : '마디를 누르면 그 마디부터 재생합니다. 스페이스바·재생 단추는 일시정지(다시 누르면 이어서), ⏹ 정지는 처음으로.';
   if (viewMode === 'score') { hideBarTip(0); buildScoreView(); if (state.playing && lastNow != null) svShow(state.rendered ? (state.rendered.plan.barTimes.find(b => b.number === lastNow) || {}).idx ?? -1 : -1, true); }
   saveViewPref();
@@ -2059,7 +2108,7 @@ function setView(mode) {
 $('viewMap').addEventListener('click', () => setView('map'));
 // 연주 칸의 같은 단추: 보기를 바꾸고 그 칸으로 옮겨 간다
 for (const [id, mode] of [['viewScore2', 'score'], ['viewMap2', 'map']]) $(id).addEventListener('click', () => { setView(mode); $('tBars').closest('section').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
-$('viewScore').addEventListener('click', () => setView('score'));
+$('viewScore').addEventListener('click', () => { setView('score'); try { $('scoreView').scrollIntoView({ block: 'start' }); } catch (e) {} });
 $('svFollow').addEventListener('change', saveViewPref);
 // 화면 가득 보기 (휴대폰·아이패드에서도 되게 브라우저 전체 화면 대신 화면을 덮는 칸으로)
 function setFull(on) {
@@ -2736,14 +2785,24 @@ $('optRamp').addEventListener('change', () => {
   if (on && !$('optLoop').checked) { $('optLoop').checked = true; audio.loop = true; }
   rampBegin(false);
 });
-['rampStart', 'rampStep'].forEach(id => $(id).addEventListener('change', () => { if (!state.playing) rampBegin(false); }));
+// 처음 %·한 번에 +%: 칸에도 실제로 쓰는 값(범위 안 정수)을 보여 준다
+['rampStart', 'rampStep'].forEach(id => $(id).addEventListener('change', () => {
+  const [def, lo, hi] = id === 'rampStart' ? [70, 30, 100] : [5, 1, 30];
+  const v = Math.round(+$(id).value); $(id).value = Number.isFinite(v) && $(id).value !== '' ? Math.max(lo, Math.min(hi, v)) : def;
+  if (!state.playing) rampBegin(false);
+}));
 $('speed').addEventListener('input', () => { $('speedVal').textContent = $('speed').value + '%'; changed(); });
-for (const id of ['from', 'to']) $(id).addEventListener('change', () => { clampRange(); changed(); updateOut(); });
+for (const id of ['from', 'to']) $(id).addEventListener('change', () => { clampRange(id); changed(); updateOut(); });
 $('rangeAll').addEventListener('click', () => { $('from').value = 1; $('to').value = lastBar(); changed(); updateOut(); });
-function clampRange() {
+// 마디 범위 맞추기: 정수로, 1~마지막 마디 안으로. 시작이 끝보다 뒤면 방금 고친 칸은 그대로 두고 다른 칸을 맞춘다
+function fixRange(fv, tv, edited) {
+  let f = Math.max(1, Math.min(lastBar(), Math.round(+fv) || 1)), t = Math.max(1, Math.min(lastBar(), Math.round(+tv) || lastBar()));
+  if (t < f) { if (edited === 'from') t = f; else if (edited === 'to') f = t; else [f, t] = [t, f]; }
+  return [f, t];
+}
+function clampRange(edited) {
   if (!state.bars.length) return;   // 악기를 모두 꺼 마디가 없을 때 범위를 1~1로 줄여 버리던 문제
-  let f = Math.max(1, Math.min(lastBar(), +$('from').value || 1)), t = Math.max(1, Math.min(lastBar(), +$('to').value || lastBar()));
-  if (t < f) [f, t] = [t, f];
+  const [f, t] = fixRange($('from').value, $('to').value, edited);
   $('from').value = f; $('to').value = t;
 }
 
@@ -2971,6 +3030,8 @@ document.addEventListener('click', ev => { const b = ev.target && ev.target.clos
 document.addEventListener('keydown', ev => {
   if (ev.code !== 'Space' || ev.repeat || ev.ctrlKey || ev.altKey || ev.metaKey) return;
   if (editorBar != null) return;   // 수정 창이 열려 있으면 재생하지 않는다
+  // 첫 화면·악보 파일·사용법·이력 창이 떠 있을 때는 뒤에서 재생되지 않게
+  if (document.body.classList.contains('welcome') || document.body.classList.contains('files-open') || document.body.classList.contains('help-open') || document.querySelector('.edit-back')) return;
   const target = ev.target;
   if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
   ev.preventDefault();
@@ -3076,10 +3137,11 @@ function syncSaveFromPlay() {
   $('sMetro').checked = o.metronome; $('sRest').value = o.restCount; $('sDyn').checked = o.dyn; $('sSpeed').value = o.speed;
   saveSummary();
 }
+let saveEdited = null;
+$('sFrom').addEventListener('change', () => { saveEdited = 'from'; }, true); $('sTo').addEventListener('change', () => { saveEdited = 'to'; }, true);
 function saveOpts() {
   if (!state.bars.length) return { from: +$('sFrom').value || 1, to: +$('sTo').value || 1, repeats: $('sRepeat').checked, countIn: $('sCount').checked, metronome: $('sMetro').checked, restCount: $('sRest').value, dyn: $('sDyn').checked, speed: Math.max(50, Math.min(150, +$('sSpeed').value || 100)) };
-  let f = Math.max(1, Math.min(lastBar(), +$('sFrom').value || 1)), t = Math.max(1, Math.min(lastBar(), +$('sTo').value || lastBar()));
-  if (t < f) [f, t] = [t, f];
+  const [f, t] = fixRange($('sFrom').value, $('sTo').value, saveEdited); saveEdited = null;
   $('sFrom').value = f; $('sTo').value = t;
   const sp = Math.max(50, Math.min(150, +$('sSpeed').value || 100)); $('sSpeed').value = sp;
   return { from: f, to: t, repeats: $('sRepeat').checked, countIn: $('sCount').checked, metronome: $('sMetro').checked, restCount: $('sRest').value, dyn: $('sDyn').checked, speed: sp };
@@ -3088,7 +3150,7 @@ function saveSummary() {
   const o = saveOpts();
   const opt = [o.countIn && '카운트인', o.metronome && '메트로놈', o.restCount !== 'off' && '쉬는 마디 박', o.repeats && '도돌이표 반복', o.dyn && '셈여림'].filter(Boolean);
   const sm = state.lineIds.some(id => state.solo.has(cfgKey(id)) || state.mute.has(cfgKey(id)));
-  $('saveSummary').textContent = `${o.from}~${o.to}마디 · 속도 ${o.speed}%${opt.length ? ' · ' + opt.join(', ') : ''} 설정으로 저장합니다. 켜 둔 줄과 악기 소리·음량은 위 줄 설정을 따릅니다.` + (sm ? ' 지금 솔로·음소거 중이라 그대로 저장됩니다(전체를 저장하려면 [솔로·음소거 모두 해제]).' : '');
+  $('saveSummary').textContent = `${o.from}~${o.to}마디 · 속도 ${o.speed}%${opt.length ? ' · ' + opt.join(', ') : ''} 설정으로 저장합니다. 켜 둔 줄과 악기 소리·음량은 [악기] 칸 설정을 따릅니다.` + (sm ? ' 지금 솔로·음소거 중이라 그대로 저장됩니다(전체를 저장하려면 [솔로·음소거 모두 해제]).' : '');
   $('saveLinkState').textContent = saveLinked ? '재생 설정과 같음' : '저장용 설정';
 }
 for (const id of SAVE_IDS) $(id).addEventListener('change', () => { saveLinked = false; saveSummary(); });
@@ -3293,8 +3355,8 @@ $('setExport').addEventListener('click', () => {
 });
 $('setImport').addEventListener('change', async ev => {
   const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
-  let S; try { S = JSON.parse(await f.text()); } catch (e) { setState('설정 파일을 읽지 못했습니다.'); return; }
-  if (!S || S.format !== 'hapju-settings') { setState('합주연습기에서 내보낸 설정 파일이 아닙니다.'); return; }
+  let S; try { S = JSON.parse(await f.text()); } catch (e) { setState('설정 파일을 읽지 못했습니다.'); showMsg('설정 파일을 읽지 못했습니다. [저장] 칸의 [설정 파일로 내보내기]로 만든 .json 파일을 골라 주세요.'); return; }
+  if (!S || S.format !== 'hapju-settings') { setState('합주연습기에서 내보낸 설정 파일이 아닙니다.'); showMsg('합주연습기에서 내보낸 설정 파일이 아닙니다. [저장] 칸의 [설정 파일로 내보내기]로 만든 파일을 골라 주세요.'); return; }
   if (S.key && S.key !== settingsKey() && !confirm(`이 설정은 다른 악보 파일(${S.file || S.title || '이름 없음'})에서 만든 것입니다. 지금 악보에 적용할까요? 줄이 맞지 않는 곳은 건너뜁니다.`)) return;
   stop();
   let editN = 0;
@@ -3311,6 +3373,8 @@ $('setImport').addEventListener('change', async ev => {
 
 // ---------- PDF 읽기 ----------
 function showMsg(t) { $('msg').hidden = !t; $('msg').textContent = t || ''; }
+$('msg').addEventListener('click', () => showMsg(''));
+$('msg').title = '누르면 닫힙니다';
 // PDF 한 개를 읽는다 (총보·파트보·더한 악보 공통)
 async function readPdf(file, onPage) {
   const data = new Uint8Array(await file.arrayBuffer());
@@ -3343,12 +3407,13 @@ function resetEmpty(text) {
   stop(); loadSeq++;   // 읽는 중이던 악보가 있으면 버린다
   // 모두 빼면 처음 화면처럼 예시 장단으로 돌아간다 (빈 상태에서 재생·저장을 눌러도 아무 일이 없던 문제)
   Object.assign(state, { score: null, sourceScores: [], parts: [], extras: [], lineRes: {}, lineRaw: {}, soundSel: {}, lineList: [], lineCfg: {}, lineIds: [null], bars: exampleBars(), title: '예시장단', fileName: '', manualOrder: null, rendered: null, dirty: true, marks: EXAMPLE_MARKS, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set(), rehearsal: [] });
+  if (typeof openLines !== 'undefined') openLines.clear();   // 새 악보: 펼친 줄 기억 지우기
   state.tempoRows = [{ start: 1, unit: 'dq', bpm: 84, text: '' }];
   state.lineCfg = { p: { role: 'perc', R: '따', L: '궁', vol: 1, inst: 'gayageum', oct: 0, pitched: false } };
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
   showExampleLine();
   $('fileName').textContent = text ? text + ' 예시 장단으로 돌아왔습니다.' : '총보를 아직 추가하지 않았습니다.';
-  $('fileInfo').textContent = '총보 PDF를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
+  $('fileInfo').textContent = '총보 PDF(또는 MusicXML)를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
 }
@@ -3397,6 +3462,7 @@ async function loadFullPdf(files) {
   files = (Array.isArray(files) ? files : [files]).filter(isPdf);
   if (!files.length) return;
   stop();
+  if (typeof openLines !== 'undefined') openLines.clear();   // 새 악보: 펼친 줄 기억 지우기
   state.sourceScores = []; state.parts = []; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.lineList = []; state.lineCfg = {}; state.lineIds = []; state.solo = new Set(); state.mute = new Set();
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   state.score = null; renderFileLists();
@@ -3997,8 +4063,14 @@ const partsDrop = $('partsDrop');
 function wirePdfDrop(zone, handler) {
   ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
-  zone.addEventListener('drop', e => { const files = [...e.dataTransfer.files].filter(isPdf); if (files.length) handler(files); });
+  zone.addEventListener('drop', e => { e.stopPropagation(); const all = [...e.dataTransfer.files], files = all.filter(isPdf); if (files.length) handler(files); else if (all.length) showMsg('악보 PDF나 MusicXML(.musicxml·.xml·.mxl) 파일만 올릴 수 있습니다.'); });
 }
+// 올리기 상자 밖에 파일을 떨어뜨리면 브라우저가 그 파일을 열어 지금 화면이 사라지던 문제: 상자 밖은 받지 않고 안내만
+['dragover', 'drop'].forEach(t => window.addEventListener(t, e => {
+  if (!e.dataTransfer || ![...(e.dataTransfer.types || [])].includes('Files')) return;
+  e.preventDefault();
+  if (t === 'drop') showMsg('파일은 [악보 파일] 창의 총보·악보 추가·파트보 상자 위에 놓아 주세요.');
+}));
 wirePdfDrop(drop, files => loadFullPdf(files));
 wirePdfDrop($('extraBox'), files => loadExtraPdfs(files));
 wirePdfDrop(partsDrop, files => loadPartPdfs(files));
@@ -4009,6 +4081,7 @@ async function loadPartPdfs(files) {
   if (!pdfs.length) return;
   stop(); showMsg('');
   const my = ++loadSeq;
+  if (!state.score?.isComposite && typeof openLines !== 'undefined') openLines.clear();   // 새 악보: 펼친 줄 기억 지우기
   const existing = state.score?.isComposite ? state.parts.slice() : [];
   if (!existing.length) { state.solo = new Set(); state.mute = new Set(); state.score = null; state.extras = []; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.lineCfg = {}; state.lineList = []; state.lineIds = []; renderFileLists(); }
   $('fileName').textContent = '총보를 아직 올리지 않았습니다.'; $('fileInfo').textContent = '파트보를 쓰는 중이라 총보는 비워 두었습니다.';
@@ -4127,6 +4200,7 @@ function hasRealScore() { return !!(state.score || (state.parts && state.parts.l
 function updateTopbar() {
   const real = hasRealScore();
   document.body.classList.toggle('welcome', !real && !demoChosen && !document.body.classList.contains('all-panes'));
+  if (document.body.classList.contains('welcome')) document.body.classList.remove('files-open', 'sheet-open');
   if (real) document.body.classList.remove('files-open-first');
   const name = real ? (state.title || state.fileName || '악보') : '예시 장단';
   $('tbSongName').textContent = name;
@@ -4136,11 +4210,24 @@ function updateTopbar() {
 }
 const _renderBarsV1 = renderBars;
 renderBars = function () { const r = _renderBarsV1.apply(this, arguments); try { updateTopbar(); } catch (e) {} return r; };
+// 창을 닫으면 연 단추로 초점을 돌려준다(키보드로 쓸 때 초점이 사라지지 않게)
+// 마우스·손가락으로 열었으면 닫을 때 초점을 비워 스페이스바가 다시 재생이 되게
+let dlgOpener = null, lastPointerT = 0;
+document.addEventListener('pointerdown', () => { lastPointerT = Date.now(); }, true);
+const openerNow = () => (Date.now() - lastPointerT < 1000 ? null : document.activeElement);
+const backFocus = () => { const el = dlgOpener; dlgOpener = null; if (el && el.isConnected && el.offsetParent !== null) { try { el.focus({ preventScroll: true }); } catch (e) {} } else if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); };
 function setFiles(on) {
+  const was = document.body.classList.contains('files-open');
   document.body.classList.toggle('files-open', !!on);
-  if (on) { setSheet(false); setTimeout(() => { try { $('filesClose').focus(); } catch (e) {} }, 0); }
+  if (on && !was) { dlgOpener = openerNow(); setSheet(false); setTimeout(() => { try { $('filesClose').focus(); } catch (e) {} }, 0); }
+  if (!on && was) backFocus();
 }
-function setHelpView(on) { document.body.classList.toggle('help-open', !!on); if (on) { setSheet(false); $('fullHelp').open = true; setTimeout(() => $('helpClose').focus(), 0); } }
+function setHelpView(on) {
+  const was = document.body.classList.contains('help-open');
+  document.body.classList.toggle('help-open', !!on);
+  if (on && !was) { dlgOpener = openerNow(); setSheet(false); $('fullHelp').open = true; setTimeout(() => $('helpClose').focus(), 0); }
+  if (!on && was) backFocus();
+}
 $('filesBtn').addEventListener('click', () => setFiles(true));
 $('tbSong').addEventListener('click', () => setFiles(true));
 $('filesClose').addEventListener('click', () => setFiles(false));

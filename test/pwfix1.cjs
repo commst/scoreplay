@@ -1,0 +1,31 @@
+// 이번 점검에서 고친 것 시험
+const { chromium } = require('playwright'); const fs = require('fs');
+const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const ok = (c, m) => { console.log((c ? 'ok  ' : 'FAIL') + ' ' + m); if (!c) process.exitCode = 1; };
+(async () => { const b = await chromium.launch(); const p = await (await b.newContext({ viewport: { width: 1280, height: 800 } })).newPage(); const errs = [];
+ p.on('pageerror', e => errs.push(e.message));
+ await p.route('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/**', r => { const f = r.request().url().split('pdfjs-dist@4.10.38/')[1].replace('.min.mjs', '.mjs'); r.fulfill({ path: '/home/claude/web/node_modules/pdfjs-dist/' + f, contentType: 'text/javascript' }); });
+ await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ body: '', contentType: 'text/css' }));
+ await p.goto('file:///home/claude/web/deploy-hapju/index.html'); await p.waitForTimeout(300);
+ await p.keyboard.press('Space'); await p.waitForTimeout(600);
+ ok(/정지/.test(await p.textContent('#nowText')), 'space on welcome does not play');
+ // 상자 밖에 떨어뜨리기
+ const dropAt = async (sel, name, type) => p.evaluate(([sel, name, type]) => { const dt = new DataTransfer(); dt.items.add(new File(['x'], name, { type })); const el = document.querySelector(sel); el.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true, cancelable: true })); const ev = new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }); el.dispatchEvent(ev); return ev.defaultPrevented; }, [sel, name, type]);
+ ok(await dropAt('.hero', 'a.pdf', 'application/pdf'), 'drop outside box is prevented (no navigation)');
+ ok(/상자 위에 놓아/.test(await p.textContent('#msg')), 'outside-drop message');
+ await dropAt('#drop', 'a.txt', 'text/plain'); ok(/만 올릴 수 있습니다/.test(await p.textContent('#msg')), 'non-PDF drop message');
+ await p.click('#msg'); ok(await p.isHidden('#msg'), 'message closes on click');
+ await p.setInputFiles('#pdfInput', pick('44e95fb3')); await p.waitForFunction(() => !document.body.classList.contains('welcome'), null, { timeout: 60000 }); await p.waitForTimeout(500);
+ await p.click('#filesBtn'); await p.keyboard.press('Space'); await p.waitForTimeout(600);
+ ok(/정지/.test(await p.textContent('#nowText')), 'space with files dialog open does not play');
+ if (!(await p.evaluate(() => document.body.classList.contains('files-open')))) await p.click('#filesBtn'); await p.click('.flist .rm'); await p.waitForTimeout(800);
+ ok(await p.evaluate(() => document.body.classList.contains('welcome') && !document.body.classList.contains('files-open')), 'removing last score returns to welcome, not inside dialog');
+ await p.setInputFiles('#pdfInput', pick('ea34b050')); await p.waitForFunction(() => !document.body.classList.contains('welcome'), null, { timeout: 90000 }); await p.waitForTimeout(800);
+ ok(!(await p.isHidden('#msg')), 'warning shown for ea34b050');
+ await p.click('#viewScore', { timeout: 5000 }); await p.waitForTimeout(800);
+ ok(await p.evaluate(() => !document.getElementById('scoreView').hidden), 'view switch clickable with warning shown');
+ await p.click('#helpBtn'); await p.keyboard.press('Space'); await p.waitForTimeout(500); ok(/정지/.test(await p.textContent('#nowText')), 'space with help open does not play');
+ await p.keyboard.press('Escape');
+ await p.keyboard.press('Space'); await p.waitForTimeout(1500); ok(!/^\s*정지/.test(await p.textContent('#nowText')), 'space plays normally: ' + (await p.textContent('#nowText')).slice(0, 20));
+ ok(!errs.length, 'no errors ' + errs.join(' | '));
+ await b.close(); })();
