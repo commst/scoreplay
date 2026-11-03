@@ -1107,6 +1107,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
             <b>큰 점</b>은 악센트, 앞의 <b>작은 점</b>은 꾸밈음, <b>가로 막대</b>는 롤입니다.</dd>
           <dt>마디 위 표시</dt>
           <dd>오른쪽 위 숫자(예: 12/8)는 박자가 바뀌는 마디입니다. ‖: :‖는 도돌이표, 아래 글자는 셈여림·빠르기 표시나 "% 앞 마디 반복"처럼 읽어 낸 내용입니다.</dd>
+          <dt>내 파트만 보기</dt>
+          <dd>악보로 보기 위쪽의 <b>보기</b>에서 '총보 전체' 대신 켠 줄(예: '대금만')을 고르면 총보에서 그 악기 오선만 단마다 잘라 위아래로 이어 보여 줍니다. 크기를 키우면 내 파트를 크게 볼 수 있고, 노란 칸·빨간 선·마디 누르기·음 고치기가 그대로 됩니다. 그 줄을 끄면 총보 전체로 돌아갑니다.</dd>
           <dt>음 수정 (✎)</dt>
           <dd>음정이나 음 길이가 악보와 다르게 읽힌 마디는 마디 칸의 <b>✎ 수정</b>을 눌러 고칩니다(컴퓨터는 마우스를 올리면 보이고, 휴대폰은 늘 보입니다). <b>악보로 보기</b>에서는 <b>[✎ 음 고치기]</b>를 켜고 고칠 마디를 누르면 같은 창이 열립니다(켜 둔 동안은 마디를 눌러도 재생하지 않음, 고친 마디에는 ✎ 표시). 선율 음은 ♭·♯(반음), ↓8·↑8(옥타브)로 높이를, 목록에서 음 길이를 고르고, 타악은 길이만 고릅니다. 길이를 바꾸면 같은 성부의 뒤 음들이 따라 밀립니다.
             고친 내용은 이 기기에 바로 저장되어 같은 악보 PDF를 다시 올리면 자동으로 적용되고, 고친 마디는 번호 옆에 ✎가 붙습니다. 음마다 [↺ 되돌리기], 마디마다 [이 마디 모두 되돌리기], 악보 전체는 [수정 모두 되돌리기]로 되돌리고, 방금 한 수정은 Ctrl+Z로 취소합니다.
@@ -1143,6 +1145,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 <template id="histTpl">
   <section><h4>11월 3일</h4>
     <h5>기능 업데이트</h5><ul>
+    <li><b>내 파트만 크게 보기</b>: 악보로 보기의 '보기'에서 켠 줄 하나를 고르면 그 줄 오선만 잘라 위아래로 이어 보여 줍니다. 연주 위치 표시·마디 누르기·음 고치기도 그대로</li>
     <li><b>테누토</b>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</li>
     <li><b>MIDI·MusicXML 저장</b>: 연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</li>
     <li><b>사람처럼 연주</b>(소리 다듬기, 기본 켬): 음마다 세기와 치는 때를 아주 조금씩 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게</li>
@@ -7101,7 +7104,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-03 15:54';
+const APP_VERSION = '2026-11-03 15:55';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
