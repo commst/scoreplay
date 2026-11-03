@@ -765,7 +765,7 @@ function findTempoMarks(glyphs) {
   for (const r of runs) {
     // '♩=70~73'의 물결표가 다른 글꼴로 찍혀 빠지면 숫자 사이가 벌어진다 → 그 자리를 '~'로
     const s = r.map((g, k) => (k && isDigit(g.code) && isDigit(r[k - 1].code) && g.x0 - r[k - 1].x1 > 2.5 ? '~' : '') + String.fromCharCode(g.code)).join('');
-    const m = s.match(/([qehx])\s*([.k]?)\s*=\s*(\d+)(?:\s*[-~]\s*(\d+))?/);
+    const m = s.match(/([qehx])\s*([.k]?)\s*=\s*(?:c(?:a|irca)?\.?\s*)?(\d+)(?:\s*[-~]\s*(\d+))?/);   // '♩ = c. 108'(약 108)도
     if (!m) continue;
     const unit = { q: [1, 4], e: [1, 8], h: [1, 2], x: [1, 16] }[m[1]];
     const dotted = !!m[2];
@@ -2034,7 +2034,8 @@ export async function loadScore(pdfjs, data, onPage) {
       const big = Math.max(0, ...all.filter(g => g.code > 32).map(x => x.size));
       if (big < 16) return '';
       const y = all.find(g => g.size > big - 1 && g.code > 32).oy;
-      return all.filter(x => x.size > big - 1 && Math.abs(x.oy - y) < 2).sort((a, b) => a.ox - b.ox).map(x => x.uni || String.fromCharCode(x.code)).join('').replace(/\s+/g, ' ').trim();
+      const tg = all.filter(x => x.size > big - 1 && Math.abs(x.oy - y) < 2).sort((a, b) => a.ox - b.ox);
+      return tg.map((x, i) => (i && x.x0 - tg[i - 1].x1 > x.size * 0.2 ? ' ' : '') + (x.uni || String.fromCharCode(x.code))).join('').replace(/\s+/g, ' ').trim();   // 글자 사이가 벌어진 곳은 띄어쓰기('Flowers of K')
     }
     const big = Math.max(...g.map(x => x.size));
     const t = g.filter(x => x.size > big - 1).sort((a, b) => a.ox - b.ox);
@@ -2055,6 +2056,17 @@ export async function loadScore(pdfjs, data, onPage) {
     // 110점 아래에서 찾은 것이 빠르기 말(…게)이거나 너무 길면 이름이 아니다
     if (s.length > 6 || (y >= 110 && /게$|빠르|느리|보통|여유|조금|천천/.test(s))) return '';   // 긴 글(연주 안내 등)은 이름이 아니다
     return s;
+  })() || (() => {
+    // 한글 이름이 없으면 왼쪽 위의 영어 악기 이름(예: 'Piano'). 악기 이름으로 보이는 낱말만
+    const pg = pages[0]; if (!pg) return '';
+    const L0 = layouts[0], top0 = L0 && L0.staves && L0.staves.length ? Math.min(...L0.staves.map(t => t.top)) : 110;
+    const g = pg.glyphs.filter(g => !isMusicFont(g.font) && !g.font.includes('Engraver') && g.ox < pg.width * 0.3 && g.oy < Math.max(110, Math.min(top0 - 6, pg.height * 0.3)) && g.code >= 32 && g.code < 127).sort((a, b) => a.oy - b.oy || a.ox - b.ox);
+    const rows = []; for (const x of g) { const r = rows.find(r => Math.abs(r.y - x.oy) < 2); if (r) r.g.push(x); else rows.push({ y: x.oy, g: [x] }); }
+    for (const r of rows) {
+      const t = r.g.sort((a, b) => a.ox - b.ox).map(x => String.fromCharCode(x.code)).join('').replace(/\s+/g, ' ').trim();
+      if (/^(piano|pno\.?|keyboard|synth\w*|organ|harp|timpani|timp\.?|percussion|perc\.?|drums?|marimba|vibraphone|glockenspiel|xylophone|celesta|violin|viola|cello|contrabass|double bass|bass|flute|clarinet|oboe|horn|trumpet|guitar)( ?[0-9IV]+)?$/i.test(t)) return t;
+    }
+    return '';
   })();
   const musicCount = pages.reduce((a, p) => a + p.glyphs.filter(isMaestro).length, 0);
   // 글꼴 탓에 첫 글자만 남은 악기 이름(예: Ghostscript로 만든 Finale PDF의 '소', '피', '거')을 채운다
@@ -2062,6 +2074,8 @@ export async function loadScore(pdfjs, data, onPage) {
   const named = new Set(lines.map(l => l.name));
   lines.forEach(l => { if (l.name && ONE[l.name] && !named.has(ONE[l.name])) l.name = ONE[l.name];
     else if (l.name === '대') l.name = named.has('대금') ? '대아쟁' : '대금'; });
+  // 줄 이름이 하나도 없는 두 줄 악보(피아노 큰보표 파트보 등): 왼쪽 위 파트 이름을 윗줄·아랫줄로
+  if (lines.length === 2 && !lines.some(l => l.name) && partName) { lines[0].name = lines[1].name = partName; }
   lines.forEach(l => { l.label = l.name || `${l.id + 1}번째 줄`; });
   // 같은 이름이 이어진 두 줄 = 한 악기의 윗줄·아랫줄
   lines.forEach((l, i) => { const n = lines[i + 1]; if (n && l.name && n.name === l.name && !(lines[i - 1] && lines[i - 1].name === l.name)) { l.label = l.name + ' (윗줄)'; n.label = n.name + ' (아랫줄)'; } });
