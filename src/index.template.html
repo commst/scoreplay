@@ -721,6 +721,14 @@ body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
 .dock .pos .now span[style] { color: var(--dock-soft) !important; }
 .dock .bar-track { background: var(--dock-2); }
 .dock .bar-track i { background: var(--hi); }
+/* 진행 막대: 끌어서 재생 위치 옮기기. 손가락으로 잡기 쉽게 위아래로 보이지 않는 칸을 넓힌다 */
+.bar-track { position: relative; overflow: visible; touch-action: none; cursor: pointer; }
+.bar-track::before { content: ''; position: absolute; left: -6px; right: -6px; top: -12px; bottom: -12px; }
+.track-knob { position: absolute; top: 50%; left: 0; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--accent); pointer-events: none; transition: transform .1s; }
+.bar-track.drag .track-knob, .bar-track:focus-visible .track-knob { transform: scale(1.3); }
+.track-tip { position: absolute; bottom: calc(100% + 14px); left: 0; transform: translateX(-50%); white-space: nowrap; padding: 4px 10px; border-radius: 7px; font-size: 14px; font-weight: 700; pointer-events: none; background: var(--ink); color: var(--paper); box-shadow: 0 2px 8px rgba(30, 40, 70, .3); z-index: 2; }
+.dock .track-knob { background: var(--hi); box-shadow: 0 0 0 3px rgba(20, 28, 50, .25); }
+.dock .track-tip { background: var(--hi); color: var(--hi-ink); }
 .dock-stop { flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--dock-2); color: #ffffff; display: inline-grid; place-items: center; }
 .dock-stop svg { width: 14px; height: 14px; fill: currentColor; }
 .dock-range .range { padding: 0; border: 0; background: none; gap: 6px; font-size: 13px; color: var(--dock-soft); flex-wrap: nowrap; }
@@ -1468,7 +1476,7 @@ body.all-panes { padding-bottom: 0; }
           <button class="play" id="playBtn" type="button" aria-label="재생"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg></button>
           <div class="pos">
             <div class="now" id="nowText"><b>정지</b></div>
-            <div class="bar-track" id="track"><i id="trackFill"></i></div>
+            <div class="bar-track" id="track" role="slider" tabindex="0" aria-label="재생 위치" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="처음"><i id="trackFill"></i><b class="track-knob" id="trackKnob" aria-hidden="true"></b><span class="track-tip" id="trackTip" hidden></span></div>
           </div>
         </div>
       <div class="dock-range"><div class="range">
@@ -1486,7 +1494,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 4일</h3>
-    <h4>기능 업데이트 <small>5</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>6</small></h4><ul class="hlist">
+      <li><details><summary>진행 막대를 끌어 재생 위치 옮기기 (마디 표시)</summary><p>연주 막대의 진행 막대를 누르거나 동그란 손잡이를 끌면 그 자리로 옮겨 재생합니다. 끄는 동안 막대 위에 '101마디 · 5:03'처럼 마디와 시간이 보입니다. 재생 중·일시정지·정지 상태 모두 되고, 소리를 만들기 전에 누르면 만든 뒤 그 자리로 갑니다. 휴대폰에서도 손가락으로 잡기 쉽게 누르는 칸을 넓혔고, 끄는 동안 화면이 스크롤되지 않습니다. 키보드: 막대에서 ←·→ 한 마디씩, Home·End</p></details></li>
       <li><details><summary>소리 만드는 시간 줄이기, 속도는 바로 바뀜</summary><p>첫 재생 때 소리를 만드는 시간이 약 25% 줄었습니다(연변목가 파트보 3.4초 → 2.5초, 15줄 총보 6.2초 → 4.2초. 잔향 계산을 빠르게, 소리는 예전과 똑같음). 연습 속도 −·+를 누르면 기다리지 않고 바로 그 속도로 들립니다: 음 높이는 그대로 빠르기만 바꿔 먼저 들려주고, 뒤에서 새 속도로 소리를 다시 만들어 2~3초 뒤 같은 마디에서 바꿔 끼웁니다. 연주 중에 속도를 바꿔도 멈추지 않습니다</p></details></li>
       <li><details><summary>악기 이름 고치기</summary><p>악보에서 악기 이름을 잘못 읽었으면 [악기] 칸에서 그 줄을 펼쳐 '악기 이름' 칸에 바른 이름을 적습니다(Enter). 고친 이름은 줄 목록, 악보로 보기의 '○○만', 마디 미리보기, 음 고치기 창, 솔로 안내, MIDI·MusicXML 내보내기에 함께 쓰이고 이 악보의 설정에 저장됩니다. 고친 이름에 맞는 소리가 있으면 [이 소리로 바꾸기] 단추가 나옵니다(예: '야금' → '가야금'이면 가야금 소리). [악보 이름으로]나 칸을 비우면 원래 이름으로</p></details></li>
       <li><details><summary>사용설명서 (PDF) 받기</summary><p>위 막대·첫 화면·사용법 창의 [사용설명서 받기]로 PDF 사용설명서를 받습니다. 예시 악보로 한 단계씩 따라 하는 방법(총보로 내 파트 연습, 어려운 대목 반복, 빠르기 채우기, 파트보로 장단 연습, 음원 저장)과 칸별 기능, 휴대폰에서 쓰기, 문제 해결을 실제 화면 그림과 함께 담았습니다</p></details></li>
@@ -3114,7 +3123,7 @@ function tick() {
   const html = (cur ? `<b class="num">${n}</b>마디${restTxt} <span class="num" style="color:var(--muted)">· ${fmt(t / spdRate())} / ${fmt(plan.total / spdRate())}</span>` : '<b>카운트인</b>') + rampTxt;
   if (html !== tick.html) { $('nowText').innerHTML = html; tick.html = html; }
   const w = Math.min(100, t / plan.total * 100).toFixed(1) + '%';
-  if (w !== tick.w) { $('trackFill').style.width = w; tick.w = w; }
+  if (!trackDrag && w !== tick.w) { $('trackFill').style.width = w; $('trackKnob').style.left = w; tick.w = w; const tr = $('track'); tr.setAttribute('aria-valuenow', Math.round(parseFloat(w))); tr.setAttribute('aria-valuetext', cur ? `${n}마디 · ${fmt(t / spdRate())}` : '카운트인'); }
   if (viewMode === 'score' && cur) { const nx = bt[k + 1], end = nx ? nx.abs : plan.total; svCursor(cur.idx, Math.max(0, Math.min(1, (t - cur.abs) / Math.max(0.01, end - cur.abs)))); }
   if (n !== lastNow) {
     document.querySelectorAll('.b.now').forEach(e => e.classList.remove('now'));
@@ -3140,12 +3149,53 @@ document.addEventListener('keydown', ev => {
   ev.preventDefault();
   togglePlay();
 });
-$('track').addEventListener('click', ev => {
-  if (!fresh()) return;
-  const r = $('track').getBoundingClientRect();
-  play(Math.max(0, (ev.clientX - r.left) / r.width) * state.rendered.plan.total);
+// 진행 막대를 누르거나 끌어서 재생 위치 옮기기. 끄는 동안 막대 위에 '23마디 · 1:05'를 보여 주고, 손을 떼면 그 자리부터 재생
+let trackDrag = null;
+function barAtT(plan, t) { const bt = plan.barTimes; let k = -1; for (let i = 0; i < bt.length; i++) { if (bt[i].abs <= t + 0.01) k = i; else break; } return k >= 0 ? bt[k] : null; }
+function trackFrac(ev) { const r = $('track').getBoundingClientRect(); return r.width > 0 ? Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) : 0; }
+function trackShow(f) {
+  const w = (f * 100).toFixed(2) + '%'; $('trackFill').style.width = w; $('trackKnob').style.left = w; tick.w = null;
+  const tip = $('trackTip'), r = state.rendered;
+  if (!r) { tip.hidden = true; return; }   // 아직 소리를 만들기 전: 손을 떼면 만든 뒤 그 자리로
+  const t = f * r.plan.total, b = barAtT(r.plan, t);
+  tip.textContent = (b ? `${b.number}마디` : '카운트인') + ` · ${fmt(t / spdRate())}`;
+  tip.hidden = false;
+  const tw = $('track').getBoundingClientRect().width, half = tip.offsetWidth / 2;
+  tip.style.left = (tw > 2 * half ? Math.max(half, Math.min(tw - half, f * tw)) : tw / 2) + 'px';
+}
+function trackEnd(apply) {
+  const d = trackDrag; if (!d) return; trackDrag = null;
+  $('track').classList.remove('drag'); $('trackTip').hidden = true;
+  if (!apply) return;
+  if (building) return;
+  if (noBars() || tempoBlocked()) return;
+  const r = state.rendered;
+  if (fresh()) { play(d.f * r.plan.total); return; }
+  // 설정이 바뀌어 소리를 다시 만들어야 하면: 만든 뒤 고른 마디로 (처음이면 같은 비율 자리로)
+  unlockAudio();
+  const b = r ? barAtT(r.plan, d.f * r.plan.total) : null;
+  if (b) { pendingBar = b.number; play(0); }
+  else play(0).then(() => { if (state.rendered && state.playing && d.f > 0) play(d.f * state.rendered.plan.total); });
+}
+$('track').addEventListener('pointerdown', ev => {
+  if (ev.button !== 0 || building) return;
+  ev.preventDefault();
+  try { $('track').setPointerCapture(ev.pointerId); } catch (e) {}
+  trackDrag = { id: ev.pointerId, f: trackFrac(ev) }; $('track').classList.add('drag'); trackShow(trackDrag.f);
 });
-// 연습 번호 단추 (A, B, 2악장 …): 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 연주 구간으로
+$('track').addEventListener('pointermove', ev => { if (!trackDrag || ev.pointerId !== trackDrag.id) return; trackDrag.f = trackFrac(ev); trackShow(trackDrag.f); });
+$('track').addEventListener('pointerup', ev => { if (trackDrag && ev.pointerId === trackDrag.id) trackEnd(true); });
+$('track').addEventListener('pointercancel', () => { trackEnd(false); tick.w = null; if (!state.playing) { const r = state.rendered, f = r ? Math.min(1, (audio.currentTime || 0) / r.plan.total) : 0; const w = (f * 100).toFixed(1) + '%'; $('trackFill').style.width = w; $('trackKnob').style.left = w; } });
+// 키보드: ←·→ 한 마디씩, Home 처음, End 마지막 마디
+$('track').addEventListener('keydown', ev => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
+  ev.preventDefault();
+  if (building || !fresh()) return;
+  const { plan } = state.rendered, bt = plan.barTimes; if (!bt.length) return;
+  const cur = barAtT(plan, audio.currentTime || 0), i = cur ? bt.indexOf(cur) : -1;
+  const j = ev.key === 'Home' ? 0 : ev.key === 'End' ? bt.length - 1 : Math.max(0, Math.min(bt.length - 1, i + (ev.key === 'ArrowRight' ? 1 : -1)));
+  play(ev.key === 'Home' ? 0 : Math.max(0, bt[j].abs - 0.05));
+});// 연습 번호 단추 (A, B, 2악장 …): 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 연주 구간으로
 function renderRehearsal() {
   const list = state.score ? (state.rehearsal || []) : [], box = $('rehBtns');
   $('rehRow').hidden = !list.length; box.textContent = '';
