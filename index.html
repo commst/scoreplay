@@ -823,6 +823,13 @@ body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 
 }
 @media (max-width: 380px) { .dock-range .range .x { display: none; } }
 @media (prefers-reduced-motion: reduce) { .sidebar { transition: none !important; } }
+.lrename { display: grid; gap: 4px; }
+.lrename .rn-row { display: flex; gap: 6px; align-items: center; }
+.lrename input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+.lrename .rn-hint { margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lrename .rn-hint[hidden] { display: none; }
+.lrename .rn-sug { padding: 4px 10px; font-size: 13px; }
+body:not(.all-panes) .lcard:not(.open) > .lrename { display: none; }
 /* 악기 줄: 접기·펼치기 */
 .lcard { position: relative; }
 .lcard .top { align-items: center; }
@@ -1485,7 +1492,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h4>11월 4일</h4>
-    <h5>기능 업데이트 <small>3</small></h5><ul class="hlist">
+    <h5>기능 업데이트 <small>4</small></h5><ul class="hlist">
+      <li><details><summary>악기 이름 고치기</summary><p>악보에서 악기 이름을 잘못 읽었으면 [악기] 칸에서 그 줄을 펼쳐 '악기 이름' 칸에 바른 이름을 적습니다(Enter). 고친 이름은 줄 목록, 악보로 보기의 '○○만', 마디 미리보기, 음 고치기 창, 솔로 안내, MIDI·MusicXML 내보내기에 함께 쓰이고 이 악보의 설정에 저장됩니다. 고친 이름에 맞는 소리가 있으면 [이 소리로 바꾸기] 단추가 나옵니다(예: '야금' → '가야금'이면 가야금 소리). [악보 이름으로]나 칸을 비우면 원래 이름으로</p></details></li>
       <li><details><summary>사용설명서 (PDF) 받기</summary><p>위 막대·첫 화면·사용법 창의 [사용설명서 받기]로 PDF 사용설명서를 받습니다. 예시 악보로 한 단계씩 따라 하는 방법(총보로 내 파트 연습, 어려운 대목 반복, 빠르기 채우기, 파트보로 장단 연습, 음원 저장)과 칸별 기능, 휴대폰에서 쓰기, 문제 해결을 실제 화면 그림과 함께 담았습니다</p></details></li>
       <li><details><summary>업데이트 이력을 요약으로</summary><p>항목마다 짧은 제목만 보이고, 누르면 자세한 내용이 아래로 펼쳐집니다. 고친 문제는 날짜마다 [버그 수정 n건]을 눌러야 펼쳐집니다</p></details></li>
       <li><details><summary>첫 화면에 [업데이트 이력 보기] 단추</summary><p>첫 화면 아래에 [업데이트 이력 보기] 단추(휴대폰에서도 바로 보이게)</p></details></li>
@@ -5603,7 +5611,7 @@ function barTipContent(b) {
     const famC = { wind: '#2e8b57', string: '#3f5bb5', perc: '#d0533a', etc: '#8e57c4' }[familyOf(state.lineList.find(l => cfgKey(l.id) === key), cfg)];
     const color = famC || LINE_COLORS[order.indexOf(key) % LINE_COLORS.length];
     const item = state.lineList.find(l => cfgKey(l.id) === key);
-    const name = (item && item.label) || (key === 'p' ? '장단' : `${key}번 줄`);
+    const name = (item && dispName(item)) || (key === 'p' ? '장단' : `${key}번 줄`);
     const melodic = evs.some(e => e.midis && e.midis.length);
     const inst = melodic ? (INSTRUMENTS[cfg.inst] ? INSTRUMENTS[cfg.inst].name.replace(' (녹음)', '').replace(' (합성음)', ' 합성') : '선율') : '타악';
     const sec = tipNode('div', 'bt-line'); sec.style.setProperty('--lc', color);
@@ -5741,7 +5749,7 @@ function renderPartSel() {
   const sel = $('svPartSel'); if (!sel) return;
   const opts = state.score && state.scoreGeo ? state.lineIds.map(id => cfgKey(id)).filter(k => { const r = state.lineRes[k]; return r && r.geo && r.bars.length === state.bars.length; }) : [];
   if (svPart && !opts.includes(svPart)) svPart = null;
-  const want = [''].concat(opts).join('|');
+  const want = [''].concat(opts.map(k => k + ':' + lineLabel(state.lineIds.find(i => cfgKey(i) === k)))).join('|');
   if (sel.dataset.opts !== want) {
     sel.textContent = ''; sel.appendChild(new Option('총보 전체', ''));
     for (const k of opts) { const id = state.lineIds.find(i => cfgKey(i) === k); sel.appendChild(new Option(`${lineLabel(id) || '줄'}만`, k)); }
@@ -6823,7 +6831,7 @@ function settingsKey() {
 }
 // 줄을 가리키는 열쇠: 더한 악보·파트보는 그 PDF 지문으로(올릴 때마다 바뀌는 번호가 아니라)
 function stableKey(l) { return l.sourceScore ? l.sourceScore.fp + ':' + (l.sourceLineId == null ? 'p' : l.sourceLineId) : 'main:' + cfgKey(l.id); }
-const CFG_FIELDS = ['role', 'inst', 'oct', 'octUser', 'vol', 'R', 'L', 'nong', 'pan', 'pairOff'];
+const CFG_FIELDS = ['role', 'inst', 'oct', 'octUser', 'vol', 'R', 'L', 'nong', 'pan', 'pairOff', 'rename'];
 function readSettings(key) { if (!key) return null; try { const t = localStorage.getItem(SET_KEY + key); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
 function collectSettings() {
   const lines = {};
@@ -7165,7 +7173,9 @@ function removeExtra(uid) {
   state.lineList = fullLineList(); syncLineIds();
   renderFileLists(); renderLineList(); applySelection(); scheduleAutoSave();
 }
-function lineLabel(id) { const item = state.lineList.find(l => cfgKey(l.id) === cfgKey(id)); if (item) return item.label || item.sourceScore?.partName || item.sourceScore?.title || ''; if (id == null) return state.score?.partName || ''; const l = state.score?.lines?.[id]; return l ? l.label : ''; }
+// 줄 이름: 사용자가 고친 이름(설정 rename)이 있으면 그것, 없으면 악보에서 읽은 이름
+function dispName(l) { if (!l) return ''; const c = state.lineCfg[cfgKey(l.id)]; return (c && c.rename) || l.label || ''; }
+function lineLabel(id) { const item = state.lineList.find(l => cfgKey(l.id) === cfgKey(id)); if (item) return dispName(item) || item.sourceScore?.partName || item.sourceScore?.title || ''; if (id == null) return state.score?.partName || ''; const l = state.score?.lines?.[id]; return l ? l.label : ''; }
 
 // 고른 줄들을 해석해 하나의 마디 목록으로 합친다 (기준 = 고른 줄 중 맨 위)
 function applySelection(first = false) {
@@ -7287,7 +7297,7 @@ function linesEmptyState(t) {
 const FAM_WIND = new Set(['daegeum', 'sogeum', 'piri', 'daepiri', 'taepyeongso', 'saenghwang']), FAM_STRING = new Set(['gayageum', 'geomungo', 'yanggeum', 'haegeum', 'ajaeng']);
 const FAM_NAME = { wind: '관악', string: '현악', perc: '타악', etc: '건반·그 밖' };
 function familyOf(l, c) {
-  const name = (l && l.label) || '';
+  const name = (c && c.rename) || (l && l.label) || '';
   if (c && c.role === 'perc') return 'perc';
   if (c && c.role !== 'melody' && (!c.pitched || PERC_NAME.test(name))) return 'perc';
   const inst = ((c && c.role === 'melody' && c.inst) || guessInstrument(name) || (c && c.inst) || '').replace(/_syn$/, '');
@@ -7306,10 +7316,11 @@ function renderLineList() {
     const fam = familyOf(l, c); card.dataset.fam = fam; card.dataset.key = key;
     const top = document.createElement('div'); top.className = 'top';
     top.innerHTML = `<button type="button" class="lfold" aria-expanded="${openLines.has(key)}"><span class="no">${idx + 1}번</span><span class="fam-tag">${FAM_NAME[fam]}</span><span class="lname"></span><span class="lchev" aria-hidden="true"></span></button><span class="lmeta"></span>`;
-    top.querySelector('.lname').textContent = l.label || `${idx + 1}번째 줄`;
+    top.querySelector('.lname').textContent = dispName(l) || `${idx + 1}번째 줄`;
+    if (c.rename && l.label && c.rename !== l.label) top.querySelector('.lname').title = `악보에서 읽은 이름: ${l.label}`;
     top.querySelector('.lfold').addEventListener('click', () => { if (openLines.has(key)) openLines.delete(key); else openLines.add(key); renderLineList(); });
     const sw = document.createElement('button'); sw.type = 'button'; sw.className = 'lsw'; sw.setAttribute('role', 'switch'); sw.setAttribute('aria-checked', String(c.role !== 'off'));
-    { sw.setAttribute('aria-label', `${l.label || idx + 1 + '번째 줄'} ${c.role === 'off' ? '켜기' : '끄기'}`);
+    { sw.setAttribute('aria-label', `${dispName(l) || idx + 1 + '번째 줄'} ${c.role === 'off' ? '켜기' : '끄기'}`);
       sw.addEventListener('click', () => setLineRole(key, c, c.role !== 'off' ? 'off' : (c.lastRole && (c.lastRole !== 'melody' || c.pitched) ? c.lastRole : (c.pitched && !PERC_NAME.test(l.label || '') ? 'melody' : 'perc')))); }
     top.querySelector('.lmeta').textContent = l.clef === 'pitched' ? '선율 악보' : (l.oneLine ? '타악 · 1줄' : '타악 악보');
     const cv = document.createElement('canvas'); cv.dataset.line = key; cv.width = 10; cv.height = 10; if (!l.first) cv.hidden = true;
@@ -7383,7 +7394,25 @@ function renderLineList() {
       const anySolo = soloActive();
       if (state.mute.has(key) || (anySolo && !state.solo.has(key))) card.classList.add('silenced');
     }
-    card.append(top, sw, cv, seg, ...(sm ? [sm] : []), cfg);
+    // 악기 이름 고치기: 악보에서 잘못 읽은 이름을 바꾼다(이 악보의 설정에 저장). 비우면 악보 이름으로
+    const rn = document.createElement('div'); rn.className = 'lrename';
+    const rid = 'rn-' + key;
+    rn.innerHTML = `<label class="small" for="${rid}">악기 이름</label><div class="rn-row"><input type="text" id="${rid}" maxlength="30" autocomplete="off" spellcheck="false"><button type="button" class="x rn-reset" hidden>악보 이름으로</button></div><p class="hint rn-hint" hidden></p>`;
+    { const inp = rn.querySelector('input'), reset = rn.querySelector('.rn-reset'), hint = rn.querySelector('.rn-hint');
+      inp.value = dispName(l); inp.placeholder = l.label || `${idx + 1}번째 줄`;
+      reset.hidden = !c.rename; if (c.rename) reset.title = `악보에서 읽은 이름 '${l.label || ''}'으로 되돌립니다`;
+      const commit = () => { const v = inp.value.trim().slice(0, 30); const nv = v && v !== (l.label || '') ? v : undefined; if (nv === c.rename) return; if (nv) c.rename = nv; else delete c.rename; changed(); renderLineList(); renderPartSel(); };
+      inp.addEventListener('change', commit);
+      inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); } else if (ev.key === 'Escape') { inp.value = dispName(l); inp.blur(); } });
+      reset.addEventListener('click', () => { delete c.rename; changed(); renderLineList(); renderPartSel(); });
+      // 고친 이름으로 짐작한 소리가 지금 소리와 다르면 바꾸기 단추
+      if (c.rename) {
+        let sug = null;
+        if (c.role === 'melody') { const g = guessInstrument(c.rename); if (g && g !== c.inst && INSTRUMENTS[g]) sug = { text: `이 소리로 바꾸기: ${INSTRUMENTS[g].name}`, apply: () => { c.inst = g; c.instDefaulted = false; autoOct(key); } }; }
+        else if (c.role === 'perc') { const [R, L] = percDefaults(c.rename); const lab = k => ((PERC_OPTIONS.find(o => o[0] === k) || [k, k])[1]); if (R && (R !== c.R || L !== c.L) && PERC_NAME.test(c.rename)) sug = { text: `이 소리로 바꾸기: ${lab(R)}${L && L !== R ? ' / ' + lab(L) : ''}`, apply: () => { c.R = R; c.L = L; } }; }
+        if (sug) { hint.hidden = false; hint.textContent = '고친 이름에 맞는 소리가 있습니다. '; const b = document.createElement('button'); b.type = 'button'; b.className = 'btn rn-sug'; b.textContent = sug.text; b.addEventListener('click', () => { sug.apply(); changed(); renderLineList(); }); hint.appendChild(b); }
+      } }
+    card.append(top, sw, cv, rn, seg, ...(sm ? [sm] : []), cfg);
     box.appendChild(card);
   });
   { const ns = state.lineIds.filter(id => state.solo.has(cfgKey(id))).length, nm = state.lineIds.filter(id => state.mute.has(cfgKey(id))).length;
@@ -7905,7 +7934,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-04 09:43';
+const APP_VERSION = '2026-11-04 10:09';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
