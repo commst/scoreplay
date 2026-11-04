@@ -672,7 +672,7 @@ body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
 .tb-song:hover { background: var(--accent-soft); }
 .tb-gap { flex: 1; }
 .tb-state { font-size: 12.5px; color: var(--ok-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
-.tb-btn { padding: 7px 12px; font-size: 14px; background: var(--btn-bg); white-space: nowrap; }
+.tb-btn { padding: 7px 12px; font-size: 14px; background: var(--btn-bg); white-space: nowrap; text-decoration: none; color: var(--ink); }
 
 /* 몸: 왼쪽 설정 칸 + 가운데 */
 .shell { display: grid; grid-template-columns: 380px minmax(0, 1fr); align-items: start; }
@@ -745,7 +745,7 @@ body.welcome .shell, body.welcome .dock, body.welcome .tb-song, body.welcome #fi
 body.welcome { padding-bottom: 24px; }
 body.welcome .load-view { display: block; padding: 20px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
 body.welcome .lv-inner { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
-body.welcome .lv-head { display: none; }
+body.welcome .load-view .lv-head { display: none; }
 body.welcome .lv-demo { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
 body.welcome .lv-demo .btn { padding: 10px 18px; }
 body:not(.welcome) .load-view .hero { display: none; }
@@ -763,7 +763,8 @@ body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 
 .hero-steps li { background: var(--hero-card); border-color: var(--hero-card-line); color: var(--hero-sub); }
 .hero-steps b { color: var(--ink); }
 .hero-steps .hs-n { background: var(--accent); color: var(--accent-ink); }
-.hero .hist-btn { position: relative; margin-top: 16px; padding: 8px 16px; border: 1px solid var(--hero-card-line); border-radius: 999px; background: var(--hero-card); color: var(--accent); font: 600 14px/1.3 var(--font-body); }
+.hero-btns { position: relative; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.hero .hist-btn { position: relative; margin-top: 0; text-decoration: none; padding: 8px 16px; border: 1px solid var(--hero-card-line); border-radius: 999px; background: var(--hero-card); color: var(--accent); font: 600 14px/1.3 var(--font-body); }
 .hero .hist-btn:hover { background: var(--accent-soft); }
 /* 악보·마디맵 전환: 작게 */
 .stage .bars-panel > .row:first-child { display: none; }
@@ -795,7 +796,7 @@ body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 
   .dock-speed { order: 4; margin-left: auto; }
   #dockLoop { order: 3; }
   .dock-save { display: none; }
-  .tb-btn#histBtn { display: none; }
+  .tb-btn#histBtn, .tb-btn#manualBtn { display: none; }
   .tb-song { max-width: none; flex: 1; }
   .tb-gap { display: none; }
 }
@@ -889,6 +890,26 @@ body.sv-mode .score-view:not(.sv-full) .sv-wrap { height: calc(100vh - var(--tbh
   body.sheet-open .sheet-back { z-index: 47; bottom: var(--dockh); }
   .sheet-grab { display: none; }
 }
+/* 업데이트 이력: 요약만 보이고 누르면 펼침 */
+.hist-dlg .hday { margin: 0 0 14px; }
+.hist-dlg .hday h4 { margin: 14px 0 6px; }
+.hist-dlg .hday h5 { margin: 6px 0 4px; font-size: 13px; color: var(--muted); }
+.hist-dlg .hday h5 small, .hist-dlg .hbug > summary small { font-weight: 500; color: var(--muted); margin-left: 4px; }
+.hist-dlg ul.hlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.hist-dlg ul.hlist li { margin: 0; }
+.hist-dlg ul.hlist details > summary { cursor: pointer; padding: 6px 8px 6px 24px; border-radius: 8px; position: relative; list-style: none; line-height: 1.45; }
+.hist-dlg ul.hlist details > summary::-webkit-details-marker { display: none; }
+.hist-dlg ul.hlist details > summary::before { content: '▸'; position: absolute; left: 8px; color: var(--muted); }
+.hist-dlg ul.hlist details[open] > summary::before { content: '▾'; }
+.hist-dlg ul.hlist details > summary:hover { background: var(--accent-soft); }
+.hist-dlg ul.hlist details > p { margin: 2px 8px 8px 24px; padding: 8px 10px; border-radius: 8px; background: var(--paper); font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+.hist-dlg .hbug { margin-top: 6px; }
+.hist-dlg .hbug > summary { cursor: pointer; display: inline-block; padding: 5px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--chae) 45%, transparent); color: var(--chae); font-weight: 600; font-size: 13px; list-style: none; }
+.hist-dlg .hbug > summary::-webkit-details-marker { display: none; }
+.hist-dlg .hbug > summary::before { content: '▸ '; }
+.hist-dlg .hbug[open] > summary::before { content: '▾ '; }
+.hist-dlg .hbug > ul { margin-top: 6px; }
+.hist-dlg ul.hlist.bug details > summary { color: var(--chae); }
 /* 시험용(#allpanes): 모든 칸을 차례로 펼쳐 보인다 */
 body.all-panes .load-view { display: block; }
 body.all-panes .dock { position: static; }
@@ -911,6 +932,7 @@ body.all-panes { padding-bottom: 0; }
     <button class="btn tb-btn" id="filesBtn" type="button">악보 파일</button>
     <button class="btn tb-btn" id="helpBtn" type="button">사용법</button>
     <button class="btn tb-btn" id="histBtn" type="button">업데이트 이력</button>
+    <a class="btn tb-btn" id="manualBtn" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기</a>
   </header>
   <div class="msg" id="msg" hidden></div>
 
@@ -920,7 +942,7 @@ body.all-panes { padding-bottom: 0; }
       <header class="hero">
     <svg class="hero-mark" viewBox="0 0 120 150" aria-hidden="true"><path d="M30 18 L104 4 L104 108" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><path d="M30 18 L30 122" fill="none" stroke="currentColor" stroke-width="7"/><path d="M30 18 L104 4 L104 24 L30 38 Z" fill="currentColor"/><ellipse cx="18" cy="124" rx="18" ry="13" transform="rotate(-20 18 124)" fill="currentColor"/><ellipse cx="92" cy="110" rx="18" ry="13" transform="rotate(-20 92 110)" fill="currentColor"/></svg>
     <h1>합주연습기</h1>
-    <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 늘봄에서 녹음한 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
+    <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 직접 녹음한 국악기 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
     <p class="caution">악보를 자동으로 읽기 때문에 템포·악기 이름·음표가 실제와 다르게 인식될 수 있습니다. 재생하기 전에 줄 이름과 빠르기 표를 악보와 한 번 맞춰 보세요.</p>
     <ol class="hero-steps">
       <li><span class="hs-n">1</span><span><b>악보 PDF 올리기</b> · 총보 또는 파트보. 악보 프로그램에서 저장한 PDF.</span></li>
@@ -928,7 +950,7 @@ body.all-panes { padding-bottom: 0; }
       <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
       <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
     </ol>
-    <button class="btn hist-btn" id="histBtn3" type="button">업데이트 이력 보기</button>
+    <span class="hero-btns"><button class="btn hist-btn" id="histBtn3" type="button">업데이트 이력 보기</button><a class="btn hist-btn" id="manualBtn2" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a></span>
   </header>
       <section class="step" aria-labelledby="stepLoad">
     <h2 class="step-h" id="stepLoad"><span class="sn">1</span>악보 올리기</h2>
@@ -995,7 +1017,7 @@ body.all-panes { padding-bottom: 0; }
 
   <div class="help-view" id="helpView" role="dialog" aria-labelledby="helpTitle">
     <div class="hv-inner">
-      <div class="lv-head"><span class="lv-title" id="helpTitle">사용법</span><button class="btn" id="helpClose" type="button">닫기</button></div>
+      <div class="lv-head"><span class="lv-title" id="helpTitle">사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn" id="helpClose" type="button">닫기</button></span></div>
       <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
@@ -1454,158 +1476,160 @@ body.all-panes { padding-bottom: 0; }
 
 
 <template id="histTpl">
-  <section><h4>11월 4일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li>첫 화면 아래에 [업데이트 이력 보기] 단추(휴대폰에서도 바로 보이게)</li>
+  <section class="hday"><h4>11월 4일</h4>
+    <h5>기능 업데이트 <small>3</small></h5><ul class="hlist">
+      <li><details><summary>사용설명서 (PDF) 받기</summary><p>위 막대·첫 화면·사용법 창의 [사용설명서 받기]로 PDF 사용설명서를 받습니다. 예시 악보로 한 단계씩 따라 하는 방법(총보로 내 파트 연습, 어려운 대목 반복, 빠르기 채우기, 파트보로 장단 연습, 음원 저장)과 칸별 기능, 휴대폰에서 쓰기, 문제 해결을 실제 화면 그림과 함께 담았습니다</p></details></li>
+      <li><details><summary>업데이트 이력을 요약으로</summary><p>항목마다 짧은 제목만 보이고, 누르면 자세한 내용이 아래로 펼쳐집니다. 고친 문제는 날짜마다 [버그 수정 n건]을 눌러야 펼쳐집니다</p></details></li>
+      <li><details><summary>첫 화면에 [업데이트 이력 보기] 단추</summary><p>첫 화면 아래에 [업데이트 이력 보기] 단추(휴대폰에서도 바로 보이게)</p></details></li>
     </ul>
   </section>
-  <section><h4>11월 3일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>화면 새 배치</b>: 위에는 곡 이름과 [악보 파일]·[사용법], 왼쪽에는 [악기]·[빠르기]·[연주]·[저장] 네 칸을 탭으로, 가운데는 악보·마디맵, 아래에는 늘 보이는 연주 막대(정지·재생·지금 마디·구간·구간 반복·속도 −/+·음원 저장·연습 번호). 전체 색은 밝은 파스텔, 연주 막대만 차분한 남색으로</li>
-    <li><b>휴대폰·태블릿 세로</b>: 설정 칸은 연주 막대의 [악기]·[빠르기]·[연주]·[저장] 단추로 여는 아래 서랍으로. 악보를 가리지 않고 한 손으로 쓸 수 있게</li>
-    <li><b>첫 화면</b>: 악보를 올리기 전에는 큰 올리기 화면. 올린 뒤에는 위의 [악보 파일](또는 곡 이름)로 총보·악보 추가·파트보를 보고 바꿉니다. 화면에 파일을 끌어 오면 이 창이 열림</li>
-    <li><b>악기 줄 접기</b>: 줄마다 이름·켜기 스위치·솔로(S)·음소거(M)와, 켠 줄은 소리·음량만 한 줄로. 이름을 누르면 역할·첫 단 그림·옥타브·좌우·농현까지 펼침. [켠 악기 설정 모두 펼치기]로 한꺼번에 펼치고 접기</li>
-    <li>빠르기 숫자를 못 읽어 재생이 막히면 [빠르기] 칸을 열어 노란 칸으로 바로 데려감. [음원 저장] 단추는 [저장] 칸을 엶</li>
-    <li><b>MusicXML 올리기</b>: PDF와 함께 MusicXML(.musicxml·.xml·.mxl) 파일도 총보·파트보·악보 추가 칸에 올릴 수 있습니다. 음 높이·길이·빠르기·셈여림·도돌이표·연습 번호를 그대로 읽어 인식 오류가 없음(악보로 보기는 PDF만)</li>
-    <li><b>내 파트만 크게 보기</b>: 악보로 보기의 '보기'에서 켠 줄 하나를 고르면 그 줄 오선만 잘라 위아래로 이어 보여 줍니다. 연주 위치 표시·마디 누르기·음 고치기도 그대로</li>
-    <li><b>테누토</b>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</li>
-    <li><b>MIDI·MusicXML 저장</b>: 연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</li>
-    <li><b>사람처럼 연주</b>(소리 다듬기, 기본 켬): 음마다 세기와 치는 때를 아주 조금씩 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게</li>
-    <li><b>연습 번호</b>: 악보의 네모 칸 연습 번호(A, B, C …, 2악장)를 연주 칸에 단추로. 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 구간으로 정해 재생</li>
-    <li><b>반복할 때마다 빠르게</b>: 구간 계속 반복과 함께 켜면 처음 %(기본 70%)에서 시작해 한 바퀴마다 +%(기본 5%)씩 빨라져 연습 속도까지. 음 높이는 그대로, 지금 몇 번째·몇 %인지 표시</li>
-    <li><b>타악 성부 짝 맞추기</b>: 윗성부나 아랫성부 소리를 고르면 다른 쪽도 짝 소리로 바뀝니다(꽹과리 → 꽹과리, 장구 궁 → 장구 따 등). 줄마다 '윗성부·아랫성부 함께 바꾸기'를 끄면 따로 고를 수 있음</li>
-    <li><b>팀파니·윈드차임 녹음</b>: 줄 이름이 팀파니·Timp.면 팀파니 녹음으로 음표 높이대로(굴림 표시는 녹음한 굴림으로), 윈드차임·윈드벨·W.Chimes면 윈드차임(한 번 훑는 소리). 다른 타악기와 들리는 크기를 맞춤</li>
-    <li><b>악보로 보기에서 음 고치기</b>: [✎ 음 고치기]를 켜고 마디를 누르면 마디맵의 ✎ 수정과 같은 창이 열립니다. 마우스를 올린 마디는 점선 칸으로, 고친 마디는 ✎로 표시. 화면 가득 보기에서도 됩니다</li>
-    <li>올리기 칸 이름: '총보 하나' → '총보 업로드', '파트보 여러 개' → '파트보 업로드', '총보 고르기' → '총보 추가'. 처음 문구는 '총보를 아직 추가하지 않았습니다.' [악보 추가] 단추를 [총보 추가]와 같은 색·크기로</li>
-    <li><b>악보 추가</b>: '피아노 악보 더하기'를 '악보 추가'로 바꾸고 총보 추가와 한 카드로 묶음. 총보에 없는 악기를 추가할 수 있고, 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있다는 설명을 넣음</li>
-    <li>악센트(&gt;) 음을 더 세게: 타악 약 +5dB, 선율 약 +4dB(예전 +3dB·+2dB)</li>
-    <li>줄 이름으로 정하는 처음 소리: 꽹과리(쇠)는 윗성부·아랫성부 모두 꽹과리('꽹과리 / 징'처럼 다른 악기와 한 줄이어도 꽹과리), 대고는 베이스드럼, 제금은 바라</li>
-    <li>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</li>
+  <section class="hday"><h4>11월 3일</h4>
+    <h5>기능 업데이트 <small>20</small></h5><ul class="hlist">
+      <li><details><summary>화면 새 배치</summary><p>위에는 곡 이름과 [악보 파일]·[사용법], 왼쪽에는 [악기]·[빠르기]·[연주]·[저장] 네 칸을 탭으로, 가운데는 악보·마디맵, 아래에는 늘 보이는 연주 막대(정지·재생·지금 마디·구간·구간 반복·속도 −/+·음원 저장·연습 번호). 전체 색은 밝은 파스텔, 연주 막대만 차분한 남색으로</p></details></li>
+      <li><details><summary>휴대폰·태블릿 세로</summary><p>설정 칸은 연주 막대의 [악기]·[빠르기]·[연주]·[저장] 단추로 여는 아래 서랍으로. 악보를 가리지 않고 한 손으로 쓸 수 있게</p></details></li>
+      <li><details><summary>첫 화면</summary><p>악보를 올리기 전에는 큰 올리기 화면. 올린 뒤에는 위의 [악보 파일](또는 곡 이름)로 총보·악보 추가·파트보를 보고 바꿉니다. 화면에 파일을 끌어 오면 이 창이 열림</p></details></li>
+      <li><details><summary>악기 줄 접기</summary><p>줄마다 이름·켜기 스위치·솔로(S)·음소거(M)와, 켠 줄은 소리·음량만 한 줄로. 이름을 누르면 역할·첫 단 그림·옥타브·좌우·농현까지 펼침. [켠 악기 설정 모두 펼치기]로 한꺼번에 펼치고 접기</p></details></li>
+      <li><details><summary>빠르기가 비면 [빠르기] 칸으로 안내</summary><p>빠르기 숫자를 못 읽어 재생이 막히면 [빠르기] 칸을 열어 노란 칸으로 바로 데려감. [음원 저장] 단추는 [저장] 칸을 엶</p></details></li>
+      <li><details><summary>MusicXML 올리기</summary><p>PDF와 함께 MusicXML(.musicxml·.xml·.mxl) 파일도 총보·파트보·악보 추가 칸에 올릴 수 있습니다. 음 높이·길이·빠르기·셈여림·도돌이표·연습 번호를 그대로 읽어 인식 오류가 없음(악보로 보기는 PDF만)</p></details></li>
+      <li><details><summary>내 파트만 크게 보기</summary><p>악보로 보기의 '보기'에서 켠 줄 하나를 고르면 그 줄 오선만 잘라 위아래로 이어 보여 줍니다. 연주 위치 표시·마디 누르기·음 고치기도 그대로</p></details></li>
+      <li><details><summary>테누토</summary><p>(음표 위·아래 짧은 가로줄): 음 길이를 꽉 채우고 조금 무게 있게 연주</p></details></li>
+      <li><details><summary>MIDI·MusicXML 저장</summary><p>연주 칸의 [MIDI 저장]·[MusicXML 저장]으로 켠 줄을 파일로 내보내 뮤즈스코어·도리코 등에서 열어 고치거나 다시 쓸 수 있음</p></details></li>
+      <li><details><summary>사람처럼 연주</summary><p>(소리 다듬기, 기본 켬): 음마다 세기와 치는 때를 아주 조금씩 달리하고 박 사이 음을 살짝 여리게 해 기계 소리처럼 들리지 않게</p></details></li>
+      <li><details><summary>연습 번호</summary><p>악보의 네모 칸 연습 번호(A, B, C …, 2악장)를 연주 칸에 단추로. 누르면 그 마디부터 재생하거나, 다음 번호 전까지를 구간으로 정해 재생</p></details></li>
+      <li><details><summary>반복할 때마다 빠르게</summary><p>구간 계속 반복과 함께 켜면 처음 %(기본 70%)에서 시작해 한 바퀴마다 +%(기본 5%)씩 빨라져 연습 속도까지. 음 높이는 그대로, 지금 몇 번째·몇 %인지 표시</p></details></li>
+      <li><details><summary>타악 성부 짝 맞추기</summary><p>윗성부나 아랫성부 소리를 고르면 다른 쪽도 짝 소리로 바뀝니다(꽹과리 → 꽹과리, 장구 궁 → 장구 따 등). 줄마다 '윗성부·아랫성부 함께 바꾸기'를 끄면 따로 고를 수 있음</p></details></li>
+      <li><details><summary>팀파니·윈드차임 녹음</summary><p>줄 이름이 팀파니·Timp.면 팀파니 녹음으로 음표 높이대로(굴림 표시는 녹음한 굴림으로), 윈드차임·윈드벨·W.Chimes면 윈드차임(한 번 훑는 소리). 다른 타악기와 들리는 크기를 맞춤</p></details></li>
+      <li><details><summary>악보로 보기에서 음 고치기</summary><p>[✎ 음 고치기]를 켜고 마디를 누르면 마디맵의 ✎ 수정과 같은 창이 열립니다. 마우스를 올린 마디는 점선 칸으로, 고친 마디는 ✎로 표시. 화면 가득 보기에서도 됩니다</p></details></li>
+      <li><details><summary>올리기 칸 이름</summary><p>올리기 칸 이름: '총보 하나' → '총보 업로드', '파트보 여러 개' → '파트보 업로드', '총보 고르기' → '총보 추가'. 처음 문구는 '총보를 아직 추가하지 않았습니다.' [악보 추가] 단추를 [총보 추가]와 같은 색·크기로</p></details></li>
+      <li><details><summary>악보 추가</summary><p>'피아노 악보 더하기'를 '악보 추가'로 바꾸고 총보 추가와 한 카드로 묶음. 총보에 없는 악기를 추가할 수 있고, 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있다는 설명을 넣음</p></details></li>
+      <li><details><summary>악센트</summary><p>악센트(&gt;) 음을 더 세게: 타악 약 +5dB, 선율 약 +4dB(예전 +3dB·+2dB)</p></details></li>
+      <li><details><summary>줄 이름으로 정하는 처음 소리</summary><p>줄 이름으로 정하는 처음 소리: 꽹과리(쇠)는 윗성부·아랫성부 모두 꽹과리('꽹과리 / 징'처럼 다른 악기와 한 줄이어도 꽹과리), 대고는 베이스드럼, 제금은 바라</p></details></li>
+      <li><details><summary>업데이트 이력을 기능·버그 수정으로 나눔</summary><p>업데이트 이력을 기능 업데이트와 버그 수정(붉은 글씨)으로 나눠 표시</p></details></li>
     </ul>
-    <h5 class="bug">버그 수정</h5><ul class="bug">
-    <li>첫 화면이나 악보 파일·사용법·이력 창이 떠 있을 때 스페이스바를 누르면 뒤에서 재생되던 문제</li>
-    <li>올리기 상자 밖에 파일을 떨어뜨리면 브라우저가 그 파일을 열어 지금 화면이 사라지던 문제(이제 안내만). PDF·MusicXML이 아닌 파일을 놓으면 안내</li>
-    <li>악보 파일 창에서 마지막 악보를 빼면 첫 화면이 창 안에 갇히던 문제</li>
-    <li>긴 안내 글(마디 번호가 다르다는 경고 등)이 악보·마디맵 단추를 가려 누를 수 없던 문제</li>
-    <li>마디 범위에서 시작을 끝보다 뒤로 적으면 순서에 따라 엉뚱한 범위가 되던 문제: 방금 고친 칸은 그대로 두고 다른 칸을 맞춤. 2.5처럼 소수는 반올림(음원 저장 범위도 같음)</li>
-    <li>반복할 때마다 빠르게의 처음 %·한 번에 +%에 범위 밖 숫자를 넣으면 칸에는 그대로 남던 문제(30~100%, 1~30%로 맞춤)</li>
-    <li>다른 프로그램의 설정 파일이나 깨진 파일을 가져오면 안내가 곧바로 '자동 저장됨'에 덮여 보이지 않던 문제</li>
-    <li>펼쳐 둔 악기 줄이 다른 악보를 올려도 같은 자리 줄이 펼쳐진 채 나오던 문제</li>
-    <li>휴대폰을 가로로 눕히면 설정 서랍이 손가락 두 마디 높이로 작아지던 문제: 낮은 화면에서는 연주 막대를 두 줄로 줄이고 서랍을 왼쪽에서 엶</li>
-    <li>휴대폰에서 악보로 보기를 누르면 악보가 화면 아래쪽에 조금만 보이던 문제: 악보 칸이 남은 화면을 다 쓰고 바로 그 자리로 이동</li>
-    <li>키보드로 연 창을 닫으면 초점이 사라지던 문제(연 단추로 돌아감)</li>
-    <li>예시 장단으로 돌아왔을 때 안내 문구에서 MusicXML이 빠지던 것, 도움말의 옛 자리 이름('연주 칸' 등) 고침</li>
-    <li>휴대폰·컴퓨터가 어두운 화면 모드일 때 새 화면의 글자와 단추가 흰색으로 바뀌어 거의 보이지 않던 문제: 이제 기기 설정을 따라 밝은 모드는 파스텔, 어두운 모드는 어두운 남색 화면으로 보입니다(모든 글자의 밝기 대비 확인)</li>
-    <li>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</li>
-    <li>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</li>
-    <li>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</li>
-    <li>'♪= Ca 60'처럼 음표는 악보 글꼴, 숫자는 일반 글꼴로 이어 적은 빠르기를 못 읽던 문제(소금협주곡 '길'). 8분음표 빠르기가 ♩로 보이던 표시도 ♪로</li>
-    <li>'♩ = c. 108'처럼 빠르기 숫자 앞에 c.(약)가 붙거나 괄호로 감싼 표시를 못 읽던 문제(Flowers of K 피아노 파트보). 영어로만 'Piano'라고 적힌 파트보·큰보표 악보도 피아노로 알아봄</li>
-    <li>파트보 이름(악기) 인식: '가'로 시작하는 글자를 한글로 치지 않아 '가야금'이 '야금', '꽹가리'가 '꽹리', 곡 제목 '연변목가'가 '연변목'으로 읽히던 문제. 파트 이름이 쪽 맨 위에서 조금 아래(첫 오선 위)에 있으면 못 읽던 문제(연변목가 장고·북 파트보). 파트 이름 자리에 적힌 긴 연주 안내 글은 이름으로 쓰지 않음</li>
-    <li>[모두 켜기]가 높은음자리표로 적은 북 등 타악 파트를 선율(가야금)로 켜던 문제</li>
-    <li>악보로 보기에서 음을 고치고 창을 닫으면 악보가 사라질 수 있던 문제: 고친 음 때문에 기준 줄이 바뀌면 악보를 처음부터 다시 펼치거나(추가한 악보가 있으면) 다른 PDF를 보여 주던 것. 이제 고쳐도 같은 악보를 그대로 둠</li>
-    <li>꽹과리 막음 소리가 아랫성부 음표마다 나던 것: 이제 윗성부의 X 머리 음표에서만 막음 소리. 윗성부를 모두 X 머리로 적은 악보는 X가 보통 꽹과리 표기라 막음으로 치지 않음</li>
+    <details class="hbug"><summary>버그 수정 <small>22건</small></summary><ul class="hlist bug">
+      <li><details><summary>창이 떠 있을 때 스페이스바로 재생되던 문제</summary><p>첫 화면이나 악보 파일·사용법·이력 창이 떠 있을 때 스페이스바를 누르면 뒤에서 재생되던 문제</p></details></li>
+      <li><details><summary>상자 밖에 파일을 놓으면 화면이 사라지던 문제</summary><p>올리기 상자 밖에 파일을 떨어뜨리면 브라우저가 그 파일을 열어 지금 화면이 사라지던 문제(이제 안내만). PDF·MusicXML이 아닌 파일을 놓으면 안내</p></details></li>
+      <li><details><summary>마지막 악보를 빼면 첫 화면이 창에 갇히던 문제</summary><p>악보 파일 창에서 마지막 악보를 빼면 첫 화면이 창 안에 갇히던 문제</p></details></li>
+      <li><details><summary>긴 안내 글이 단추를 가리던 문제</summary><p>긴 안내 글(마디 번호가 다르다는 경고 등)이 악보·마디맵 단추를 가려 누를 수 없던 문제</p></details></li>
+      <li><details><summary>마디 범위가 엉뚱하게 바뀌던 문제</summary><p>마디 범위에서 시작을 끝보다 뒤로 적으면 순서에 따라 엉뚱한 범위가 되던 문제: 방금 고친 칸은 그대로 두고 다른 칸을 맞춤. 2.5처럼 소수는 반올림(음원 저장 범위도 같음)</p></details></li>
+      <li><details><summary>점점 빠르게 % 칸에 범위 밖 숫자가 남던 문제</summary><p>반복할 때마다 빠르게의 처음 %·한 번에 +%에 범위 밖 숫자를 넣으면 칸에는 그대로 남던 문제(30~100%, 1~30%로 맞춤)</p></details></li>
+      <li><details><summary>설정 파일 가져오기 오류 안내가 안 보이던 문제</summary><p>다른 프로그램의 설정 파일이나 깨진 파일을 가져오면 안내가 곧바로 '자동 저장됨'에 덮여 보이지 않던 문제</p></details></li>
+      <li><details><summary>펼친 악기 줄이 새 악보에도 펼쳐지던 문제</summary><p>펼쳐 둔 악기 줄이 다른 악보를 올려도 같은 자리 줄이 펼쳐진 채 나오던 문제</p></details></li>
+      <li><details><summary>휴대폰 가로 화면에서 서랍이 작던 문제</summary><p>휴대폰을 가로로 눕히면 설정 서랍이 손가락 두 마디 높이로 작아지던 문제: 낮은 화면에서는 연주 막대를 두 줄로 줄이고 서랍을 왼쪽에서 엶</p></details></li>
+      <li><details><summary>휴대폰 악보 보기가 작게 보이던 문제</summary><p>휴대폰에서 악보로 보기를 누르면 악보가 화면 아래쪽에 조금만 보이던 문제: 악보 칸이 남은 화면을 다 쓰고 바로 그 자리로 이동</p></details></li>
+      <li><details><summary>키보드로 연 창을 닫으면 초점이 사라지던 문제</summary><p>키보드로 연 창을 닫으면 초점이 사라지던 문제(연 단추로 돌아감)</p></details></li>
+      <li><details><summary>안내 문구 정리</summary><p>예시 장단으로 돌아왔을 때 안내 문구에서 MusicXML이 빠지던 것, 도움말의 옛 자리 이름('연주 칸' 등) 고침</p></details></li>
+      <li><details><summary>어두운 화면 모드에서 글자가 안 보이던 문제</summary><p>휴대폰·컴퓨터가 어두운 화면 모드일 때 새 화면의 글자와 단추가 흰색으로 바뀌어 거의 보이지 않던 문제: 이제 기기 설정을 따라 밝은 모드는 파스텔, 어두운 모드는 어두운 남색 화면으로 보입니다(모든 글자의 밝기 대비 확인)</p></details></li>
+      <li><details><summary>붙임줄로 이어진 음이 통째로 빠지던 문제</summary><p>붙임줄로 이어진 음이 통째로 빠지던 문제: 마디를 넘는 붙임줄의 곡선이 반대쪽에 그려져 앞 음과 성부가 다르게 읽히거나, 이음줄(다른 음을 잇는 곡선)을 붙임줄로 읽으면 뒤 음을 소리 내지 않았음. 이제 성부와 상관없이 앞 음을 늘리고, 이을 앞 음이 없으면 새 음으로 칩니다(샘플 30곡에서 이렇게 빠지던 음 215개)</p></details></li>
+      <li><details><summary>빠르기 음표를 못 읽던 문제 (쑥대머리 해금)</summary><p>'♩=72'의 음표를 악보 글꼴이 아닌 이름 없는 글꼴로 찍은 PDF(Ghostscript로 만든 Finale 파트보, 쑥대머리 해금)에서 빠르기를 못 읽던 문제</p></details></li>
+      <li><details><summary>예전 설정이 새로 읽은 빠르기를 덮던 문제</summary><p>새 판에서 빠르기를 더 읽게 돼도, 예전에 저장된 설정(빠르기를 못 읽던 때의 표)을 불러와 첫 BPM이 여전히 비어 있던 문제: 이제 새로 읽은 빠르기를 쓰고, 직접 고친 칸만 저장한 값으로</p></details></li>
+      <li><details><summary>'♪= Ca 60' 빠르기를 못 읽던 문제 (소금협주곡 '길')</summary><p>'♪= Ca 60'처럼 음표는 악보 글꼴, 숫자는 일반 글꼴로 이어 적은 빠르기를 못 읽던 문제(소금협주곡 '길'). 8분음표 빠르기가 ♩로 보이던 표시도 ♪로</p></details></li>
+      <li><details><summary>'♩ = c. 108' 빠르기를 못 읽던 문제</summary><p>'♩ = c. 108'처럼 빠르기 숫자 앞에 c.(약)가 붙거나 괄호로 감싼 표시를 못 읽던 문제(Flowers of K 피아노 파트보). 영어로만 'Piano'라고 적힌 파트보·큰보표 악보도 피아노로 알아봄</p></details></li>
+      <li><details><summary>파트보 악기 이름을 잘못 읽던 문제</summary><p>파트보 이름(악기) 인식: '가'로 시작하는 글자를 한글로 치지 않아 '가야금'이 '야금', '꽹가리'가 '꽹리', 곡 제목 '연변목가'가 '연변목'으로 읽히던 문제. 파트 이름이 쪽 맨 위에서 조금 아래(첫 오선 위)에 있으면 못 읽던 문제(연변목가 장고·북 파트보). 파트 이름 자리에 적힌 긴 연주 안내 글은 이름으로 쓰지 않음</p></details></li>
+      <li><details><summary>[모두 켜기]가 타악 파트를 선율로 켜던 문제</summary><p>[모두 켜기]가 높은음자리표로 적은 북 등 타악 파트를 선율(가야금)로 켜던 문제</p></details></li>
+      <li><details><summary>음 고치기를 닫으면 악보가 사라지던 문제</summary><p>악보로 보기에서 음을 고치고 창을 닫으면 악보가 사라질 수 있던 문제: 고친 음 때문에 기준 줄이 바뀌면 악보를 처음부터 다시 펼치거나(추가한 악보가 있으면) 다른 PDF를 보여 주던 것. 이제 고쳐도 같은 악보를 그대로 둠</p></details></li>
+      <li><details><summary>꽹과리 막음 소리가 아랫성부에서 나던 문제</summary><p>꽹과리 막음 소리가 아랫성부 음표마다 나던 것: 이제 윗성부의 X 머리 음표에서만 막음 소리. 윗성부를 모두 X 머리로 적은 악보는 X가 보통 꽹과리 표기라 막음으로 치지 않음</p></details></li>
+    </ul></details>
+  </section>
+  <section class="hday"><h4>11월 1일</h4>
+    <h5>기능 업데이트 <small>2</small></h5><ul class="hlist">
+      <li><details><summary>타악 소리 넣음 (봉고·탬버린·트라이앵글·카바사)</summary><p>타악 소리 넣음: 봉고(높은 쪽·낮은 쪽), 탬버린, 트라이앵글, 카바사(마라카스·셰이커 대신). 녹음마다 크기가 달라 다른 타악기와 들리는 크기를 맞춤. 줄 이름이 봉고·탬버린(템버린)·트라이앵글·카바사(카바스)·마라카스면 처음부터 그 소리로</p></details></li>
+      <li><details><summary>트라이앵글·탬버린·카바사 굴림 소리 다듬음</summary><p>트라이앵글·탬버린·카바사 굴림은 고음을 깎지 않고, 트라이앵글은 굴림 뒤 울림이 남게</p></details></li>
     </ul>
   </section>
-  <section><h4>11월 1일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li>타악 소리 넣음: 봉고(높은 쪽·낮은 쪽), 탬버린, 트라이앵글, 카바사(마라카스·셰이커 대신). 녹음마다 크기가 달라 다른 타악기와 들리는 크기를 맞춤. 줄 이름이 봉고·탬버린(템버린)·트라이앵글·카바사(카바스)·마라카스면 처음부터 그 소리로</li>
-    <li>트라이앵글·탬버린·카바사 굴림은 고음을 깎지 않고, 트라이앵글은 굴림 뒤 울림이 남게</li>
+  <section class="hday"><h4>10월 31일</h4>
+    <h5>기능 업데이트 <small>18</small></h5><ul class="hlist">
+      <li><details><summary>'공'·'탐탐' 줄은 징 소리로</summary><p>타악 줄 이름이 '공'·'Gong'·'탐탐'이면 처음 소리를 징으로(예전에는 장구 소리). 북·심벌·꽹과리 등과 한 줄에 적힌 공은 그 악기 쪽을 따름</p></details></li>
+      <li><details><summary>빠르게 몰아치는 북 소리를 자연스럽게</summary><p>모듬북처럼 빠르게 몰아치는 북을 자연스럽게: 오선 위 자리마다 다른 북 높이로(가장 많이 치는 자리가 낮은 북, 위로 갈수록 높은 북), 박 사이 음은 조금 여리게, 세기·때를 사람처럼 조금씩 흔들고, 같은 북을 다시 칠 때 앞 울림이 뚝 끊기지 않게</p></details></li>
+      <li><details><summary>북 소리에 울림을</summary><p>북 소리에 울림을: 가죽이 떨며 남는 소리와 북통·방의 짧은 잔향을 더함(높은 북 약 0.6초, 낮은 북 약 1.2초)</p></details></li>
+      <li><details><summary>낮은 북은 더 낮게</summary><p>낮은 북은 더 낮게(약 50Hz), 높은 북은 더 높게(약 195Hz)</p></details></li>
+      <li><details><summary>북 녹음 두 가지 음색 구분</summary><p>북 녹음 두 가지의 음색을 확실히 다르게: 윗성부(악보 위쪽 음표)용 '북 (녹음, 높고 짧게)'는 높은 북 소리(약 165Hz)로, '북 (녹음, 낮고 길게)'는 낮은 울림(약 60Hz)을 살린 큰북 소리로</p></details></li>
+      <li><details><summary>북 소리에 힘을</summary><p>북 소리에 힘을: 스피커가 못 내는 아주 낮은 소리는 줄이고 가죽 울림과 채가 닿는 소리를 살림. 북·모듬북·대고 줄의 기본 소리를 윗성부 '북 (녹음, 짧게)', 아랫성부 '북 (녹음, 낮고 길게)'로(예전에는 아랫성부가 장구 궁 소리). 곡 전체 크기 맞추기도 드문 큰 소리 때문에 전체가 작아지지 않게 바꿈</p></details></li>
+      <li><details><summary>북 소리를 크게</summary><p>북 소리(합성·녹음 모두)를 크게: 소리가 거의 낮은 음역에만 있어 노트북·휴대폰 스피커에서 잘 안 들리던 것을, 가죽 울림을 살리고 크기를 장구만큼 올림</p></details></li>
+      <li><details><summary>악기 갈래 색</summary><p>악기 선택의 줄 카드를 관악(초록)·현악(남색)·타악(주홍)·건반 등(보라)으로 색을 나누고 이름 앞에 갈래 표시. 마디 미리보기의 줄 색도 같은 색</p></details></li>
+      <li><details><summary>솔로·음소거</summary><p>악기 선택의 줄마다 [솔로 (이 줄만)]·[음소거 (이 줄 빼기)]. 줄 설정은 그대로 두고 잠깐 듣기만 바꿉니다. [솔로·음소거 모두 해제]로 원래대로</p></details></li>
+      <li><details><summary>소리 다듬기</summary><p>(연주 칸): 조옮김(반음 단위), 기준음 A4(415~466Hz), 늘임표(페르마타) 길이(늘이지 않음~4박, 울리던 음을 늘임), 잔향(없음·조금·보통·많이), 좌우 배치(입체 음향, 국악관현악 자리처럼. 줄마다 '좌우 위치'로 바꾸기)</p></details></li>
+      <li><details><summary>스타카토·트릴</summary><p>악보의 스타카토 점은 짧게 끊고, 선율의 트릴(물결선)은 위 음과 빠르게 오가며 연주. MP3도 입체로 저장</p></details></li>
+      <li><details><summary>악보·마디맵을 넓게</summary><p>악보·마디맵 칸을 화면 폭 전체로 넓혀 크게 키워도 잘 보이게. 악보로 보기에는 <b>[화면 가득 보기]</b>(화면 전체에 악보만, 재생·일시정지 단추 포함, Esc나 ✕ 닫기로 돌아옴)</p></details></li>
+      <li><details><summary>일시정지</summary><p>재생 단추·스페이스바로 멈추면 그 자리를 기억했다가 다시 누르면 이어서 재생합니다(처음부터 다시 시작하던 문제). 연주 중에 속도·악기를 바꿔도 그 마디부터 이어서. 처음부터 들으려면 ⏹ 정지</p></details></li>
+      <li><details><summary>악보 보기</summary><p>연주 칸과 마디맵 칸의 [악보로 보기]를 누르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</p></details></li>
+      <li><details><summary>rit.·accel.을 원하는 마디에</summary><p>빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</p></details></li>
+      <li><details><summary>♩=♪ 표시 읽는 방향 단추</summary><p>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</p></details></li>
+      <li><details><summary>'장구 녹음 바꾸기' 칸을 없앰</summary><p>'장구 녹음 바꾸기' 칸을 없앰: 직접 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</p></details></li>
+      <li><details><summary>'업데이트 이력' 창</summary><p>이 '업데이트 이력' 창</p></details></li>
+    </ul>
+    <details class="hbug"><summary>버그 수정 <small>4건</small></summary><ul class="hlist bug">
+      <li><details><summary>악보를 열면 연주 범위가 1~1마디로 되던 문제</summary><p>악보를 열면 연주 범위가 1~1마디로 되던 문제(악기를 모두 끈 채 설정이 저장된 경우). 이미 1~1로 저장된 설정도 전곡으로 바로잡음</p></details></li>
+      <li><details><summary>읽지 못한 악보에서 연주 범위 칸 비우기</summary><p>스캔(사진) PDF처럼 읽지 못한 악보를 열면 연주 범위 칸을 비워 둠(1~1로 보이지 않게)</p></details></li>
+      <li><details><summary>정지·스페이스바·꾸밈음 조옮김 등 여러 문제</summary><p>소리를 만드는 중에 ⏹ 정지를 눌러도 다 만든 뒤 재생되던 문제, [화면 가득 보기]·솔로 단추를 누른 뒤 스페이스바가 재생 대신 그 단추를 다시 누르던 문제, 꾸밈음이 조옮김을 따르지 않던 문제, 휴대폰·태블릿은 5분 넘는 소리를 모노로(메모리), 다른 곡을 열면 조옮김이 남던 문제</p></details></li>
+      <li><details><summary>노란 표시 지연·Ctrl+Z 멈춤 등 여러 문제</summary><p>정지한 뒤 같은 마디부터 다시 재생하면 노란 표시가 늦게 나오던 문제, 악보를 뺀 뒤 Ctrl+Z를 누르면 프로그램이 멈추던 문제, 악기를 모두 끈 상태에서 설정을 저장하다 오류가 나던 문제, 읽는 중에 뺀 파트보가 되살아나던 문제 등</p></details></li>
+    </ul></details>
+  </section>
+  <section class="hday"><h4>10월 30일</h4>
+    <h5>기능 업데이트 <small>2</small></h5><ul class="hlist">
+      <li><details><summary>타악 크기</summary><p>장구(약 2배)·북·꽹과리(약 3배)를 키워 같은 100%에서 선율 악기와 비슷하게 들리게. 징은 울림을 3초 안으로 줄임</p></details></li>
+      <li><details><summary>rit.·accel. 더 읽기</summary><p>poco a poco accel., molto rit., 약간 accel, allargando, stringendo, in tempo</p></details></li>
+    </ul>
+    <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>두 악보가 섞이던 문제 등</summary><p>악보를 읽는 중에 다른 악보를 올리면 두 악보가 섞이던 문제, BPM 칸에 아주 작은 수를 넣으면 휴대폰이 멈출 수 있던 문제 등</p></details></li>
+    </ul></details>
+  </section>
+  <section class="hday"><h4>10월 29일</h4>
+    <h5>기능 업데이트 <small>4</small></h5><ul class="hlist">
+      <li><details><summary>새 녹음 악기</summary><p>대피리(저피리), 생황, 양금, 스네어드럼</p></details></li>
+      <li><details><summary>줄 이름 인식 보강</summary><p>줄 이름 인식 보강: 대피·저피·생·현·현금(25현 가야금)·S.Dr·풋심벌 등</p></details></li>
+      <li><details><summary>'2 줄 고르기' → '2 악기 선택'</summary><p>'2 줄 고르기' → '2 악기 선택'. 악보를 올리기 전에도 예시 장단 줄로 미리 써 보기</p></details></li>
+      <li><details><summary>연주 중에 화면이 지금 마디를 따라 움직이지 않음</summary><p>연주 중에 화면이 지금 마디를 따라 움직이지 않음(마디 지도의 노란 표시만 옮겨 감)</p></details></li>
+    </ul>
+    <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>전체 점검으로 고친 문제</summary><p>전체 점검으로 고친 문제: 마디를 눌러 재생할 때 재생 표시가 꺼지던 것, 소리를 만드는 동안 바꾼 설정이 반영되지 않던 것, 일부 줄의 첫 마디 번호가 밀리던 것 등</p></details></li>
+    </ul></details>
+  </section>
+  <section class="hday"><h4>10월 28일</h4>
+    <h5>기능 업데이트 <small>5</small></h5><ul class="hlist">
+      <li><details><summary>악보별 설정 저장</summary><p>템포·연습 속도·줄 설정·재생 옵션을 악보마다 자동 저장하고, 같은 악보를 열면 자동으로 불러옴. 파일로 내보내기·가져오기</p></details></li>
+      <li><details><summary>웹 주소</summary><p>commst.github.io/scoreplay. 카카오톡 등 앱 안 브라우저에서는 [브라우저에서 실행] 단추</p></details></li>
+      <li><details><summary>판 번호와 새 판 안내</summary><p>화면 아래 판 번호, 새 판이 나오면 [새로 고침] 안내</p></details></li>
+      <li><details><summary>읽을 수 있는 PDF 안내, 첫 화면 디자인</summary><p>'읽을 수 있는 악보 PDF' 안내, 머리 부분 새 디자인, 휴대폰 화면 순서</p></details></li>
+      <li><details><summary>아이패드 등에서 동작하지 않을 때 원인 안내</summary><p>아이패드 등에서 동작하지 않을 때 원인 안내</p></details></li>
+    </ul>
+    <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>MuseScore 2.0 악보의 옥타브 음자리표·임시표 읽기</summary><p>MuseScore 2.0 악보의 옥타브 음자리표·임시표 읽기(대아쟁 파트보를 타악으로 읽던 문제)</p></details></li>
+    </ul></details>
+  </section>
+  <section class="hday"><h4>10월 27일</h4>
+    <h5>기능 업데이트 <small>8</small></h5><ul class="hlist">
+      <li><details><summary>마디별 음 수정(✎)</summary><p>음정·음 길이를 고치고 자동 저장, 되돌리기, 다른 기기로 내보내기·가져오기</p></details></li>
+      <li><details><summary>마디 미리보기</summary><p>(타임라인·상세)와 [n마디부터 재생]</p></details></li>
+      <li><details><summary>마디 범위를 정해 음원 저장</summary><p>(MP3·WAV), 카운트인·메트로놈 등 저장용 설정</p></details></li>
+      <li><details><summary>새 녹음</summary><p>새 녹음: 북, 바라, 심벌, 하이햇, 베이스드럼, 피아노</p></details></li>
+      <li><details><summary>악보 빼기·여러 개 한꺼번에 고르기·피아노 악보 더하기</summary><p>악보 빼기·여러 개 한꺼번에 고르기·피아노 악보 더하기</p></details></li>
+      <li><details><summary>템포를 못 읽으면 BPM 입력 안내</summary><p>템포를 못 읽은 구간은 재생하지 않고 BPM 입력 안내</p></details></li>
+      <li><details><summary>화면 디자인 새로, 작은 연주 막대</summary><p>화면 디자인 새로, 아래쪽 작은 연주 막대, 휴대폰 글자 깨짐 고침</p></details></li>
+      <li><details><summary>여러 총보</summary><p>여러 총보(Frontier·미락흘·달빛항해·얼씨구야 등) 검토로 인식 개선, MuseScore 3·4·Dorico 기호 읽기</p></details></li>
     </ul>
   </section>
-  <section><h4>10월 31일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li>타악 줄 이름이 '공'·'Gong'·'탐탐'이면 처음 소리를 징으로(예전에는 장구 소리). 북·심벌·꽹과리 등과 한 줄에 적힌 공은 그 악기 쪽을 따름</li>
-    <li>모듬북처럼 빠르게 몰아치는 북을 자연스럽게: 오선 위 자리마다 다른 북 높이로(가장 많이 치는 자리가 낮은 북, 위로 갈수록 높은 북), 박 사이 음은 조금 여리게, 세기·때를 사람처럼 조금씩 흔들고, 같은 북을 다시 칠 때 앞 울림이 뚝 끊기지 않게</li>
-    <li>북 소리에 울림을: 가죽이 떨며 남는 소리와 북통·방의 짧은 잔향을 더함(높은 북 약 0.6초, 낮은 북 약 1.2초)</li>
-    <li>낮은 북은 더 낮게(약 50Hz), 높은 북은 더 높게(약 195Hz)</li>
-    <li>북 녹음 두 가지의 음색을 확실히 다르게: 윗성부(악보 위쪽 음표)용 '북 (녹음, 높고 짧게)'는 높은 북 소리(약 165Hz)로, '북 (녹음, 낮고 길게)'는 낮은 울림(약 60Hz)을 살린 큰북 소리로</li>
-    <li>북 소리에 힘을: 스피커가 못 내는 아주 낮은 소리는 줄이고 가죽 울림과 채가 닿는 소리를 살림. 북·모듬북·대고 줄의 기본 소리를 윗성부 '북 (녹음, 짧게)', 아랫성부 '북 (녹음, 낮고 길게)'로(예전에는 아랫성부가 장구 궁 소리). 곡 전체 크기 맞추기도 드문 큰 소리 때문에 전체가 작아지지 않게 바꿈</li>
-    <li>북 소리(합성·녹음 모두)를 크게: 소리가 거의 낮은 음역에만 있어 노트북·휴대폰 스피커에서 잘 안 들리던 것을, 가죽 울림을 살리고 크기를 장구만큼 올림</li>
-    <li><b>악기 갈래 색</b>: 악기 선택의 줄 카드를 관악(초록)·현악(남색)·타악(주홍)·건반 등(보라)으로 색을 나누고 이름 앞에 갈래 표시. 마디 미리보기의 줄 색도 같은 색</li>
-    <li><b>솔로·음소거</b>: 악기 선택의 줄마다 [솔로 (이 줄만)]·[음소거 (이 줄 빼기)]. 줄 설정은 그대로 두고 잠깐 듣기만 바꿉니다. [솔로·음소거 모두 해제]로 원래대로</li>
-    <li><b>소리 다듬기</b>(연주 칸): 조옮김(반음 단위), 기준음 A4(415~466Hz), 늘임표(페르마타) 길이(늘이지 않음~4박, 울리던 음을 늘임), 잔향(없음·조금·보통·많이), 좌우 배치(입체 음향, 국악관현악 자리처럼. 줄마다 '좌우 위치'로 바꾸기)</li>
-    <li><b>스타카토·트릴</b>: 악보의 스타카토 점은 짧게 끊고, 선율의 트릴(물결선)은 위 음과 빠르게 오가며 연주. MP3도 입체로 저장</li>
-    <li><b>악보·마디맵을 넓게</b>: 악보·마디맵 칸을 화면 폭 전체로 넓혀 크게 키워도 잘 보이게. 악보로 보기에는 <b>[화면 가득 보기]</b>(화면 전체에 악보만, 재생·일시정지 단추 포함, Esc나 ✕ 닫기로 돌아옴)</li>
-    <li><b>일시정지</b>: 재생 단추·스페이스바로 멈추면 그 자리를 기억했다가 다시 누르면 이어서 재생합니다(처음부터 다시 시작하던 문제). 연주 중에 속도·악기를 바꿔도 그 마디부터 이어서. 처음부터 들으려면 ⏹ 정지</li>
-    <li><b>악보 보기</b>: 연주 칸과 마디맵 칸의 [악보로 보기]를 누르면 올린 악보 PDF를 그대로 보여 주고, 연주하는 동안 지금 마디를 노란 칸으로, 지금 위치를 빨간 선으로 음표를 따라 움직이며 보여 줍니다(피날레 재생처럼). 악보를 누르면 그 마디부터 재생, 크기 조절, '연주 위치 따라가기' 켜고 끄기</li>
-    <li><b>rit.·accel.을 원하는 마디에</b>: 빠르기 칸의 'rit. · accel.' 표에서 rit.(점점 느리게)·accel.(점점 빠르게)·a tempo를 넣고, 고치고, 뺄 수 있습니다. 시작 마디·길이(마디수)·끝 %를 정하면 줄마다 "몇 마디 동안 얼마나 바뀌는지" 풀어 쓴 설명이 나옵니다. '설정 방법과 예'도 함께</li>
-    <li>빠르기 표의 '왼쪽이 새 박'·'오른쪽이 새 박'(♩=♪ 읽는 방향) 설명</li>
-    <li>'장구 녹음 바꾸기' 칸을 없앰: 늘봄에서 녹음한 장구 소리(굴림·꾸밈음 포함)가 더 자연스러워서</li>
-    <li>이 '업데이트 이력' 창</li>
-    </ul>
-    <h5 class="bug">버그 수정</h5><ul class="bug">
-    <li>악보를 열면 연주 범위가 1~1마디로 되던 문제(악기를 모두 끈 채 설정이 저장된 경우). 이미 1~1로 저장된 설정도 전곡으로 바로잡음</li>
-    <li>스캔(사진) PDF처럼 읽지 못한 악보를 열면 연주 범위 칸을 비워 둠(1~1로 보이지 않게)</li>
-    <li>소리를 만드는 중에 ⏹ 정지를 눌러도 다 만든 뒤 재생되던 문제, [화면 가득 보기]·솔로 단추를 누른 뒤 스페이스바가 재생 대신 그 단추를 다시 누르던 문제, 꾸밈음이 조옮김을 따르지 않던 문제, 휴대폰·태블릿은 5분 넘는 소리를 모노로(메모리), 다른 곡을 열면 조옮김이 남던 문제</li>
-    <li>정지한 뒤 같은 마디부터 다시 재생하면 노란 표시가 늦게 나오던 문제, 악보를 뺀 뒤 Ctrl+Z를 누르면 프로그램이 멈추던 문제, 악기를 모두 끈 상태에서 설정을 저장하다 오류가 나던 문제, 읽는 중에 뺀 파트보가 되살아나던 문제 등</li>
+  <section class="hday"><h4>10월 24일</h4>
+    <h5>기능 업데이트 <small>3</small></h5><ul class="hlist">
+      <li><details><summary>직접 녹음한 국악기 소리</summary><p>가야금(25현), 거문고, 대금, 소금, 피리, 태평소, 해금, 아쟁, 장구, 꽹과리, 징</p></details></li>
+      <li><details><summary>긴 음의 농현·요성, 장구·꽹과리 굴림과 꾸밈음</summary><p>긴 음의 농현·요성, 장구·꽹과리 굴림과 꾸밈음</p></details></li>
+      <li><details><summary>옥타브 자동 맞춤 (태평소 등)</summary><p>태평소처럼 한 옥타브 낮게 적은 악보는 옥타브 자동 맞춤</p></details></li>
     </ul>
   </section>
-  <section><h4>10월 30일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>타악 크기</b>: 장구(약 2배)·북·꽹과리(약 3배)를 키워 같은 100%에서 선율 악기와 비슷하게 들리게. 징은 울림을 3초 안으로 줄임</li>
-    <li><b>rit.·accel. 더 읽기</b>: poco a poco accel., molto rit., 약간 accel, allargando, stringendo, in tempo</li>
-    </ul>
-    <h5 class="bug">버그 수정</h5><ul class="bug">
-    <li>악보를 읽는 중에 다른 악보를 올리면 두 악보가 섞이던 문제, BPM 칸에 아주 작은 수를 넣으면 휴대폰이 멈출 수 있던 문제 등</li>
+  <section class="hday"><h4>10월 22일</h4>
+    <h5>기능 업데이트 <small>2</small></h5><ul class="hlist">
+      <li><details><summary>국악 합주 연습기</summary><p>총보의 선율 줄(가야금·대금·해금 등)과 장구·북을 함께 연주. 줄마다 역할(선율/타악/끄기)·악기·옥타브·음량</p></details></li>
+      <li><details><summary>음높이 읽기</summary><p>음높이 읽기(음자리표·조표·임시표·붙임줄·화음·꾸밈음), 휴대폰에서 재생</p></details></li>
     </ul>
   </section>
-  <section><h4>10월 29일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>새 녹음 악기</b>: 대피리(저피리), 생황, 양금, 스네어드럼</li>
-    <li>줄 이름 인식 보강: 대피·저피·생·현·현금(25현 가야금)·S.Dr·풋심벌 등</li>
-    <li>'2 줄 고르기' → '2 악기 선택'. 악보를 올리기 전에도 예시 장단 줄로 미리 써 보기</li>
-    <li>연주 중에 화면이 지금 마디를 따라 움직이지 않음(마디 지도의 노란 표시만 옮겨 감)</li>
-    </ul>
-    <h5 class="bug">버그 수정</h5><ul class="bug">
-    <li>전체 점검으로 고친 문제: 마디를 눌러 재생할 때 재생 표시가 꺼지던 것, 소리를 만드는 동안 바꾼 설정이 반영되지 않던 것, 일부 줄의 첫 마디 번호가 밀리던 것 등</li>
+  <section class="hday"><h4>10월 21일</h4>
+    <h5>기능 업데이트 <small>1</small></h5><ul class="hlist">
+      <li><details><summary>총보 읽기·쉬는 마디 박 짚기 등</summary><p>총보 읽기, 쉬는 마디 박 짚기, MuseScore 2·Encore·Sibelius 악보 읽기, ♩=♪ 같은 빠르기 표시</p></details></li>
     </ul>
   </section>
-  <section><h4>10월 28일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>악보별 설정 저장</b>: 템포·연습 속도·줄 설정·재생 옵션을 악보마다 자동 저장하고, 같은 악보를 열면 자동으로 불러옴. 파일로 내보내기·가져오기</li>
-    <li><b>웹 주소</b> commst.github.io/scoreplay. 카카오톡 등 앱 안 브라우저에서는 [브라우저에서 실행] 단추</li>
-    <li>화면 아래 판 번호, 새 판이 나오면 [새로 고침] 안내</li>
-    <li>'읽을 수 있는 악보 PDF' 안내, 머리 부분 새 디자인, 휴대폰 화면 순서</li>
-    <li>아이패드 등에서 동작하지 않을 때 원인 안내</li>
-    </ul>
-    <h5 class="bug">버그 수정</h5><ul class="bug">
-    <li>MuseScore 2.0 악보의 옥타브 음자리표·임시표 읽기(대아쟁 파트보를 타악으로 읽던 문제)</li>
-    </ul>
-  </section>
-  <section><h4>10월 27일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>마디별 음 수정(✎)</b>: 음정·음 길이를 고치고 자동 저장, 되돌리기, 다른 기기로 내보내기·가져오기</li>
-    <li><b>마디 미리보기</b>(타임라인·상세)와 [n마디부터 재생]</li>
-    <li><b>마디 범위를 정해 음원 저장</b>(MP3·WAV), 카운트인·메트로놈 등 저장용 설정</li>
-    <li>새 녹음: 북, 바라, 심벌, 하이햇, 베이스드럼, 피아노</li>
-    <li>악보 빼기·여러 개 한꺼번에 고르기·피아노 악보 더하기</li>
-    <li>템포를 못 읽은 구간은 재생하지 않고 BPM 입력 안내</li>
-    <li>화면 디자인 새로, 아래쪽 작은 연주 막대, 휴대폰 글자 깨짐 고침</li>
-    <li>여러 총보(Frontier·미락흘·달빛항해·얼씨구야 등) 검토로 인식 개선, MuseScore 3·4·Dorico 기호 읽기</li>
-    </ul>
-  </section>
-  <section><h4>10월 24일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>늘봄에서 직접 녹음한 국악기 소리</b>: 가야금(25현), 거문고, 대금, 소금, 피리, 태평소, 해금, 아쟁, 장구, 꽹과리, 징</li>
-    <li>긴 음의 농현·요성, 장구·꽹과리 굴림과 꾸밈음</li>
-    <li>태평소처럼 한 옥타브 낮게 적은 악보는 옥타브 자동 맞춤</li>
-    </ul>
-  </section>
-  <section><h4>10월 22일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li><b>국악 합주 연습기</b>: 총보의 선율 줄(가야금·대금·해금 등)과 장구·북을 함께 연주. 줄마다 역할(선율/타악/끄기)·악기·옥타브·음량</li>
-    <li>음높이 읽기(음자리표·조표·임시표·붙임줄·화음·꾸밈음), 휴대폰에서 재생</li>
-    </ul>
-  </section>
-  <section><h4>10월 21일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li>총보 읽기, 쉬는 마디 박 짚기, MuseScore 2·Encore·Sibelius 악보 읽기, ♩=♪ 같은 빠르기 표시</li>
-    </ul>
-  </section>
-  <section><h4>10월 20일</h4>
-    <h5>기능 업데이트</h5><ul>
-    <li>처음 시작: 장구 악보 PDF를 읽어 장단을 들려주는 '악보 리듬 연습기'</li>
+  <section class="hday"><h4>10월 20일</h4>
+    <h5>기능 업데이트 <small>1</small></h5><ul class="hlist">
+      <li><details><summary>처음 시작</summary><p>처음 시작: 장구 악보 PDF를 읽어 장단을 들려주는 '악보 리듬 연습기'</p></details></li>
     </ul>
   </section>
 </template>
@@ -4190,7 +4214,8 @@ showTab(curTab);
 // 다른 곳에서 칸으로 데려갈 때: 탭을 바꾸고(좁은 화면은 서랍을 열고) 그 자리로
 function goPane(t, el) {
   showTab(t, true);
-  if (el) setTimeout(() => { try { el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} }, NARROW.matches ? 240 : 30);
+  // 옆 칸(서랍) 안에서만 옮긴다: scrollIntoView는 화면 전체까지 움직여 악보 칸 위쪽이 가려졌음
+  if (el) setTimeout(() => { try { const sb = $('sidebar'); sb.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - sb.getBoundingClientRect().top + sb.scrollTop - 56), behavior: 'smooth' }); } catch (e) {} }, NARROW.matches ? 240 : 30);
 }
 
 // 위 막대·연주 막대 높이를 CSS 변수로 (서랍·옆 칸 높이 계산)
@@ -4281,7 +4306,7 @@ updateTopbar();
 function openHistory() {
   const back = document.createElement('div'); back.className = 'edit-back';
   const dlg = tipNode('div', 'edit-dlg hist-dlg'); dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-label', '업데이트 이력');
-  dlg.append(tipNode('h3', '', '업데이트 이력'), tipNode('p', 'hist-sub', (APP_VERSION && !APP_VERSION.startsWith('/*') ? `지금 화면: ${APP_VERSION} 판 · ` : '') + '날짜별로 기능 업데이트와 버그 수정(붉은 글씨)을 나눠 적었습니다. 최근 것이 위에 있습니다.'));
+  dlg.append(tipNode('h3', '', '업데이트 이력'), tipNode('p', 'hist-sub', (APP_VERSION && !APP_VERSION.startsWith('/*') ? `지금 화면: ${APP_VERSION} 판 · ` : '') + '최근 것이 위에 있습니다. 항목을 누르면 자세한 내용이 펼쳐지고, 고친 문제는 [버그 수정]을 누르면 보입니다.'));
   dlg.append($('histTpl').content.cloneNode(true));
   const foot = tipNode('div', 'hist-foot'), cl = tipNode('button', 'btn primary', '닫기'); cl.type = 'button'; foot.append(cl); dlg.append(foot);
   const close = () => { back.remove(); document.removeEventListener('keydown', esc, true); };
@@ -4290,6 +4315,7 @@ function openHistory() {
   document.addEventListener('keydown', esc, true);
   back.append(dlg); document.body.append(back); cl.focus();
 }
+try { if (/^https?:/.test(location.href) && /github\.io$/.test(location.hostname)) document.querySelectorAll('a.manual-link').forEach(a => { a.href = new URL('manual.pdf', location.href).href; a.removeAttribute('target'); }); } catch (e) {}
 $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListener('click', openHistory); $('histBtn3').addEventListener('click', openHistory);
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
