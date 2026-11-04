@@ -46,7 +46,7 @@ const audit = () => {
     await p.click('#filesBtn'); await p.waitForTimeout(250); await check('files'); await p.click('#filesClose');
     await p.click('#helpBtn'); await p.waitForTimeout(250); await check('help'); await p.keyboard.press('Escape');
     await p.click('#histBtn').catch(() => {}); await p.waitForTimeout(250); if (await p.$('.hist-dlg')) { await check('history'); await p.keyboard.press('Escape'); }
-    await p.click('#viewScore'); await p.waitForTimeout(1500); await check('score');
+    await p.click('#viewScore'); await p.waitForTimeout(1500); await check('score'); await p.click('#svFull'); await p.waitForTimeout(800); await check('score-full'); await p.keyboard.press('Escape'); await p.waitForTimeout(200);
     if (errs.length) console.log('  errors', errs);
     await ctx.close();
   }

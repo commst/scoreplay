@@ -226,7 +226,7 @@ button { cursor: pointer; }
 .sv-cur { position: absolute; width: 2px; margin-left: -1px; background: #d22; box-shadow: 0 0 0 1px #fff8; pointer-events: none; z-index: 3; }
 .sv-hl b { position: absolute; left: 0; top: -18px; padding: 0 5px; border-radius: 4px; background: #e0a100; color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
 /* 화면 가득 보기: 악보 칸을 화면 전체로 */
-.score-view.sv-full { position: fixed; inset: 0; z-index: 1500; display: flex; flex-direction: column; padding: 8px max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); background: var(--bg, #eef1f5); }
+.score-view.sv-full { position: fixed; inset: 0; z-index: 1500; display: flex; flex-direction: column; padding: 8px max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); background: var(--paper); }
 .score-view.sv-full .sv-tools { margin: 0 0 6px; gap: 6px 10px; }
 .score-view.sv-full .sv-tools .btn { padding: 6px 12px; font-size: 13.5px; }
 .score-view.sv-full .sv-wrap { flex: 1; height: auto; }
@@ -1511,7 +1511,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>업데이트 이력을 요약으로</summary><p>항목마다 짧은 제목만 보이고, 누르면 자세한 내용이 아래로 펼쳐집니다. 고친 문제는 날짜마다 [버그 수정 n건]을 눌러야 펼쳐집니다</p></details></li>
       <li><details><summary>첫 화면에 [업데이트 이력 보기] 단추</summary><p>첫 화면 아래에 [업데이트 이력 보기] 단추(휴대폰에서도 바로 보이게)</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>2건</small></summary><ul class="hlist bug">
+      <li><details><summary>어두운 모드에서 [화면 가득 보기] 악보의 위쪽 글씨가 안 보이던 문제</summary><p>휴대폰·컴퓨터가 어두운 모드일 때 악보 보기의 [화면 가득 보기]에서 바탕이 밝은 회색으로 고정되어 '보기', '100%', '연주 위치 따라가기' 같은 밝은 글씨가 바탕에 묻히던 것. 바탕을 화면 모드에 맞는 색으로 바꿈</p></details></li>
       <li><details><summary>화면 읽기 프로그램·키보드로 쓸 때의 문제 (접근성 검사)</summary><p>접근성 자동 검사(axe)에서 나온 문제를 모두 고침: 접힌 악기 줄의 소리·음량 칸 이름표가 화면 읽기 프로그램에 안 읽히던 것, 연주 막대의 '끝 마디'·음원 저장 마디·연습 속도 칸에 이름이 없던 것, 마디 칸(누르면 재생) 안에 ✎ 수정 단추가 겹친 구조, 휴대폰 서랍의 탭 목록에 닫기 단추가 섞인 것, 악보 칸을 키보드로 스크롤할 수 없던 것, 머리글·바닥글·제목 순서가 맞지 않던 것, 음 고치기 창의 길이 선택 이름. 보이는 화면은 그대로입니다</p></details></li>
     </ul></details>
 </section>
@@ -8065,7 +8066,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-04 18:18';
+const APP_VERSION = '2026-11-04 18:28';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
