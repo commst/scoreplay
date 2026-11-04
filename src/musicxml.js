@@ -110,7 +110,7 @@ export async function loadMusicXml(bytes, fileName = '') {
 function mxBlankMeasure(ts) { return { timesig: ts, len: mxF(ts[0], ts[1]), notes: [], dyn: [], tempo: [], words: [], rehearsal: [], flags: {} }; }
 
 function mxReadPart(p, name) {
-  let div = 1, ts = [4, 4], staves = 1, transpose = 0, perc = false;
+  let div = 1, ts = [4, 4], staves = 1, transpose = 0, perc = false, fifths = null;
   const measures = [];
   for (const me of mxKids(p, 'measure')) {
     const at = mxKid(me, 'attributes');
@@ -122,6 +122,7 @@ function mxReadPart(p, name) {
         div = mxNum(el, 'divisions', div);
         const t = mxKid(el, 'time'); if (t && mxNum(t, 'beats') && mxNum(t, 'beat-type')) { const nts = [parseInt(mxTxt(t, 'beats')) || 4, mxNum(t, 'beat-type')]; if (nts.join('/') !== ts.join('/') || !measures.length) tsChanged = true; ts = nts; }
         staves = Math.max(staves, mxNum(el, 'staves', 1));
+        const ky = mxKid(el, 'key'); if (ky && mxKid(ky, 'fifths')) fifths = mxNum(ky, 'fifths', 0);
         const tr = mxKid(el, 'transpose'); if (tr) transpose = mxNum(tr, 'chromatic', 0) + 12 * mxNum(tr, 'octave-change', 0);
         for (const c of mxKids(el, 'clef')) if (mxTxt(c, 'sign') === 'percussion') perc = true;
       } else if (el.name === 'backup') cur -= mxNum(el, 'duration', 0);
@@ -143,7 +144,7 @@ function mxReadPart(p, name) {
         else if (!rest) M.notes.push({ t: start, d, midi: midi != null ? Math.round(midi) : null, voice, staff, stem: mxTxt(el, 'stem'), disp, chord,
           accent: has('articulations', 'accent') || has('articulations', 'strong-accent'), stacc: has('articulations', 'staccato') || has('articulations', 'staccatissimo'),
           ten: has('articulations', 'tenuto'), trill: has('ornaments', 'trill-mark') || has('ornaments', 'wavy-line'), trem: has('ornaments', 'tremolo'),
-          xh: mxTxt(el, 'notehead') === 'x', tieStop, graces: graceBuf[voice + '|' + staff] || null });
+          xh: mxTxt(el, 'notehead') === 'x', tieStop, kf: fifths == null ? null : (((Math.round(fifths + 7 * transpose) % 12) + 18) % 12) - 6, graces: graceBuf[voice + '|' + staff] || null });
         if (!grace && !rest && graceBuf[voice + '|' + staff]) delete graceBuf[voice + '|' + staff];
         if (nots.some(x => mxKid(x, 'fermata')) || mxKid(el, 'fermata')) M.flags.fermata = true;
         if (!chord && !grace) { lastStart = cur; cur += d; maxT = Math.max(maxT, cur); }
@@ -201,7 +202,7 @@ export function analyzeXmlLine(sc, line = null) {
       if (n.chord && n.midi != null) { const host = ev.find(e => e.voice === v && e.t.eq(t) && e.midis && !e.tie === !n.tieStop); if (host) { if (!host.midis.includes(n.midi)) host.midis.push(n.midi); continue; } }
       if (n.chord && n.midi == null && ev.some(e => e.voice === v && e.t.eq(t))) continue;
       const e = { voice: v, t, dur: d, accent: n.accent, grace: n.graces ? n.graces.length : 0, roll: n.trem || (P.perc && n.trill) };
-      if (n.midi != null && !P.perc) { e.midis = [n.midi]; if (n.graces) e.graceMidis = n.graces; if (n.trill) { e.trill = true; e.trillInt = 2; } }
+      if (n.midi != null && !P.perc) { e.midis = [n.midi]; if (n.graces) e.graceMidis = n.graces; if (n.kf != null) e.kf = n.kf; if (n.trill) { e.trill = true; e.trillInt = 2; } }
       if (n.tieStop && n.midi != null) e.tie = true;
       if (n.stacc) e.stacc = true; if (n.ten) e.ten = true; if (n.xh) e.xh = true;
       if (n.disp != null) e.pos = 35 - n.disp;

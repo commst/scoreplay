@@ -1287,6 +1287,7 @@ export function parseScore(pages, opts = {}) {
             const acc = accs.find(a => attached(a) && Math.abs(n.y - a.oy) < sp * 0.6 && n.x - a.x1 > -1 && n.x - a.x1 < sp * 4.5 && !heads0.some(o => o !== n && Math.abs(o.y - a.oy) < sp * 0.6 && o.x > a.x1 - 1 && o.x < n.x - 0.5));
             if (acc) barAcc[d] = ACC[acc.code];
             const key = keyAt(n.x);
+            n.kf = Object.values(key).reduce((a, v) => a + (v > 0 ? 1 : v < 0 ? -1 : 0), 0);   // 조표 (샵 개수 +, 플랫 개수 −) — MusicXML 내보내기용
             const alt = d in barAcc ? barAcc[d] : (key[d % 7] || 0);
             n.midi = 12 * (Math.floor(d / 7) + 1) + SEMI[((d % 7) + 7) % 7] + alt;
             const d1 = d + 1, alt1 = d1 in barAcc ? barAcc[d1] : (key[d1 % 7] || 0);
@@ -1655,7 +1656,7 @@ function timing(m, barLen) {
     if (n.pos != null) ev.pos = n.pos;
     if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
-    if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); }
+    if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); if (n.kf != null) ev.kf = n.kf; }
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
     if (n.tenuto) ev.ten = true;   // 테누토: 길이를 꽉 채우고 조금 무게 있게
     if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
