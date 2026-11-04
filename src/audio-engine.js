@@ -513,11 +513,11 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
 // 크기 맞추기: 예전에는 가장 큰 한 점(최댓값)을 0.89에 맞췄는데, 북을 여러 번 겹쳐 친 순간 같은 드문 큰 점 때문에
 // 곡 전체가 작아졌다 → 거의 모든 소리(99.97%)가 0.8 안에 들도록 키우되 최대 6dB까지만, 넘치는 드문 점은 부드럽게 눌러 0.95 아래로
 export function fitLevel(L, R = null) {
-  let peak = 0; const st = Math.max(1, Math.floor(L.length / 200000)), smp = [];
+  let peak = 0; const st = Math.max(1, Math.floor(L.length / 200000)), smp = [];   // 표본은 숫자 배열 대신 Float32Array로 정렬 (같은 값, 훨씬 빠름)
   for (const x of R ? [L, R] : [L]) for (let i = 0; i < x.length; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; if (i % st === 0) smp.push(a); }
   if (!(peak > 0)) return;
-  smp.sort((a, b) => a - b);
-  const p = Math.max(smp[Math.floor(smp.length * 0.9997)] || 0, peak / 2);   // 많아야 6dB
+  const ss = Float32Array.from(smp).sort();
+  const p = Math.max(ss[Math.floor(ss.length * 0.9997)] || 0, peak / 2);   // 많아야 6dB
   const k = Math.min(0.8 / p, 0.89 / peak * 2), T = 0.7, H = 0.95 - T;
   for (const x of R ? [L, R] : [L]) for (let i = 0; i < x.length; i++) {
     const v = x[i] * k, a = Math.abs(v);
@@ -542,17 +542,32 @@ export function makeReverb(wet, stereo) {
   const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, 0.8, 0.3));
   const alls = sp => [556, 441, 341].map(d => mk(d + sp, 0.5, 0));
   const chans = [{ c: combs(0), a: alls(0) }, { c: combs(23), a: alls(23) }];
-  const run = (C, x) => {
-    let out = 0;
-    for (const f of C.c) { const y = f.b[f.i]; f.lp = y * (1 - f.damp) + f.lp * f.damp; f.b[f.i] = x + f.lp * f.fb; if (++f.i >= f.b.length) f.i = 0; out += y; }
-    for (const f of C.a) { const y = f.b[f.i]; const o = -out + y; f.b[f.i] = out + y * f.fb; if (++f.i >= f.b.length) f.i = 0; out = o; }
-    return out;
+  // 지연선 하나씩 덩어리 전체를 돌린다 (한 점마다 아홉 개를 번갈아 부르던 때보다 몇 배 빠르고 결과는 같다)
+  let X = new Float64Array(0), A = new Float64Array(0);
+  const comb = (f, X, A, n) => {
+    const b = f.b, len = b.length, fb = f.fb, d = f.damp, d1 = 1 - d; let i = f.i, lp = f.lp;
+    for (let k = 0; k < n; k++) { const y = b[i]; lp = y * d1 + lp * d; b[i] = X[k] + lp * fb; if (++i >= len) i = 0; A[k] += y; }
+    f.i = i; f.lp = lp;
   };
+  const allp = (f, A, n) => {
+    const b = f.b, len = b.length, fb = f.fb; let i = f.i;
+    for (let k = 0; k < n; k++) { const out = A[k], y = b[i]; b[i] = out + y * fb; if (++i >= len) i = 0; A[k] = -out + y; }
+    f.i = i;
+  };
+  const run = (C, n) => { A.fill(0, 0, n); for (const f of C.c) comb(f, X, A, n); for (const f of C.a) allp(f, A, n); };
   const g = wet * 0.18;   // 지연선 여섯 개를 더한 크기를 맞춘다
   return {
     process(L, R, i0, i1) {
-      if (stereo && R) for (let i = i0; i < i1; i++) { const x = (L[i] + R[i]) * 0.5; const yl = run(chans[0], x), yr = run(chans[1], x); L[i] += yl * g; R[i] += yr * g; }
-      else for (let i = i0; i < i1; i++) L[i] += run(chans[0], L[i]) * g;
+      const n = i1 - i0; if (n <= 0) return;
+      if (X.length < n) { X = new Float64Array(n); A = new Float64Array(n); }
+      if (stereo && R) {
+        for (let k = 0; k < n; k++) X[k] = (L[i0 + k] + R[i0 + k]) * 0.5;
+        run(chans[0], n); for (let k = 0; k < n; k++) L[i0 + k] += A[k] * g;
+        run(chans[1], n); for (let k = 0; k < n; k++) R[i0 + k] += A[k] * g;
+      } else {
+        for (let k = 0; k < n; k++) X[k] = L[i0 + k];
+        run(chans[0], n); for (let k = 0; k < n; k++) L[i0 + k] += A[k] * g;
+      }
     },
   };
 }

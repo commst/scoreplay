@@ -1494,7 +1494,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 4일</h3>
-    <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>5</small></h4><ul class="hlist">
+      <li><details><summary>소리 만드는 시간 줄이기, 속도는 바로 바뀜</summary><p>첫 재생 때 소리를 만드는 시간이 약 25% 줄었습니다(연변목가 파트보 3.4초 → 2.5초, 15줄 총보 6.2초 → 4.2초. 잔향 계산을 빠르게, 소리는 예전과 똑같음). 연습 속도 −·+를 누르면 기다리지 않고 바로 그 속도로 들립니다: 음 높이는 그대로 빠르기만 바꿔 먼저 들려주고, 뒤에서 새 속도로 소리를 다시 만들어 2~3초 뒤 같은 마디에서 바꿔 끼웁니다. 연주 중에 속도를 바꿔도 멈추지 않습니다</p></details></li>
       <li><details><summary>악기 이름 고치기</summary><p>악보에서 악기 이름을 잘못 읽었으면 [악기] 칸에서 그 줄을 펼쳐 '악기 이름' 칸에 바른 이름을 적습니다(Enter). 고친 이름은 줄 목록, 악보로 보기의 '○○만', 마디 미리보기, 음 고치기 창, 솔로 안내, MIDI·MusicXML 내보내기에 함께 쓰이고 이 악보의 설정에 저장됩니다. 고친 이름에 맞는 소리가 있으면 [이 소리로 바꾸기] 단추가 나옵니다(예: '야금' → '가야금'이면 가야금 소리). [악보 이름으로]나 칸을 비우면 원래 이름으로</p></details></li>
       <li><details><summary>사용설명서 (PDF) 받기</summary><p>위 막대·첫 화면·사용법 창의 [사용설명서 받기]로 PDF 사용설명서를 받습니다. 예시 악보로 한 단계씩 따라 하는 방법(총보로 내 파트 연습, 어려운 대목 반복, 빠르기 채우기, 파트보로 장단 연습, 음원 저장)과 칸별 기능, 휴대폰에서 쓰기, 문제 해결을 실제 화면 그림과 함께 담았습니다</p></details></li>
       <li><details><summary>업데이트 이력을 요약으로</summary><p>항목마다 짧은 제목만 보이고, 누르면 자세한 내용이 아래로 펼쳐집니다. 고친 문제는 날짜마다 [버그 수정 n건]을 눌러야 펼쳐집니다</p></details></li>
@@ -4810,11 +4811,11 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
 // 크기 맞추기: 예전에는 가장 큰 한 점(최댓값)을 0.89에 맞췄는데, 북을 여러 번 겹쳐 친 순간 같은 드문 큰 점 때문에
 // 곡 전체가 작아졌다 → 거의 모든 소리(99.97%)가 0.8 안에 들도록 키우되 최대 6dB까지만, 넘치는 드문 점은 부드럽게 눌러 0.95 아래로
 function fitLevel(L, R = null) {
-  let peak = 0; const st = Math.max(1, Math.floor(L.length / 200000)), smp = [];
+  let peak = 0; const st = Math.max(1, Math.floor(L.length / 200000)), smp = [];   // 표본은 숫자 배열 대신 Float32Array로 정렬 (같은 값, 훨씬 빠름)
   for (const x of R ? [L, R] : [L]) for (let i = 0; i < x.length; i++) { const a = Math.abs(x[i]); if (a > peak) peak = a; if (i % st === 0) smp.push(a); }
   if (!(peak > 0)) return;
-  smp.sort((a, b) => a - b);
-  const p = Math.max(smp[Math.floor(smp.length * 0.9997)] || 0, peak / 2);   // 많아야 6dB
+  const ss = Float32Array.from(smp).sort();
+  const p = Math.max(ss[Math.floor(ss.length * 0.9997)] || 0, peak / 2);   // 많아야 6dB
   const k = Math.min(0.8 / p, 0.89 / peak * 2), T = 0.7, H = 0.95 - T;
   for (const x of R ? [L, R] : [L]) for (let i = 0; i < x.length; i++) {
     const v = x[i] * k, a = Math.abs(v);
@@ -4839,17 +4840,32 @@ function makeReverb(wet, stereo) {
   const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, 0.8, 0.3));
   const alls = sp => [556, 441, 341].map(d => mk(d + sp, 0.5, 0));
   const chans = [{ c: combs(0), a: alls(0) }, { c: combs(23), a: alls(23) }];
-  const run = (C, x) => {
-    let out = 0;
-    for (const f of C.c) { const y = f.b[f.i]; f.lp = y * (1 - f.damp) + f.lp * f.damp; f.b[f.i] = x + f.lp * f.fb; if (++f.i >= f.b.length) f.i = 0; out += y; }
-    for (const f of C.a) { const y = f.b[f.i]; const o = -out + y; f.b[f.i] = out + y * f.fb; if (++f.i >= f.b.length) f.i = 0; out = o; }
-    return out;
+  // 지연선 하나씩 덩어리 전체를 돌린다 (한 점마다 아홉 개를 번갈아 부르던 때보다 몇 배 빠르고 결과는 같다)
+  let X = new Float64Array(0), A = new Float64Array(0);
+  const comb = (f, X, A, n) => {
+    const b = f.b, len = b.length, fb = f.fb, d = f.damp, d1 = 1 - d; let i = f.i, lp = f.lp;
+    for (let k = 0; k < n; k++) { const y = b[i]; lp = y * d1 + lp * d; b[i] = X[k] + lp * fb; if (++i >= len) i = 0; A[k] += y; }
+    f.i = i; f.lp = lp;
   };
+  const allp = (f, A, n) => {
+    const b = f.b, len = b.length, fb = f.fb; let i = f.i;
+    for (let k = 0; k < n; k++) { const out = A[k], y = b[i]; b[i] = out + y * fb; if (++i >= len) i = 0; A[k] = -out + y; }
+    f.i = i;
+  };
+  const run = (C, n) => { A.fill(0, 0, n); for (const f of C.c) comb(f, X, A, n); for (const f of C.a) allp(f, A, n); };
   const g = wet * 0.18;   // 지연선 여섯 개를 더한 크기를 맞춘다
   return {
     process(L, R, i0, i1) {
-      if (stereo && R) for (let i = i0; i < i1; i++) { const x = (L[i] + R[i]) * 0.5; const yl = run(chans[0], x), yr = run(chans[1], x); L[i] += yl * g; R[i] += yr * g; }
-      else for (let i = i0; i < i1; i++) L[i] += run(chans[0], L[i]) * g;
+      const n = i1 - i0; if (n <= 0) return;
+      if (X.length < n) { X = new Float64Array(n); A = new Float64Array(n); }
+      if (stereo && R) {
+        for (let k = 0; k < n; k++) X[k] = (L[i0 + k] + R[i0 + k]) * 0.5;
+        run(chans[0], n); for (let k = 0; k < n; k++) L[i0 + k] += A[k] * g;
+        run(chans[1], n); for (let k = 0; k < n; k++) R[i0 + k] += A[k] * g;
+      } else {
+        for (let k = 0; k < n; k++) X[k] = L[i0 + k];
+        run(chans[0], n); for (let k = 0; k < n; k++) L[i0 + k] += A[k] * g;
+      }
     },
   };
 }
@@ -5351,6 +5367,12 @@ const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, re
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
   marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set() };
 let raf = 0, audioUrl = null, lastNow = null;
+// 연습 속도만 바꿨는지: 속도만 바뀌었으면 소리를 다시 만들 때까지 재생 빠르기(음 높이 그대로)로 먼저 들려준다
+let spdSetting = false;
+{ let d = state.dirty; Object.defineProperty(state, 'dirty', { get: () => d, set: v => { d = v; if (!spdSetting) state.spdOnly = false; }, enumerable: true, configurable: true }); }
+state.spdOnly = false;
+const fresh = () => !!state.rendered && (!state.dirty || state.spdOnly);   // 지금 들고 있는 소리로 바로 재생해도 되는가
+const spdRate = () => { const r = state.rendered; const v = +$('speed').value || 100; return r && r.speed > 0 ? Math.max(0.25, Math.min(4, v / r.speed)) : 1; };
 const audio = new Audio(); audio.preload = 'auto'; audio.setAttribute('playsinline', '');
 
 // ---------- 예시 장단 (직접 만든 연습용 패턴) ----------
@@ -6421,7 +6443,7 @@ $('optRamp').addEventListener('change', () => {
   const v = Math.round(+$(id).value); $(id).value = Number.isFinite(v) && $(id).value !== '' ? Math.max(lo, Math.min(hi, v)) : def;
   if (!state.playing) rampBegin(false);
 }));
-$('speed').addEventListener('input', () => { $('speedVal').textContent = $('speed').value + '%'; changed(); });
+$('speed').addEventListener('input', () => { $('speedVal').textContent = $('speed').value + '%'; speedChanged(); });
 for (const id of ['from', 'to']) $(id).addEventListener('change', () => { clampRange(id); changed(); updateOut(); });
 $('rangeAll').addEventListener('click', () => { $('from').value = 1; $('to').value = lastBar(); changed(); updateOut(); });
 // 마디 범위 맞추기: 정수로, 1~마지막 마디 안으로. 시작이 끝보다 뒤면 방금 고친 칸은 그대로 두고 다른 칸을 맞춘다
@@ -6465,7 +6487,7 @@ function panOf(c) { if (typeof c.pan === 'number') return c.pan; const k = (c.in
 // rit.·accel. 끝 빠르기 칸: 0·음수·아주 큰 수를 넣으면 시간이 거꾸로 가거나 소리가 끝없이 길어지므로 칸의 범위로 맞춘다
 function pctIn(id, def, lo, hi) { const v = +$(id).value; const x = v > 0 ? Math.max(lo, Math.min(hi, v)) : def; if (String(x) !== $(id).value) $(id).value = x; return x; }
 // o를 주면(음원 저장) 재생용 소리는 그대로 두고 따로 만든 소리를 돌려준다
-async function buildAudio(onProgress, o = null) {
+async function buildAudio(onProgress, o = null, bg = false) {
   const forSave = !!o; o = o || playOpts();
   if (!forSave) state.dirty = false;   // 만드는 사이에 설정을 바꾸면 다시 true가 되어 다음 재생 때 다시 만든다
   if (!state.sounds) state.sounds = { ...makeSounds(), ...decodeRecorded(RECORDED_DATA) };
@@ -6493,24 +6515,71 @@ async function buildAudio(onProgress, o = null) {
   const stereo = snd.stereo && raw.length <= (coarse ? 300 : 600) * SR;   // 휴대폰·태블릿은 5분, 컴퓨터는 10분까지 입체 (메모리)
   const rawR = stereo ? raw.slice() : null;
   if (stereo) for (const nt of notes) { const c = state.lineCfg[nt.line]; nt.pan = c ? panOf(c) : 0; }
-  const CH = 120;
+  // 화면에 양보하는 것은 약 40ms마다 한 번 (예전에는 120음마다 → 쉬는 시간만 쌓였다)
+  const yieldNow = () => new Promise(r => setTimeout(r, 0));
+  let lastY = performance.now();
+  const CH = 40;
   for (let k = 0; k < notes.length; k += CH) {
     mixNotes(raw, notes.slice(k, k + CH), null, rawR);
-    if (onProgress) onProgress(Math.min(snd.reverb ? 0.9 : 1, (k + CH) / notes.length * (snd.reverb ? 0.9 : 1)));
-    await new Promise(r => setTimeout(r, 0));
+    if (performance.now() - lastY > 40) {
+      if (onProgress) onProgress(Math.min(snd.reverb ? 0.75 : 0.95, (k + CH) / notes.length * (snd.reverb ? 0.75 : 0.95)));
+      await yieldNow(); lastY = performance.now();
+    }
   }
   clearNoteCache();
   if (snd.reverb > 0) {   // 잔향: 조금씩 나눠 처리(화면 멈춤 없게)
-    const rv = makeReverb(snd.reverb, stereo), N = raw.length, STEP = 32000 * 8;
-    for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (onProgress) onProgress(0.9 + 0.1 * Math.min(1, (i + STEP) / N)); await new Promise(r => setTimeout(r, 0)); }
+    const rv = makeReverb(snd.reverb, stereo), N = raw.length, STEP = 32000 * 2;
+    for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (performance.now() - lastY > 40) { if (onProgress) onProgress(0.75 + 0.2 * Math.min(1, (i + STEP) / N)); await yieldNow(); lastY = performance.now(); } }
   }
   fitLevel(raw, rawR);   // 크기 맞추기 (드문 큰 점은 부드럽게 눌러 곡 전체가 작아지지 않게)
   // 휴대폰 메모리를 아끼려고 소리 데이터는 wav 파일 하나로만 들고 있는다
   const wavBlob = new Blob([encodeWav(raw, rawR)], { type: 'audio/wav' });
   if (forSave) return { plan, blob: wavBlob };
+  if (bg) return { plan, blob: wavBlob, speed: o.speed };
   if (audioUrl) URL.revokeObjectURL(audioUrl);
   audioUrl = URL.createObjectURL(wavBlob);
-  state.rendered = { plan, blob: wavBlob, url: audioUrl };
+  state.rendered = { plan, blob: wavBlob, url: audioUrl, speed: o.speed };
+}
+// 속도를 바꾼 뒤: 뒤에서 새 속도로 소리를 다시 만들고, 다 되면 듣던 자리(같은 마디의 같은 위치)에서 이어 바꿔 끼운다
+let bgRunning = false, bgTok = 0, swapping = false;
+function bgBuild(delay = 400) { clearTimeout(bgBuild.t); bgBuild.t = setTimeout(runBg, delay); }
+async function runBg() {
+  if (bgRunning || building) { bgBuild(); return; }
+  if (!(state.rendered && state.dirty && state.spdOnly)) return;
+  bgRunning = true; const tok = ++bgTok, base = state.rendered; let r = null;
+  try { r = await buildAudio(null, null, true); } catch (e) { console.error(e); state.dirty = true; }
+  finally { bgRunning = false; }
+  if (r && tok === bgTok && state.rendered === base && (!state.dirty || state.spdOnly)) adopt(r);
+  if (state.rendered && state.dirty && state.spdOnly) bgBuild();
+}
+function mapTime(pa, pb, t) {   // 옛 소리의 시각 → 새 소리에서 같은 마디·같은 비율의 시각
+  const a = pa.barTimes, b = pb.barTimes;
+  if (!a.length || a.length !== b.length) return t * pb.total / Math.max(0.001, pa.total);
+  let k = -1; for (let i = 0; i < a.length; i++) { if (a[i].abs <= t) k = i; else break; }
+  if (k < 0) return a[0].abs > 0 ? t * b[0].abs / a[0].abs : t;
+  const ea = k + 1 < a.length ? a[k + 1].abs : pa.total, eb = k + 1 < b.length ? b[k + 1].abs : pb.total;
+  const f = Math.max(0, Math.min(1, (t - a[k].abs) / Math.max(1e-6, ea - a[k].abs)));
+  return b[k].abs + f * (eb - b[k].abs);
+}
+function adopt(r) {
+  const old = state.rendered, url = URL.createObjectURL(r.blob);
+  state.rendered = { plan: r.plan, blob: r.blob, url, speed: r.speed }; audioUrl = url;
+  if (resumeAt && resumeAt.t > 0) resumeAt.t = mapTime(old.plan, r.plan, resumeAt.t);
+  if (state.playing && audio.src === old.url && audio.readyState >= 1) {
+    const nt = mapTime(old.plan, r.plan, audio.currentTime || 0), tok = ++playTok;
+    swapping = true; audio.src = url; rampLastT = nt;
+    const go = () => { swapping = false; if (tok !== playTok || !state.playing) return; try { audio.currentTime = nt; } catch (e) {} rampApply(); const p = audio.play(); if (p && p.catch) p.catch(() => {}); };
+    if (audio.readyState >= 1) go(); else audio.addEventListener('loadedmetadata', go, { once: true });
+  } else rampApply();
+  URL.revokeObjectURL(old.url);
+}
+function speedChanged() {
+  const ok = fresh();
+  spdSetting = true; state.dirty = true; spdSetting = false; state.spdOnly = ok;
+  explainTempo();
+  if (!ok) { if (state.playing) pause(); return; }
+  rampApply(); tick.html = null;
+  bgBuild();
 }
 
 function setPlayIcon(p) {
@@ -6554,8 +6623,10 @@ async function play(offset = 0) {
   if (noBars()) { stop(true); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return; }
   if (tempoBlocked()) { stop(true); return; }
   unlockAudio();
-  if (state.dirty || !state.rendered) {
+  if (!fresh()) {
     $('playBtn').disabled = true; building = true; cancelPlay = false;
+    bgTok++;   // 뒤에서 만들던 소리는 버린다 (다른 설정이 바뀌어 처음부터 다시 만든다)
+    while (bgRunning) await new Promise(r => setTimeout(r, 30));
     tick.html = null; $('nowText').innerHTML = '<span class="busy">소리를 만드는 중… <span class="num" id="pct">0%</span></span>';
     await new Promise(r => setTimeout(r, 30));
     try { await buildAudio(p => { const el = $('pct'); if (el) el.textContent = Math.round(p * 100) + '%'; }); }
@@ -6567,7 +6638,7 @@ async function play(offset = 0) {
     }
     finally { $('playBtn').disabled = false; building = false; }
     if (cancelPlay) { cancelPlay = false; pendingBar = null; $('nowText').innerHTML = '<b>정지</b>'; return; }
-    if (state.dirty) return play(offset);   // 만드는 동안 설정·악보가 바뀌었으면 바뀐 대로 다시 만든다
+    if (!fresh()) return play(offset);   // 만드는 동안 설정·악보가 바뀌었으면 바뀐 대로 다시 만든다 (속도만 바뀌었으면 바로 재생하고 뒤에서 다시 만든다)
   }
   stop(true);
   if (audio.src !== state.rendered.url) audio.src = state.rendered.url;
@@ -6580,6 +6651,7 @@ async function play(offset = 0) {
   if (audio.readyState >= 1) go(); else audio.addEventListener('loadedmetadata', go, { once: true });
   state.playing = true; setPlayIcon(true); tick();
   if (pendingBar != null) { const n = pendingBar; pendingBar = null; seekBar(n); }   // 만드는 동안 누른 마디로
+  if (state.dirty && state.spdOnly) bgBuild(0);
 }
 audio.addEventListener('ended', () => { if (!audio.loop && state.playing && audio.src === state.rendered?.url) stop(); });   // 아이폰용 무음 깨우기 소리가 끝날 때 '소리를 만드는 중'이 '정지'로 바뀌던 문제
 // 일시정지: 재생 단추·스페이스바·아래 작은 막대로 멈추면 그 자리를 기억해 두었다가 다시 누르면 이어서 재생한다.
@@ -6597,7 +6669,7 @@ function pause() {
 function resume() {
   const r = resumeAt; resumeAt = null;
   if (!r) return play(0);
-  if (!state.dirty && state.rendered && r.t > 0) return play(Math.max(0, r.t - 0.05));
+  if (fresh() && r.t > 0) return play(Math.max(0, r.t - 0.05));
   // 그사이 소리가 바뀌었으면(속도·악기 등) 새로 만든 뒤 그 마디부터
   if (r.n != null) pendingBar = r.n;
   return play(0);
@@ -6615,20 +6687,21 @@ const rampOn = () => $('optRamp').checked && $('optLoop').checked;
 function rampPct(id, def, lo, hi) { const v = Math.round(+$(id).value); return v >= lo && v <= hi ? v : def; }
 function rampApply() {
   try { audio.preservesPitch = true; audio.webkitPreservesPitch = true; audio.mozPreservesPitch = true; } catch (e) {}
-  audio.playbackRate = rampOn() ? rampCur / 100 : 1;
+  audio.playbackRate = (rampOn() ? rampCur / 100 : 1) * spdRate();
 }
 function rampBegin(keep, at) {   // keep: 일시정지 뒤 이어서 재생할 때는 지금 단계 유지. at: 재생을 시작할 자리(초) — 앞 재생 자리와 견줘 한 바퀴로 잘못 세지 않게
   if (!keep || !rampOn()) { rampCur = rampOn() ? rampPct('rampStart', 70, 30, 100) : 100; rampLap = 1; }
   rampLastT = at != null ? at : (audio.currentTime || 0); rampApply();
 }
 function rampTick(t) {
-  if (!rampOn()) { if (audio.playbackRate !== 1) audio.playbackRate = 1; return ''; }
+  if (!rampOn()) { const sr = spdRate(); if (Math.abs(audio.playbackRate - sr) > 1e-3) rampApply(); return ''; }
   if (t + 0.5 < rampLastT) { rampLap++; rampCur = Math.min(100, rampCur + rampPct('rampStep', 5, 1, 30)); rampApply(); }   // 처음으로 돌아왔다 = 한 바퀴
   rampLastT = t;
   return ` <span class="pill num">${rampLap}번째 · ${rampCur}%</span>`;
 }
 function tick() {
   if (!state.playing || !state.rendered) return;
+  if (swapping) { raf = requestAnimationFrame(tick); return; }   // 새 속도 소리로 바꿔 끼우는 사이 (잠깐 0초로 보이는 것을 반복 한 바퀴로 세지 않게)
   const { plan } = state.rendered;
   const t = audio.currentTime || 0;
   const rampTxt = rampTick(t);
@@ -6638,7 +6711,7 @@ function tick() {
   const n = cur ? cur.number : null;
   const restTxt = cur && cur.rest ? ` <span class="pill num">쉼 ${cur.rest.k}/${cur.rest.n}마디</span>` : '';
   // 화면은 글자가 바뀔 때만 다시 쓴다 (1초에 60번 다시 그리지 않게)
-  const html = (cur ? `<b class="num">${n}</b>마디${restTxt} <span class="num" style="color:var(--muted)">· ${fmt(t)} / ${fmt(plan.total)}</span>` : '<b>카운트인</b>') + rampTxt;
+  const html = (cur ? `<b class="num">${n}</b>마디${restTxt} <span class="num" style="color:var(--muted)">· ${fmt(t / spdRate())} / ${fmt(plan.total / spdRate())}</span>` : '<b>카운트인</b>') + rampTxt;
   if (html !== tick.html) { $('nowText').innerHTML = html; tick.html = html; }
   const w = Math.min(100, t / plan.total * 100).toFixed(1) + '%';
   if (w !== tick.w) { $('trackFill').style.width = w; tick.w = w; }
@@ -6668,7 +6741,7 @@ document.addEventListener('keydown', ev => {
   togglePlay();
 });
 $('track').addEventListener('click', ev => {
-  if (!state.rendered || state.dirty) return;
+  if (!fresh()) return;
   const r = $('track').getBoundingClientRect();
   play(Math.max(0, (ev.clientX - r.left) / r.width) * state.rendered.plan.total);
 });
@@ -6695,7 +6768,7 @@ function playFromBar(n) {
   if (n < +$('from').value || n > to) { $('from').value = n; $('to').value = lastBar(); changed(); updateOut(); if (saveLinked) syncSaveFromPlay(); scheduleAutoSave(); }
   if (tempoBlocked()) return;
   if (building) { pendingBar = n; return; }
-  if (state.dirty || !state.rendered) { unlockAudio(); play(0).then(() => { if (state.rendered && state.playing) seekBar(n); }); return; }
+  if (!fresh()) { unlockAudio(); play(0).then(() => { if (state.rendered && state.playing) seekBar(n); }); return; }
   seekBar(n);
 }
 function seekBar(n) {
@@ -7939,7 +8012,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-04 15:00';
+const APP_VERSION = '2026-11-04 15:49';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
