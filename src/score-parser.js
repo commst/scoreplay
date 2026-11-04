@@ -672,7 +672,12 @@ export function pageLayout(pg) {
     if (g.code === 38 || g.code === 63 || g.code === 66) return 'pitched';
     return 'perc';
   });
-  return { staves, vls, systems, sysOf, posOf, labels, clefs };
+  // 음자리표 종류 (맨 아랫줄의 온음 번호: 높은음 30, 낮은음 18, 가온 24) — 낮은음자리표에 적은 북처럼 타악 줄을 MusicXML로 내보낼 때
+  const clefBase = staves.map(st => {
+    const g = pg.glyphs.filter(g => isMusicFont(g.font) && g.ox >= st.x0 - 2 && g.ox < st.x0 + 18 && g.oy > st.top - 10 && g.oy < st.bottom + 10).sort((a, b) => a.ox - b.ox)[0];
+    return g ? ({ 38: 30, 63: 18, 66: 24 })[g.code] ?? null : null;
+  });
+  return { staves, vls, systems, sysOf, posOf, labels, clefs, clefBase };
 }
 
 // 단마다 같은 줄(악기)을 찾아 번호를 붙인다
@@ -681,7 +686,7 @@ export function assignLines(pages) {
   let tmpl = null;
   for (const L of layouts) for (const g of L.systems) if (!tmpl || g.length > tmpl.g.length) tmpl = { L, g };
   if (!tmpl) return { layouts, lines: [] };
-  const lines = tmpl.g.map((i, k) => ({ id: k, name: tmpl.L.labels[i] || '', clef: tmpl.L.clefs[i], oneLine: !!tmpl.L.staves[i].oneLine, first: null, count: 0 }));
+  const lines = tmpl.g.map((i, k) => ({ id: k, name: tmpl.L.labels[i] || '', clef: tmpl.L.clefs[i], clefBase: tmpl.L.clefBase ? tmpl.L.clefBase[i] : null, oneLine: !!tmpl.L.staves[i].oneLine, first: null, count: 0 }));
   // 총보 뒤에 파트보를 이어 붙인 PDF: 총보가 끝난 뒤 쪽마다 1~2단짜리 단만 여럿 있으면 파트보 → 읽지 않는다
   let partFrom = layouts.length;
   if (tmpl.g.length >= 4) {
@@ -858,7 +863,9 @@ function pagePrep(pg, layout, pi) {
   if (w < 2 || Math.abs(b[1] - a[1]) / w > 0.7) continue;
   beamList.push({ x0: a[0], x1: b[0], yAt: x => a[1] + (b[1] - a[1]) * (x - a[0]) / w });
   }
-  const curves = [...fills.filter(d => d.items.some(i => i.op === 'c')).map(d => d.rect), ...tieRects];
+  // 곡선(붙임줄·이음줄). 피날레 PDF 가운데에는 곡선을 짧은 직선 수십 개로 펴서 그린 것도 있다(채운 다각형, 납작하고 가로로 긴 모양)
+  const polyCurve = d => d.type.includes('f') && d.items.length >= 12 && d.items.every(i => i.op === 'l') && d.rect.width > 6 && d.rect.width > d.rect.height * 2.2 && d.rect.height < 30;
+  const curves = [...fills.filter(d => d.items.some(i => i.op === 'c')).map(d => d.rect), ...drawings.filter(polyCurve).map(d => d.rect), ...tieRects];
   const thickH = drawings.filter(d => d.type === 's' && d.items.length === 1 && (d.width || 0) > 1.5 && d.rect.height < 0.2 && d.rect.width > 20).map(d => d.rect);
   const boxes = drawings.filter(d => d.type === 's' && ((d.items.length === 1 && d.items[0].op === 're') ||
   (d.items.length >= 4 && d.items.length <= 5 && d.items.every(i => i.op === 'l' && (Math.abs(i.p[0] - i.q[0]) < 0.1 || Math.abs(i.p[1] - i.q[1]) < 0.1)))) &&
@@ -1213,6 +1220,7 @@ export function parseScore(pages, opts = {}) {
           }
         }
       }
+      const curvePairs = [];   // 곡선의 시작 음·끝 음 (음높이를 정한 뒤 이음줄인지 가린다 — MusicXML 내보내기용)
       for (const c of curves) {
         if (!(st.top - 30 < c.y0 && c.y0 < st.bottom + 30) || c.width < 4) continue;
         const ccy = (c.y0 + c.y1) / 2;
@@ -1220,8 +1228,30 @@ export function parseScore(pages, opts = {}) {
         const vn = headNotes.filter(n => n.voice === voice && !n.grace);
         const start = vn.filter(n => c.x0 - 10 <= n.x && n.x <= c.x0 + 4 && Math.abs(n.y - ccy) < 10);
         const end = vn.filter(n => c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 10 && n.x > c.x0 + 2);
-        if (end.length) end.reduce((b, n) => n.x < b.x ? n : b).tied = true;
+        if (end.length) {
+          const en = end.reduce((b, n) => n.x < b.x ? n : b); en.tied = true;
+          const sn = start.length ? start.reduce((b, n) => Math.abs(n.x - c.x0) < Math.abs(b.x - c.x0) ? n : b) : null;
+          if (sn && sn !== en && sn.x < en.x) curvePairs.push([sn, en, voice]);
+        }
         else if (start.length && c.x1 > st.x1 - 15) pendingTie[voice] = true;
+      }
+      // 이음줄(슬러) 찾기: 붙임줄로 쓰이지 않은 곡선의 양 끝 가까이(위로 굽으면 음 위, 아래로 굽으면 음 아래)에 음이 있으면 그 두 음을 잇는다.
+      // 소리에는 쓰지 않고 MusicXML 내보내기에서만 쓴다 (붙임줄 처리와 무관)
+      {
+        const taken = new Set(curvePairs.map(p => p[1])), sp = (st.bottom - st.top) / 4 || 7;
+        for (const c of curves) {
+          if (!(st.top - 40 < c.y0 && c.y1 < st.bottom + 40) || c.width < 8) continue;
+          const near = (x, y, dir) => headNotes.filter(n => !n.grace && !n.rest && Math.abs(n.x - x) < sp * 1.6 && (dir > 0 ? n.y - y > -sp * 0.8 && n.y - y < sp * 4 : y - n.y > -sp * 0.8 && y - n.y < sp * 4))
+            .sort((p, q) => Math.abs(p.x - x) + Math.abs(p.y - y) * 0.3 - Math.abs(q.x - x) - Math.abs(q.y - y) * 0.3)[0];
+          let best = null;
+          for (const dir of [1, -1]) {   // 1: 위로 굽은 곡선(끝이 아래쪽 y1), -1: 아래로 굽은 곡선(끝이 위쪽 y0)
+            const y = dir > 0 ? c.y1 : c.y0, a = near(c.x0, y, dir), b = near(c.x1, y, dir);
+            if (a && b && a !== b && a.x < b.x - 2 && (!best || Math.abs(a.y - y) + Math.abs(b.y - y) < best.d)) best = { a, b, d: Math.abs(a.y - y) + Math.abs(b.y - y) };
+          }
+          if (!best || taken.has(best.b)) continue;
+          if (curvePairs.some(p => p[0] === best.a && p[1] === best.b)) continue;
+          curvePairs.push([best.a, best.b, best.a.voice, true]);
+        }
       }
       const ferm = sg.filter(g => g.code === FERMATA);
       const trills = sg.filter(g => g.code === TRILL_EXT).sort((a, b) => a.x0 - b.x0);
@@ -1284,6 +1314,7 @@ export function parseScore(pages, opts = {}) {
           const inBar = notes.filter(n => !n.rest && n.x >= rx0 && n.x < rx1).sort((a, b) => a.x - b.x);
           for (const n of inBar) {
             const base = clefAt(n.x), d = base + stepOf(n.y);
+            n.cl = base;   // 음자리표 (MusicXML 내보내기용: 30 높은음, 18 낮은음, 24 알토, 22 테너, ±7 옥타브)
             const acc = accs.find(a => attached(a) && Math.abs(n.y - a.oy) < sp * 0.6 && n.x - a.x1 > -1 && n.x - a.x1 < sp * 4.5 && !heads0.some(o => o !== n && Math.abs(o.y - a.oy) < sp * 0.6 && o.x > a.x1 - 1 && o.x < n.x - 0.5));
             if (acc) barAcc[d] = ACC[acc.code];
             const key = keyAt(n.x);
@@ -1293,6 +1324,12 @@ export function parseScore(pages, opts = {}) {
             const d1 = d + 1, alt1 = d1 in barAcc ? barAcc[d1] : (key[d1 % 7] || 0);
             n.upInt = 12 * (Math.floor(d1 / 7) + 1) + SEMI[((d1 % 7) + 7) % 7] + alt1 - n.midi;   // 트릴(떤음)로 오갈 위 음까지의 반음 수
           }
+        }
+        // 이음줄(슬러): 곡선 양 끝의 음높이가 다르거나 사이에 다른 음이 있으면 붙임줄이 아니라 이음줄. 소리(붙임줄 처리)는 그대로 두고 표시만 남긴다
+        for (const [sn, en, v, onlySlur] of curvePairs) {
+          if (sn.midi == null || en.midi == null) continue;
+          const between = headNotes.some(n => n.voice === v && !n.grace && !n.rest && n.x > sn.x + 1 && n.x < en.x - 1);
+          if (onlySlur || sn.midi !== en.midi || between) { sn.slurS = (sn.slurS || 0) + 1; en.slurE = (en.slurE || 0) + 1; }
         }
         // 다음 단으로 넘길 상태 (끝의 음자리표·조표)
         if (clefs.length) lineState.clef = clefs[clefs.length - 1].base;
@@ -1563,7 +1600,7 @@ export function parseScore(pages, opts = {}) {
       if (!dir) continue;
       a.used = b.used = true;
       const x0 = Math.min(a.x0, b.x0), x1 = Math.max(a.x1, b.x1);
-      marks.push({ type: 'dramp', dir, a: at(x0), b: posAt(x1), dashed: true });
+      marks.push({ type: 'dramp', dir, a: at(x0), b: posAt(x1), dashed: true, hp: true });   // hp: 그린 꺾쇠(헤어핀) — 글자 cresc.와 구분 (MusicXML 내보내기)
       addLabel(mAt(x0), dir > 0 ? '<' : '>');
     }
   }
@@ -1644,19 +1681,20 @@ function timing(m, barLen) {
       // 붙임줄로 이어진 음: 선율 악기는 앞 음을 길게 (마디를 넘는 붙임줄은 재생할 때 잇는다)
       if (n.midi != null) {
         const prev = evs.filter(e => e.voice === n.voice && e.midis && e.midis.includes(n.midi) && e.t.lt(onset.get(n))).pop();
-        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) prev.sus = (prev.sus || prev.dur).add(n.dur);
-        else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi] });
+        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; }   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
+        else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
       }
       continue;
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
-    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); continue; }
+    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); if (n.slurS) ex.slurS = Math.max(ex.slurS || 0, n.slurS); if (n.slurE) ex.slurE = Math.max(ex.slurE || 0, n.slurE); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
     if (n.pos != null) ev.pos = n.pos;
     if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
-    if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); if (n.kf != null) ev.kf = n.kf; }
+    if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); if (n.kf != null) ev.kf = n.kf; if (n.cl != null) ev.cl = n.cl; }
+    if (n.slurS) ev.slurS = n.slurS; if (n.slurE) ev.slurE = n.slurE;   // 이음줄 (MusicXML 내보내기용)
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
     if (n.tenuto) ev.ten = true;   // 테누토: 길이를 꽉 채우고 조금 무게 있게
     if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
@@ -1902,7 +1940,7 @@ export function resolveMarks(measures, marks) {
   const dyn = [], tempo = [];
   for (const k of marks) {
     if (k.type === 'dyn') dyn.push({ kind: 'mark', p0: P(k), level: k.level, label: k.label });
-    else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed });
+    else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed, ...(k.hp ? { hp: true } : {}) });
     else if (k.type === 'tramp') tempo.push({ kind: k.kind, p0: P(k.a), p1: P(k.b), dashed: k.dashed, gradual: k.gradual });
     else if (k.type === 'atempo') tempo.push({ kind: 'atempo', p0: P(k.a), p1: P(k.a) });
   }

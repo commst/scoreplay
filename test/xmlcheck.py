@@ -40,11 +40,24 @@ def check(pre):
             for si, jp in enumerate(jl):
                 if jp['role'] != 'melody': continue
                 key = str(jp['id']); want = []
+                def cont(e, mm):   # 앞 음과 이어지는 붙임줄인가 (이을 앞 음이 없으면 새 음)
+                    t = F(e['t']['n'], e['t']['d'])
+                    for k, bb in ((0, b), (1, bars[mi - 1] if mi > 0 else None)):
+                        if not bb: continue
+                        off = F(bb['barLen']['n'], bb['barLen']['d']) if k else 0
+                        for p in bb['events']:
+                            if p is e or p.get('line') != key or not p.get('midis') or mm not in p['midis']: continue
+                            d = p.get('sus') or p['dur']
+                            if F(p['t']['n'], p['t']['d']) + F(d['n'], d['d']) - off == t: return True
+                    return False
                 for e in b['events']:
-                    if e.get('line') != key or not e.get('midis') or e.get('tie'): continue
+                    if e.get('line') != key or not e.get('midis'): continue
+                    if e.get('tie') and all(cont(e, mm) for mm in e['midis']): continue
                     st = round(F(e['t']['n'], e['t']['d']) * 384)
                     if st >= L: continue
-                    for mm in set(e['midis']): want.append((st, mm + 12 * (jp['settings'].get('oct') or 0)))
+                    for mm in set(e['midis']):
+                        if e.get('tie') and cont(e, mm): continue
+                        want.append((st, mm + 12 * (jp['settings'].get('oct') or 0)))
                 ws, gs = sorted(set(want)), sorted(set(got.get(si + 1, []))); tot += len(ws)
                 mi_ = [x for x in ws if x not in gs]; ex_ = [x for x in gs if x not in ws]
                 miss += len(mi_); extra += len(ex_)
