@@ -1062,7 +1062,21 @@ export function parseScore(pages, opts = {}) {
               const want = cand.filter(c => k === 0 ? c[1] < g.oy - 4 : c[2] > g.oy + 4);
               if (want.length) v = want[0];
             }
-            const up = v[1] < g.oy - 4;
+            // 가장 가까운 기둥이 이 머리를 끝에 달고 있지 않으면(같은 자리에 위·아래 기둥이 둘), 이 머리가 끝에 붙은 기둥이 이 음의 기둥
+            const endAt = c => Math.abs(c[1] - g.oy) < 3.5 || Math.abs(c[2] - g.oy) < 3.5;
+            if (!forceStem && twins.length < 2 && !endAt(v)) { const own = cand.filter(endAt); if (own.length) v = own.reduce((b, c) => Math.abs(c[0] - cx(g)) < Math.abs(b[0] - cx(g)) ? c : b); }
+            let up = v[1] < g.oy - 4;
+            // 한 기둥에 머리가 여럿인 화음: 기둥 가운데 놓인 머리는 위·아래로 모두 기둥이 뻗어 있다. 기둥 한쪽 끝에만 머리가 있으면
+            // 머리가 없는 끝이 기둥 끝 (아래 음이 '위 기둥'으로 읽혀 위·아래 음이 다른 성부·다른 길이로 갈리던 문제: 바르도 거문고 144마디)
+            if (!forceStem && !endAt(v) && v[1] < g.oy - 4 && v[2] > g.oy + 4) {
+              const onStem = h => h.size === g.size && h.x0 - 1.2 <= v[0] && v[0] <= h.x1 + 1.2;
+              const topH = heads.some(h => onStem(h) && Math.abs(h.oy - v[1]) < 3.5), botH = heads.some(h => onStem(h) && Math.abs(h.oy - v[2]) < 3.5);
+              // 머리 없는 끝에 꼬리·빔이 있을 때만 (없으면 길이가 같아 예전대로 둔다 — 성부만 바뀌어 경고가 생기던 것)
+              // 지금 기둥 끝으로 본 쪽에는 꼬리·빔이 없고 반대쪽 끝에만 있을 때 (그때만 길이가 틀린다)
+              const marksAt = y => beamList.some(r => r.x0 - 0.6 <= v[0] && v[0] <= r.x1 + 0.6 && Math.abs(r.yAt(v[0]) - y) < 10)
+                || sg.some(f => [FLAG_UP, FLAG_DN, FLAG16_UP, FLAG16_DN].includes(f.code) && Math.abs(f.x0 - v[0]) < 2.5 && Math.min(Math.abs(f.y0 - y), Math.abs(f.y1 - y), Math.abs(f.oy - y)) < 8);
+              if (topH !== botH && marksAt(botH ? v[1] : v[2]) && !marksAt(up ? v[1] : v[2])) up = botH;
+            }
             n.voice = up ? 'R' : 'L';
             n._stem = v[0]; n._up = up;
             const tip = up ? v[1] : v[2];
@@ -1070,7 +1084,7 @@ export function parseScore(pages, opts = {}) {
               if (!(r.x0 - 0.6 <= v[0] && v[0] <= r.x1 + 0.6)) continue;
               const ry = r.yAt(v[0]);
               // 짧은 토막 빔(점8분+16분 등): 양 끝에 기둥이 둘 다 걸치면 끝이 더 가까운 기둥 하나의 것
-              const tipY = (v[1] < g.oy - 4) ? v[1] : v[2];
+              const tipY = up ? v[1] : v[2];
               if (r.x1 - r.x0 < g.size * 0.45 && Math.abs(ry - tipY) > 1.5) {
                 const near = stems.filter(o => r.x0 - 0.6 <= o[0] && o[0] <= r.x1 + 0.6 && o[1] - 3 <= ry && ry <= o[2] + 3);
                 const endD = o => Math.min(Math.abs(o[0] - r.x0), Math.abs(o[0] - r.x1));
@@ -1198,6 +1212,16 @@ export function parseScore(pages, opts = {}) {
           const L = hz.filter(q => q.x1 <= t.x0 + 2 && q.x1 >= t.x0 - 8).sort((a, b) => b.x1 - a.x1)[0];
           const R = hz.filter(q => q.x0 >= t.x1 - 2 && q.x0 <= t.x1 + 8 && (!L || (t.plainTup ? Math.abs(q.y0 - L.y1) < 2 : Math.abs(q.y0 - L.y0) < 1.5))).sort((a, b) => a.x0 - b.x0)[0];
           if (L && R) br = { x0: L.x0, x1: R.x1 };
+          else {
+            // 많이 기운 괄호(위·아래 성부 괄호가 빔을 따라 비스듬히): 숫자 양옆 선분이 한 직선으로 이어질 때만 (달빛항해 136마디)
+            const sl = segs.filter(q => q.x1 - q.x0 > 6 && Math.abs(q.y1 - q.y0) <= (q.x1 - q.x0) * 0.3);
+            const yAt = (q, x) => q.y0 + (q.y1 - q.y0) * (x - q.x0) / (q.x1 - q.x0);
+            const L2 = sl.filter(q => q.x1 <= t.x0 + 2 && q.x1 >= t.x0 - 8 && Math.abs(q.y1 - cy(t)) < 6);
+            for (const l of L2) {
+              const r = sl.find(q => q.x0 >= t.x1 - 2 && q.x0 <= t.x1 + 8 && Math.abs(q.y0 - cy(t)) < 6 && Math.abs(yAt(l, q.x0) - q.y0) < 1.5 && Math.abs((q.y1 - q.y0) / (q.x1 - q.x0) - (l.y1 - l.y0) / (l.x1 - l.x0)) < 0.03);
+              if (r) { br = { x0: l.x0, x1: r.x1 }; break; }
+            }
+          }
         }
         if (br) {
           // 잇단음표 숫자와 세로로 가장 가까운 음표의 성부에 적용 (숫자가 오선 위에 있어도 아랫성부일 수 있음)
@@ -1219,7 +1243,8 @@ export function parseScore(pages, opts = {}) {
             const xs = [...new Set(notes.filter(n => n.voice === v && !n.grace).map(n => Math.round(n.x * 10) / 10))].sort((a, b) => a - b);
             let best = null, bd = 1e9;
             for (let i = 0; i + tk - 1 < xs.length; i++) { const d = Math.abs((xs[i] + xs[i + tk - 1]) / 2 - cx(t)); if (d < bd) { bd = d; best = i; } }
-            if (best != null && bd < 6 && xs[best + tk - 1] - xs[best] < 20 * (tk - 1)) {
+            const wide = best != null && notes.filter(n => n.voice === v && !n.grace && n.x >= xs[best] - 0.2 && n.x <= xs[best + tk - 1] + 0.2).every(n => !n.dur.lt(F(1, 4)));   // 4분음표 이상 셋잇단은 간격이 넓다 (화랑 25현 203마디)
+            if (best != null && bd < 6 && xs[best + tk - 1] - xs[best] < (wide ? Math.max(20, normSize * 1.6) : 20) * (tk - 1)) {
               const lo = xs[best] - 0.2, hi = xs[best + tk - 1] + 0.2;
               notes.forEach(n => { if (n.voice === v && !n.grace && n.x >= lo && n.x <= hi) n.tuplet = tf; });
             }
@@ -1252,6 +1277,17 @@ export function parseScore(pages, opts = {}) {
         const vn = headNotes.filter(n => n.voice === voice && !n.grace);
         const start = vn.filter(n => c.x0 - 10 <= n.x && n.x <= c.x0 + 4 && Math.abs(n.y - ccy) < 10);
         const end = vn.filter(n => c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 10 && n.x > c.x0 + 2);
+        // 곡선 높이 쪽 성부에 끝 음이 없으면(한 기둥 화음: 위·아래 음이 같은 성부) 성부와 상관없이 곡선 높이에 가장 가까운 머리
+        // (화음 붙임줄 둘 중 하나만 읽혀 나머지 음이 다시 울리던 문제: 바르도 대아쟁·거문고)
+        if (!end.length && pitchedStaff) {
+          const all = headNotes.filter(n => !n.grace && c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 6 && n.x > c.x0 + 2
+            && headNotes.some(o => !o.grace && o !== n && Math.abs(o.y - n.y) < 1 && c.x0 - 10 <= o.x && o.x <= c.x0 + 4));   // 시작 쪽에도 같은 높이 머리
+          if (all.length) { const mx = Math.min(...all.map(n => n.x)); const en0 = all.filter(n => n.x < mx + 2).reduce((b, n) => Math.abs(n.y - ccy) < Math.abs(b.y - ccy) ? n : b);
+            const st0 = headNotes.filter(o => !o.grace && Math.abs(o.y - en0.y) < 1 && c.x0 - 10 <= o.x && o.x <= c.x0 + 4);
+            // 사이에 다른 음표 머리가 있으면 같은 높이로 끝나는 이음줄(슬러)일 수 있으니 붙임줄로 보지 않는다
+            const sx = st0.length ? Math.max(...st0.map(o => o.x)) : c.x0;
+            if (!headNotes.some(o => !o.grace && o.x > sx + 1.5 && o.x < en0.x - 1.5)) { end.push(en0); start.push(...st0); } }
+        }
         if (end.length) {
           const en = end.reduce((b, n) => n.x < b.x ? n : b); en.tied = true;
           const sn = start.length ? start.reduce((b, n) => Math.abs(n.x - c.x0) < Math.abs(b.x - c.x0) ? n : b) : null;
@@ -1397,7 +1433,10 @@ export function parseScore(pages, opts = {}) {
         if (sg.some(g => g.code === MEAS_REPEAT && inr(cx(g)))) { m.kind = 'repeat1'; content = true; }
         let pendingTwoBarNext = false;
         if (sg.some(g => g.code === TWO_BAR_REPEAT && rx0 + 3 < cx(g) && cx(g) <= rx1 + 3)) { m.kind = 'repeat2a'; content = true; pendingTwoBarNext = true; }
-        const mr = [...rects, ...thickH].filter(r => inr(r.x0 + 1) && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3);
+        // 막대 밑에 음표가 둘 이상이면 빔(오선 아래 덧줄 음에서 기둥이 올라와 빔이 가운데 줄에 걸린 경우 등)이지 여러 마디 쉼표가 아니다
+        // (화랑 25현 147~166마디가 모두 빈 마디로 읽히던 원인)
+        const mr = [...rects, ...thickH].filter(r => inr(r.x0 + 1) && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3
+          && m.notes.filter(n => !n.rest && !n.grace && n.x >= r.x0 - 4 && n.x <= r.x1 + 4).length < 2);
         if (mr.length) {
           const r = mr[0];
           const above = g => isDigit(g.code) && g.oy < (st.oneLine ? st.mid - 2 : st.top - 2) && g.oy > st.top - 30;
@@ -1721,7 +1760,8 @@ function timing(m, barLen) {
       // 붙임줄로 이어진 음: 선율 악기는 앞 음을 길게 (마디를 넘는 붙임줄은 재생할 때 잇는다)
       if (n.midi != null) {
         const prev = evs.filter(e => e.voice === n.voice && e.midis && e.midis.includes(n.midi) && e.t.lt(onset.get(n))).pop();
-        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; }   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
+        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; prev._lp = [onset.get(n), n.dur]; }   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
+        else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) { /* 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐 */ }
         else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
       }
       continue;
@@ -1850,12 +1890,13 @@ export function resolveBars(measures, systemNumbers = []) {
     return others.length ? wr.length : wr.length - 1;
   };
   let sysStart = 0;
-  const splitHiddenBars = diff => {
+  const splitHiddenBars = (diff, allowLess = false) => {
     const cand = [];
     // 온쉼표가 없으면(붙임줄로 이은 긴 음 등) 늘려 읽은 마디 길이가 박자의 정수배인 마디
     const overK = j => { const m = measures[j], e = out[m._first]; if (m.kind !== 'normal' || !e || !m._tsLen || !e.warnings.some(w => /보다 김/.test(w))) return 0; const r = e.barLen.v / m._tsLen.v; return Math.abs(r - Math.round(r)) < 1e-9 && r >= 2 ? Math.round(r) - 1 : 0; };
     for (let j = sysStart; j < measures.length && measures[j] !== curM; j++) { const k = trailingRests(measures[j]) || overK(j); if (k) cand.push([j, k]); }
-    if (!cand.length || cand.reduce((a, c) => a + c[1], 0) !== diff) return false;
+    const tot = cand.reduce((a, c) => a + c[1], 0);
+    if (!cand.length || (tot !== diff && !(allowLess && tot < diff))) return false;
     for (const [j, k] of cand.reverse()) {
       const at = measures[j]._first, e = out[at];
       e.barLen = measures[j]._tsLen || e.barLen;
@@ -1871,7 +1912,7 @@ export function resolveBars(measures, systemNumbers = []) {
       for (let q = at + 1 + k; q < out.length; q++) out[q].number += k;
       for (let q = j + 1; q < measures.length; q++) if (measures[q]._first != null) measures[q]._first += k;
     }
-    return true;
+    return tot;
   };
   let curM = null;
   measures.forEach((m, mi) => {
@@ -1912,7 +1953,15 @@ export function resolveBars(measures, systemNumbers = []) {
       }
     }
     if (printed && printed > num && printed - num < 40 && out.length && splitHiddenBars(printed - num)) num = printed;
-    if (printed && printed > num && printed - num < 40 && out.length) {
+    if (printed && printed > num && printed - num < 40 && out.length && !out[out.length - 1].events.length && out[out.length - 1].kind === 'rest') {
+      // 비어 있는 마디 뒤에서 번호가 건너뛰면(파트보의 숨긴 마디선·모양이 다른 여러 마디 쉼표): 한 마디로 합치지 않고 빠진 수만큼 쉬는 마디로
+      // (합치면 연주 길이가 그만큼 짧아져 다른 줄과 어긋남)
+      const done = splitHiddenBars(printed - num, true); if (done) num += done;   // 늘려 읽은 마디를 먼저 나눌 수 있는 만큼 나누고
+      const tpl = out[out.length - 1], diff = printed - num;
+      for (let k = 0; k < diff; k++) out.push({ ...tpl, number: num + k, repeatStart: false, repeatEnd: false, sectionStart: false, warnings: [], tempoMarks: [], timesigChange: false, events: [] });
+      out[out.length - 1].warnings.push(`인쇄된 마디 번호(${printed})에 맞춰 쉬는 마디 ${diff}개를 채움`);
+      num = printed;
+    } else if (printed && printed > num && printed - num < 40 && out.length) {
       out[out.length - 1].warnings.push(`마디선이 보이지 않아 ${out[out.length - 1].number}~${printed - 1}마디를 한 마디로 읽음`);
       num = printed;
     } else if (printed && printed > num && !out.length && printed < 2000) {
