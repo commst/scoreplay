@@ -4,6 +4,7 @@ from fractions import Fraction as F
 STEP = {'C':0,'D':2,'E':4,'F':5,'G':7,'A':9,'B':11}
 def check(pre):
     root = ET.parse(f'xmlout/{pre}.musicxml').getroot()
+    WH = int(root.find('.//divisions').text) * 4
     js = json.load(open(f'xmlout/{pre}.json'))
     names = {sp.get('id'): sp.findtext('part-name') for sp in root.iter('score-part')}
     jparts = [p for p in js['parts'] if p['role'] in ('melody', 'perc')]
@@ -17,7 +18,7 @@ def check(pre):
         pname = names[part.get('id')]
         if any(j.get('name', '') not in pname and pname not in j.get('name', '') for j in jl): probs.append(f'part map {pname} vs {[j.get("name") for j in jl]}')
         for mi, me in enumerate(part.iter('measure')):
-            b = bars[mi]; L = round(F(b['barLen']['n'], b['barLen']['d']) * 384)
+            b = bars[mi]; L = round(F(b['barLen']['n'], b['barLen']['d']) * WH)
             pos = 0; vend = {}; got = {}; last = 0
             for el in me:
                 if el.tag == 'backup': pos -= int(el.findtext('duration')); continue
@@ -39,7 +40,7 @@ def check(pre):
                 if e != L: probs.append(f'{pname} m{b["number"]} staff/voice {k} len {e} != {L}')
             for si, jp in enumerate(jl):
                 if jp['role'] != 'melody': continue
-                key = str(jp['id']); want = []
+                key = 'p' if jp.get('id') is None else str(jp['id']); want = []
                 def cont(e, mm):   # 앞 음과 이어지는 붙임줄인가 (이을 앞 음이 없으면 새 음)
                     t = F(e['t']['n'], e['t']['d'])
                     for k, bb in ((0, b), (1, bars[mi - 1] if mi > 0 else None)):
@@ -53,7 +54,7 @@ def check(pre):
                 for e in b['events']:
                     if e.get('line') != key or not e.get('midis'): continue
                     if e.get('tie') and all(cont(e, mm) for mm in e['midis']): continue
-                    st = round(F(e['t']['n'], e['t']['d']) * 384)
+                    st = round(F(e['t']['n'], e['t']['d']) * WH)
                     if st >= L: continue
                     for mm in set(e['midis']):
                         if e.get('tie') and cont(e, mm): continue

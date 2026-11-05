@@ -1584,6 +1584,18 @@ export function parseScore(pages, opts = {}) {
       else if (/^(accel|string(\.|endo|e\b))|점점\s*빠르게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'accel', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco/i.test(t) }); addLabel(mAt(r.x0), 'accel.'); alsoDyn(r, tc, e); }
       else if (/^cresc|점점\s*세게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: 1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'cresc.'); }
       else if (/^(dim|decresc)|점점\s*여리게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: -1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'dim.'); }
+      // 그 밖의 연주 지시 글자(pizz.·arco·div.·SOLO·빠르게·여유있게 등): 소리에는 쓰지 않고 MusicXML 내보내기에 글자로 옮긴다.
+      // 숫자·쪽 번호·연습 번호(대문자 한 글자)·이 줄에서 먼 글자(제목·저작권 등)는 뺀다
+      else if (own && t.length >= 2 && t.length <= 40 && !(r.size > 13) && !/^[\d\s.,:;()~\-–/×x]+$/i.test(t) && !/^[A-Z](-\d+)?$/.test(t) && !/^[가-힣]$/.test(t)
+        && !/작곡|편곡|작사|채보|composed|arranged|arr\.|\bby\b|lyrics|words|copyright|ⓒ|©/i.test(t) && !/^(cre|cres|sc\.?|esc\.?|resc\.?|dim|im\.?)$/i.test(t)
+        && /[A-Za-z가-힣]{2}|[가-힣]/.test(t) && !/曲|^\s*-\s*\d+\s*-|-\s*\d+\s*-\s*$|[\u0080-\u00ff]{2,}|\.(tif|pdf|mus|musx|jpg|png)\b|\(score\)|_\d|관현악단|악단$|orchestra|ensemble|ㅡ/i.test(t)
+        && !/^[A-G][#b♯♭]?(m|maj|min|dim|aug|sus)?\d*$/.test(t)   // 코드 이름 && !(typeof pi !== 'undefined' && pi === 0 && sysOf(si) === sysOf(0) && yy < tTop)   // 첫 쪽 첫 단 위(제목·작곡자)는 빼기
+        && yy > st.top - 40 && yy < st.bottom + 40) {
+        // 굵게 보이려고 같은 글자를 겹쳐 두 번 찍은 PDF('세세'·'징징'): 거의 같은 자리의 같은 글자는 하나로
+        let tw = t;
+        if (r.g && r.g.length > 1) { const dd = r.g.filter((g, k) => !(k && g.code === r.g[k - 1].code && Math.abs(g.x0 - r.g[k - 1].x0) < Math.max(1.2, (g.x1 - g.x0) * 0.5))); if (dd.length < r.g.length) tw = dd.map(g => String.fromCodePoint(g.code)).join('').replace(/\s+/g, ' ').trim(); }
+        marks.push({ type: 'words', text: tw, a: at(r.x0 + 1), above: yy < (st.top + st.bottom) / 2 });
+      }
       else hit = false;
       if (hit) r.used = true;
     }
@@ -1937,10 +1949,11 @@ export function resolveMarks(measures, marks) {
     if (q.note && q.note.onset && m.timesigLen) return m._first + q.note.onset.v / m.timesigLen;
     return m._first + q.frac * (m._count || 1);
   };
-  const dyn = [], tempo = [];
+  const dyn = [], tempo = [], words = [];
   for (const k of marks) {
     if (k.type === 'dyn') dyn.push({ kind: 'mark', p0: P(k), level: k.level, label: k.label });
-    else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed, ...(k.hp ? { hp: true } : {}) });
+    else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed, ...(k.hp ? { hp: true, p1d: P(k.b) } : {}) });   // p1d: 그린 꺾쇠의 실제 끝 (소리용 p1은 짧으면 2마디로 늘림)
+    else if (k.type === 'words') words.push({ p0: P(k.a), text: k.text, above: k.above });
     else if (k.type === 'tramp') tempo.push({ kind: k.kind, p0: P(k.a), p1: P(k.b), dashed: k.dashed, gradual: k.gradual });
     else if (k.type === 'atempo') tempo.push({ kind: 'atempo', p0: P(k.a), p1: P(k.a) });
   }
@@ -1955,7 +1968,8 @@ export function resolveMarks(measures, marks) {
       if (list === dyn) { const t = list.find(x => x.kind === 'mark' && x.p0 > it.p0 + 0.01 && x.p0 <= it.p1 + 1); it.target = t ? t.level : null; }
     });
   }
-  return { dyn, tempo };
+  words.sort(byP);
+  return { dyn, tempo, words };
 }
 
 // 연주 순서: 도돌이표, 1·2번 괄호, D.S./D.C., 코다, Fine

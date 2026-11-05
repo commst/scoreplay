@@ -1509,7 +1509,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 5일</h3>
-    <h4>기능 업데이트 <small>1</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>2</small></h4><ul class="hlist">
+      <li><details><summary>MusicXML을 피날레·뮤즈스코어에서 손 안 대고 쓰게</summary><p>뮤즈스코어로 직접 열어 보며 고쳤습니다: 원래 악보의 쪽 크기·오선 크기·여백과 마디 폭을 넣어 한 단·한 쪽에 같은 마디가 들어가게, 악기 이름이 모든 단에, 관악·찰현·발현·타악 묶음 괄호, 악기마다 소리(타악은 드럼 소리 번호)와 셈여림 크기가 들어가 바로 재생, 마디를 넘는 붙임줄의 시작 표시가 빠지던 것, 다섯잇단·일곱잇단음표, 3/8·5/8·7/8·8/8·10/8(엇모리) 빔 묶음, 4/4의 8분음표 넷 묶음, 셋잇단 괄호 묶음, 앞 마디에서 이어진 음의 임시표, 같은 마디 되풀이(%) 마디의 둘째 성부, 악보의 연주 지시 글자(pizz.·arco·div.·Solo·빠르기말 등)와 꺾쇠 길이, 타악 두 줄 악기도 한 파트로</p></details></li>
       <li><details><summary>MusicXML을 원래 악보와 거의 같게</summary><p>내보낸 MusicXML을 피날레·뮤즈스코어에서 열면 원래 PDF와 거의 같은 모양이 되도록: 악보에서 읽은 음자리표(낮은음자리표에 적은 북도), 이음줄(슬러), 붙임줄로 적힌 음은 적힌 조각 그대로, 셈여림(p·f)과 꺾쇠·cresc.를 그 자리에, 빠르기 표시·rit.·accel.·a tempo, 연습 번호, 늘임표, 1·2번 괄호, 세뇨·코다·D.S.·D.C.·Fine, 같은 마디 되풀이(%), 여러 마디 쉼(파트보), 못갖춘마디, 원래 악보의 줄 바꿈·쪽 바꿈, 타악의 줄·칸 자리와 기둥 방향, 굴림(빗금/tr), 6/8·12/8 쉼표는 박마다. MusicXML 표준 규칙 검사 통과. 곡선을 짧은 직선으로 펴서 그린 피날레 PDF에서는 붙임줄도 새로 알아보게 되어, 이어 가야 할 음을 다시 치던 것도 고쳐졌습니다</p></details></li>
     </ul>
       <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
@@ -3473,6 +3474,18 @@ function parseScore(pages, opts = {}) {
       else if (/^(accel|string(\.|endo|e\b))|점점\s*빠르게/i.test(tc)) { const e = rampEnd(r); marks.push({ type: 'tramp', kind: 'accel', a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found, gradual: /poco\s+a\s+poco/i.test(t) }); addLabel(mAt(r.x0), 'accel.'); alsoDyn(r, tc, e); }
       else if (/^cresc|점점\s*세게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: 1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'cresc.'); }
       else if (/^(dim|decresc)|점점\s*여리게/i.test(t)) { const e = rampEnd(r); marks.push({ type: 'dramp', dir: -1, a: at(r.x0 + 2), b: posAt(e.x), dashed: e.found }); addLabel(mAt(r.x0), 'dim.'); }
+      // 그 밖의 연주 지시 글자(pizz.·arco·div.·SOLO·빠르게·여유있게 등): 소리에는 쓰지 않고 MusicXML 내보내기에 글자로 옮긴다.
+      // 숫자·쪽 번호·연습 번호(대문자 한 글자)·이 줄에서 먼 글자(제목·저작권 등)는 뺀다
+      else if (own && t.length >= 2 && t.length <= 40 && !(r.size > 13) && !/^[\d\s.,:;()~\-–/×x]+$/i.test(t) && !/^[A-Z](-\d+)?$/.test(t) && !/^[가-힣]$/.test(t)
+        && !/작곡|편곡|작사|채보|composed|arranged|arr\.|\bby\b|lyrics|words|copyright|ⓒ|©/i.test(t) && !/^(cre|cres|sc\.?|esc\.?|resc\.?|dim|im\.?)$/i.test(t)
+        && /[A-Za-z가-힣]{2}|[가-힣]/.test(t) && !/曲|^\s*-\s*\d+\s*-|-\s*\d+\s*-\s*$|[\u0080-\u00ff]{2,}|\.(tif|pdf|mus|musx|jpg|png)\b|\(score\)|_\d|관현악단|악단$|orchestra|ensemble|ㅡ/i.test(t)
+        && !/^[A-G][#b♯♭]?(m|maj|min|dim|aug|sus)?\d*$/.test(t)   // 코드 이름 && !(typeof pi !== 'undefined' && pi === 0 && sysOf(si) === sysOf(0) && yy < tTop)   // 첫 쪽 첫 단 위(제목·작곡자)는 빼기
+        && yy > st.top - 40 && yy < st.bottom + 40) {
+        // 굵게 보이려고 같은 글자를 겹쳐 두 번 찍은 PDF('세세'·'징징'): 거의 같은 자리의 같은 글자는 하나로
+        let tw = t;
+        if (r.g && r.g.length > 1) { const dd = r.g.filter((g, k) => !(k && g.code === r.g[k - 1].code && Math.abs(g.x0 - r.g[k - 1].x0) < Math.max(1.2, (g.x1 - g.x0) * 0.5))); if (dd.length < r.g.length) tw = dd.map(g => String.fromCodePoint(g.code)).join('').replace(/\s+/g, ' ').trim(); }
+        marks.push({ type: 'words', text: tw, a: at(r.x0 + 1), above: yy < (st.top + st.bottom) / 2 });
+      }
       else hit = false;
       if (hit) r.used = true;
     }
@@ -3826,10 +3839,11 @@ function resolveMarks(measures, marks) {
     if (q.note && q.note.onset && m.timesigLen) return m._first + q.note.onset.v / m.timesigLen;
     return m._first + q.frac * (m._count || 1);
   };
-  const dyn = [], tempo = [];
+  const dyn = [], tempo = [], words = [];
   for (const k of marks) {
     if (k.type === 'dyn') dyn.push({ kind: 'mark', p0: P(k), level: k.level, label: k.label });
-    else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed, ...(k.hp ? { hp: true } : {}) });
+    else if (k.type === 'dramp') dyn.push({ kind: 'ramp', p0: P(k.a), p1: P(k.b), dir: k.dir, dashed: k.dashed, ...(k.hp ? { hp: true, p1d: P(k.b) } : {}) });   // p1d: 그린 꺾쇠의 실제 끝 (소리용 p1은 짧으면 2마디로 늘림)
+    else if (k.type === 'words') words.push({ p0: P(k.a), text: k.text, above: k.above });
     else if (k.type === 'tramp') tempo.push({ kind: k.kind, p0: P(k.a), p1: P(k.b), dashed: k.dashed, gradual: k.gradual });
     else if (k.type === 'atempo') tempo.push({ kind: 'atempo', p0: P(k.a), p1: P(k.a) });
   }
@@ -3844,7 +3858,8 @@ function resolveMarks(measures, marks) {
       if (list === dyn) { const t = list.find(x => x.kind === 'mark' && x.p0 > it.p0 + 0.01 && x.p0 <= it.p1 + 1); it.target = t ? t.level : null; }
     });
   }
-  return { dyn, tempo };
+  words.sort(byP);
+  return { dyn, tempo, words };
 }
 
 // 연주 순서: 도돌이표, 1·2번 괄호, D.S./D.C., 코다, Fine
@@ -7793,22 +7808,25 @@ function buildMidi() {
 // 그 밖에 셈여림(p·f·꺾쇠·cresc.)을 그 자리에, 빠르기(♩.=52 등)·rit.·accel.·a tempo, 연습 번호, 늘임표, 1·2번 괄호, 세뇨·코다·D.S.·D.C.·Fine,
 // 같은 마디 되풀이(%), 여러 마디 쉼(파트보), 못갖춘마디, 원래 악보의 줄 바꿈·쪽 바꿈
 function buildMusicXml() {
-  const DIV = 96, W = DIV * 4, lines = exportLines(), esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // 4분음표 = 3360: 2·3·5·7로 나뉘어 셋잇단·다섯잇단·일곱잇단과 128분음표까지 정확히 (예전 96은 다섯·일곱잇단을 적지 못해 1~2짜리 조각이 생겼다)
+  const DIV = 3360, Q = DIV, W = DIV * 4, lines = exportLines(), esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const NAT = [0, 2, 4, 5, 7, 9, 11], LET = 'CDEFGAB';
-  const TYPES = [[384, 'whole'], [192, 'half'], [96, 'quarter'], [48, 'eighth'], [24, '16th'], [12, '32nd'], [6, '64th']];
-  const LEVEL = { eighth: 1, '16th': 2, '32nd': 3, '64th': 4 };
+  const TYPES = [[Q * 4, 'whole'], [Q * 2, 'half'], [Q, 'quarter'], [Q / 2, 'eighth'], [Q / 4, '16th'], [Q / 8, '32nd'], [Q / 16, '64th'], [Q / 32, '128th']];
+  const LEVEL = { eighth: 1, '16th': 2, '32nd': 3, '64th': 4, '128th': 5 };
+  const TUPS = [[3, 2], [5, 4], [6, 4], [7, 4], [7, 8], [5, 2], [9, 8]];   // 잇단음표 (몇 개를 몇 개 자리에)
   const typeOf = d => {
     for (const [v, n] of TYPES) { if (d === v) return { type: n }; if (d === v * 1.5) return { type: n, dots: 1 }; if (d === v * 1.75) return { type: n, dots: 2 }; }
-    for (const [v, n] of TYPES) if (d * 3 === v * 2) return { type: n, tup: true };
+    for (const [ac, nm] of TUPS) for (const [v, n] of TYPES) { if (d * ac === v * nm) return { type: n, tup: [ac, nm] }; if (d * ac === v * nm * 1.5) return { type: n, dots: 1, tup: [ac, nm] }; }
     return {};
   };
   const PLAIN = TYPES.flatMap(([v]) => [v * 1.75, v * 1.5, v]).filter(Number.isInteger).sort((a, b) => b - a);
-  const TRIP = TYPES.map(([v]) => v * 2 / 3).filter(Number.isInteger).sort((a, b) => b - a);
+  const TUPV = r => TYPES.map(([v]) => v * r[1] / r[0]).filter(Number.isInteger).sort((a, b) => b - a);
+  const TRIP = TUPV([3, 2]), QUIN = TUPV([5, 4]), SEPT = TUPV([7, 4]);
   // 한 음표로 못 적는 길이 → 붙임줄로 이을 조각들 (보통 음가 먼저, 남으면 셋잇단)
   const pieces = d => {
     if (typeOf(d).type) return [d];
     const out = []; let r = d;
-    for (const list of [PLAIN, TRIP, [...PLAIN, ...TRIP].sort((a, b) => b - a)]) {
+    for (const list of [PLAIN, TRIP, QUIN, SEPT, [...PLAIN, ...TRIP].sort((a, b) => b - a), [...PLAIN, ...TRIP, ...QUIN, ...SEPT].sort((a, b) => b - a)]) {
       let rr = r, tmp = [];
       while (rr > 0) { const c = list.find(v => v <= rr); if (!c) break; tmp.push(c); rr -= c; }
       if (rr === 0) return out.concat(tmp);
@@ -7838,22 +7856,74 @@ function buildMusicXml() {
     if (!best) best = [30, 'G', 2, 0];
     return `<clef${num ? ` number="${num}"` : ''}><sign>${best[1]}</sign><line>${best[2]}</line>${best[3] ? `<clef-octave-change>${best[3] / 7}</clef-octave-change>` : ''}</clef>`;
   };
+  const DYN_V = { pppp: 10, ppp: 23, pp: 36, p: 54, mp: 71, mf: 89, f: 106, ff: 124, fff: 141, ffff: 158 };
   const DYN_OK = new Set(['pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff', 'ffff', 'sf', 'sfz', 'sffz', 'fz', 'fp', 'sfp', 'rfz', 'rf']);
   const UNIT_XML = { q: ['quarter', 0], dq: ['quarter', 1], e: ['eighth', 0], h: ['half', 0] };
   const nb = state.bars.length;
   // 마디 위치(p: 마디 번호 축, 0부터) → [마디 index, 마디 안 위치(divisions)]
-  const atP = p => { const bi = Math.max(0, Math.min(nb - 1, Math.floor(p + 1e-6))), L = Math.round(state.bars[bi].barLen.v * W); return [bi, Math.max(0, Math.min(L, Math.round((p - bi) * L / 12) * 12))]; };
+  const atP = p => { const bi = Math.max(0, Math.min(nb - 1, Math.floor(p + 1e-6))), L = Math.round(state.bars[bi].barLen.v * W); return [bi, Math.max(0, Math.min(L, Math.round((p - bi) * L / (Q / 8)) * (Q / 8)))]; };
 
   let out = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">\n<score-partwise version="3.1">\n`;
-  out += `<work><work-title>${esc(state.title || '')}</work-title></work>\n<identification><encoding><software>합주연습기</software><encoding-date>${new Date().toISOString().slice(0, 10)}</encoding-date></encoding></identification>\n<part-list>\n`;
+  // 원래 악보의 쪽 크기·오선 크기·오선 사이를 그대로 (피날레·뮤즈스코어가 한 단에 같은 마디 수를 넣고 쪽을 같게 나누도록)
+  const sc0 = state.score && state.score.pages ? state.score : null;
+  const pg0 = sc0 && (sc0.pages.find((p, i) => sc0.layouts && sc0.layouts[i] && sc0.layouts[i].staves && sc0.layouts[i].staves.length) || sc0.pages[0]);
+  const pgW = pg0 && pg0.width > 100 ? pg0.width : 595.3, pgH = pg0 && pg0.height > 100 ? pg0.height : 841.9;
+  const med = a => { const v = a.filter(x => x > 0).sort((p, q) => p - q); return v.length ? v[v.length >> 1] : null; };
+  const LAY = (sc0 && sc0.layouts) || [];
+  const stH = med(LAY.flatMap(L => (L.staves || []).filter(st => !st.oneLine).map(st => st.bottom - st.top))) || 24;   // 오선 높이(pt)
+  const stGap = med(LAY.flatMap(L => (L.systems || []).flatMap(g => g.slice(1).map((si, k) => { const a = L.staves[g[k]], b = L.staves[si]; return a && b ? b.top - a.bottom : 0; })))) || stH * 1.6;
+  const sysGap = med(LAY.flatMap(L => (L.systems || []).slice(1).map((g, k) => { const a = L.staves[L.systems[k][L.systems[k].length - 1]], b = L.staves[g[0]]; return a && b ? b.top - a.bottom : 0; }))) || stH * 3;
+  const firstTop = med(LAY.map(L => L.staves && L.staves.length ? Math.min(...L.staves.map(st => st.top)) : 0)) || 72;
+  // 오선은 원래보다 20% 작게: 뮤즈스코어·피날레는 원래 악보(피날레 PDF)보다 음표 간격을 넓게 잡아, 같은 크기면 한 단에 넣은 마디가 넘쳐 다음 단·쪽으로 밀린다
+  const KS = 0.8, stU = stH * KS;   // 80%: 샘플 80곡을 뮤즈스코어로 열어 원래 쪽 수와 가장 가까웠던 값 (90% 39곡, 85% 47곡, 80% 54곡이 10% 안)
+  const T = pt => Math.round(pt / stU * 40 * 10) / 10;   // pt → tenths (오선 높이 = 40)
+  // 여백: 원래 오선이 시작·끝나는 자리 (왼쪽 악기 이름 자리는 단 여백으로 — 이름이 원래처럼 오선 왼쪽에)
+  const stX0 = med(LAY.flatMap(L => (L.staves || []).map(st => st.x0))) || 0.1 * pgW, stX1 = med(LAY.flatMap(L => (L.staves || []).map(st => st.x1))) || 0.95 * pgW;
+  const mL = Math.min(0.06 * pgW, Math.max(10, stX0 * 0.35)), sysL = Math.max(0, stX0 - mL), mR = Math.max(10, Math.min(0.12 * pgW, pgW - stX1)), mT = Math.max(20, Math.min(firstTop - 10, 0.12 * pgH)), mB = 0.05 * pgH;
+  const credits = state.title ? `<credit page="1"><credit-type>title</credit-type><credit-words default-x="${T(pgW / 2)}" default-y="${T(pgH - Math.max(24, mT * 0.45))}" justify="center" valign="top" font-size="20">${esc(state.title)}</credit-words></credit>\n` : '';
+  out += `<work><work-title>${esc(state.title || '')}</work-title></work>\n<movement-title>${esc(state.title || '')}</movement-title>\n<identification><encoding><software>합주연습기</software><encoding-date>${new Date().toISOString().slice(0, 10)}</encoding-date>`
+    + `<supports element="accidental" type="yes"/><supports element="beam" type="yes"/><supports attribute="new-system" element="print" type="yes" value="yes"/><supports attribute="new-page" element="print" type="yes" value="yes"/></encoding></identification>\n`
+    + `<defaults><scaling><millimeters>${(stU * 25.4 / 72).toFixed(4)}</millimeters><tenths>40</tenths></scaling>`
+    + `<page-layout><page-height>${T(pgH)}</page-height><page-width>${T(pgW)}</page-width><page-margins type="both"><left-margin>${T(mL)}</left-margin><right-margin>${T(mR)}</right-margin><top-margin>${T(mT)}</top-margin><bottom-margin>${T(mB)}</bottom-margin></page-margins></page-layout>`
+    + `<system-layout><system-margins><left-margin>${T(sysL)}</left-margin><right-margin>0</right-margin></system-margins><system-distance>${T(Math.max(stH * 1.5, sysGap))}</system-distance><top-system-distance>${T(Math.max(stH, firstTop - mT))}</top-system-distance></system-layout>`
+    + `<staff-layout><staff-distance>${T(Math.max(stH * 0.6, stGap))}</staff-distance></staff-layout></defaults>\n` + credits + `<part-list>\n`;
   // 한 악기의 윗줄·아랫줄(가야금·양금·피아노 등)은 한 파트의 두 오선으로 (피날레에서 묶음 괄호로 함께 보이게)
   const groups = [];
   lines.forEach(ln => {
     const prev = groups[groups.length - 1], m = /^(.*) \(아랫줄\)$/.exec(ln.name);
-    if (m && prev && prev.lines.length === 1 && prev.lines[0].name === m[1] + ' (윗줄)' && prev.lines[0].c.role === 'melody' && ln.c.role === 'melody') { prev.lines.push(ln); prev.name = m[1]; }
+    if (m && prev && prev.lines.length === 1 && prev.lines[0].name === m[1] + ' (윗줄)' && prev.lines[0].c.role === ln.c.role && (ln.c.role === 'melody' || ln.c.role === 'perc')) { prev.lines.push(ln); prev.name = m[1]; }   // 타악 두 줄도 한 파트로
     else groups.push({ lines: [ln], name: ln.name });
   });
-  groups.forEach((g, i) => { const c = g.lines[0].c; out += `<score-part id="P${i + 1}"><part-name>${esc(g.name)}</part-name>${c.role === 'melody' ? `<midi-instrument id="P${i + 1}-I1"><midi-program>${(GM_PROG[c.inst] ?? 0) + 1}</midi-program></midi-instrument>` : ''}</score-part>\n`; });
+  // 악기 갈래마다 묶음 괄호 (관악·찰현·발현·타악) — 원래 총보처럼, 마디선도 갈래 안에서 이어서
+  const SECT = { daegeum: 'w', sogeum: 'w', piri: 'w', daepiri: 'w', taepyeongso: 'w', saenghwang: 'w', haegeum: 'b', ajaeng: 'b', gayageum: 'p', geomungo: 'p', yanggeum: 'p' };
+  const sectOf = g => { const c = g.lines[0].c; return c.role === 'perc' ? 'x' : SECT[(c.inst || '').replace(/_syn$/, '')] || null; };
+  // 타악 소리(위·아래 성부마다 고른 소리) → 악기 정의와 GM 드럼 번호 (피날레·뮤즈스코어에서 바로 소리가 나게)
+  let chan = 0;
+  groups.forEach((g, i) => {
+    const c = g.lines[0].c;
+    if (c.role === 'perc') {
+      const keys = []; for (const ln of g.lines) for (const v of ['R', 'L']) { const k = ln.c[v]; if (k && k !== 'off' && !keys.includes(k)) keys.push(k); }
+      g.inst = keys.map((k, j) => ({ id: `P${i + 1}-I${j + 1}`, key: k, name: (SOUND_OPTIONS.find(o => o[0] === k) || [k, k])[1], midi: GM_DRUM[k] || 38 }));
+      g.instOf = (ln, voice) => { const k = ln.c[voice === 'L' ? 'L' : 'R']; const x = g.inst.find(o => o.key === k); return x ? x.id : null; };
+    } else { chan++; if (chan === 10) chan++; g.chan = ((chan - 1) % 16) + 1; }
+  });
+  let gi = 0;
+  groups.forEach((g, i) => {
+    const sec = sectOf(g), prevS = i > 0 ? sectOf(groups[i - 1]) : null, nextS = i < groups.length - 1 ? sectOf(groups[i + 1]) : null;
+    if (sec && sec !== prevS && sec === nextS) { gi++; g.grp = gi; out += `<part-group type="start" number="${gi}"><group-symbol>bracket</group-symbol><group-barline>yes</group-barline></part-group>\n`; }
+    else if (sec && sec === prevS) g.grp = groups[i - 1].grp;
+    const c = g.lines[0].c, nm = esc(g.name);
+    let x = `<score-part id="P${i + 1}"><part-name>${nm}</part-name><part-abbreviation>${nm}</part-abbreviation>`;
+    if (c.role === 'perc') {
+      x += g.inst.map(o => `<score-instrument id="${o.id}"><instrument-name>${esc(o.name)}</instrument-name></score-instrument>`).join('');
+      x += g.inst.map(o => `<midi-instrument id="${o.id}"><midi-channel>10</midi-channel><midi-program>1</midi-program><midi-unpitched>${o.midi + 1}</midi-unpitched><volume>80</volume></midi-instrument>`).join('');
+    } else {
+      const pan = Math.round(Math.max(-1, Math.min(1, panOf(c))) * 90);
+      x += `<score-instrument id="P${i + 1}-I1"><instrument-name>${nm}</instrument-name></score-instrument><midi-instrument id="P${i + 1}-I1"><midi-channel>${g.chan}</midi-channel><midi-program>${(GM_PROG[c.inst] ?? 0) + 1}</midi-program><volume>80</volume><pan>${pan}</pan></midi-instrument>`;
+    }
+    out += x + `</score-part>\n`;
+    if (sec && sec === prevS && sec !== nextS) out += `<part-group type="stop" number="${g.grp}"/>\n`;
+  });
   out += `</part-list>\n`;
   // 모든 줄에서 읽은 조표 (총보는 모든 줄이 같은 조: 그 마디에서 여러 줄이 읽은 조표의 다수)
   const barKf = state.bars.map(b => { const c = {}; for (const e of b.events) if (e.kf != null && e.midis) c[e.kf] = (c[e.kf] || 0) + 1; let best = null; for (const k in c) if (best == null || c[k] > c[best]) best = k; return best == null ? null : +best; });
@@ -7932,15 +8002,25 @@ function buildMusicXml() {
       for (const d of (res && res.marks && res.marks.dyn) || []) {
         if (!(d.p0 >= 0)) continue;
         const [bi, pos] = atP(d.p0);
-        if (d.kind === 'mark' && d.label && DYN_OK.has(d.label)) add(bi, pos, `<direction placement="below"><direction-type><dynamics><${d.label}/></dynamics></direction-type>@STAFF@</direction>`);
+        if (d.kind === 'mark' && d.label && DYN_OK.has(d.label)) add(bi, pos, `<direction placement="below"><direction-type><dynamics><${d.label}/></dynamics></direction-type>@STAFF@${DYN_V[d.label] ? `<sound dynamics="${DYN_V[d.label]}"/>` : ''}</direction>`);   // sound dynamics: 피날레·뮤즈스코어 재생 크기
         else if (d.kind === 'ramp' && d.dir) {
           if (!d.hp) add(bi, pos, `<direction placement="below"><direction-type><words font-style="italic">${d.dir > 0 ? 'cresc.' : 'dim.'}</words></direction-type>@STAFF@</direction>`);   // 글자 cresc.·dim. (꺾쇠가 아님)
           else {
-            const [bj, pj] = atP(d.p1 > d.p0 ? d.p1 : d.p0 + 0.5);
+            const e1 = d.p1d != null && d.p1d > d.p0 ? d.p1d : d.p1;   // 그린 꺾쇠는 그린 끝까지 (소리용 p1은 짧으면 2마디로 늘어나 있다)
+            const [bj, pj] = atP(e1 > d.p0 ? e1 : d.p0 + 0.5);
             add(bi, pos, `<direction placement="below"><direction-type><wedge type="${d.dir > 0 ? 'crescendo' : 'diminuendo'}" number="1"/></direction-type>@STAFF@</direction>`);
-            add(bj, Math.max(bj === bi ? pos + 12 : 0, pj), `<direction placement="below"><direction-type><wedge type="stop" number="1"/></direction-type>@STAFF@</direction>`);
+            add(bj, Math.max(bj === bi ? pos + Q / 8 : 0, pj), `<direction placement="below"><direction-type><wedge type="stop" number="1"/></direction-type>@STAFF@</direction>`);
           }
         }
+      }
+      // 연주 지시 글자(pizz.·arco·div.·Solo·빠르게 등): 악보에서 읽은 자리에 그대로
+      for (const w of (res && res.marks && res.marks.words) || []) {
+        if (!(w.p0 >= 0) || !w.text) continue;
+        const nt = w.text.replace(/\s+/g, ''), tt = (state.title || '').replace(/\s+/g, '');
+        if (tt.length >= 2 && (nt === tt || (tt.length >= 3 && nt.includes(tt)))) continue;   // 쪽마다 위에 찍힌 곡 제목(머리글)은 빼기
+        if (/^(([^\s,])\2+[,\s]*)+$/.test(w.text.trim())) continue;   // '세세'·'징징,징징'처럼 한 글자만 되풀이: 글꼴을 잘못 읽은 글자라 옮기지 않는다
+        const [bi, pos] = atP(w.p0), latin = /^[A-Za-z .,()'"\-]+$/.test(w.text);
+        add(bi, pos, `<direction placement="${w.above === false ? 'below' : 'above'}"><direction-type><words${latin ? ' font-style="italic"' : ''}>${esc(w.text)}</words></direction-type>@STAFF@</direction>`);
       }
       return { ln, perc, pcb, oct, mine, allM, avg, res, lb: res ? res.bars : null, oneLine: !!(item && item.oneLine), cls, dirs, lastNote: new Map() };
     });
@@ -7962,15 +8042,18 @@ function buildMusicXml() {
     const mrest = {};
     if (oneGroup && SS[0].lb) { const lb = SS[0].lb; for (let i = 0; i < nb; i++) { if (lb[i].kind !== 'rest' || (i > 0 && lb[i - 1].kind === 'rest' && lb[i - 1].src === lb[i].src)) continue; let j = i; while (j + 1 < nb && lb[j + 1].kind === 'rest' && lb[j + 1].src === lb[i].src) j++; if (j > i) mrest[i] = j - i + 1; } }
     // 줄 하나(오선 하나)의 한 마디 → 음·쉼표 객체 (vb: 성부 번호 시작, 둘째 오선은 5부터)
-    const staffObjs = (S, b, L, beat, K, vb, bi) => {
+    const staffObjs = (S, b, L, beat, K, vb, bi, bounds, regular, grpAt, halfBar, snap) => {
       const { perc, oct, mine, lastNote } = S, mid = S.pcb != null ? S.pcb + 4 : 34;   // 가운데 줄의 온음 번호 (타악 음자리표 B4)
       // 성부 나누기
       // 악보에 붙임줄로 적힌 음은 적힌 조각으로 나눠 둔다 (뒤 조각은 '이어 온 음'). 그래야 붙임줄이 이어지는 사이에 같은 성부에서 새로 치는 음과
       // 한 화음으로 묶여 원래 악보처럼 적힌다 (예: 솔을 이어 가는 동안 미♭을 새로 침)
       const evs = [];
+      const G = Q / 8, S16 = Q / 4;
       for (const e of b.events.filter(mine)) {
-        const st = Math.round(e.t.v * W), nat = Math.round((perc ? e.dur : (e.sus || e.dur)).v * W);
-        const pc = !perc && e.midis && e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
+        let st = Math.round(e.t.v * W), nat = Math.round((perc ? e.dur : (e.sus || e.dur)).v * W);
+        // snap: 잇단음표가 반쯤만 읽힌 마디(셋잇단과 보통 음이 한 박에 섞임) — 그런 음만 16분음표 칸에 맞춘다 (뮤즈스코어가 '깨진 파일'로 여기지 않게)
+        if (snap && (st % G || (st + nat) % G)) { const s2 = Math.min(L - S16, Math.round(st / S16) * S16), e2 = Math.max(s2 + S16, Math.min(L, Math.round((st + nat) / S16) * S16)); st = s2; nat = e2 - s2; }
+        const pc = !snap && !perc && e.midis && e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
         if (pc && pc.every(v => v > 0) && pc.reduce((a, c) => a + c, 0) === nat) {
           let p = st;
           pc.forEach((d, k) => { evs.push({ st: p, nat: d, e: k === 0 ? { ...e, pcs: null, stacc: false } : { ...e, pcs: null, tie: true, accent: false, ten: false, trill: false, slurS: 0, slurE: 0, graceMidis: null, stacc: k === pc.length - 1 && e.stacc } }); p += d; });
@@ -8008,8 +8091,9 @@ function buildMusicXml() {
         const rest = (from, to) => {   // 쉼표: 박 경계에서 나눈다 (한 박 안을 넘지 않게)
           let p = from;
           while (p < to) {
+            if (!regular) { const nb2 = bounds.find(x => x > p) || L, end = Math.min(to, nb2); for (const d of pieces(end - p)) { objs.push({ rest: true, d, voice, st: p }); p += d; } p = end; continue; }
             if (p % beat === 0 && to - p >= beat) {   // 박에서 시작: 여러 박을 한 쉼표로 (2분쉼표 등)
-              const n = Math.floor((to - p) / beat) * beat, c = PLAIN.find(v => v <= n && v % beat === 0 && v < 384 && (beat === 144 ? v === 144 : p % v === 0));   // 마디 가운데의 온쉼표는 쓰지 않고, 2분쉼표는 1·3박에서만. 6/8·12/8은 박마다 점4분쉼표(원래 악보처럼)
+              const n = Math.floor((to - p) / beat) * beat, c = PLAIN.find(v => v <= n && v % beat === 0 && v < 4 * Q && (beat === Q * 1.5 ? v === Q * 1.5 : p % v === 0));   // 마디 가운데의 온쉼표는 쓰지 않고, 2분쉼표는 1·3박에서만. 6/8·12/8은 박마다 점4분쉼표(원래 악보처럼)
               if (c) { objs.push({ rest: true, d: c, voice, st: p }); p += c; continue; }
             }
             const end = Math.min(to, (Math.floor(p / beat) + 1) * beat);
@@ -8033,7 +8117,7 @@ function buildMusicXml() {
             ps.forEach((pd, pi) => {
               heads.forEach((h, j) => {
                 const idx = h.pos != null ? mid - h.pos : e.voice === 'L' ? mid - 3 : mid + 1;
-                objs.push({ d: pd, voice, st: p, perc: true, chord: j > 0, low: e.voice === 'L', dstep: LET[((idx % 7) + 7) % 7], doct: Math.floor(idx / 7), accent: pi === 0 && e.accent, xh: h.xh, stacc: pi === ps.length - 1 && e.stacc, roll: pi === 0 && e.roll && !!e.rollDur, trill: pi === 0 && e.roll && !e.rollDur, twoV });   // 굴림: 빗금(트레몰로)으로 적힌 것은 빗금, tr로 적힌 것은 tr
+                objs.push({ d: pd, voice, st: p, perc: true, inst: g.instOf ? g.instOf(S.ln, e.voice) : null, chord: j > 0, low: e.voice === 'L', dstep: LET[((idx % 7) + 7) % 7], doct: Math.floor(idx / 7), accent: pi === 0 && e.accent, xh: h.xh, stacc: pi === ps.length - 1 && e.stacc, roll: pi === 0 && e.roll && !!e.rollDur, trill: pi === 0 && e.roll && !e.rollDur, twoV });   // 굴림: 빗금(트레몰로)으로 적힌 것은 빗금, tr로 적힌 것은 tr
               });
               p += pd;
             });
@@ -8078,19 +8162,30 @@ function buildMusicXml() {
           }
           run = [];
         };
+        // 같은 박 묶음 안의 이어진 음을 한 빔으로. 4/4·2/4에서 8분음표만 둘씩 있는 박은 반 마디(2박) 안에서 넷을 한 빔으로 (피날레·뮤즈스코어 기본과 같게)
+        const runs = []; let cur = [];
         for (const o of seq) {
           const ok = !o.rest && !o.whole && LEVEL[typeOf(o.d).type];
-          if (!ok) { flush(); continue; }
-          if (run.length && Math.floor(o.st / beat) !== Math.floor(run[0].st / beat)) flush();
-          run.push(o);
+          if (!ok) { if (cur.length) runs.push(cur); cur = []; continue; }
+          if (cur.length && grpAt(o.st) !== grpAt(cur[0].st)) { runs.push(cur); cur = []; }
+          cur.push(o);
+        }
+        if (cur.length) runs.push(cur);
+        const E = Q / 2, pair = r => r.length === 2 && r.every(o => o.d === E) && r[0].st % Q === 0 && r[1].st === r[0].st + E;
+        for (const r of runs) {
+          const last = run;
+          if (halfBar && last.length && pair(r) && last.length % 2 === 0 && last.every(o => o.d === E) && last[last.length - 1].st + E === r[0].st && Math.floor(r[0].st / halfBar) === Math.floor(last[0].st / halfBar) && last[0].st % Q === 0 && pair(last.slice(-2))) { run = last.concat(r); continue; }
+          flush(); run = r;
         }
         flush();
         // 셋잇단 괄호: 이어진 셋잇단 음·쉼표를 한 박(또는 두 박)씩
         let grp = [], acc = 0;
         for (const o of seq) {
-          if (!typeOf(o.d).tup) { if (grp.length) { grp[0].tupS = true; grp[grp.length - 1].tupE = true; } grp = []; acc = 0; continue; }
+          const tu = typeOf(o.d).tup;
+          if (!tu || (grp.length && grp.ratio !== tu.join(':'))) { if (grp.length) { grp[0].tupS = true; grp[grp.length - 1].tupE = true; } grp = []; acc = 0; if (!tu) continue; }
+          if (!grp.length) grp.ratio = tu.join(':');
           grp.push(o); acc += o.d;
-          const unit = grp.every(x => x.d < 96) ? 96 : 192;
+          const unit = tu[0] * Math.min(...grp.map(x => x.d));   // 셋잇단 한 묶음 = 가장 짧은 음 셋 (16분 셋잇단 여섯 개는 '3' 두 개로)
           if (acc % unit === 0) { grp[0].tupS = true; grp[grp.length - 1].tupE = true; grp = []; acc = 0; }
         }
         if (grp.length) { grp[0].tupS = true; grp[grp.length - 1].tupE = true; }
@@ -8102,6 +8197,7 @@ function buildMusicXml() {
       objs.map((o, i) => [o, i]).filter(([o]) => o.midi != null).sort((a, c) => a[0].st - c[0].st || (c[0].grace ? 1 : 0) - (a[0].grace ? 1 : 0) || a[1] - c[1]).forEach(([o]) => {
         const [stp, al, oc] = spell(o.midi, o.K); o.sp = [stp, al, oc];
         const id = stp + ':' + oc, cur = id in accState ? accState[id] : ka[stp];
+        if (o.tieStop && !o.inner) return;   // 앞 마디에서 붙임줄로 넘어온 음: 임시표를 다시 적지 않고, 이 마디의 다음 같은 음에는 다시 적는다
         if (al !== cur && !o.inner) { o.acc = ACCN[al]; accState[id] = al; }
         else if (al !== cur) accState[id] = al;
       });
@@ -8124,13 +8220,15 @@ function buildMusicXml() {
       return res;
     };
     out += `<part id="P${li + 1}">\n`;
+    const pending = [];
     let lastTs = null, lastKey = null; const lastCl = SS.map(() => null);
     const slurOpen = SS.map(() => null);   // 오선마다 열린 이음줄의 시작 음 (짝이 없는 시작·끝은 지운다)
     state.bars.forEach((b, bi) => {
       const L = Math.round(b.barLen.v * W);
       // 못갖춘마디: 첫 마디가 박자표보다 짧으면 박자표는 그대로 두고 implicit
       const full = Math.round(b.timesig[0] / b.timesig[1] * W), pickup = bi === 0 && L < full;
-      let m = `<measure number="${esc(b.number)}"${pickup ? ' implicit="yes"' : ''}>\n`;
+      const mw = geo && geo[bi] && geo[bi].x1 > geo[bi].x0 ? T(geo[bi].x1 - geo[bi].x0) : 0;   // 원래 마디 폭 (피날레가 레이아웃을 그대로 쓰게)
+      let m = `<measure number="${esc(b.number)}"${pickup ? ' implicit="yes"' : ''}${mw > 0 ? ` width="${mw}"` : ''}>\n`;
       if (geo && bi > 0 && geo[bi] && geo[bi - 1]) { if (geo[bi].page !== geo[bi - 1].page) m += '<print new-page="yes"/>\n'; else if (geo[bi].staff !== geo[bi - 1].staff) m += '<print new-system="yes"/>\n'; }
       const en = endings[bi];
       if (b.repeatStart || en) m += `<barline location="left">${b.repeatStart ? '<bar-style>heavy-light</bar-style>' : ''}${en ? `<ending number="${esc(en.num)}" type="start"/>` : ''}${b.repeatStart ? '<repeat direction="forward"/>' : ''}</barline>\n`;
@@ -8138,8 +8236,20 @@ function buildMusicXml() {
       let bt = b.timesig[1], bs = b.barLen.v * bt; if (Math.abs(bs - Math.round(bs)) > 1e-6) { bt = 16; bs = b.barLen.v * 16; } bs = Math.round(bs);
       if (pickup) { bs = b.timesig[0]; bt = b.timesig[1]; }
       const ts = bs + '/' + bt, K = perc ? 0 : keys[bi];
-      // 박 단위 (빔·쉼표 나누기): 6/8·9/8·12/8은 점4분, 2/2는 2분, 그 밖에는 4분
-      const beat = bt === 8 && bs % 3 === 0 && bs >= 6 ? 144 : bt === 2 ? 192 : 96;
+      // 박 단위 (빔·쉼표 나누기): 3/8·6/8·9/8·12/8은 점4분, 2/2는 2분, 그 밖에는 4분.
+      // 3으로 안 나뉘는 x/8은 국악·피날레에서 흔한 묶음으로 (5/8 3+2, 7/8 2+2+3, 8/8 3+3+2, 10/8 엇모리 3+2+3+2, 11/8 3+3+3+2), 못갖춘마디는 마디 끝에 맞춤
+      const beat = bt === 8 && bs % 3 === 0 ? Q * 1.5 : bt === 2 ? Q * 2 : Q;
+      const bounds = (() => {
+        const full = Math.round(bs / bt * W);
+        let grp = null;
+        if (bt === 8 && bs % 3 !== 0) grp = ({ 5: [3, 2], 7: [2, 2, 3], 8: [3, 3, 2], 10: [3, 2, 3, 2], 11: [3, 3, 3, 2], 13: [3, 3, 3, 2, 2] })[bs] || [...Array(Math.floor(bs / 2) - (bs % 2 ? 1 : 0)).fill(2), ...(bs % 2 ? [3] : [])];
+        const sizes = grp ? grp.map(n => n * Q / 2) : Array(Math.max(1, Math.round(full / beat))).fill(beat);
+        const out = [0]; for (const z of sizes) out.push(out[out.length - 1] + z);
+        const sh = (out[out.length - 1]) - L;   // 못갖춘마디: 끝을 맞춰 앞을 자른다
+        const r = out.map(x => x - sh).filter(x => x > 0 && x < L); return [0, ...r, L];
+      })();
+      const regular = bt !== 8 || bs % 3 === 0;
+      const grpAt = st => { let k = 0; while (k + 1 < bounds.length - 1 && bounds[k + 1] <= st) k++; return k; };
       const clefCh = SS.map((S, si) => !S.perc && S.cls[bi] !== lastCl[si]);
       const styles = SS.flatMap((S, si) => (mrep[si][bi] || []).map(x => `<measure-style${two ? ` number="${si + 1}"` : ''}>${x}</measure-style>`));
       if (mrest[bi]) styles.push(`<measure-style><multiple-rest>${mrest[bi]}</multiple-rest></measure-style>`);
@@ -8157,8 +8267,14 @@ function buildMusicXml() {
       SS.forEach((S, si) => { lastCl[si] = S.cls[bi]; });
       const objs = [];
       SS.forEach((S, si) => {
-        let o2 = staffObjs(S, b, L, beat, K, si * 4, bi);
+        const keepLN = new Map(S.lastNote);
+        let o2 = staffObjs(S, b, L, beat, K, si * 4, bi, bounds, regular, grpAt, bt === 4 && (bs === 4 || bs === 2) ? Q * 2 : 0, false);
+        // 잇단음표 묶음이 다 차지 않으면(악보를 잘못 읽은 곳) 그 마디만 16분음표 칸에 맞춰 다시 만든다
+        const brokenTup = (() => { const acc = {}; for (const o of o2) { if (o.backup || o.chord || o.grace || o.dirXml) continue; const v = o.voice; if (o.tupS) acc[v] = 0; if (v in acc) acc[v] += o.d; if (o.tupE && v in acc) { const t = acc[v]; delete acc[v]; const r = t / (Q / 32); if (!(r >= 1 && Number.isInteger(r) && (r & (r - 1)) === 0)) return true; } } return Object.keys(acc).length > 0; })();
+        if (brokenTup) { S.lastNote.clear(); for (const [k, v] of keepLN) S.lastNote.set(k, v); o2 = staffObjs(S, b, L, beat, K, si * 4, bi, bounds, regular, grpAt, bt === 4 && (bs === 4 || bs === 2) ? Q * 2 : 0, true); }
         if (two) o2.forEach(o => { if (!o.backup) o.staff = si + 1; });
+        // 같은 마디 되풀이(%) 마디: 뮤즈스코어는 첫 성부만 %로 바꾸므로 둘째 성부는 숨긴다(소리는 남김)
+        if (S.lb && S.lb[bi] && /^repeat/.test(S.lb[bi].kind || '')) o2.forEach(o => { if (!o.backup && o.voice % 4 !== 1) o.hidden = true; });
         // 늘임표: 이 줄의 그 마디에 늘임표가 있으면 첫 성부의 마지막 음(없으면 쉼표)에
         const ferm = S.lb ? S.lb[bi] && S.lb[bi].fermata : b.fermata;
         if (ferm) { const seq = o2.filter(o => !o.backup && !o.chord && !o.grace && o.voice % 4 === 1); const t = [...seq].reverse().find(o => !o.rest) || seq[seq.length - 1]; if (t) t.fermata = true; }
@@ -8180,7 +8296,7 @@ function buildMusicXml() {
       const noteXml = o => {
         if (o.dirXml) return o.dirXml;
         if (o.backup) return `<backup><duration>${o.backup}</duration></backup>\n`;
-        let x = '<note>';
+        let x = o.hidden ? '<note print-object="no">' : '<note>';
         if (o.grace) x += '<grace slash="yes"/>';
         if (o.chord) x += '<chord/>';
         if (o.rest) x += o.whole ? '<rest measure="yes"/>' : '<rest/>';
@@ -8188,11 +8304,12 @@ function buildMusicXml() {
         else { const [stp, al, oc] = o.sp; x += `<pitch><step>${LET[stp]}</step>${al ? `<alter>${al}</alter>` : ''}<octave>${oc}</octave></pitch>`; }
         if (!o.grace) x += `<duration>${o.d}</duration>`;
         if (o.tieStop) x += '<tie type="stop"/>'; if (o.tieStart) x += '<tie type="start"/>';
+        if (o.inst) x += `<instrument id="${o.inst}"/>`;
         x += `<voice>${o.voice}</voice>`;
         const ty = o.grace ? { type: 'eighth' } : o.whole ? {} : typeOf(o.d);
         if (ty.type) x += `<type>${ty.type}</type>` + '<dot/>'.repeat(ty.dots || 0);
         if (o.acc) x += `<accidental>${o.acc}</accidental>`;
-        if (ty.tup) x += '<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>';
+        if (ty.tup) x += `<time-modification><actual-notes>${ty.tup[0]}</actual-notes><normal-notes>${ty.tup[1]}</normal-notes></time-modification>`;
         if (!o.rest && !o.chord && (o.perc || o.twoV)) x += `<stem>${o.perc ? (o.low ? 'down' : 'up') : o.voice % 4 === 1 ? 'up' : 'down'}</stem>`;   // 타악은 악보의 기둥 방향대로
         if (o.perc && !o.rest && o.xh) x += '<notehead>x</notehead>';
         if (o.staff) x += `<staff>${o.staff}</staff>`;
@@ -8209,12 +8326,13 @@ function buildMusicXml() {
         if (nots.length) x += `<notations>${nots.join('')}</notations>`;
         return x + '</note>\n';
       };
-      m += objs.map(noteXml).join('');
-      const ee = endAt[bi];
-      if (b.repeatEnd || ee) m += `<barline location="right">${b.repeatEnd ? '<bar-style>light-heavy</bar-style>' : ''}${ee ? `<ending number="${esc(ee.num)}" type="${ee.type}"/>` : ''}${b.repeatEnd ? '<repeat direction="backward"/>' : ''}</barline>\n`;
-      out += m + `</measure>\n`;
+      // 글로 옮기는 것은 파트를 다 만든 뒤에: 다음 마디로 넘어가는 붙임줄의 시작 표시·짝 없는 이음줄 지우기가 앞 마디 음에 나중에 붙기 때문
+      // (예전에는 마디를 바로 써 버려 마디를 넘는 붙임줄의 시작 표시가 빠졌다)
+      const ee = endAt[bi], head = m;
+      const tail = (b.repeatEnd || ee ? `<barline location="right">${b.repeatEnd ? '<bar-style>light-heavy</bar-style>' : ''}${ee ? `<ending number="${esc(ee.num)}" type="${ee.type}"/>` : ''}${b.repeatEnd ? '<repeat direction="backward"/>' : ''}</barline>\n` : '') + `</measure>\n`;
+      pending.push(() => head + objs.map(noteXml).join('') + tail);
     });
-    out += `</part>\n`;
+    out += pending.map(f => f()).join('') + `</part>\n`;
   });
   return out + `</score-partwise>\n`;
 }
@@ -8460,7 +8578,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-05 07:44';
+const APP_VERSION = '2026-11-05 10:35';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

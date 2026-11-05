@@ -2,9 +2,10 @@ import verovio, sys, re
 src, out, mfrom, mto = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 parts = sys.argv[5].split(',') if len(sys.argv) > 5 else None
 s = open(src, encoding='utf-8').read()
+DIVS = re.search(r'<divisions>(\d+)</divisions>', s).group(1)
 # 필요한 마디만 남기기 (첫 마디의 attributes는 유지하기 위해 1마디 attributes를 복사)
 def trim(body):
-    ms = re.findall(r'<measure number="[^"]+">.*?</measure>\n', body, re.S)
+    ms = re.findall(r'<measure number="[^"]+"[^>]*>.*?</measure>\n', body, re.S)
     first_attr = re.search(r'<attributes>.*?</attributes>', ms[0], re.S).group(0)
     keep = []; last_attr = {}
     for m in ms:
@@ -17,8 +18,8 @@ def trim(body):
         if mfrom <= n <= mto:
             if not keep:
                 m = re.sub(r'<attributes>.*?</attributes>\n?', '', m, flags=re.S)
-                attr = '<attributes><divisions>96</divisions>' + last_attr.get('key', '') + last_attr.get('time', '') + last_attr.get('staves', '') + last_attr.get('clef', '') + '</attributes>\n'
-                m = re.sub(r'(<measure number="[^"]+">\n)', r'\1' + attr.replace('\\', '\\\\'), m, count=1)
+                attr = '<attributes><divisions>' + DIVS + '</divisions>' + last_attr.get('key', '') + last_attr.get('time', '') + last_attr.get('staves', '') + last_attr.get('clef', '') + '</attributes>\n'
+                m = re.sub(r'(<measure number="[^"]+"[^>]*>\n)', r'\1' + attr.replace('\\', '\\\\'), m, count=1)
             keep.append(m)
     return ''.join(keep)
 names = dict(re.findall(r'<score-part id="(P\d+)"><part-name>([^<]*)', s))
