@@ -364,6 +364,15 @@ python3 tools/gen_outline_templates.py <fonts 폴더> src/outline-templates.js
 | `node test/regr.mjs <이전 score-parser.js 절대경로> 악보.pdf …` | 해석기를 고친 뒤 결과(마디·음·경고·템포·반복)가 이전과 같은지 비교, 걸린 시간 |
 | `node test/test.mjs 악보.pdf` | 마디별 이벤트를 `js_out.txt`로 쓰고 템포 구간 출력 |
 | `node test/bench.mjs 총보.pdf` | 총보 읽기·줄 해석·소리 만들기 단계별 시간 |
+| `node test/inv.mjs 악보.pdf` | 악보 한 개 요약(제목·파트 이름·쪽·줄 수·줄 이름·마디·음·경고 수, JSON 한 줄) |
+| `node test/lstat.mjs 총보.pdf` | 줄마다 마디·음·경고 수, 세로 맞춤으로 다시 읽은 마디 수, 경고 종류 집계 |
+| `node test/alignregr.mjs 총보.pdf …` | 세로 맞춤(alignToSystem) 회귀: 경고 없던 마디가 바뀌지 않는지, 음높이 손실·마디 밖 음이 없는지 |
+| `PREV=<이전 score-parser.js> node test/bdiff.mjs <샘플 접두어>` | 해석기 고치기 전/후로 바뀐 마디와 경고 |
+| `S=<출력 폴더> node test/vis.mjs <샘플 접두어> [개수]` | 다시 읽은 마디를 PDF에서 잘라 그림으로(눈으로 대조) |
+| `node test/pwv2.cjs <html> desktop\|tablet\|phone`, `fuzz2.cjs`, `pwedit.cjs <html>` 등 | 화면 자동 시험(Playwright) |
+| `node test/pwxml.cjs <접두어…>` → `xsdcheck.py`·`xmlcheck.py`·`integrity.py`·`msall.sh` | MusicXML 내보내기 검사(표준 규칙, 원래 음 대비, 붙임줄·이음줄·잇단 짝, 뮤즈스코어로 열기) |
+
+이어 작업할 때의 규칙·샘플 목록·검사 순서·남은 과제는 `HANDOFF.md`에 모아 두었습니다.
 
 샘플 악보 PDF는 저작권 때문에 저장소에 넣지 않습니다. 각자 가진 악보로 실행하세요.
 
