@@ -1694,14 +1694,14 @@ function timing(m, barLen) {
       if (n.midi != null) {
         const prev = evs.filter(e => e.voice === n.voice && e.midis && e.midis.includes(n.midi) && e.t.lt(onset.get(n))).pop();
         if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; }   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
-        else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
+        else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
       }
       continue;
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
     if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); if (n.slurS) ex.slurS = Math.max(ex.slurS || 0, n.slurS); if (n.slurE) ex.slurE = Math.max(ex.slurE || 0, n.slurE); continue; }
-    const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo };
+    const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo, x: n.x };   // x: 음표 가로 자리 (다른 줄과 세로로 맞춰 시각을 다시 읽을 때)
     if (n.pos != null) ev.pos = n.pos;
     if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
@@ -2182,6 +2182,105 @@ export function analyzeLine(score, line = null) {
     return g;
   });
   return { bars, marks, mismatches, scanned: res.scanned, geo, rehearsal: findRehearsal(score, bars, geo) };
+}
+
+// ---------- 총보: 다른 줄과 세로로 맞춰 다시 읽기 ----------
+// 악보 프로그램은 같은 때 나는 음을 같은 가로 자리에 찍는다. 음표 길이를 잘못 읽어(꼬리를 못 찾는 등) 마디가 넘친 줄의 마디를,
+// 같은 단의 제대로 읽힌 다른 줄들이 알려 주는 '가로 자리 → 마디 안 시각'으로 다시 맞춘다.
+// res: 고칠 줄의 analyzeLine 결과, others: 같은 악보의 다른 줄 결과들(마디 수가 같아야 함).
+// 마디의 모든 음이 다른 줄의 음 자리와 맞을 때만 바꾸고(아니면 그대로), 바꾼 마디 수를 res.aligned에 남긴다
+const ALIGN_BAD = /박자보다 김|마디 길이를 넘음/;
+export function alignToSystem(res, others) {
+  if (!res || !res.bars || !res.geo) return res;
+  const n = res.bars.length, peers = (others || []).filter(o => o && o !== res && o.bars && o.bars.length === n && o.geo);
+  if (!peers.length) return res;
+  let changed = 0;
+  const bars = res.bars.map((b, i) => {
+    if (!b.warnings || !b.warnings.some(w => ALIGN_BAD.test(w))) return b;
+    const g = res.geo[i]; if (!g || g.page == null || !b.events.length) return b;
+    // 같은 단(같은 쪽)의, 경고 없이 읽힌 다른 줄의 음 자리
+    // 마디 길이는 경고 없는 줄들의 다수결(둘 이상, 다른 값보다 많아야) — 한 줄이 길이를 잘못 읽었을 때 따라가지 않도록
+    const ok = peers.map(o => [o.bars[i], o.geo[i]]).filter(([ob, og]) => ob && og && og.page === g.page && !ob.warnings.length && ob.number === b.number && ob.kind === 'normal');
+    const cnt = new Map(); for (const [ob] of ok) { const k = String(ob.barLen); cnt.set(k, (cnt.get(k) || 0) + 1); }
+    const top = [...cnt.entries()].sort((p, q) => q[1] - p[1]);
+    if (!top.length || top[0][1] < 2 || (top[1] && top[1][1] >= top[0][1])) return b;
+    let L = null; const raw = [];
+    for (const [ob, og] of ok) {
+      if (String(ob.barLen) !== top[0][0]) continue;
+      L = ob.barLen;
+      // 다른 줄의 음(붙임줄 이음 제외)의 가로 자리와 정확한 시각(분수) — 다섯잇단·셋잇단도 그대로
+      for (const e of ob.events) if (e.x != null && !e.tie) raw.push({ x: e.x, t: e.t });
+    }
+    if (!L || raw.length < 2) return b;
+    // 가로로 가까운 점(2pt 안)은 하나로 — 시각이 다르면 믿지 않는다
+    raw.sort((p, q) => p.x - q.x);
+    const anch = [];
+    for (const p of raw) {
+      const last = anch[anch.length - 1];
+      if (last && p.x - last.x1 < 2) { if (!last.t.eq(p.t)) last.bad = true; last.x1 = p.x; last.xs.push(p.x); }
+      else anch.push({ x0: p.x, x1: p.x, xs: [p.x], t: p.t });
+    }
+    const A = anch.filter(a => !a.bad).map(a => ({ x: a.xs.reduce((s, v) => s + v, 0) / a.xs.length, t: a.t.v, tf: a.t }));
+    for (let k = 1; k < A.length; k++) if (!(A[k].t > A[k - 1].t)) return b;   // 오른쪽으로 갈수록 시각이 늘어야 한다
+    const gap = Math.min(...A.slice(1).map((a, k) => a.x - A[k].x), 99);
+    const tol = Math.max(1.5, Math.min(5, gap * 0.45));
+    // 이 줄의 음마다 가장 가까운 자리의 시각 (하나라도 못 맞추면 이 마디는 그대로)
+    const evs = [], pend = [];
+    for (const e of b.events) {
+      if (e.x == null) return b;
+      let best = null; for (const a of A) { const d = Math.abs(a.x - e.x); if (d <= tol && (!best || d < best.d)) best = { d, a }; }
+      if (!best) { pend.push(e); continue; }
+      const tt = best.a.t; if (!(tt >= 0 && tt < L.v)) return b;
+      if (!e.t.n && tt > 1e-9) return b;   // 마디 첫 음(처음 읽기에서 시각 0)이 뒤로 밀리면 기준 자리가 어긋난 것 — 손대지 않음
+      evs.push({ ...e, t: best.a.tf });
+    }
+    // 다른 줄에 같은 자리 음이 없는 음(이 줄에만 있는 리듬): 같은 성부 바로 앞 음의 시각 + 그 음의 적힌 길이.
+    // 그 시각이 양옆 자리(가로로 앞·뒤 기준점)의 시각 사이에 들어갈 때만 받아들인다
+    for (const e of pend.sort((p, q) => p.x - q.x)) {
+      const prev = evs.filter(o => o.voice === e.voice && o.x < e.x - 0.5).sort((p, q) => q.x - p.x)[0];
+      if (!prev) return b;
+      const t = prev.t.add(prev.dur), lo = A.filter(a => a.x < e.x).pop(), hi = A.find(a => a.x > e.x);
+      if (!(lo && t.v > lo.t + 1e-9) || (hi ? !(t.v < hi.t - 1e-9) : !(t.v < L.v))) return b;
+      evs.push({ ...e, t });
+    }
+    // 같은 때의 윗성부 음이 아랫성부 음들보다 낮으면(화음의 아래 음을 윗성부로 잘못 나눔) 아랫성부로
+    for (const e of evs) {
+      if (e.voice !== 'R' || !e.midis || e.tie) continue;
+      const low = evs.filter(o => o.voice === 'L' && o.midis && !o.tie && o.t.eq(e.t));
+      const lm = low.flatMap(o => o.midis);
+      if (low.length && Math.max(...e.midis) < Math.min(...lm) && !e.midis.some(m => lm.includes(m))) e.voice = 'L';
+    }
+    // 성부마다 같은 때의 선율 음은 한 화음으로
+    const out = [];
+    for (const e of evs.sort((p, q) => p.t.v - q.t.v)) {
+      const h = e.midis && !e.tie ? out.find(o => o.voice === e.voice && o.midis && !o.tie && o.t.eq(e.t)) : null;
+      if (h && e.midis.some(m => h.midis.includes(m))) return b;   // 같은 성부 같은 때에 같은 음이 둘: 읽기가 겹친 것 — 손대지 않음
+      if (h) { for (const m of e.midis) if (!h.midis.includes(m)) h.midis.push(m); h.accent = h.accent || e.accent; continue; }
+      out.push({ ...e, midis: e.midis ? e.midis.slice() : e.midis });
+    }
+    // 길이: 적힌 길이와 같은 성부의 다음 음까지 중 짧은 쪽 (꼬리를 못 찾아 길게 읽은 것을 바로잡는다)
+    // 앞 음이 잇단음표 비율(2/3, 4/5 …)로 줄었고 이 음의 적힌 길이가 앞 음과 같으면, 이 음도 같은 비율로 (잇단음표 묶음의 마지막 음)
+    out.sort((p, q) => p.t.v - q.t.v);
+    const prevOf = new Map();
+    for (const e of out) {
+      const nx = out.filter(o => o.voice === e.voice && o.t.gt(e.t)).reduce((m, o) => (!m || o.t.lt(m) ? o.t : m), null);
+      const lim = (nx || L).sub(e.t);
+      if (!(lim.v > 0)) return b;
+      const d0 = e.dur, pv = prevOf.get(e.voice);
+      if (e.dur.gt(lim)) e.dur = lim;
+      if (pv && !e.tie && pv.d0.eq(d0) && pv.d.lt(pv.d0)) {
+        const r = F(pv.d.n * pv.d0.d, pv.d.d * pv.d0.n);
+        if ([3, 5, 6, 7].includes(r.d) && d0.mul(r).lt(e.dur)) e.dur = d0.mul(r);
+      }
+      if (e.sus && e.sus.gt(e.dur)) e.sus = e.dur;
+      if (e.pcs) delete e.pcs;
+      if (!e.tie) prevOf.set(e.voice, { d0, d: e.dur });
+    }
+    changed++;
+    return { ...b, barLen: L, events: out, warnings: [...b.warnings.filter(w => !ALIGN_BAD.test(w)), '다른 줄과 세로 자리를 맞춰 음 길이를 다시 읽음'] };
+  });
+  if (!changed) return res;
+  return { ...res, bars, aligned: changed };
 }
 
 // 연습 번호(리허설 마크): 단 맨 위 오선 바로 위, 마디 왼쪽 끝에 있는 네모 칸 안의 짧은 글(A, B, 1, 25, 가 …)

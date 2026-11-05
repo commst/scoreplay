@@ -1501,7 +1501,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 5일</h3>
-    <h4>기능 업데이트 <small>2</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>3</small></h4><ul class="hlist">
+      <li><details><summary>총보에서 음 길이를 잘못 읽은 마디를 다른 줄에 맞춰 다시 읽기</summary><p>총보에서는 같은 때 치는 음이 모든 줄에서 같은 가로 자리에 놓입니다. 한 줄의 음 길이를 잘못 읽어 마디가 넘치면(꼬리가 둘인 두 성부 8분음표를 4분음표로 읽는 등), 같은 단에서 제대로 읽힌 다른 줄들의 음 자리에 맞춰 그 마디의 박자·성부를 다시 읽습니다. 달빛항해 해금처럼 위·아래 성부가 엉키던 마디가 원래 악보와 같아지고, 재생과 MusicXML 내보내기에도 그대로 쓰입니다. 경고가 없던 마디는 바뀌지 않고, 근거가 될 다른 줄이 부족하면 처음 읽은 그대로 둡니다. 다시 읽은 마디에는 '다른 줄과 세로 자리를 맞춰 음 길이를 다시 읽음'이 표시됩니다</p></details></li>
       <li><details><summary>MusicXML을 피날레·뮤즈스코어에서 손 안 대고 쓰게</summary><p>뮤즈스코어로 직접 열어 보며 고쳤습니다: 원래 악보의 쪽 크기·오선 크기·여백과 마디 폭을 넣어 한 단·한 쪽에 같은 마디가 들어가게, 악기 이름이 모든 단에, 관악·찰현·발현·타악 묶음 괄호, 악기마다 소리(타악은 드럼 소리 번호)와 셈여림 크기가 들어가 바로 재생, 마디를 넘는 붙임줄의 시작 표시가 빠지던 것, 다섯잇단·일곱잇단음표, 3/8·5/8·7/8·8/8·10/8(엇모리) 빔 묶음, 4/4의 8분음표 넷 묶음, 셋잇단 괄호 묶음, 앞 마디에서 이어진 음의 임시표, 같은 마디 되풀이(%) 마디의 둘째 성부, 악보의 연주 지시 글자(pizz.·arco·div.·Solo·빠르기말 등)와 꺾쇠 길이, 타악 두 줄 악기도 한 파트로</p></details></li>
       <li><details><summary>MusicXML을 원래 악보와 거의 같게</summary><p>내보낸 MusicXML을 피날레·뮤즈스코어에서 열면 원래 PDF와 거의 같은 모양이 되도록: 악보에서 읽은 음자리표(낮은음자리표에 적은 북도), 이음줄(슬러), 붙임줄로 적힌 음은 적힌 조각 그대로, 셈여림(p·f)과 꺾쇠·cresc.를 그 자리에, 빠르기 표시·rit.·accel.·a tempo, 연습 번호, 늘임표, 1·2번 괄호, 세뇨·코다·D.S.·D.C.·Fine, 같은 마디 되풀이(%), 여러 마디 쉼(파트보), 못갖춘마디, 원래 악보의 줄 바꿈·쪽 바꿈, 타악의 줄·칸 자리와 기둥 방향, 굴림(빗금/tr), 6/8·12/8 쉼표는 박마다. MusicXML 표준 규칙 검사 통과. 곡선을 짧은 직선으로 펴서 그린 피날레 PDF에서는 붙임줄도 새로 알아보게 되어, 이어 가야 할 음을 다시 치던 것도 고쳐졌습니다</p></details></li>
     </ul>
@@ -3724,6 +3725,18 @@ function removeExtra(uid) {
 function dispName(l) { if (!l) return ''; const c = state.lineCfg[cfgKey(l.id)]; return (c && c.rename) || l.label || ''; }
 function lineLabel(id) { const item = state.lineList.find(l => cfgKey(l.id) === cfgKey(id)); if (item) return dispName(item) || item.sourceScore?.partName || item.sourceScore?.title || ''; if (id == null) return state.score?.partName || ''; const l = state.score?.lines?.[id]; return l ? l.label : ''; }
 
+// 총보에서 음 길이를 잘못 읽어 마디가 넘친 줄: 같은 단의 다른 줄들과 세로 자리를 맞춰 다시 읽는다(alignToSystem).
+// 다른 줄 해석은 악보마다 한 번만 해 두고(_rawCache) 같이 쓴다. 그런 마디가 없으면 다른 줄은 해석하지 않는다
+const ALIGN_NEED = /박자보다 김|마디 길이를 넘음/;
+function alignRaw(sc, lineId, raw) {
+  try {
+    if (!sc || !sc.lines || sc.lines.length < 2 || lineId == null || !raw || !raw.bars.some(b => b.warnings.some(w => ALIGN_NEED.test(w)))) return raw;
+    const cache = sc._rawCache || (sc._rawCache = {});
+    cache[lineId] = raw;
+    const others = sc.lines.map((l, i) => i === lineId ? null : (cache[i] || (cache[i] = analyzeLine(sc, i)))).filter(Boolean);
+    return alignToSystem(raw, others);
+  } catch (e) { console.warn('alignRaw', e); return raw; }
+}
 // 고른 줄들을 해석해 하나의 마디 목록으로 합친다 (기준 = 고른 줄 중 맨 위)
 function applySelection(first = false) {
   const sc = state.score;
@@ -3732,7 +3745,7 @@ function applySelection(first = false) {
     const k = cfgKey(id), item = state.lineList.find(l => cfgKey(l.id) === k);
     const sourceScore = item?.sourceScore || sc;
     const sourceLineId = item && Object.prototype.hasOwnProperty.call(item, 'sourceLineId') ? item.sourceLineId : id;
-    if (!state.lineRaw[k]) state.lineRaw[k] = sourceScore.xml ? analyzeXmlLine(sourceScore, sourceLineId) : analyzeLine(sourceScore, sourceLineId);
+    if (!state.lineRaw[k]) state.lineRaw[k] = sourceScore.xml ? analyzeXmlLine(sourceScore, sourceLineId) : alignRaw(sourceScore, sourceLineId, analyzeLine(sourceScore, sourceLineId));
     if (!state.lineRes[k]) state.lineRes[k] = applyEdits(state.lineRaw[k], sourceScore, sourceLineId == null ? 'p' : String(sourceLineId));
     return { id, key: k, r: state.lineRes[k], sc: sourceScore };
   });
