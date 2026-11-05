@@ -1458,6 +1458,16 @@ export function parseScore(pages, opts = {}) {
           m.kind = 'multirest'; m.multirest = Math.max(1, nd.length ? +nd.map(g => g.code - 48).join('') : 1); content = true;
           // 숫자 일부가 네모 칸에 가려졌거나 못 찾았으면 나중에 인쇄된 마디 번호로 맞춘다
           m.mrUncertain = !nd.length || glyphs.some(g => isDigit(g.code) && inBox(g) && Math.abs(cx(g) - rc) < (r.x1 - r.x0) / 2 + 10 && g.oy < st.top + 2 && g.oy > st.top - 30);
+        } else if (!st.oneLine && !m.notes.some(n => !n.rest) && m.kind === 'normal') {
+          // 막대 대신 Finale JazzPerc 글꼴의 짧은 기호('5' 자리) 하나 위에 숫자만 찍은 여러 마디 쉼표(뱃노래 타악 첫 마디 '2' 등).
+          // 오선 안에 그 기호 하나만 있고, 바로 위(오선 위 30pt 안) 같은 자리에 숫자가 있을 때만
+          const dg = sg.filter(g => isDigit(g.code) && inr(cx(g)) && g.oy < st.top - 2 && g.oy > st.top - 30);
+          if (dg.length >= 1 && dg.length <= 2 && Math.abs(dg[0].oy - dg[dg.length - 1].oy) < 1) {
+            const c0 = (Math.min(...dg.map(g => g.x0)) + Math.max(...dg.map(g => g.x1))) / 2;
+            const sym = sg.filter(g => Math.abs(cx(g) - c0) < 15 && Math.abs(g.oy - st.mid) < (st.bottom - st.top) / 2 + 1);
+            const n = +[...dg].sort((a, b) => a.ox - b.ox).map(g => g.code - 48).join('');
+            if (sym.length === 1 && sym[0].code === 53 && /JazzPerc/i.test(sym[0].font) && !pendingTwoBar && Math.abs(c0 - cx(sym[0])) < 6 && n >= 2 && n < 100) { m.kind = 'multirest'; m.multirest = n; m.mrUncertain = false; content = true; }
+          }
         }
         // 도돌이 점: 같은 세로줄에 가운데선 위·아래로 대칭인 점 두 개.
         // 음표의 부점으로도 쓰인 점이면 겹세로줄(굵은+가는 선) 옆일 때만 도돌이로 본다
@@ -1760,8 +1770,12 @@ function timing(m, barLen) {
       // 붙임줄로 이어진 음: 선율 악기는 앞 음을 길게 (마디를 넘는 붙임줄은 재생할 때 잇는다)
       if (n.midi != null) {
         const prev = evs.filter(e => e.voice === n.voice && e.midis && e.midis.includes(n.midi) && e.t.lt(onset.get(n))).pop();
-        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; prev._lp = [onset.get(n), n.dur]; }   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
-        else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) { /* 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐 */ }
+        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) {
+          prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; prev._lp = [onset.get(n), n.dur];   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
+          if (prev._cs) prev._tm = prev._tm ? new Set([...prev._tm].filter(m => prev._cs.has(m))) : prev._cs;   // 앞 조각까지 이어진 음
+          prev._cs = new Set([n.midi]);
+        }
+        else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) prev._cs.add(n.midi);   // 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐
         else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
       }
       continue;
@@ -1780,6 +1794,19 @@ function timing(m, barLen) {
     if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
     seen.set(key, ev); evs.push(ev);
   }
+  // 화음 가운데 일부 음만 붙임줄로 이어졌으면 이어진 음만 길게 두고 나머지 음은 떼어 낸다
+  // (화음 전체가 늘어나 다시 치는 음과 겹쳐 울리던 것: 바르도 대아쟁 등)
+  for (const e of evs.slice()) {
+    if (!e._cs) continue;
+    const tm = e._tm ? new Set([...e._tm].filter(m => e._cs.has(m))) : e._cs;
+    delete e._cs; delete e._tm;
+    if (!e.midis || e.midis.length < 2 || tm.size >= e.midis.length || !tm.size) continue;
+    const rest = e.midis.filter(m => !tm.has(m));
+    const o = { ...e, midis: rest }; delete o.sus; delete o.pcs; delete o._lp;
+    e.midis = e.midis.filter(m => tm.has(m));
+    evs.push(o);
+  }
+  for (const e of evs) delete e._lp;
   evs.sort((a, b) => a.t.v - b.t.v);
   return evs;
 }

@@ -1517,7 +1517,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>MusicXML을 피날레·뮤즈스코어에서 손 안 대고 쓰게</summary><p>뮤즈스코어로 직접 열어 보며 고쳤습니다: 원래 악보의 쪽 크기·오선 크기·여백과 마디 폭을 넣어 한 단·한 쪽에 같은 마디가 들어가게, 악기 이름이 모든 단에, 관악·찰현·발현·타악 묶음 괄호, 악기마다 소리(타악은 드럼 소리 번호)와 셈여림 크기가 들어가 바로 재생, 마디를 넘는 붙임줄의 시작 표시가 빠지던 것, 다섯잇단·일곱잇단음표, 3/8·5/8·7/8·8/8·10/8(엇모리) 빔 묶음, 4/4의 8분음표 넷 묶음, 셋잇단 괄호 묶음, 앞 마디에서 이어진 음의 임시표, 같은 마디 되풀이(%) 마디의 둘째 성부, 악보의 연주 지시 글자(pizz.·arco·div.·Solo·빠르기말 등)와 꺾쇠 길이, 타악 두 줄 악기도 한 파트로</p></details></li>
       <li><details><summary>MusicXML을 원래 악보와 거의 같게</summary><p>내보낸 MusicXML을 피날레·뮤즈스코어에서 열면 원래 PDF와 거의 같은 모양이 되도록: 악보에서 읽은 음자리표(낮은음자리표에 적은 북도), 이음줄(슬러), 붙임줄로 적힌 음은 적힌 조각 그대로, 셈여림(p·f)과 꺾쇠·cresc.를 그 자리에, 빠르기 표시·rit.·accel.·a tempo, 연습 번호, 늘임표, 1·2번 괄호, 세뇨·코다·D.S.·D.C.·Fine, 같은 마디 되풀이(%), 여러 마디 쉼(파트보), 못갖춘마디, 원래 악보의 줄 바꿈·쪽 바꿈, 타악의 줄·칸 자리와 기둥 방향, 굴림(빗금/tr), 6/8·12/8 쉼표는 박마다. MusicXML 표준 규칙 검사 통과. 곡선을 짧은 직선으로 펴서 그린 피날레 PDF에서는 붙임줄도 새로 알아보게 되어, 이어 가야 할 음을 다시 치던 것도 고쳐졌습니다</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>2건</small></summary><ul class="hlist bug">
+      <li><details><summary>화음의 한 음만 붙임줄로 이을 때 화음 전체가 길게 울리던 문제, 타악 파트보의 여러 마디 쉼표를 한 마디로 세던 문제</summary><p>화음에서 붙임줄로 이어지는 음만 길게 울리고 나머지 음은 적힌 길이대로 끊깁니다. 피날레 타악 글꼴로 짧은 기호 위에 숫자만 찍은 여러 마디 쉼표(뱃노래 파트보 등)를 숫자만큼 쉬는 마디로 읽어, 뒤쪽 마디가 한 마디로 합쳐지거나 다른 줄과 어긋나던 것을 고쳤습니다.</p></details></li>
       <li><details><summary>태블릿 가로 화면에서 왼쪽 탭(악기·빠르기·연주·저장)이 위 막대에 가려 눌리지 않던 문제</summary><p>넓은 화면에서 왼쪽 설정 칸이 페이지를 따라 붙어 있다가, 아래까지 굴리면 칸이 위로 밀려 올라가 탭이 위 막대 밑으로 숨었습니다(아이패드 사파리는 주소창이 접히고 펴질 때 화면 높이가 바뀌어 더 많이 밀림). 왼쪽 칸을 위 막대 바로 아래에 고정해 어떤 높이·스크롤에서도 탭이 보이고 눌리게 고침</p></details></li>
     </ul></details>
 </section>
@@ -3352,6 +3353,16 @@ function parseScore(pages, opts = {}) {
           m.kind = 'multirest'; m.multirest = Math.max(1, nd.length ? +nd.map(g => g.code - 48).join('') : 1); content = true;
           // 숫자 일부가 네모 칸에 가려졌거나 못 찾았으면 나중에 인쇄된 마디 번호로 맞춘다
           m.mrUncertain = !nd.length || glyphs.some(g => isDigit(g.code) && inBox(g) && Math.abs(cx(g) - rc) < (r.x1 - r.x0) / 2 + 10 && g.oy < st.top + 2 && g.oy > st.top - 30);
+        } else if (!st.oneLine && !m.notes.some(n => !n.rest) && m.kind === 'normal') {
+          // 막대 대신 Finale JazzPerc 글꼴의 짧은 기호('5' 자리) 하나 위에 숫자만 찍은 여러 마디 쉼표(뱃노래 타악 첫 마디 '2' 등).
+          // 오선 안에 그 기호 하나만 있고, 바로 위(오선 위 30pt 안) 같은 자리에 숫자가 있을 때만
+          const dg = sg.filter(g => isDigit(g.code) && inr(cx(g)) && g.oy < st.top - 2 && g.oy > st.top - 30);
+          if (dg.length >= 1 && dg.length <= 2 && Math.abs(dg[0].oy - dg[dg.length - 1].oy) < 1) {
+            const c0 = (Math.min(...dg.map(g => g.x0)) + Math.max(...dg.map(g => g.x1))) / 2;
+            const sym = sg.filter(g => Math.abs(cx(g) - c0) < 15 && Math.abs(g.oy - st.mid) < (st.bottom - st.top) / 2 + 1);
+            const n = +[...dg].sort((a, b) => a.ox - b.ox).map(g => g.code - 48).join('');
+            if (sym.length === 1 && sym[0].code === 53 && /JazzPerc/i.test(sym[0].font) && !pendingTwoBar && Math.abs(c0 - cx(sym[0])) < 6 && n >= 2 && n < 100) { m.kind = 'multirest'; m.multirest = n; m.mrUncertain = false; content = true; }
+          }
         }
         // 도돌이 점: 같은 세로줄에 가운데선 위·아래로 대칭인 점 두 개.
         // 음표의 부점으로도 쓰인 점이면 겹세로줄(굵은+가는 선) 옆일 때만 도돌이로 본다
@@ -3654,8 +3665,12 @@ function timing(m, barLen) {
       // 붙임줄로 이어진 음: 선율 악기는 앞 음을 길게 (마디를 넘는 붙임줄은 재생할 때 잇는다)
       if (n.midi != null) {
         const prev = evs.filter(e => e.voice === n.voice && e.midis && e.midis.includes(n.midi) && e.t.lt(onset.get(n))).pop();
-        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; prev._lp = [onset.get(n), n.dur]; }   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
-        else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) { /* 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐 */ }
+        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) {
+          prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; prev._lp = [onset.get(n), n.dur];   // pcs: 악보에 적힌 붙임줄 조각 (내보내기용)
+          if (prev._cs) prev._tm = prev._tm ? new Set([...prev._tm].filter(m => prev._cs.has(m))) : prev._cs;   // 앞 조각까지 이어진 음
+          prev._cs = new Set([n.midi]);
+        }
+        else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) prev._cs.add(n.midi);   // 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐
         else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
       }
       continue;
@@ -3674,6 +3689,19 @@ function timing(m, barLen) {
     if (n.roll && n.midi != null) { ev.trill = true; ev.trillInt = n.upInt || 2; }   // 선율의 트릴(물결선): 위 음과 빠르게 오간다
     seen.set(key, ev); evs.push(ev);
   }
+  // 화음 가운데 일부 음만 붙임줄로 이어졌으면 이어진 음만 길게 두고 나머지 음은 떼어 낸다
+  // (화음 전체가 늘어나 다시 치는 음과 겹쳐 울리던 것: 바르도 대아쟁 등)
+  for (const e of evs.slice()) {
+    if (!e._cs) continue;
+    const tm = e._tm ? new Set([...e._tm].filter(m => e._cs.has(m))) : e._cs;
+    delete e._cs; delete e._tm;
+    if (!e.midis || e.midis.length < 2 || tm.size >= e.midis.length || !tm.size) continue;
+    const rest = e.midis.filter(m => !tm.has(m));
+    const o = { ...e, midis: rest }; delete o.sus; delete o.pcs; delete o._lp;
+    e.midis = e.midis.filter(m => tm.has(m));
+    evs.push(o);
+  }
+  for (const e of evs) delete e._lp;
   evs.sort((a, b) => a.t.v - b.t.v);
   return evs;
 }
@@ -8816,7 +8844,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-05 18:58';
+const APP_VERSION = '2026-11-05 19:59';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

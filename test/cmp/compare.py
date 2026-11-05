@@ -32,6 +32,12 @@ def match(pbars,sbars):
     for tag,i1,i2,j1,j2 in sm.get_opcodes():
         if tag in('equal','replace') and (i2-i1)==(j2-j1):
             pairs+= [(i1+k,j1+k) for k in range(i2-i1)]
+    # 마디 번호로 맞대기도 해 보고 일치가 더 많은 쪽 (반복이 많은 곡에서 서열 정렬이 비슷한 마디끼리 엇갈리는 것)
+    idx={x['n']:j for j,x in enumerate(sbars)}
+    pn=[(i,idx[x['n']]) for i,x in enumerate(pbars) if x['n'] in idx]
+    okn=sum(1 for i,j in pn if NE(pbars[i]) and a[i]==b[j])
+    ok0=sum(1 for i,j in pairs if NE(pbars[i]) and a[i]==b[j])
+    if okn>=ok0: pairs=pn
     ok=sum(1 for i,j in pairs if NE(pbars[i]) and a[i]==b[j])
     okp=sum(1 for i,j in pairs if NE(pbars[i]) and a[i]==b[j] and pbars[i]['ps']==sbars[j]['ps'])
     tot=sum(1 for b_ in pbars if NE(b_)) or 1
