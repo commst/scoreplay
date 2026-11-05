@@ -1509,7 +1509,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>MusicXML을 피날레·뮤즈스코어에서 손 안 대고 쓰게</summary><p>뮤즈스코어로 직접 열어 보며 고쳤습니다: 원래 악보의 쪽 크기·오선 크기·여백과 마디 폭을 넣어 한 단·한 쪽에 같은 마디가 들어가게, 악기 이름이 모든 단에, 관악·찰현·발현·타악 묶음 괄호, 악기마다 소리(타악은 드럼 소리 번호)와 셈여림 크기가 들어가 바로 재생, 마디를 넘는 붙임줄의 시작 표시가 빠지던 것, 다섯잇단·일곱잇단음표, 3/8·5/8·7/8·8/8·10/8(엇모리) 빔 묶음, 4/4의 8분음표 넷 묶음, 셋잇단 괄호 묶음, 앞 마디에서 이어진 음의 임시표, 같은 마디 되풀이(%) 마디의 둘째 성부, 악보의 연주 지시 글자(pizz.·arco·div.·Solo·빠르기말 등)와 꺾쇠 길이, 타악 두 줄 악기도 한 파트로</p></details></li>
       <li><details><summary>MusicXML을 원래 악보와 거의 같게</summary><p>내보낸 MusicXML을 피날레·뮤즈스코어에서 열면 원래 PDF와 거의 같은 모양이 되도록: 악보에서 읽은 음자리표(낮은음자리표에 적은 북도), 이음줄(슬러), 붙임줄로 적힌 음은 적힌 조각 그대로, 셈여림(p·f)과 꺾쇠·cresc.를 그 자리에, 빠르기 표시·rit.·accel.·a tempo, 연습 번호, 늘임표, 1·2번 괄호, 세뇨·코다·D.S.·D.C.·Fine, 같은 마디 되풀이(%), 여러 마디 쉼(파트보), 못갖춘마디, 원래 악보의 줄 바꿈·쪽 바꿈, 타악의 줄·칸 자리와 기둥 방향, 굴림(빗금/tr), 6/8·12/8 쉼표는 박마다. MusicXML 표준 규칙 검사 통과. 곡선을 짧은 직선으로 펴서 그린 피날레 PDF에서는 붙임줄도 새로 알아보게 되어, 이어 가야 할 음을 다시 치던 것도 고쳐졌습니다</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>2건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>3건</small></summary><ul class="hlist bug">
+      <li><details><summary>MusicXML 출력 점검: 셋잇단·박자·붙임줄을 잘못 내보내던 곳, 켠 줄이 없어 악보가 안 읽힌 것처럼 보이던 문제</summary><p>악보 75곡을 MusicXML로 내보내 원래 음과 하나씩 맞춰 보며 고쳤습니다. 기둥 방향이 엇갈린 셋잇단음표(괄호 안 첫 음만 기둥이 반대인 것, 4분+8분 셋잇단, 괄호 없이 숫자만 적은 것)를 제대로 읽고, 6/8 마디의 온쉼표 모양 쉼표와 한 성부 선율을 두 성부로 보아 박자를 잘못 바꾸던 것, 마디 번호 칸의 세로 변을 음표 기둥으로 읽어 음이 하나 더 생기던 것, 두 성부가 함께 치는 음의 점을 한쪽만 받던 것을 고쳤습니다. 총보에서 박자표를 그림으로 그린 곡(월광 12/8)을 4/4로 내보내던 것, 다른 성부가 같은 음을 적으면 마디를 넘는 붙임줄이 빠지던 것도 바로잡았습니다. 이름으로 악기를 모르는 큰보표 파트보를 올리면 켠 줄이 없어 '들을 줄을 하나 이상 켜세요'만 나오던 것은 선율 줄을 모두 켜도록 했습니다.</p></details></li>
       <li><details><summary>화음의 한 음만 붙임줄로 이을 때 화음 전체가 길게 울리던 문제, 타악 파트보의 여러 마디 쉼표를 한 마디로 세던 문제</summary><p>화음에서 붙임줄로 이어지는 음만 길게 울리고 나머지 음은 적힌 길이대로 끊깁니다. 피날레 타악 글꼴로 짧은 기호 위에 숫자만 찍은 여러 마디 쉼표(뱃노래 파트보 등)를 숫자만큼 쉬는 마디로 읽어, 뒤쪽 마디가 한 마디로 합쳐지거나 다른 줄과 어긋나던 것을 고쳤습니다.</p></details></li>
       <li><details><summary>태블릿 가로 화면에서 왼쪽 탭(악기·빠르기·연주·저장)이 위 막대에 가려 눌리지 않던 문제</summary><p>넓은 화면에서 왼쪽 설정 칸이 페이지를 따라 붙어 있다가, 아래까지 굴리면 칸이 위로 밀려 올라가 탭이 위 막대 밑으로 숨었습니다(아이패드 사파리는 주소창이 접히고 펴질 때 화면 높이가 바뀌어 더 많이 밀림). 왼쪽 칸을 위 막대 바로 아래에 고정해 어떤 높이·스크롤에서도 탭이 보이고 눌리게 고침</p></details></li>
     </ul></details>
@@ -3682,6 +3683,10 @@ async function loadFullPdf(files) {
     }
     // 파트보 하나뿐이면 무조건 켠다
     if (state.lineList.length === 1) { const c = state.lineCfg[cfgKey(state.lineList[0].id)]; if (c.role === 'off') { c.role = c.pitched ? 'melody' : 'perc'; if (c.pitched) ensureInst(c); } }
+    // 그래도 켠 줄이 하나도 없으면(이름으로 악기를 모르는 큰보표 파트보 '가야금 25현편집' 등을 총보 칸에 올린 경우) 선율 줄을 모두 켠다
+    // (전에는 '들을 줄을 하나 이상 켜세요'만 나와 악보가 안 읽힌 것처럼 보였음)
+    if (!state.lineList.some(l => state.lineCfg[cfgKey(l.id)].role !== 'off'))
+      for (const l of state.lineList) { const c = state.lineCfg[cfgKey(l.id)]; if (l.clef === 'pitched' && !PERC_NAME.test(l.label || '')) { c.role = 'melody'; ensureInst(c); } }
     syncLineIds();
     renderFileLists(); renderLineList();
     applySelection(true);
@@ -3791,8 +3796,11 @@ function applySelection(first = false) {
   // 마디 길이는 줄들의 다수결: 기준 줄 한 곳이 잘못 늘려 읽었으면 다른 줄들이 읽은 길이로
   const numMaps = multi ? results.map(({ r }) => new Map(r.bars.map(x => [x.number, x]))) : [];
   if (multi) bars.forEach((b, k) => {
-    const votes = new Map();
-    for (const mp of numMaps) { const o = mp.get(b.number); if (o) { const key = o.barLen.v; const v = votes.get(key) || { n: 0, o }; v.n++; votes.set(key, v); } }
+    // 음이 있고 경고 없이 읽은 보통 마디만 센다: 쉬는 줄은 앞 박자를 그대로 이어 쓰고(박자표를 못 읽은 단에서 4/4로 남음), 되풀이(%) 마디는 앞 마디 길이를 베낌
+    // (월광 16마디부터 12/8인데 쉬는 줄이 많아 4/4로 내보내던 문제). 그런 줄이 하나도 없으면 모든 줄로
+    const votes = new Map(), good = o => o.events.length && !o.warnings.length && o.kind === 'normal';
+    const all = numMaps.map(mp => mp.get(b.number)).filter(Boolean), voters = all.some(good) ? all.filter(good) : all;
+    for (const o of voters) { const key = o.barLen.v; const v = votes.get(key) || { n: 0, o }; v.n++; votes.set(key, v); }
     let best = null; for (const [len, v] of votes) if (!best || v.n > best.n || (v.n === best.n && len === b.barLen.v)) best = { len, ...v };
     if (best && best.len !== b.barLen.v && best.n > (votes.get(b.barLen.v)?.n || 0)) { b.barLen = best.o.barLen; b.timesig = best.o.timesig; }
   });
@@ -4494,14 +4502,16 @@ function buildMusicXml() {
                 slurS: j === 0 && pi === 0 && !!e.slurS, slurE: j === 0 && pi === ps.length - 1 && !!e.slurE }));
               piece.forEach((o, j) => {
                 if (pi === 0) {   // 이을 앞 음이 바로 앞에서 끝날 때만 붙임줄 (사이에 다른 음이 있으면 새 음 — 재생과 같게)
-                  const pv = tied.has(o.midi) ? lastNote.get(o.midi) : null;
-                  if (pv && ((pv.bi === bi && pv.end === st) || (pv.bi === bi - 1 && pv.end === pv.L && st === 0))) { pv.o.tieStart = true; o.tieStop = true; }
+                  // 앞 음은 성부마다 기억한다: 다른 성부가 나중에 같은 음을 적으면 그 음으로 덮여 붙임줄을 놓치던 것(미락흘 소아쟁 183→184마디)
+                  const ok = pv => pv && !pv.o.tieStart && ((pv.bi === bi && pv.end === st) || (pv.bi === bi - 1 && pv.end === pv.L && st === 0));
+                  const pv = !tied.has(o.midi) ? null : [lastNote.get(o.midi + '|' + o.voice), ...[...lastNote.entries()].filter(([k]) => k.startsWith(o.midi + '|')).map(([, v]) => v)].find(ok);
+                  if (pv) { pv.o.tieStart = true; o.tieStop = true; }
                 }
                 else { prevPiece[j].tieStart = true; o.tieStop = true; o.inner = true; }
               });
               objs.push(...piece); prevPiece = piece; p += pd;
             });
-            prevPiece.forEach(o => lastNote.set(o.midi, { o, bi, end: o.st + o.d, L }));
+            prevPiece.forEach(o => lastNote.set(o.midi + '|' + o.voice, { o, bi, end: o.st + o.d, L }));
           }
           pos = st + d;
         });

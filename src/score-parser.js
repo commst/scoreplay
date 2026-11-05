@@ -1039,7 +1039,9 @@ export function parseScore(pages, opts = {}) {
         const k = (st.bottom - g.oy) / (staffSp / 2), onSpace = Math.abs(Math.round(k)) % 2 === 1;
         return Math.min(3.5, staffSp * (onSpace ? 0.3 : 0.75));
       };
-      const stems = vls.filter(v => !isBar(v) && st.top - 30 < v[1] && v[2] < st.bottom + 30);
+      // 네모 칸(마디 번호·연습 번호)의 세로 변은 기둥이 아니다: 칸 오른쪽 변이 음표 머리에 닿아 위 기둥 음이 하나 더 생기던 것(미락흘 소금 238마디)
+      const boxLeader = v => boxes.some(b => (Math.abs(v[0] - b.x0) < 0.8 || Math.abs(v[0] - b.x1) < 0.8) && Math.abs(v[1] - b.y0) < 1 && Math.abs(v[2] - b.y1) < 1);
+      const stems = vls.filter(v => !isBar(v) && st.top - 30 < v[1] && v[2] < st.bottom + 30 && !boxLeader(v));
 
       const stemsOf = g => stems.filter(v => g.x0 - 1.2 <= v[0] && v[0] <= g.x1 + 1.2 && v[1] - 3 <= g.oy && g.oy <= v[2] + 3);
       const makeNote = (g, isRest, forceStem = null, forceDots = null) => {
@@ -1131,6 +1133,11 @@ export function parseScore(pages, opts = {}) {
         }
         return [makeNote(g, false)];
       });
+      // 같은 자리에 머리를 두 번 그린 같은 음(두 성부가 함께 치는 음)은 점도 함께: 점은 먼저 읽은 머리만 가져가 다른 성부가 짧아지던 것(Frontier 피리 34마디)
+      for (const a of headNotesAll) for (const b of headNotesAll) {
+        if (a === b || a.grace || b.grace || a.voice === b.voice || !(a._dots > (b._dots || 0)) || Math.abs(a.x - b.x) > 0.5 || Math.abs(a.y - b.y) > 0.5) continue;
+        if (b.dur.mul(a._dots === 1 ? F(3, 2) : F(7, 4)).div(b._dots === 1 ? F(3, 2) : F(1)).eq(a.dur)) { b.dur = a.dur; b._dots = a._dots; }
+      }
       // Encore: 한 기둥에 머리가 여럿(화음)이면 기둥 끝 쪽 머리만 그 성부, 나머지 하나는 반대 성부(장구의 덩), 더 있으면 버린다
       if (false && pg.encore) {   // 시험해 보니 Encore 파트·총보 사이 일치가 나빠져 꺼 둠
         const byStem = new Map();
@@ -1201,7 +1208,12 @@ export function parseScore(pages, opts = {}) {
       }
       // 잇단음표 숫자 → 길이 배율 (3: 셋을 둘 자리, 4: 넷을 셋 자리, 5·7: 넷 자리, 6: 넷 자리)
       const TUP_F = { 51: F(2, 3), 52: F(3, 4), 53: F(4, 5), 54: F(2, 3), 55: F(4, 7), 57: F(2, 3) };
-      for (const t of tupletNums.filter(g => staffOf(g.oy) === si)) {
+      // 두 오선 사이의 숫자: 아래(위) 오선에 더 가까워도, 숫자 바로 옆 빔이 이 오선의 것이면 이 오선의 잇단음표(엇갈린 기둥 묶음 아래 숫자 — 아침을 두드리는 소리 가야금 147마디)
+      const beamNear = g => {   // 숫자에 가장 가까운 빔이 이 오선의 것일 때만
+        const bs = beamList.filter(b => b.x0 - 2 <= cx(g) && cx(g) <= b.x1 + 2).map(b => ({ d: Math.abs(b.yAt(cx(g)) - cy(g)), y: b.yAt(cx(g)) })).sort((a, b) => a.d - b.d);
+        return bs.length > 0 && bs[0].d < 16 && staffOf(bs[0].y) === si;
+      };
+      for (const t of tupletNums.filter(g => staffOf(g.oy) === si || (Math.abs(staffOf(g.oy) - si) === 1 && beamNear(g)))) {
         const tf = TUP_F[t.code] || F(2, 3), tk = t.code - 48;
         const voice = t.oy < st.mid ? 'R' : 'L';
         let br = brackets.find(b => b.x0 - 2 <= cx(t) && cx(t) <= b.x1 + 2 && Math.abs((b.y0 + b.y1) / 2 - cy(t)) < 8);
@@ -1228,6 +1240,17 @@ export function parseScore(pages, opts = {}) {
           const inBr = notes.filter(n => !n.grace && br.x0 - 4 <= n.x && n.x <= br.x1 + 4);
           const v = inBr.length ? inBr.reduce((b, n) => Math.abs(n.y - t.oy) < Math.abs(b.y - t.oy) ? n : b).voice : voice;
           inBr.forEach(n => { if (n.voice === v) n.tuplet = tf; });
+          // 괄호 안 그 성부 음이 숫자보다 적고, 기둥 방향만 다른 다른 성부 음을 더하면 가로 자리가 숫자와 꼭 맞으면 그 음도 잇단음표
+          // (한 성부 선율의 셋잇단에서 첫 음만 기둥이 아래로 — 미락흘 소금 86마디)
+          const xsOf = arr => [...new Set(arr.map(n => Math.round(n.x)))];
+          const inB2 = inBr.filter(n => br.x0 - 1.5 <= n.x && n.x <= br.x1 + 1.5);   // 빽빽한 악보에서 옆 묶음 음이 끼지 않게 괄호 안쪽만
+          const mine = inB2.filter(n => n.voice === v), oth = inB2.filter(n => n.voice !== v && !n.tuplet);
+          // 가로 자리마다 음 하나씩, 모두 합친 길이가 (가장 짧은 음 × 숫자)와 같을 때 (4분+8분 셋잇단처럼 음 수가 숫자보다 적어도 — Frontier 대피리 142마디)
+          if (mine.length && oth.length && xsOf(mine).length + xsOf(oth).length === xsOf(inB2).length) {
+            const one = arr => xsOf(arr).map(x => arr.find(n => Math.round(n.x) === x));
+            const sum = arr => frSum(one(arr).map(n => n.dur)), unit = one(inB2).reduce((a, n) => n.dur.lt(a) ? n.dur : a, F(1));
+            if (sum(inB2).eq(unit.mul(F(tk))) && sum(mine).lt(unit.mul(F(tk)))) oth.forEach(n => { n.tuplet = tf; });
+          }
         } else {
           // 괄호 없이 숫자 3만 빔 묶음 위·아래에 적힌 경우: 숫자 가운데에 놓인 이웃한 음표 3개
           const near = notes.filter(n => !n.grace && Math.abs(n.x - cx(t)) < 20);
@@ -1239,14 +1262,25 @@ export function parseScore(pages, opts = {}) {
             const solo = bm && !notes.some(n => !n.rest && n.voice !== v && inSpan(n));
             if (bm) notes.forEach(n => { if ((n.voice === v || (n.rest && solo)) && !n.grace && inSpan(n)) n.tuplet = tf; });
           } else if (near.length) {
-            const v = near.reduce((b, n) => Math.abs(n.y - t.oy) < Math.abs(b.y - t.oy) ? n : b).voice;
-            const xs = [...new Set(notes.filter(n => n.voice === v && !n.grace).map(n => Math.round(n.x * 10) / 10))].sort((a, b) => a - b);
-            let best = null, bd = 1e9;
-            for (let i = 0; i + tk - 1 < xs.length; i++) { const d = Math.abs((xs[i] + xs[i + tk - 1]) / 2 - cx(t)); if (d < bd) { bd = d; best = i; } }
-            const wide = best != null && notes.filter(n => n.voice === v && !n.grace && n.x >= xs[best] - 0.2 && n.x <= xs[best + tk - 1] + 0.2).every(n => !n.dur.lt(F(1, 4)));   // 4분음표 이상 셋잇단은 간격이 넓다 (화랑 25현 203마디)
-            if (best != null && bd < 6 && xs[best + tk - 1] - xs[best] < (wide ? Math.max(20, normSize * 1.6) : 20) * (tk - 1)) {
-              const lo = xs[best] - 0.2, hi = xs[best + tk - 1] + 0.2;
-              notes.forEach(n => { if (n.voice === v && !n.grace && n.x >= lo && n.x <= hi) n.tuplet = tf; });
+            // 숫자와 세로로 가까운 음의 성부부터, 거기에 숫자 가운데 놓인 음 묶음이 없으면 다른 성부로
+            // (기둥이 엇갈린 두 묶음: 위 숫자가 아래 기둥 묶음 위에 — 아침을 두드리는 소리 가야금 147마디)
+            // 괄호 없는 숫자는 빔 쪽에 적는다: 오선 밖 위면 윗성부(기둥 위), 아래면 아랫성부부터
+            // (빔이 숫자 바로 옆에 있을 때만 — 빔 없는 4분음표 셋잇단은 머리 쪽에 곡선 괄호와 함께 적기도 함)
+            const beamSide = beamList.some(b => b.x0 - 2 <= cx(t) && cx(t) <= b.x1 + 2 && Math.abs(b.yAt(cx(t)) - cy(t)) < 16);
+            const v0 = beamSide && cy(t) < st.top - 2 ? 'R' : beamSide && cy(t) > st.bottom + 2 ? 'L' : near.reduce((b, n) => Math.abs(n.y - t.oy) < Math.abs(b.y - t.oy) ? n : b).voice;
+            for (const v of [v0, v0 === 'R' ? 'L' : 'R']) {
+              const xs = [...new Set(notes.filter(n => n.voice === v && !n.grace).map(n => Math.round(n.x * 10) / 10))].sort((a, b) => a - b);
+              let best = null, bd = 1e9;
+              for (let i = 0; i + tk - 1 < xs.length; i++) { const d = Math.abs((xs[i] + xs[i + tk - 1]) / 2 - cx(t)); if (d < bd) { bd = d; best = i; } }
+              const wide = best != null && notes.filter(n => n.voice === v && !n.grace && n.x >= xs[best] - 0.2 && n.x <= xs[best + tk - 1] + 0.2).every(n => !n.dur.lt(F(1, 4)));   // 4분음표 이상 셋잇단은 간격이 넓다 (화랑 25현 203마디)
+              if (best != null && bd < 6 && xs[best + tk - 1] - xs[best] < (wide ? Math.max(20, normSize * 1.6) : 20) * (tk - 1)) {
+                const lo = xs[best] - 0.2, hi = xs[best + tk - 1] + 0.2;
+                // 다른 성부로 넘어간 경우는 더 조심: 이미 잇단음표인 음·마디선을 넘는 묶음·4분음표 이상이 끼면 버림(고구려의 혼 피리 84마디)
+                const win = notes.filter(n => n.voice === v && !n.grace && n.x >= lo && n.x <= hi);
+                if (v !== v0 && (win.some(n => n.tuplet || !n.dur.lt(F(1, 4))) || bars.some(b => b[0] > lo && b[0] < hi))) break;
+                notes.forEach(n => { if (n.voice === v && !n.grace && n.x >= lo && n.x <= hi) n.tuplet = tf; });
+                break;
+              }
             }
           }
         }
@@ -1697,7 +1731,13 @@ export function parseScore(pages, opts = {}) {
 function timing(m, barLen) {
   fixCenteredRests(m);
   // 온쉼표: 그 성부에 다른 음표가 없으면 마디 전체, 있으면 온음표 길이
-  for (const n of m.notes) if (n.wholeRest) n.dur = m.notes.some(o => o !== n && o.voice === n.voice && !o.grace) ? F(1) : barLen;
+  // 단, 그 성부에 온쉼표가 하나뿐이고 나머지 음의 합 + 온음표가 마디를 넘으면 마디의 남은 길이(6/8에서 ♩. 뒤 온쉼표 모양 = 남은 쉼, 뱃노래 양금 114마디)
+  for (const n of m.notes) if (n.wholeRest) {
+    const others = m.notes.filter(o => o !== n && o.voice === n.voice && !o.grace && !o.chordOf);
+    if (!others.length) { n.dur = barLen; continue; }
+    n.dur = F(1);
+    if (!others.some(o => o.wholeRest)) { const s = frSum(others.map(o => o.dur)); if (s.lt(barLen) && s.add(F(1)).gt(barLen)) n.dur = barLen.sub(s); }
+  }
   const chordMembers = m.notes.filter(n => n.chordOf && !n.grace);
   const main = m.notes.filter(n => !n.grace && !n.chordOf);
   const graces = m.notes.filter(n => n.grace);
@@ -1888,14 +1928,17 @@ function fixAmbigBeams(m, barLen) {
 }
 
 // 성부별 음표 길이 합 (잇단음표 표시가 있으면 2/3로 줄인 값도 고려)
-function voiceSums(m) {
+function voiceSums(m, len) {
   fixCenteredRests(m);
   const out = {};
   for (const v of ['R', 'L']) {
     const vn = m.notes.filter(n => n.voice === v && !n.grace && !n.chordOf);
     if (!vn.length || (vn.length === 1 && vn[0].wholeRest)) continue;
-    const plain = frSum(vn.map(n => n.dur));
-    const scaled = frSum(vn.map(n => n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : n.dur));
+    // 온쉼표 하나 + 다른 음: 온음표를 더하면 박자를 넘을 때는 남은 길이로 센다(timing과 같은 규칙)
+    const wr = vn.filter(n => n.wholeRest), oth = vn.filter(n => !n.wholeRest);
+    const wd = n => { if (!len || !n.wholeRest || wr.length !== 1) return n.dur; const s = frSum(oth.map(o => o.dur)); return s.lt(len) && s.add(F(1)).gt(len) ? len.sub(s) : n.dur; };
+    const plain = frSum(vn.map(wd));
+    const scaled = frSum(vn.map(n => n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : wd(n)));
     out[v] = [plain, scaled];
   }
   return out;
@@ -2004,13 +2047,27 @@ export function resolveBars(measures, systemNumbers = []) {
     // 박자표를 못 읽었거나 다른 경우: 두 성부 길이가 같으면 그 길이를 박자로 본다
     if (m.kind === 'normal' && m.notes.length) {
       fixAmbigBeams(m, tsLen);
-      const vs = voiceSums(m);
+      const vs = voiceSums(m, tsLen);
       const vals = Object.values(vs);
-      const matches = vals.some(([p, q]) => p.eq(tsLen) || q.eq(tsLen));
+      // 기둥 방향만 바뀐 한 성부(두 성부 음이 같은 때 없음): 모두 이어 붙인 길이가 박자와 같으면 맞는 마디 (timing의 mergeFlippedStems와 같은 판단)
+      const oneVoice = (() => {
+        if (!m.pitched || vals.length !== 2) return false;
+        const mn = m.notes.filter(n => !n.grace && !n.chordOf).sort((a, b) => a.x - b.x);
+        for (let i = 1; i < mn.length; i++) if (mn[i].voice !== mn[i - 1].voice && mn[i].x - mn[i - 1].x < 2.0) return false;
+        const sc = frSum(mn.map(n => n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : n.dur)), pl = frSum(mn.map(n => n.dur));
+        return sc.eq(tsLen) || pl.eq(tsLen);
+      })();
+      const matches = oneVoice || vals.some(([p, q]) => p.eq(tsLen) || q.eq(tsLen));
       if (!matches && vals.length) {
         let L = null, strong = false;
         if (vals.length === 2) {
           for (const x of vals[0]) for (const y of vals[1]) if (!L && x.eq(y)) { L = x; strong = true; }
+          // 두 성부가 가로로 겹치지 않고 앞뒤로 이어지면(기둥 방향만 바뀐 한 성부) 두 성부 길이가 같아도 박자의 근거가 아니다
+          if (strong && m.pitched) {
+            const xs = v => [...new Set(m.notes.filter(n => n.voice === v && !n.grace).map(n => Math.round(n.x)))];
+            const r = xs('R'), l = xs('L');
+            if (r.length && l.length && r.length + l.length >= 3 && (Math.max(...r) < Math.min(...l) - 4 || Math.max(...l) < Math.min(...r) - 4)) { L = null; strong = false; }   // 음 둘(비켜 찍은 화음 머리)은 빼고
+          }
         }
         if (!L) { const mx = vals.flat().reduce((a, b) => (b.gt(a) ? b : a)); if (mx.gt(tsLen)) L = mx; }
         if (L && L.lt(tsLen)) {
