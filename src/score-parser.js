@@ -318,6 +318,20 @@ export async function extractPages(doc, OPS, onPage) {
       if (tab === SMUFL_PUA) { const o = { 0xE052: -1, 0xE053: 1, 0xE051: -2, 0xE054: 2, 0xE064: -1, 0xE065: 1, 0xE063: -2, 0xE066: 2 }[g.raw]; if (o) g.clefOct = o; }
       if (!/\(MusicFont\)/.test(g.font)) g.font += ' (MusicFont)';
     }
+    // 윈도에서 만든 PDF(한컴 PDF 등): Maestro·Petrucci 글자 번호를 Latin-1 문자로 적어 둠(250 → ú). 맥 문자표로 바꾸면 엉뚱한 기호가 되므로
+    // 그 글꼴의 128 이상 글자가 모두 Latin-1(U+00A0~00FF)이고 음표 머리·쉼표 자리(Ï Î ú · î)가 보이면 번호를 그대로 쓴다
+    {
+      const hi = {}, bad = new Set();
+      for (const g of glyphs) if (MUSIC_FONT.test(g.font) && !/Anastasia|MusicFont/i.test(g.font) && g.raw >= 128 && !(g.raw >= 0xF000 && g.raw < 0xF100)) {
+        if (g.raw >= 0xA0 && g.raw <= 0xFF) (hi[g.font] = hi[g.font] || new Set()).add(g.raw); else bad.add(g.font);
+      }
+      for (const [f, set] of Object.entries(hi)) if (!bad.has(f) && [0xCF, 0xCE, 0xFA, 0xB7, 0xEE].filter(c => set.has(c)).length >= 2)
+        for (const g of glyphs) if (g.font === f && g.raw >= 0xA0 && g.raw <= 0xFF) g.code = g.raw;
+    }
+    // Maestro·Petrucci의 X 음표 머리(192, 징·심벌 등): 보통 머리로 읽고 X 표시
+    for (const g of glyphs) if (/Maestro|Petrucci/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && g.code === 192) { g.code = 207; g.xh = true; }
+    // Maestro·Petrucci의 옥타브 음자리표: 'V' = 높은음자리표 아래 8, 't' = 낮은음자리표 아래 8 (한 옥타브 낮게 소리 남)
+    for (const g of glyphs) if (/Maestro|Petrucci/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && (g.code === 86 || g.code === 116)) { g.clefOct = -1; g.code = g.code === 86 ? 38 : 63; }
     // SMuFL 글자 글꼴(BravuraText·LelandText 등)의 메트로놈 음표: 빠르기 표시 '♩.=110'
     {
       const MET = new Map([[0xECA3, 104], [0xECA5, 113], [0xECA7, 101], [0xECB7, 107], [0xE1D3, 104], [0xE1D5, 113], [0xE1D7, 101], [0xE1E7, 107]]);
@@ -675,7 +689,7 @@ export function pageLayout(pg) {
   // 음자리표 종류 (맨 아랫줄의 온음 번호: 높은음 30, 낮은음 18, 가온 24) — 낮은음자리표에 적은 북처럼 타악 줄을 MusicXML로 내보낼 때
   const clefBase = staves.map(st => {
     const g = pg.glyphs.filter(g => isMusicFont(g.font) && g.ox >= st.x0 - 2 && g.ox < st.x0 + 18 && g.oy > st.top - 10 && g.oy < st.bottom + 10).sort((a, b) => a.ox - b.ox)[0];
-    return g ? ({ 38: 30, 63: 18, 66: 24 })[g.code] ?? null : null;
+    return g && ({ 38: 30, 63: 18, 66: 24 })[g.code] != null ? ({ 38: 30, 63: 18, 66: 24 })[g.code] + (g.clefOct || 0) * 7 : null;
   });
   return { staves, vls, systems, sysOf, posOf, labels, clefs, clefBase };
 }
@@ -877,10 +891,14 @@ function pagePrep(pg, layout, pi) {
   const normSize = hs.length ? hs[Math.floor(hs.length * 0.75)] : 20;
   const smallSize = normSize * 0.75;
   // 잇단음표 숫자: Finale은 굵은 기울임, Sibelius는 OpusText 글꼴의 작은 숫자 하나 (옆에 다른 글자가 붙어 있으면 템포 등 글자)
+  const hSegs = drawings.filter(d => d.type === 's' && d.items.length <= 3).flatMap(d => d.items.filter(i => i.op === 'l' && Math.abs(i.p[0] - i.q[0]) > 3 && Math.abs(i.p[1] - i.q[1]) < 0.4 * Math.abs(i.p[0] - i.q[0])).map(i => ({ x0: Math.min(i.p[0], i.q[0]), x1: Math.max(i.p[0], i.q[0]), y0: Math.min(i.p[1], i.q[1]), y1: Math.max(i.p[1], i.q[1]) })));
+  const bracketAround = g => { const ym = (g.y0 + g.y1) / 2, near = r => r.y1 > ym - 6 && r.y0 < ym + 6; return hSegs.some(r => near(r) && r.x1 <= g.x0 + 1 && r.x1 >= g.x0 - 8) && hSegs.some(r => near(r) && r.x0 >= g.x1 - 1 && r.x0 <= g.x1 + 8); };
   const lone = g => !glyphs.some(o => o !== g && Math.abs(o.oy - g.oy) < 1.5 && o.code > 32 && (Math.abs(o.x0 - g.x1) < 3 || Math.abs(g.x0 - o.x1) < 3));
   const tupletNums = glyphs.filter(g => ((g.code === 51 || g.code === 57) && (g.font.includes('BoldItal') || (/OpusText|Opus Text/.test(g.font) && g.size < normSize * 0.75 && lone(g))))
     // MuseScore 2 등: 기울임 글꼴의 작은 숫자 하나(3·4·5·6·7) — 4잇단(겹박자에서 셋 자리에 넷) 등도
-    || ([51, 52, 53, 54, 55].includes(g.code) && /Italic|Oblique/i.test(g.font) && !MUSIC_FONT.test(g.font) && g.size < normSize * 0.75 && lone(g)));
+    || ([51, 52, 53, 54, 55].includes(g.code) && /Italic|Oblique/i.test(g.font) && !MUSIC_FONT.test(g.font) && g.size < normSize * 0.75 && lone(g))
+    // 보통 글꼴(Arial 등)의 작은 숫자 하나가 양옆 괄호 선 사이에 있으면 잇단음표 숫자 (한컴 PDF로 옮긴 피날레 악보)
+    || ([51, 53, 54, 55].includes(g.code) && !MUSIC_FONT.test(g.font) && !/Italic|Oblique|BoldItal/i.test(g.font) && g.size < normSize * 0.75 && lone(g) && bracketAround(g) && (g.plainTup = true)));
   const runs = textRuns(glyphs);
   const segs = strokeSegs(drawings);
   const italicNums = glyphs.filter(g => !MUSIC_FONT.test(g.font) && isDigit(g.code) && g.size < 14);
@@ -923,6 +941,8 @@ export function parseScore(pages, opts = {}) {
     const layout = LA ? LA[pi] : pageLayout(pg);
     const staves = layout.staves;
     const vls = layout.vls;
+    const vlsRaw = [];
+    for (const d of pg.drawings) if (d.type === 's') for (const it of d.items) if (it.op === 'l' && Math.abs(it.p[0] - it.q[0]) < 0.1 && Math.abs(it.p[1] - it.q[1]) > 20) vlsRaw.push([it.p[0], Math.min(it.p[1], it.q[1]), Math.max(it.p[1], it.q[1]), d.width || 0, !!d.stem]);
     const sysOf = i => (i == null ? -1 : layout.sysOf[i]);
     const sysTop = si => staves[layout.systems[layout.sysOf[si]][0]];
     const { fills, rects, tieRects, beamList, curves, thickH, boxes, brackets, maestro, normSize, smallSize, tupletNums, runs, segs, italicNums, sysNums, staffOf, pageMarks, sgOf } = pagePrep(pg, layout, pi);
@@ -970,7 +990,9 @@ export function parseScore(pages, opts = {}) {
       // 음표 머리에 붙은 세로선은 기둥 (작은 오선에서 기둥 길이가 오선 높이와 거의 같을 때)
       const stemHeads = sg.filter(g => g.code === HEAD_FILLED || g.code === HEAD_HALF);
       const touchesHead = v => !(Math.abs(v[1] - st.top) < 0.15 && Math.abs(v[2] - st.bottom) < 0.15) && stemHeads.some(g => g.x0 - 0.8 <= v[0] && v[0] <= g.x1 + 0.8 && (Math.abs(g.oy - v[1]) < 2.5 || Math.abs(g.oy - v[2]) < 2.5));
-      const isBar = v => !v[4] && !touchesHead(v) && (Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6)
+      // 줄이 2~4개인 타악 오선(피날레): 마디선이 오선 위·아래로 같은 만큼(3~9pt) 삐져나오게 그려짐
+      const shortBar = v => st.lines && st.lines.length > 1 && st.lines.length < 5 && !st.oneLine && v[1] < st.top - 3 && v[1] > st.top - 9 && v[2] > st.bottom + 3 && v[2] < st.bottom + 9 && Math.abs((st.top - v[1]) - (v[2] - st.bottom)) < 1;
+      const isBar = v => !v[4] && !touchesHead(v) && ((Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6) || shortBar(v))
         || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20
           // 마디선은 어떤 오선의 맨 윗줄에서 시작해 어떤 오선의 맨 아랫줄에서 끝난다 (두 오선에 걸친 화음 기둥은 위·아래로 삐져나옴)
           && staves.some(o => Math.abs(v[1] - o.top) < 1.5 || (o.oneLine && v[1] <= o.mid + 1.5 && v[1] >= o.mid - 9)) && staves.some(o => Math.abs(v[2] - o.bottom) < 1.5 || (o.oneLine && v[2] >= o.mid - 1.5 && v[2] <= o.mid + 9) || vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && Math.abs(w[2] - o.bottom) < 1.5))
@@ -978,7 +1000,8 @@ export function parseScore(pages, opts = {}) {
           // 큰보표 마디선을 토막으로 나눠 그린 경우(위 오선~아래 오선 가운데, 아래 오선 부분 따로)
           || (v[2] >= o.top - 0.5 && vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && w[2] >= o.bottom - 1.5)))));
       // 같은 자리에 두 번 그린 마디선(한컴 PDF 등)은 하나로: 겹세로줄로 잘못 읽어 마디마다 '구간 시작'이 되던 문제
-      const bars = vls.filter(isBar).sort((a, b) => a[0] - b[0]).filter((v, i, arr) => !(i > 0 && Math.abs(v[0] - arr[i - 1][0]) < 0.5 && Math.abs((v[3] || 0) - (arr[i - 1][3] || 0)) < 0.3));
+      // 기둥이 마디선 끝에 맞닿아 하나로 이어 읽힌 경우를 위해 잇지 않은 긴 세로선도 후보로 (같은 자리 중복은 아래에서 하나로)
+      const bars = [...vls, ...vlsRaw.filter(v => !vls.some(w => w[0] === v[0] && w[1] === v[1] && w[2] === v[2]))].filter(isBar).sort((a, b) => a[0] - b[0]).filter((v, i, arr) => !(i > 0 && Math.abs(v[0] - arr[i - 1][0]) < 0.5 && Math.abs((v[3] || 0) - (arr[i - 1][3] || 0)) < 0.3));
       const groups = [];
       for (const v of bars) {
         const lg = groups[groups.length - 1];
@@ -1170,9 +1193,10 @@ export function parseScore(pages, opts = {}) {
         let br = brackets.find(b => b.x0 - 2 <= cx(t) && cx(t) <= b.x1 + 2 && Math.abs((b.y0 + b.y1) / 2 - cy(t)) < 8);
         if (!br) {
           // 괄호가 숫자 양쪽으로 끊겨 그려진 경우: 숫자 왼쪽에서 끝나는 가로선 + 오른쪽에서 시작하는 가로선
-          const hz = segs.filter(q => Math.abs(q.y1 - q.y0) < Math.max(0.3, (q.x1 - q.x0) * 0.12) && q.x1 - q.x0 > 2 && Math.abs(q.y0 - cy(t)) < 8);   // 기울어진 괄호(빔을 따라 비스듬히)도
+          const slope = t.plainTup ? 0.4 : 0.12;   // 보통 글꼴 숫자(한컴 PDF)의 괄호는 빔을 따라 많이 기울기도
+          const hz = segs.filter(q => Math.abs(q.y1 - q.y0) < Math.max(0.3, (q.x1 - q.x0) * slope) && q.x1 - q.x0 > 2 && Math.abs(q.y0 - cy(t)) < 8);   // 기울어진 괄호(빔을 따라 비스듬히)도
           const L = hz.filter(q => q.x1 <= t.x0 + 2 && q.x1 >= t.x0 - 8).sort((a, b) => b.x1 - a.x1)[0];
-          const R = hz.filter(q => q.x0 >= t.x1 - 2 && q.x0 <= t.x1 + 8 && (!L || Math.abs(q.y0 - L.y0) < 1.5)).sort((a, b) => a.x0 - b.x0)[0];
+          const R = hz.filter(q => q.x0 >= t.x1 - 2 && q.x0 <= t.x1 + 8 && (!L || (t.plainTup ? Math.abs(q.y0 - L.y1) < 2 : Math.abs(q.y0 - L.y0) < 1.5))).sort((a, b) => a.x0 - b.x0)[0];
           if (L && R) br = { x0: L.x0, x1: R.x1 };
         }
         if (br) {
@@ -1365,7 +1389,9 @@ export function parseScore(pages, opts = {}) {
             }
           }
           if (num.length && den.length) tsig = [numV, +den.map(g => g.code - 48).join('')];
-        } else if (cts.length) tsig = [4, 4];
+        }
+        // 박자표 C: 오선 안에 걸친 다른 숫자(마디 번호 등)가 있어 숫자 박자표로 못 읽었을 때도
+        if (!tsig && cts.length) tsig = [4, 4];
         if (!tsig) { const bt = bigTs.find(t => t.sys === sysOf(si) && inr((t.x + t.x1) / 2)); if (bt) tsig = bt.ts; }
         if (tsig) pendingTimesig = tsig;
         if (sg.some(g => g.code === MEAS_REPEAT && inr(cx(g)))) { m.kind = 'repeat1'; content = true; }
@@ -2095,21 +2121,30 @@ export async function loadScore(pdfjs, data, onPage) {
   const pages = await extractPages(doc, pdfjs.OPS, onPage);
   const { layouts, lines } = assignLines(pages);
   const isFull = layouts.some(L => L.systems.some(g => g.length > 1));
+  // 한글이 없는 제목(영문 등): 맨 위의 가장 큰 글자 줄
+  const latinTitle = () => {
+    const all = (pages[0]?.glyphs || []).filter(g => !isMusicFont(g.font) && !g.font.includes('Engraver') && g.oy < 130 && g.code >= 32);
+    const big = Math.max(0, ...all.filter(g => g.code > 32).map(x => x.size));
+    if (big < 16) return '';
+    const y = all.find(g => g.size > big - 1 && g.code > 32).oy;
+    const tg = all.filter(x => x.size > big - 1 && Math.abs(x.oy - y) < 2).sort((a, b) => a.ox - b.ox);
+    return tg.map((x, i) => (i && x.x0 - tg[i - 1].x1 > x.size * 0.2 ? ' ' : '') + (x.uni || String.fromCharCode(x.code))).join('').replace(/\s+/g, ' ').trim();   // 글자 사이가 벌어진 곳은 띄어쓰기('Flowers of K')
+  };
   const title = (() => {
     let g = pages[0]?.glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < 120 && g.code >= 0xAC00) || [];   // '가'(0xAC00)도 한글 (예전에는 빠져 '연변목가'가 '연변목'으로)
     // 표지 쪽: 제목이 쪽 위쪽 1/3 안의 큰 글자로 따로 있다
     if (!g.length && pages[0]) g = pages[0].glyphs.filter(g => !isMaestro(g) && !g.font.includes('Engraver') && g.oy < pages[0].height * 0.35 && g.code >= 0xAC00 && g.size >= 18);
-    if (!g.length) {
-      // 한글이 없는 제목(영문 등): 맨 위의 가장 큰 글자 줄
-      const all = (pages[0]?.glyphs || []).filter(g => !isMusicFont(g.font) && !g.font.includes('Engraver') && g.oy < 130 && g.code >= 32);
-      const big = Math.max(0, ...all.filter(g => g.code > 32).map(x => x.size));
-      if (big < 16) return '';
-      const y = all.find(g => g.size > big - 1 && g.code > 32).oy;
-      const tg = all.filter(x => x.size > big - 1 && Math.abs(x.oy - y) < 2).sort((a, b) => a.ox - b.ox);
-      return tg.map((x, i) => (i && x.x0 - tg[i - 1].x1 > x.size * 0.2 ? ' ' : '') + (x.uni || String.fromCharCode(x.code))).join('').replace(/\s+/g, ' ').trim();   // 글자 사이가 벌어진 곳은 띄어쓰기('Flowers of K')
+    // 영문 제목이 한글(작곡자·빠르기 말 등)보다 훨씬 크면 영문 제목 ('Frontier', 'Fly to the sky')
+    if (g.length && pages[0]) {
+      const latinBig = Math.max(0, ...pages[0].glyphs.filter(x => !isMusicFont(x.font) && !x.font.includes('Engraver') && x.oy < 130 && x.code > 64 && x.code < 0x2000).map(x => x.size));
+      if (latinBig >= Math.max(...g.map(x => x.size)) + 4) { const lt = latinTitle(); if (lt) return lt; }
     }
+    if (!g.length) return latinTitle();
     const big = Math.max(...g.map(x => x.size));
-    const t = g.filter(x => x.size > big - 1).sort((a, b) => a.ox - b.ox);
+    let t = g.filter(x => x.size > big - 1);
+    // 같은 크기의 글이 여러 줄이면(제목 + 악보 안의 빠르기 말 '느리고 신비스럽게' 등) 맨 위 줄만
+    const top = Math.min(...t.map(x => x.oy));
+    t = t.filter(x => x.oy - top < Math.max(3, big * 0.6)).sort((a, b) => a.ox - b.ox);
     const seen = new Set(); let s = '';
     for (const x of t) { const k = Math.round(x.ox); if (seen.has(k)) continue; seen.add(k); if (!s.endsWith(x.uni)) s += x.uni; }
     return s;
