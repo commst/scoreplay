@@ -2,3 +2,4 @@ dist/
 node_modules/
 *.pdf
 !manual.pdf
+test/xmlout/
