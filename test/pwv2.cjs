@@ -2,7 +2,7 @@
 const { chromium } = require('playwright'); const fs = require('fs');
 const [, , HTML, MODE = 'desktop'] = process.argv;
 const VP = { desktop: { width: 1366, height: 860 }, tablet: { width: 820, height: 1180, hasTouch: true }, phone: { width: 390, height: 844, hasTouch: true, isMobile: true } }[MODE];
-const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const SM = '/home/claude/samples/', pick = p => { const s = SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(s, t); return t; }   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사;
 const ok = (c, m) => { console.log((c ? 'ok  ' : 'FAIL') + ' ' + m); if (!c) process.exitCode = 1; };
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: VP.width, height: VP.height }, hasTouch: !!VP.hasTouch, isMobile: !!VP.isMobile });
@@ -31,7 +31,7 @@ const ok = (c, m) => { console.log((c ? 'ok  ' : 'FAIL') + ' ' + m); if (!c) pro
   // 악보 올리기 (파일 창)
   await p.click('#filesBtn'); await p.waitForTimeout(200);
   ok(await p.isVisible('#pdfInput + *, label[for=pdfInput]'), 'files dialog shows upload');
-  await p.setInputFiles('#pdfInput', pick('44e95fb3'));
+  await p.setInputFiles('#pdfInput', pick(process.env.PRE || '44e95fb3'));
   await p.waitForFunction(() => document.querySelectorAll('#lineList .lcard').length > 1, null, { timeout: 60000 });
   ok(/Flower/.test(await p.textContent('#tbSongName')), 'topbar song: ' + await p.textContent('#tbSongName') + ' ' + await p.textContent('#tbSongInfo'));
   await p.click('#filesClose'); await p.waitForTimeout(150);

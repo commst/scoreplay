@@ -368,8 +368,11 @@ python3 tools/gen_outline_templates.py <fonts 폴더> src/outline-templates.js
 | `node test/lstat.mjs 총보.pdf` | 줄마다 마디·음·경고 수, 세로 맞춤으로 다시 읽은 마디 수, 경고 종류 집계 |
 | `node test/alignregr.mjs 총보.pdf …` | 세로 맞춤(alignToSystem) 회귀: 경고 없던 마디가 바뀌지 않는지, 음높이 손실·마디 밖 음이 없는지 |
 | `PREV=<이전 score-parser.js> node test/bdiff.mjs <샘플 접두어>` | 해석기 고치기 전/후로 바뀐 마디와 경고 |
+| `node test/regrv.mjs <이전 score-parser.js 절대경로> 악보.pdf …` | 성부(R/L)를 빼고 비교하는 회귀 검사: 음(시각·길이·음높이)이 바뀐 마디와 경고 마디 수 변화. 성부 나누기를 고쳤을 때 |
+| `node test/alignv.mjs <이전 score-parser.js 절대경로> 총보.pdf …` | 세로 맞춤까지 한 결과를 이전 해석기와 비교(성부 빼고) |
+| `node test/crop.mjs <샘플 접두어> <줄 번호> <마디 번호…>` | 그 마디를 PDF에서 잘라 /tmp/crop-…png로(그림과 대조) |
 | `S=<출력 폴더> node test/vis.mjs <샘플 접두어> [개수]` | 다시 읽은 마디를 PDF에서 잘라 그림으로(눈으로 대조) |
-| `node test/pwv2.cjs <html> desktop\|tablet\|phone`, `fuzz2.cjs`, `pwedit.cjs <html>` 등 | 화면 자동 시험(Playwright) |
+| `node test/pwv2.cjs <html> desktop\|tablet\|phone`, `fuzz2.cjs`, `pwedit.cjs <html>` 등 | 화면 자동 시험(Playwright). 한글 파일 이름은 올라가지 않아 샘플을 `/tmp/pick-<접두어>.pdf`로 복사해 씀. pwv2는 `PRE=<접두어>`로 다른 샘플 |
 | `node test/pwxml.cjs <접두어…>` → `xsdcheck.py`·`xmlcheck.py`·`integrity.py`·`msall.sh` | MusicXML 내보내기 검사(표준 규칙, 원래 음 대비, 붙임줄·이음줄·잇단 짝, 뮤즈스코어로 열기) |
 
 이어 작업할 때의 규칙·샘플 목록·검사 순서·남은 과제는 `HANDOFF.md`에 모아 두었습니다.

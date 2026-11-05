@@ -1509,7 +1509,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 5일</h3>
-    <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>5</small></h4><ul class="hlist">
+      <li><details><summary>선율 파트보를 더 정확하게: 한 성부 선율을 두 성부로 갈라 읽던 문제</summary><p>파트보의 한 성부 선율은 음 높이에 따라 음표 기둥이 위로도 아래로도 향합니다. 전에는 기둥 방향으로 성부를 나눠서, 한 줄 선율이 두 성부로 갈리고 '쉼표 일부 숨김' 경고가 많이 났습니다(프론티어 해금은 171마디 중 62마디). 그래서 붙임줄로 이어지는 음이 따로 다시 울리고, 꾸밈음이 엉뚱한 음 앞에 붙기도 했습니다. 이제 같은 때 울리는 음이 없고 이어 붙이면 마디 길이와 꼭 맞으면 한 성부로 읽습니다. 두 성부가 함께 쓰는 가운데 쉼표도 두 성부 모두에 넣습니다. 새 학습 악보 103개에서 경고 마디가 37% 줄었습니다.</p></details></li>
       <li><details><summary>새로 읽는 악보: 한컴 PDF로 만든 Finale 악보, 2줄 타악 오선, X자 음표</summary><p>새 학습 악보(청산, 소금협주곡 「길」)로 보강했습니다. 한컴 PDF로 만든 Finale 악보에서 음표를 하나도 못 읽던 것, 2줄 타악 오선(장고 등)의 마디선, 비스듬한 괄호의 셋잇단음표, 박자표 C, 아래 8이 붙은 음자리표, 징·심벌의 X자 음표 머리를 읽습니다. 다른 악보에서도 X자 음표로 빠지던 음(거문고·북·태징 등)이 채워지고, 영문·한자 곡 제목(Frontier, Fly to the sky 등)이 제대로 나옵니다</p></details></li>
       <li><details><summary>총보에서 음 길이를 잘못 읽은 마디를 다른 줄에 맞춰 다시 읽기</summary><p>총보에서는 같은 때 치는 음이 모든 줄에서 같은 가로 자리에 놓입니다. 한 줄의 음 길이를 잘못 읽어 마디가 넘치면(꼬리가 둘인 두 성부 8분음표를 4분음표로 읽는 등), 같은 단에서 제대로 읽힌 다른 줄들의 음 자리에 맞춰 그 마디의 박자·성부를 다시 읽습니다. 달빛항해 해금처럼 위·아래 성부가 엉키던 마디가 원래 악보와 같아지고, 재생과 MusicXML 내보내기에도 그대로 쓰입니다. 경고가 없던 마디는 바뀌지 않고, 근거가 될 다른 줄이 부족하면 처음 읽은 그대로 둡니다. 다시 읽은 마디에는 '다른 줄과 세로 자리를 맞춰 음 길이를 다시 읽음'이 표시됩니다</p></details></li>
       <li><details><summary>MusicXML을 피날레·뮤즈스코어에서 손 안 대고 쓰게</summary><p>뮤즈스코어로 직접 열어 보며 고쳤습니다: 원래 악보의 쪽 크기·오선 크기·여백과 마디 폭을 넣어 한 단·한 쪽에 같은 마디가 들어가게, 악기 이름이 모든 단에, 관악·찰현·발현·타악 묶음 괄호, 악기마다 소리(타악은 드럼 소리 번호)와 셈여림 크기가 들어가 바로 재생, 마디를 넘는 붙임줄의 시작 표시가 빠지던 것, 다섯잇단·일곱잇단음표, 3/8·5/8·7/8·8/8·10/8(엇모리) 빔 묶음, 4/4의 8분음표 넷 묶음, 셋잇단 괄호 묶음, 앞 마디에서 이어진 음의 임시표, 같은 마디 되풀이(%) 마디의 둘째 성부, 악보의 연주 지시 글자(pizz.·arco·div.·Solo·빠르기말 등)와 꺾쇠 길이, 타악 두 줄 악기도 한 파트로</p></details></li>
@@ -3254,7 +3255,7 @@ function parseScore(pages, opts = {}) {
 
       regions.forEach(([rx0, rx1], ri) => {
         const inr = x => rx0 <= x && x < rx1;
-        const m = { page: pi, staff: si, x0: rx0, x1: rx1, timesig: null, notes: notes.filter(n => inr(n.x)), kind: 'normal', multirest: 0,
+        const m = { page: pi, staff: si, x0: rx0, x1: rx1, timesig: null, notes: notes.filter(n => inr(n.x)), kind: 'normal', multirest: 0, pitched: pitchedStaff,
           repeatStart: false, repeatEnd: false, fermata: false, sectionStart: false, warnings: [], tempoMarks: [] };
         let content = m.notes.length > 0;
         const ts = sg.filter(g => isDigit(g.code) && inr(cx(g)) && st.top - 2 <= g.oy && g.oy <= st.bottom + 2);
@@ -3545,6 +3546,7 @@ function timing(m, barLen) {
   const main = m.notes.filter(n => !n.grace && !n.chordOf);
   const graces = m.notes.filter(n => n.grace);
   fixAmbigBeams(m, barLen);
+  mergeFlippedStems(m, main, chordMembers, graces, barLen);
   for (const v of ['R', 'L']) {
     const vn = main.filter(n => n.voice === v);
     if (vn.some(n => n.tuplet)) {
@@ -3553,6 +3555,7 @@ function timing(m, barLen) {
       if (scaled.eq(barLen) || (!plain.eq(barLen) && scaled.lt(plain))) vn.forEach(n => { if (n.tuplet) n.dur = n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet); });
     }
   }
+  shareRests(main, barLen);
   const onset = new Map();
   const complete = new Set();
   for (const v of ['R', 'L']) {
@@ -3641,6 +3644,43 @@ function lenToSig(L) {
   if ((L.n * 4) % L.d === 0) return [L.n * 4 / L.d, 4];
   if (Number.isInteger(e)) return [e, 8];
   return [L.n * 16 / L.d, 16];
+}
+
+// 선율 오선의 한 성부인데 음 높이에 따라 기둥 방향만 바뀐 마디(파트보에 흔함): 기둥 방향으로 나눈 두 '성부'가
+// 같은 때 울리는 음이 하나도 없고, 둘 다 마디 길이에 모자라며, 모두 이어 붙이면 마디 길이와 꼭 같으면 한 성부로 합친다.
+// (전에는 두 성부로 갈라 '쉼표 일부 숨김' 경고가 나고 MusicXML에도 성부 둘 + 숨긴 쉼표로 나갔다)
+function mergeFlippedStems(m, main, chordMembers, graces, barLen) {
+  if (!m.pitched) return;
+  const vs = new Set(main.map(n => n.voice));
+  if (vs.size !== 2) return;
+  const sum = (arr, sc) => frSum(arr.map(n => sc && n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : n.dur));
+  const fits = arr => sum(arr, false).eq(barLen) || sum(arr, true).eq(barLen);
+  if (fits(main.filter(n => n.voice === 'R')) || fits(main.filter(n => n.voice === 'L')) || !fits(main)) return;
+  const s = [...main].sort((a, b) => a.x - b.x);
+  for (let i = 1; i < s.length; i++) if (s[i].voice !== s[i - 1].voice && s[i].x - s[i - 1].x < 2.0) return;   // 같은 때 두 성부 = 진짜 두 성부
+  const heads = s.filter(n => !n.rest);
+  const v = heads.filter(n => n.voice === 'L').length > heads.filter(n => n.voice === 'R').length ? 'L' : 'R';
+  for (const n of main) n.voice = v;
+  for (const n of chordMembers) n.voice = v;
+  for (const n of graces) n.voice = v;
+  m.merged = true;
+}
+
+// 두 성부가 함께 쓰는 쉼표(가운데 하나만 찍음): 한 성부에만 붙어 다른 성부가 모자라면, 그 성부의 음과 겹치지 않는
+// 다른 성부 쉼표들을 넣어 보아 마디 길이와 꼭 같아질 때만 그 성부에도 같은 쉼표를 둔다
+function shareRests(main, barLen) {
+  for (const v of ['R', 'L']) {
+    const o = v === 'R' ? 'L' : 'R';
+    const vn = main.filter(n => n.voice === v);
+    if (!vn.length || frSum(vn.map(n => n.dur)).eq(barLen)) continue;
+    const cand = main.filter(n => n.rest && n.voice === o && !n._shared && !vn.some(x => Math.abs(x.x - n.x) < 2.0));
+    if (!cand.length || !frSum([...vn, ...cand].map(n => n.dur)).eq(barLen)) continue;
+    // 나눠 쓴 뒤에도 두 성부의 가로 순서와 시각 순서가 맞아야 한다 (왼쪽 음이 더 늦게 시작하면 안 됨)
+    const seq = arr => { let t = ZERO; return [...arr].sort((a, b) => a.x - b.x).map(n => { const r = [n.x, t]; t = t.add(n.dur); return r; }); };
+    const A = seq([...vn, ...cand]), B = seq(main.filter(n => n.voice === o));
+    if (A.some(([ax, at]) => B.some(([bx, bt]) => (bx < ax - 2 && bt.gt(at)) || (bx > ax + 2 && bt.lt(at)) || (Math.abs(bx - ax) < 2 && !bt.eq(at))))) continue;
+    for (const r of cand) main.push({ ...r, voice: v, _shared: true });
+  }
 }
 
 // 오선 가운데 쉼표는 성부를 위치로 알 수 없다: 음표가 한 성부뿐이면 그 성부, 아니면 가까운 음표의 성부
@@ -8726,7 +8766,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-05 13:21';
+const APP_VERSION = '2026-11-05 15:17';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

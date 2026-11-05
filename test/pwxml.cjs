@@ -1,6 +1,6 @@
 // MusicXML 내보내기: node pwxml.cjs <샘플 접두어...> → xmlout/<접두어>.musicxml (모든 줄 켜고)
 const { chromium } = require('playwright'); const fs = require('fs');
-const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const SM = '/home/claude/samples/', pick = p => { const s = SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(s, t); return t; }   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사;
 const HTML = process.env.HTML || '/home/claude/web/deploy-hapju/index.html';
 (async () => { const b = await chromium.launch();
  for (const pre of process.argv.slice(2)) {

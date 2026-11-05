@@ -1,6 +1,6 @@
 // 태블릿 가로·세로: 왼쪽 탭(악기·빠르기·연주·저장)과 아래 서랍 탭을 누를 수 있는지
 const { chromium } = require('playwright'); const fs = require('fs');
-const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const SM = '/home/claude/samples/', pick = p => { const s = SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(s, t); return t; }   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사;
 const HTML = process.argv[2] || '/home/claude/web/deploy-hapju/index.html';
 const SIZES = [['iPad mini 가로', 1024, 768], ['iPad Air 가로', 1180, 820], ['iPad Pro 11 가로', 1194, 834], ['iPad Pro 12.9 가로', 1366, 1024], ['갤럭시탭 가로', 1280, 800], ['작은 태블릿 가로', 960, 600], ['iPad 세로', 820, 1180]];
 let bad = 0;

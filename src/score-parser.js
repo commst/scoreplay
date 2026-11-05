@@ -1362,7 +1362,7 @@ export function parseScore(pages, opts = {}) {
 
       regions.forEach(([rx0, rx1], ri) => {
         const inr = x => rx0 <= x && x < rx1;
-        const m = { page: pi, staff: si, x0: rx0, x1: rx1, timesig: null, notes: notes.filter(n => inr(n.x)), kind: 'normal', multirest: 0,
+        const m = { page: pi, staff: si, x0: rx0, x1: rx1, timesig: null, notes: notes.filter(n => inr(n.x)), kind: 'normal', multirest: 0, pitched: pitchedStaff,
           repeatStart: false, repeatEnd: false, fermata: false, sectionStart: false, warnings: [], tempoMarks: [] };
         let content = m.notes.length > 0;
         const ts = sg.filter(g => isDigit(g.code) && inr(cx(g)) && st.top - 2 <= g.oy && g.oy <= st.bottom + 2);
@@ -1653,6 +1653,7 @@ function timing(m, barLen) {
   const main = m.notes.filter(n => !n.grace && !n.chordOf);
   const graces = m.notes.filter(n => n.grace);
   fixAmbigBeams(m, barLen);
+  mergeFlippedStems(m, main, chordMembers, graces, barLen);
   for (const v of ['R', 'L']) {
     const vn = main.filter(n => n.voice === v);
     if (vn.some(n => n.tuplet)) {
@@ -1661,6 +1662,7 @@ function timing(m, barLen) {
       if (scaled.eq(barLen) || (!plain.eq(barLen) && scaled.lt(plain))) vn.forEach(n => { if (n.tuplet) n.dur = n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet); });
     }
   }
+  shareRests(main, barLen);
   const onset = new Map();
   const complete = new Set();
   for (const v of ['R', 'L']) {
@@ -1749,6 +1751,43 @@ function lenToSig(L) {
   if ((L.n * 4) % L.d === 0) return [L.n * 4 / L.d, 4];
   if (Number.isInteger(e)) return [e, 8];
   return [L.n * 16 / L.d, 16];
+}
+
+// 선율 오선의 한 성부인데 음 높이에 따라 기둥 방향만 바뀐 마디(파트보에 흔함): 기둥 방향으로 나눈 두 '성부'가
+// 같은 때 울리는 음이 하나도 없고, 둘 다 마디 길이에 모자라며, 모두 이어 붙이면 마디 길이와 꼭 같으면 한 성부로 합친다.
+// (전에는 두 성부로 갈라 '쉼표 일부 숨김' 경고가 나고 MusicXML에도 성부 둘 + 숨긴 쉼표로 나갔다)
+function mergeFlippedStems(m, main, chordMembers, graces, barLen) {
+  if (!m.pitched) return;
+  const vs = new Set(main.map(n => n.voice));
+  if (vs.size !== 2) return;
+  const sum = (arr, sc) => frSum(arr.map(n => sc && n.tuplet ? n.dur.mul(n.tuplet === true ? F(2, 3) : n.tuplet) : n.dur));
+  const fits = arr => sum(arr, false).eq(barLen) || sum(arr, true).eq(barLen);
+  if (fits(main.filter(n => n.voice === 'R')) || fits(main.filter(n => n.voice === 'L')) || !fits(main)) return;
+  const s = [...main].sort((a, b) => a.x - b.x);
+  for (let i = 1; i < s.length; i++) if (s[i].voice !== s[i - 1].voice && s[i].x - s[i - 1].x < 2.0) return;   // 같은 때 두 성부 = 진짜 두 성부
+  const heads = s.filter(n => !n.rest);
+  const v = heads.filter(n => n.voice === 'L').length > heads.filter(n => n.voice === 'R').length ? 'L' : 'R';
+  for (const n of main) n.voice = v;
+  for (const n of chordMembers) n.voice = v;
+  for (const n of graces) n.voice = v;
+  m.merged = true;
+}
+
+// 두 성부가 함께 쓰는 쉼표(가운데 하나만 찍음): 한 성부에만 붙어 다른 성부가 모자라면, 그 성부의 음과 겹치지 않는
+// 다른 성부 쉼표들을 넣어 보아 마디 길이와 꼭 같아질 때만 그 성부에도 같은 쉼표를 둔다
+function shareRests(main, barLen) {
+  for (const v of ['R', 'L']) {
+    const o = v === 'R' ? 'L' : 'R';
+    const vn = main.filter(n => n.voice === v);
+    if (!vn.length || frSum(vn.map(n => n.dur)).eq(barLen)) continue;
+    const cand = main.filter(n => n.rest && n.voice === o && !n._shared && !vn.some(x => Math.abs(x.x - n.x) < 2.0));
+    if (!cand.length || !frSum([...vn, ...cand].map(n => n.dur)).eq(barLen)) continue;
+    // 나눠 쓴 뒤에도 두 성부의 가로 순서와 시각 순서가 맞아야 한다 (왼쪽 음이 더 늦게 시작하면 안 됨)
+    const seq = arr => { let t = ZERO; return [...arr].sort((a, b) => a.x - b.x).map(n => { const r = [n.x, t]; t = t.add(n.dur); return r; }); };
+    const A = seq([...vn, ...cand]), B = seq(main.filter(n => n.voice === o));
+    if (A.some(([ax, at]) => B.some(([bx, bt]) => (bx < ax - 2 && bt.gt(at)) || (bx > ax + 2 && bt.lt(at)) || (Math.abs(bx - ax) < 2 && !bt.eq(at))))) continue;
+    for (const r of cand) main.push({ ...r, voice: v, _shared: true });
+  }
 }
 
 // 오선 가운데 쉼표는 성부를 위치로 알 수 없다: 음표가 한 성부뿐이면 그 성부, 아니면 가까운 음표의 성부

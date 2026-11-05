@@ -1,6 +1,6 @@
 # 합주연습기 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-05, CHANGELOG 102번까지)
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-05, CHANGELOG 103번까지)
 
 ## 1. 작업 규칙 (사용자 요청)
 
@@ -23,9 +23,24 @@
 - 빌드: `python3 build.py` → `index.html` + `version.json`(판 번호 = 한국 시각) + `dist/`
 - 이전 세션은 `/home/claude/web`(melody.html = index.template.html, score-parser.js, build_melody.py → deploy-hapju/index.html)에서 고친 뒤 저장소 src로 복사했다. 새 세션은 저장소 src에서 바로 고쳐도 됨
 - 뮤즈스코어 4.4.4 AppImage: `/home/claude/mscore/squashfs-root/AppRun` (없으면 다시 받아 압축 풀기; test/msall.sh가 사용)
+- **작업 공간이 새로 만들어지면**(샘플·도구가 모두 사라짐): 저장소 다시 받기 → `npm install` → `mkdir -p /home/claude/web && ln -sfn /home/claude/scoreplay/node_modules /home/claude/web/node_modules` → `mkdir -p /home/claude/web/deploy-hapju && ln -sf /home/claude/scoreplay/index.html /home/claude/web/deploy-hapju/index.html`(fuzz2·pwxml 기본 경로). Playwright는 `NODE_PATH=/opt/npm-tools/node_modules`. MusicXML XSD는 `https://raw.githubusercontent.com/w3c/musicxml/v4.0/schema/{musicxml,xml,xlink}.xsd` → `/home/claude/work/xsd/`. 뮤즈스코어는 `https://github.com/musescore/MuseScore/releases/download/v4.4.4/MuseScore-Studio-4.4.4.243461245-x86_64.AppImage` 받아 `--appimage-extract`
+- 샘플은 사용자에게 **zip으로** 받는다(PDF를 그대로 첨부하면 대화에 펼쳐져 토큰을 많이 씀). 맥에서 만든 zip은 파일 이름이 `#Uc18c` 꼴로 풀리므로 `#U(4자리)`를 글자로 바꿔 이름 붙임
+- 한글 파일 이름은 Playwright setInputFiles로 올라가지 않음 → 시험 도구는 `/tmp/pick-<접두어>.pdf`로 복사해 올림(이미 반영)
 - 시험 스크립트 대부분은 `/home/claude/samples`(샘플 PDF), `/home/claude/web/node_modules/pdfjs-dist`(앱 시험 때 CDN 대신 쓰는 pdf.js) 경로를 씀. 환경이 새로 만들어졌으면 경로를 맞추거나 SAMPLES 환경변수 사용
 
-## 3. 샘플 악보 (87개)
+## 3. 샘플 악보
+
+### 2026-11-05 새 작업 공간에 받은 것 (103개, zip 5개: 34-1·34-2 프론티어, 37 월광, 42 달빛항해, 57 미락흘, 63 소나기)
+아래 87개 목록과 겹치는 것은 총보 4개뿐(달빛항해 5a5e4c8e, Frontier 9203ad49, 월광 = 경기도립 위촉작품 2bc31eef, 미락흘 = 강원도립 신년음악회 5b2e1f54). 나머지 87개 옛 샘플은 이 작업 공간에 없음.
+**선율 파트보가 총보와 함께 있어 마디별 대조에 쓸 수 있음.** 다만 사용자가 가진 악보를 모두 올려 **판이 총보와 다를 수 있음** — 마디 수가 다르면 다른 판으로 보고, 마디 순서를 맞춘 뒤 대부분 일치하는 짝 안에서 국소적으로 어긋난 곳만 오류 후보로 볼 것
+- 소나기 (설장구 협주곡, pdfFactory): 총보 78767dd2(22줄 274마디), 타악 989bed97, 가야금1 4d14b65a·2 d01fdca8, 거문고 30ecf7c5, 대금 a20fb355, 소금 05c142e6, 피리 340c8186, 태평소 d5810074, 해금 cc07366e(277마디 — 판 다를 수 있음), 소아쟁 7d439097, 대아쟁 d1283340, 건반 cb301e6b·2 bc30801e
+- 프론티어 34-1 (PScript5): 총보 363ca361(15줄 171마디, 옛 a33365d9와 다른 파일), 소금 f26de2e2, 대금 db1091d7, 피리태평소 fffcb9e2, 해금 7cce8f62, 대아쟁 f6400eaa, 가야금 738f131a·2 209a06bb, 거문고 e4b67b61, 건반 af049f24, 타악 1ea4bf1f
+- 프론티어 34-2 우리앙상블 (Sibelius 20.6, 총보 9203ad49 170마디): 소금 71309168, 대금 52f7f3f4, 피리 f8a5cee4, 대피리 7a7b0010, 태평소 52dee6a8, 해금 348383a3, 소아쟁 f3f4b1c7, 대아쟁 c89e2641, 가야금 4cd2237f, 거문고 a159a572, 양금 33e41278, Piano b2ad8152, 장구 eeacfd93, 모듬북 5572839c, 꽹가리·징 e37dd8e0, Brass chime·징·잼베 30c7f710
+- 달빛항해 (doPDF, 총보 5a5e4c8e 152마디 / 다른 판 Score 6a8c363c): 소금 f71ee972, 대금 4ff5d13d, 피리 4c11c62e, 태평소 a435527b, 해금 d74e426b, 대아쟁 6a124bec, 가야금 65547a57, 거문고 0e4db8dc, 양금 242e8d42, 장구 082ee014, 북 8d480304, 대고 73401d64, 징 2faa3aa8, 공 e731a6ea, OPEN SYMBAL f1a3f359, Bell cc62fc8e, 탬버린 29a4d840, 트라이앵글 7a10f13f
+- 월광 (PScript5, 총보 2bc31eef 193마디): 소금 e8e04c44, 대금 047aeebe, 피리 a5d361b5, 대피리 ab608a97, 태평소 31d13b53, 해금 10ef889e, 소아쟁 5139dcdd, 대아쟁 04107df0, 양금 42e6719b, 가야금 2ab6053d, 거문고 2abfe33b, 신디 7d47f709, 장구 8dd5f49b, 쇠 d9ff8023, 징 a2cfc6ba, 모듬북 ab414a04, 심벌·윈드차임 9c5b4722, 대고·공 03d96428 / 타악 스코어 c6413c84는 그림 PDF(못 읽음)
+- 미락흘 (Sibelius 22.10, 총보 5b2e1f54 264마디): 소금 985e95bb, 대금 ccb5bf3e, 피리 bd38a457, 저피리 20875ffb, 태평소 cef37825, 피리·태평소 합본 daad401a, 생황 340e1cd7, 해금 671dc786, 소아쟁 89ad9170, 대아쟁 b0bf3d18, 가야금 50f274a6·2 92f62e02, 거문고 6db43133, syn. 4cf0e820, Contrabass 1a5f86c1, 장구 22dd0425, 모듬북 16723f30, 꽹과리·젬베·triangle c0b6c20d, Cymbals·windbell·징·대북 004d79b5 / 가야금 part1 HJ편집 6e5c0683은 그림 PDF(못 읽음)
+
+### 이전 작업 공간의 샘플 (87개)
 
 - 위치: `/home/claude/samples/<md5 앞 8자>-<원래 파일 이름>.pdf` — **저장소에는 없음**(저작권). 작업 공간이 비워졌으면 사용자에게 다시 받거나, 대화 첨부(/mnt/user-data/attachments/…)에서 md5 앞 8자로 이름 붙여 복사
 - 새 악보를 받으면 md5로 중복 확인(`md5sum`) 후 `<md5 8자>-이름.pdf`로 추가
@@ -96,9 +111,10 @@
 
 ## 4. 고친 뒤 검사 순서
 
-해석기(score-parser.js)를 고쳤으면:
+해석기(score-parser.js)를 고쳤으면 (이전 파일은 `/home/claude/prev/`에 outline-*.js와 함께 복사해 두어야 import가 됨):
 1. 고치기 전 파일을 복사해 둔다(예: `/home/claude/score-parser.prev.js`)
 2. `node --max-old-space-size=6000 test/regr.mjs <이전 파일 절대경로> <샘플들>` — 85곡 이상은 메모리 부족(137)이 나므로 40여 개씩 나눠서. `files diff 0`이 기본, 차이가 나면 `PREV=… node test/bdiff.mjs <접두어>`로 마디별 확인 후 그림 대조(`test/vis.mjs`, pdftoppm으로 해당 마디 잘라 보기)
+   - 성부(R/L) 나누기를 건드렸으면 regr는 모두 차이로 나오므로 `test/regrv.mjs`(성부 빼고 음만 비교, 경고 마디 수 변화)와 `test/alignv.mjs`(세로 맞춤까지) 사용. 바뀐 마디는 `test/crop.mjs <접두어> <줄> <마디>`로 잘라 그림과 대조
 3. 새 악보: `test/inv.mjs`(요약), `test/lstat.mjs`(줄별 경고)
 4. 세로 맞춤을 건드렸으면 `test/alignregr.mjs` (alt=0, lost 없음, broken=0)
 
@@ -125,3 +141,7 @@
 - 아침을 두드리는 소리 다른 판 모듬북(640f819f) 229·231마디: 첫 화음의 점을 못 읽어 X 머리 음들이 마디를 넘음
 - 경고 많은 타악 파트보: 판놀음 장구, 아름다운 인생 2 봉고·타악 총보, 축제 장구
 - 스캔 PDF는 읽지 못함(신뱃놀이 파트 5개)
+- **선율 파트보 ↔ 총보 마디별 자동 대조 도구는 아직 없음**(103번에서 계획만). 판이 다를 수 있으니 마디 순서 맞춤(정렬) 후 대부분 일치하는 짝만 믿을 것
+- 남은 '쉼표 숨김' 경고 대부분은 악보 그대로: 5/4박 마디에 온음표 하나(프론티어 34-1 대아쟁 21~24마디 — 마디 전체로 볼지는 미정), 성부가 마디 중간에 갈라짐(소나기 대금 141마디 등 — MusicXML에서 숨긴 쉼표 대신 forward를 쓸지 검토)
+- 파트보 제목이 첫 글자만 나오는 것: 프론티어 34-1 해금 파트보 제목이 '해'(줄 이름은 ONE 표로 채우지만 파트보 제목은 안 채움)
+- 앱의 기준 줄(master)은 경고가 가장 적은 줄 → 경고 수가 바뀌면 기준 줄이 바뀔 수 있음(103번에서 월광 8·16마디 MusicXML 박자가 바뀐 원인)

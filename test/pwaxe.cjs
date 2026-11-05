@@ -1,6 +1,6 @@
 // 접근성 검사(axe) + 중복 id
 const { chromium } = require('playwright'); const fs = require('fs');
-const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const SM = '/home/claude/samples/', pick = p => { const s = SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(s, t); return t; }   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사;
 const AXE = fs.readFileSync('/home/claude/work/axetmp/node_modules/axe-core/axe.min.js', 'utf8');
 (async () => { const b = await chromium.launch(); const all = {};
  for (const [nm, w, h] of [['desk', 1280, 860], ['phone', 390, 844]]) {

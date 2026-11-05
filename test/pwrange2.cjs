@@ -1,5 +1,5 @@
 const { chromium } = require('/opt/npm-tools/node_modules/playwright');
-const fs = require('fs'); const SM = '/home/claude/samples/'; const pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const fs = require('fs'); const SM = '/home/claude/samples/'; const pick = p => { const s = SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(s, t); return t; }   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사;
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } }); const errs = [];
   const open = async () => { const p = await ctx.newPage(); p.on('pageerror', e => errs.push(e.message));

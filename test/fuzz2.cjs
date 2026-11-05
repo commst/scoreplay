@@ -1,7 +1,7 @@
 // 무작위로 화면을 조작해 오류(pageerror·console error)와 이상 상태를 찾는다
 const { chromium, devices } = require('/opt/npm-tools/node_modules/playwright');
 const fs = require('fs'); const SM = '/home/claude/samples/'; const all = fs.readdirSync(SM).filter(f => f.endsWith('.pdf'));
-const pick = p => SM + all.find(f => f.startsWith(p));
+const pick = p => { const t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(SM + all.find(f => f.startsWith(p)), t); return t; };   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사
 const seed = +(process.argv[2] || 1), N = +(process.argv[3] || 120), mobile = process.argv[4] === 'mobile';
 let s = seed; const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }; const ri = n => Math.floor(rnd() * n);
 (async () => {
@@ -16,7 +16,9 @@ let s = seed; const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; ret
   await p.goto('file:///home/claude/web/deploy-hapju/index.html'); await p.waitForTimeout(800);
   if (rnd() < 0.5) await p.click('#demoBtn').catch(() => {});
   const log = [];
-  const pdfs = ['b3a31a97', 'd95ddafe', '59ee4663', '5b2e1f54', '52cfd0bf', '1fe03d65', 'a05c32d0', '9e386483', '20983efb'];
+  let pdfs = ['b3a31a97', 'd95ddafe', '59ee4663', '5b2e1f54', '52cfd0bf', '1fe03d65', 'a05c32d0', '9e386483', '20983efb'].filter(p => all.some(f => f.startsWith(p)));
+  const partsOf = L => { const h = L.filter(p => all.some(f => f.startsWith(p))), alt = ['eeacfd93', '5572839c', '082ee014', '8d480304', '22dd0425'].filter(p => all.some(f => f.startsWith(p))); const c = h.length ? h : alt; return c[ri(c.length)]; };   // 파트보 샘플이 없으면 있는 것으로
+  if (pdfs.length < 4) pdfs = pdfs.concat(['5a5e4c8e', '2bc31eef', '22dd0425', '7cce8f62', '6db43133', '9203ad49'].filter(p => all.some(f => f.startsWith(p))));   // 샘플이 일부만 있을 때
   const safe = async (name, fn) => { log.push(name); try { await fn(); } catch (e) { if (!/Timeout|not visible|detached|intercepts|outside of the viewport|not enabled|disabled/i.test(e.message)) errs.push('ACT ' + name + ': ' + e.message.split('\n')[0]); } };
   const vis = async sel => { const n = await p.locator(sel).count(); return n ? p.locator(sel).nth(ri(n)) : null; };
   const acts = [
@@ -32,8 +34,8 @@ let s = seed; const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; ret
     ['space', async () => { await p.keyboard.press('Space'); await p.waitForTimeout(ri(800)); }, 2],
     ['demo', async () => p.click('#demoBtn', { timeout: 800 }), 1],
     ['loadFull', async () => { await p.setInputFiles('#pdfInput', pick(pdfs[ri(pdfs.length)])); await p.waitForFunction(() => /마디를 읽었습니다|읽지 못|예시/.test(document.querySelector('#fileInfo').textContent), null, { timeout: 120000 }); }, 2],
-    ['loadParts', async () => { const k = 1 + ri(2), fs2 = []; for (let i = 0; i < k; i++) fs2.push(pick(['d95ddafe', '59ee4663', '9128e77f', 'bfb7e6f7', '26dd8f21'][ri(5)])); await p.setInputFiles('#partsInput', fs2); await p.waitForTimeout(4000); }, 1],
-    ['addExtra', async () => { await p.setInputFiles('#extraInput', pick(['d95ddafe', '26dd8f21'][ri(2)])); await p.waitForTimeout(3000); }, 1],
+    ['loadParts', async () => { const k = 1 + ri(2), fs2 = []; for (let i = 0; i < k; i++) fs2.push(pick(partsOf(['d95ddafe', '59ee4663', '9128e77f', 'bfb7e6f7', '26dd8f21']))); await p.setInputFiles('#partsInput', fs2); await p.waitForTimeout(4000); }, 1],
+    ['addExtra', async () => { await p.setInputFiles('#extraInput', pick(partsOf(['d95ddafe', '26dd8f21']))); await p.waitForTimeout(3000); }, 1],
     ['rmFile', async () => { const l = await vis('.flist .rm'); if (l) await l.click({ timeout: 2000 }); }, 1],
     ['role', async () => { const l = await vis('.lcard .seg button'); if (l) await l.click({ timeout: 2000 }); }, 6],
     ['inst', async () => { const l = await vis('.lcard .cfg select'); if (l) { const opts = await l.locator('option').evaluateAll(o => o.map(x => x.value)); await l.selectOption(opts[ri(opts.length)], { timeout: 2000 }); } }, 4],

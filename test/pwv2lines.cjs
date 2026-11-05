@@ -1,7 +1,7 @@
 // 악기 줄 접기·펼치기 시험: node pwv2lines.cjs <html> <w> <h> <outprefix>
 const { chromium } = require('playwright'); const fs = require('fs');
 const [, , HTML, W = '1366', H = '860', OUT] = process.argv;
-const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const SM = '/home/claude/samples/', pick = p => { const s = SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t = '/tmp/pick-' + p + '.pdf'; fs.copyFileSync(s, t); return t; }   // 한글 파일 이름은 setInputFiles가 올리지 못해 영어 이름으로 복사;
 const ok = (c, m) => { console.log((c ? 'ok  ' : 'FAIL') + ' ' + m); if (!c) process.exitCode = 1; };
 (async () => {
   const b = await chromium.launch(); const p = await (await b.newContext({ viewport: { width: +W, height: +H }, hasTouch: +W < 900 })).newPage(); const errs = [];
