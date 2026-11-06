@@ -1056,7 +1056,14 @@ export function parseScore(pages, opts = {}) {
           const cand = stems.filter(v => g.x0 - 1.2 <= v[0] && v[0] <= g.x1 + 1.2 && v[1] - 3 <= g.oy && g.oy <= v[2] + 3);
           let beams = 0, flags = 0;
           if (cand.length) {
-            let v = forceStem || cand.reduce((b, v) => (Math.min(Math.abs(v[0] - g.x0), Math.abs(v[0] - g.x1)) < Math.min(Math.abs(b[0] - g.x0), Math.abs(b[0] - g.x1)) ? v : b));
+            // 가장 가까운 기둥. 거리가 거의 같으면 제자리 쪽 기둥(위 기둥은 머리 오른쪽, 아래 기둥은 왼쪽)을 먼저:
+            // 촘촘한 16분음표에서 앞 음의 위 기둥이 다음 머리 왼쪽 끝에 닿아 두 음을 한 기둥의 2도 화음으로 읽던 것(미락흘 소금·대금·피리 208마디)
+            const sideOk = c => c[1] < g.oy - 4 ? Math.abs(c[0] - g.x1) <= Math.abs(c[0] - g.x0) : Math.abs(c[0] - g.x0) <= Math.abs(c[0] - g.x1);
+            // 단, 제자리 쪽 기둥의 머리 쪽 끝이 반대쪽 기둥보다 이 머리 높이에 더 가깝고 1.2pt 안일 때만 (2도 화음의 비켜 찍은 머리는 그대로)
+            const headEnd = c => c[1] < g.oy - 4 ? c[2] : c[1], gap = c => Math.abs(headEnd(c) - g.oy);
+            const score = c => Math.min(Math.abs(c[0] - g.x0), Math.abs(c[0] - g.x1))
+              + (!sideOk(c) && cand.some(c2 => c2 !== c && sideOk(c2) && gap(c2) < 1.2 && gap(c2) + 0.3 < gap(c)) ? 0.8 : 0);
+            let v = forceStem || cand.reduce((b, v) => (score(v) < score(b) ? v : b));
             // 같은 자리에 머리가 두 개(두 성부가 같은 음): 하나는 위 기둥, 하나는 아래 기둥
             const twins = heads.filter(h => Math.abs(h.ox - g.ox) < 0.5 && Math.abs(h.oy - g.oy) < 0.5 && h.size === g.size);
             if (!forceStem && twins.length >= 2) {
@@ -1521,6 +1528,7 @@ export function parseScore(pages, opts = {}) {
         m.sectionStart = leftDouble[ri] || (ri === 0 && prevRightDouble);
         const rightIsDouble = bounds.slice(1).some(bb => Math.abs(bb[0] - rx1) < 1 && bb[2] >= 2);
         m.fermata = ferm.some(g => rx0 - 3 <= cx(g) && cx(g) <= rx1 + 3);
+        m.fermataX = ferm.filter(g => rx0 - 3 <= cx(g) && cx(g) <= rx1 + 3).map(cx);   // 늘임표 가로 자리 (어느 음 위인지)
         const inRoll = rollSpan && rollSpan[0] < rx0 && rollSpan[1] > rx0 + 5;
         const isFirst = ri === 0;
         const isTrailing = ri === regions.length - 1 && (!groups.length || rx0 >= groups[groups.length - 1][groups[groups.length - 1].length - 1][0] - 0.5) && rx1 >= st.x1 - 0.5;
@@ -2126,6 +2134,17 @@ export function resolveBars(measures, systemNumbers = []) {
       const end = e.events.reduce((a, ev) => frMax(a, ev.t.add(ev.dur)), ZERO);
       if (end.gt(e.barLen)) e.barLen = end;
       if (!m.notes.length) { e.note = m.rollExt ? '롤 연장' : '쉼'; e.kind = m.rollExt ? 'rollext' : 'rest'; }
+      // 늘임표가 붙은 음의 시각: 늘임표 바로 아래(가로 12pt 안) 음. 마디 끝까지 울리는 음이거나 음이 없으면(쉼표·마디선 위) 적지 않음 → 마디 끝에서 늘임
+      // (미락흘 129마디: 첫 음에 늘임표가 있는데 마지막 음을 늘이던 것)
+      if (m.fermata && m.fermataX && e.events.length) {
+        const ts = [];
+        for (const fx of m.fermataX) {
+          const near = e.events.filter(ev => ev.x != null && !ev.tie && Math.abs(ev.x - fx) < 12).sort((a, b) => Math.abs(a.x - fx) - Math.abs(b.x - fx))[0];
+          if (!near) continue;
+          if (near.t.add(near.dur).lt(e.barLen) && !ts.some(t => t.eq(near.t))) ts.push(near.t);   // 마디 끝까지 울리는 음이면 예전처럼 마디 끝에서
+        }
+        if (ts.length) e.fermataT = ts.sort((a, b) => a.v - b.v);
+      }
     }
     out.push(e);
   });

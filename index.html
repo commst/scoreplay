@@ -206,6 +206,8 @@ button { cursor: pointer; }
 .view-switch button[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .view-switch button:focus-visible { outline: 3px solid var(--now, #f5c400); outline-offset: -3px; }
 .sv-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin: 10px 0 8px; }
+/* 악보 칸을 굴려도 위 도구(따라가기·화면 가득 보기·크기)가 위 막대 바로 아래에 붙어 있게 (프레임이 말려 올라가 도구가 안 보이던 것) */
+.score-view:not(.sv-full) .sv-tools { position: sticky; top: var(--tbh, 56px); z-index: 6; background: var(--card); padding: 6px 0; margin: 4px 0 6px; }
 .sv-tools .zoom { display: inline-flex; gap: 4px; align-items: center; font-size: 12.5px; color: var(--muted); }
 .sv-tools .zoom button { min-width: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); color: var(--ink); font: 600 13px/1.2 var(--font-body); cursor: pointer; }
 .sv-wrap { position: relative; height: min(78vh, 980px); overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--paper) 70%, #8884); padding: 10px; overscroll-behavior: contain; }
@@ -2952,7 +2954,14 @@ function parseScore(pages, opts = {}) {
           const cand = stems.filter(v => g.x0 - 1.2 <= v[0] && v[0] <= g.x1 + 1.2 && v[1] - 3 <= g.oy && g.oy <= v[2] + 3);
           let beams = 0, flags = 0;
           if (cand.length) {
-            let v = forceStem || cand.reduce((b, v) => (Math.min(Math.abs(v[0] - g.x0), Math.abs(v[0] - g.x1)) < Math.min(Math.abs(b[0] - g.x0), Math.abs(b[0] - g.x1)) ? v : b));
+            // 가장 가까운 기둥. 거리가 거의 같으면 제자리 쪽 기둥(위 기둥은 머리 오른쪽, 아래 기둥은 왼쪽)을 먼저:
+            // 촘촘한 16분음표에서 앞 음의 위 기둥이 다음 머리 왼쪽 끝에 닿아 두 음을 한 기둥의 2도 화음으로 읽던 것(미락흘 소금·대금·피리 208마디)
+            const sideOk = c => c[1] < g.oy - 4 ? Math.abs(c[0] - g.x1) <= Math.abs(c[0] - g.x0) : Math.abs(c[0] - g.x0) <= Math.abs(c[0] - g.x1);
+            // 단, 제자리 쪽 기둥의 머리 쪽 끝이 반대쪽 기둥보다 이 머리 높이에 더 가깝고 1.2pt 안일 때만 (2도 화음의 비켜 찍은 머리는 그대로)
+            const headEnd = c => c[1] < g.oy - 4 ? c[2] : c[1], gap = c => Math.abs(headEnd(c) - g.oy);
+            const score = c => Math.min(Math.abs(c[0] - g.x0), Math.abs(c[0] - g.x1))
+              + (!sideOk(c) && cand.some(c2 => c2 !== c && sideOk(c2) && gap(c2) < 1.2 && gap(c2) + 0.3 < gap(c)) ? 0.8 : 0);
+            let v = forceStem || cand.reduce((b, v) => (score(v) < score(b) ? v : b));
             // 같은 자리에 머리가 두 개(두 성부가 같은 음): 하나는 위 기둥, 하나는 아래 기둥
             const twins = heads.filter(h => Math.abs(h.ox - g.ox) < 0.5 && Math.abs(h.oy - g.oy) < 0.5 && h.size === g.size);
             if (!forceStem && twins.length >= 2) {
@@ -3417,6 +3426,7 @@ function parseScore(pages, opts = {}) {
         m.sectionStart = leftDouble[ri] || (ri === 0 && prevRightDouble);
         const rightIsDouble = bounds.slice(1).some(bb => Math.abs(bb[0] - rx1) < 1 && bb[2] >= 2);
         m.fermata = ferm.some(g => rx0 - 3 <= cx(g) && cx(g) <= rx1 + 3);
+        m.fermataX = ferm.filter(g => rx0 - 3 <= cx(g) && cx(g) <= rx1 + 3).map(cx);   // 늘임표 가로 자리 (어느 음 위인지)
         const inRoll = rollSpan && rollSpan[0] < rx0 && rollSpan[1] > rx0 + 5;
         const isFirst = ri === 0;
         const isTrailing = ri === regions.length - 1 && (!groups.length || rx0 >= groups[groups.length - 1][groups[groups.length - 1].length - 1][0] - 0.5) && rx1 >= st.x1 - 0.5;
@@ -4022,6 +4032,17 @@ function resolveBars(measures, systemNumbers = []) {
       const end = e.events.reduce((a, ev) => frMax(a, ev.t.add(ev.dur)), ZERO);
       if (end.gt(e.barLen)) e.barLen = end;
       if (!m.notes.length) { e.note = m.rollExt ? '롤 연장' : '쉼'; e.kind = m.rollExt ? 'rollext' : 'rest'; }
+      // 늘임표가 붙은 음의 시각: 늘임표 바로 아래(가로 12pt 안) 음. 마디 끝까지 울리는 음이거나 음이 없으면(쉼표·마디선 위) 적지 않음 → 마디 끝에서 늘임
+      // (미락흘 129마디: 첫 음에 늘임표가 있는데 마지막 음을 늘이던 것)
+      if (m.fermata && m.fermataX && e.events.length) {
+        const ts = [];
+        for (const fx of m.fermataX) {
+          const near = e.events.filter(ev => ev.x != null && !ev.tie && Math.abs(ev.x - fx) < 12).sort((a, b) => Math.abs(a.x - fx) - Math.abs(b.x - fx))[0];
+          if (!near) continue;
+          if (near.t.add(near.dur).lt(e.barLen) && !ts.some(t => t.eq(near.t))) ts.push(near.t);   // 마디 끝까지 울리는 음이면 예전처럼 마디 끝에서
+        }
+        if (ts.length) e.fermataT = ts.sort((a, b) => a.v - b.v);
+      }
     }
     out.push(e);
   });
@@ -4899,7 +4920,12 @@ function renderPlan(bars, order, opts) {
     k = j;
   }
   order.forEach((bi, k) => {
-    const b = bars[bi], s = spw(b.number), L = b.barLen.v, clk = clock(bi, L, s);
+    const b = bars[bi], s = spw(b.number), L = b.barLen.v, clk0 = clock(bi, L, s);
+    // 마디 가운데 음의 늘임표(fermataT): 그 음을 늘이고 뒤 음들을 그만큼 늦춘다 (마디 끝 늘임표는 아래에서 따로)
+    const fbeat = opts.fermata == null ? 2 : +opts.fermata;
+    const fIn = b.fermata && b.fermataT && b.fermataT.length && fbeat > 0 ? b.fermataT.map(t => t.v).filter(t => t < L - 1e-9) : [];
+    const fExtra = fbeat * UNIT_FRAC[rowFor(b.number).unit] * s;
+    const clk = fIn.length ? w => clk0(w) + fExtra * fIn.filter(t => t < w - 1e-9).length : clk0;
     barTimes.push({ t: cur - t0, abs: cur, idx: bi, number: b.number, rest: restInfo[k] });
     if (opts.restCount && opts.restCount !== 'off' && restInfo[k]) {
       const u = rowFor(b.number).unit, unit = UNIT_FRAC[u];
@@ -4982,7 +5008,7 @@ function renderPlan(bars, order, opts) {
     cur += clk(L);
     const next = order[k + 1];
     // 늘임표(페르마타): 그 마디 끝에 울리고 있는 선율 음을 opts.fermata박만큼 늘이고 그만큼 쉰다 (기본 2박, 0이면 늘이지 않음)
-    if (b.fermata && (next === bi + 1 || next == null)) {
+    if (b.fermata && !fIn.length && (next === bi + 1 || next == null)) {
       const fb = opts.fermata == null ? 2 : +opts.fermata;
       const extra = fb > 0 ? fb * UNIT_FRAC[rowFor(b.number).unit] * s : 0;
       if (extra) {
@@ -7766,6 +7792,14 @@ function applySelection(first = false) {
     let best = null; for (const [len, v] of votes) if (!best || v.n > best.n || (v.n === best.n && len === b.barLen.v)) best = { len, ...v };
     if (best && best.len !== b.barLen.v && best.n > (votes.get(b.barLen.v)?.n || 0)) { b.barLen = best.o.barLen; b.timesig = best.o.timesig; }
   });
+  // 늘임표 자리(fermataT: 마디 안 시각, 없으면 마디 끝): 늘임표가 있는 줄들의 다수 (기준 줄에만 빠졌거나 자리가 다를 수 있음)
+  if (multi) bars.forEach(b => {
+    const cnt = new Map();
+    for (const mp of numMaps) { const o = mp.get(b.number); if (!o || !o.fermata) continue; const key = o.fermataT ? o.fermataT.map(t => t.v).join(',') : 'end'; const v = cnt.get(key) || { n: 0, o }; v.n++; cnt.set(key, v); }
+    if (!cnt.size) return;
+    const best = [...cnt.values()].sort((a, c) => c.n - a.n)[0].o;
+    b.fermata = true; b.fermataT = best.fermataT || null;
+  });
   for (const b of bars) if (b.events.length && (b.note === '쉼' || b.note === '롤 연장')) b.note = '';
   const prevBars = state.bars;
   state.bars = bars;
@@ -8610,7 +8644,14 @@ function buildMusicXml() {
         if (S.lb && S.lb[bi] && /^repeat/.test(S.lb[bi].kind || '')) o2.forEach(o => { if (!o.backup && o.voice % 4 !== 1) o.hidden = true; });
         // 늘임표: 이 줄의 그 마디에 늘임표가 있으면 첫 성부의 마지막 음(없으면 쉼표)에
         const ferm = S.lb ? S.lb[bi] && S.lb[bi].fermata : b.fermata;
-        if (ferm) { const seq = o2.filter(o => !o.backup && !o.chord && !o.grace && o.voice % 4 === 1); const t = [...seq].reverse().find(o => !o.rest) || seq[seq.length - 1]; if (t) t.fermata = true; }
+        // 늘임표: 해석기가 음 자리(fermataT)를 알면 그 시각의 음에, 아니면 마지막 음에 (미락흘 129마디는 첫 음)
+        const fermT = S.lb ? S.lb[bi] && S.lb[bi].fermataT : b.fermataT;
+        if (ferm) {
+          const seq = o2.filter(o => !o.backup && !o.chord && !o.grace && o.voice % 4 === 1);
+          const at = fermT && fermT.length ? fermT.map(t => seq.find(o => !o.rest && o.st === Math.round(t.v * W))).filter(Boolean) : [];
+          if (at.length) at.forEach(o => { o.fermata = true; });
+          else { const t = [...seq].reverse().find(o => !o.rest) || seq[seq.length - 1]; if (t) t.fermata = true; }
+        }
         const dl = [...(S.dirs[bi] || []), ...(li === 0 && si === 0 ? topDirs[bi] || [] : []).map(d => ({ ...d, xml: !d.xml.startsWith('<direction') ? d.xml : d.xml.includes('<sound') ? d.xml.replace('<sound', '@STAFF@<sound') : d.xml.replace('</direction>', '@STAFF@</direction>') }))];
         o2 = placeDirs(o2, dl, two ? si + 1 : 0);
         if (si > 0) objs.push({ backup: L });
@@ -8911,7 +8952,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-05 21:53';
+const APP_VERSION = '2026-11-06 13:33';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

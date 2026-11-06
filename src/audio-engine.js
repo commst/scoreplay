@@ -207,7 +207,12 @@ export function renderPlan(bars, order, opts) {
     k = j;
   }
   order.forEach((bi, k) => {
-    const b = bars[bi], s = spw(b.number), L = b.barLen.v, clk = clock(bi, L, s);
+    const b = bars[bi], s = spw(b.number), L = b.barLen.v, clk0 = clock(bi, L, s);
+    // 마디 가운데 음의 늘임표(fermataT): 그 음을 늘이고 뒤 음들을 그만큼 늦춘다 (마디 끝 늘임표는 아래에서 따로)
+    const fbeat = opts.fermata == null ? 2 : +opts.fermata;
+    const fIn = b.fermata && b.fermataT && b.fermataT.length && fbeat > 0 ? b.fermataT.map(t => t.v).filter(t => t < L - 1e-9) : [];
+    const fExtra = fbeat * UNIT_FRAC[rowFor(b.number).unit] * s;
+    const clk = fIn.length ? w => clk0(w) + fExtra * fIn.filter(t => t < w - 1e-9).length : clk0;
     barTimes.push({ t: cur - t0, abs: cur, idx: bi, number: b.number, rest: restInfo[k] });
     if (opts.restCount && opts.restCount !== 'off' && restInfo[k]) {
       const u = rowFor(b.number).unit, unit = UNIT_FRAC[u];
@@ -290,7 +295,7 @@ export function renderPlan(bars, order, opts) {
     cur += clk(L);
     const next = order[k + 1];
     // 늘임표(페르마타): 그 마디 끝에 울리고 있는 선율 음을 opts.fermata박만큼 늘이고 그만큼 쉰다 (기본 2박, 0이면 늘이지 않음)
-    if (b.fermata && (next === bi + 1 || next == null)) {
+    if (b.fermata && !fIn.length && (next === bi + 1 || next == null)) {
       const fb = opts.fermata == null ? 2 : +opts.fermata;
       const extra = fb > 0 ? fb * UNIT_FRAC[rowFor(b.number).unit] * s : 0;
       if (extra) {
