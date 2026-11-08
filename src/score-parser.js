@@ -118,14 +118,15 @@ function toHex(a) {
 const apply = (m, x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
 
 // Encore(Anastasia 글꼴): 오선·마디선·기둥까지 글자로 찍는다 → 선으로 바꾸고, 기호 코드는 Maestro에 맞춘다
+const isEncoreFont = font => /Anastasia|EncoreMusicFont/i.test(font);
 function convertEncore(glyphs, drawings) {
-  if (!glyphs.some(g => /Anastasia/i.test(g.font))) return;
+  if (!glyphs.some(g => isEncoreFont(g.font))) return;
   const line = (x0, y0, x1, y1, w) => drawings.push({ type: 's', items: [{ op: 'l', p: [x0, y0], q: [x1, y1] }],
     rect: { x0: Math.min(x0, x1), y0: Math.min(y0, y1), x1: Math.max(x0, x1), y1: Math.max(y0, y1), width: Math.abs(x1 - x0), height: Math.abs(y1 - y0) }, width: w, seq: drawings.length });
   const stems = [];
   const out = [];
   for (const g of glyphs) {
-    if (!/Anastasia/i.test(g.font)) { out.push(g); continue; }
+    if (!isEncoreFont(g.font)) { out.push(g); continue; }
     const s = g.size / 1000, X = fx => g.ox + fx * s, Y = fy => g.oy - fy * s;
     switch (g.code) {
       case 61: for (let k = 0; k <= 4; k++) line(X(0), Y(k * 250), X(1011), Y(k * 250), 18 * s); break;      // 오선 한 토막
@@ -141,7 +142,7 @@ function convertEncore(glyphs, drawings) {
       }
       case 163: out.push({ ...g, font: 'EncoreTuplet,BoldItalic', code: 51, uni: '3' }); break;              // 잇단음표 3
       case 192: {                                                                                           // X 머리: 같은 자리 머리가 2분·온음표면 그 길이
-        const mate = glyphs.find(h => /Anastasia/i.test(h.font) && (h.code === 250 || h.code === 119) && Math.abs(h.ox - g.ox) < 1.5 && Math.abs(h.oy - g.oy) < g.size * 1.2);
+        const mate = glyphs.find(h => isEncoreFont(h.font) && (h.code === 250 || h.code === 119) && Math.abs(h.ox - g.ox) < 1.5 && Math.abs(h.oy - g.oy) < g.size * 1.2);
         out.push({ ...g, code: mate ? mate.code : 207, xh: true }); break;
       }
       case 246: out.push({ ...g, code: 207 }); break;                                                       // 다른 성부 머리 → 보통 머리
@@ -162,17 +163,17 @@ function convertEncore(glyphs, drawings) {
   // 같은 자리에 똑같이 두 번 찍힌 머리는 하나만
   for (let i = out.length - 1; i >= 0; i--) {
     const g = out[i];
-    if (!/Anastasia/i.test(g.font) || ![207, 250, 119].includes(g.code)) continue;
+    if (!isEncoreFont(g.font) || ![207, 250, 119].includes(g.code)) continue;
     if (out.some((h, j) => j < i && h.code === g.code && h.font === g.font && Math.abs(h.ox - g.ox) < 0.3 && Math.abs(h.oy - g.oy) < 0.3)) out.splice(i, 1);
   }
-  const isHead = g => /Anastasia/i.test(g.font) && (g.code === 207 || g.code === 250);
+  const isHead = g => isEncoreFont(g.font) && (g.code === 207 || g.code === 250);
   const stemmed = g => merged.some(([x, y0, y1]) => x > g.ox - 1.2 && x < g.ox + g.size * 0.3 + 1.2 && y0 - 3 <= g.oy && g.oy <= y1 + 3);
   const heads = out.filter(isHead), withStem = new Set(heads.filter(stemmed));
   const drop = new Set(heads.filter(h => !withStem.has(h) && heads.some(m => withStem.has(m) && Math.abs(m.oy - h.oy) <= h.size * 0.3 && Math.abs(m.ox - h.ox) > 0.5 && Math.abs(m.ox - h.ox) < h.size * 0.45)));
   if (drop.size) for (let i = out.length - 1; i >= 0; i--) if (drop.has(out[i])) out.splice(i, 1);
   // 글자 상자를 실제 모양에 맞춘다 (기둥 끝·꼬리 위치 비교에 씀)
   for (const g of out) {
-    if (!/Anastasia/i.test(g.font)) continue;
+    if (!isEncoreFont(g.font)) continue;
     const b = ANAS_BBOX[g.code] || (g.code >= 48 && g.code <= 57 ? [0, -241, 378, 241] : null);
     if (!b || g.code === 46 && g.y1 - g.y0 < g.size * 0.2) continue;
     const s = g.size / 1000;
@@ -367,6 +368,22 @@ export async function extractPages(doc, OPS, onPage) {
       let cov = 0; for (const w of whites) if (w.seq > d.seq && w.y0 <= r.y0 + 0.3 && w.y1 >= r.y0 - 0.3) cov += Math.max(0, Math.min(w.x1, r.x1) - Math.max(w.x0, r.x0));
       return cov > r.width * 0.9;
     };
+    // Encore PDF를 Microsoft Print to PDF로 출력하면 글꼴 이름이 CIDFont+F1처럼 바뀌어
+    // Anastasia라는 원래 이름이 사라진다. 오선(=), 마디선, 겹세로줄 코드의 조합으로
+    // 해당 CID 글꼴을 찾아 Encore 전용 변환을 적용한다.
+    {
+      const byFont = new Map();
+      for (const g of glyphs) {
+        if (!/^CIDFont\\+/i.test(g.font)) continue;
+        const c = byFont.get(g.font) || {};
+        c[g.code] = (c[g.code] || 0) + 1;
+        byFont.set(g.font, c);
+      }
+      for (const [font, c] of byFont) {
+        if ((c[61] || 0) < 30 || (c[108] || 0) < 5 || (c[210] || 0) + (c[211] || 0) < 1) continue;
+        for (const g of glyphs) if (g.font === font) g.font += ' (EncoreMusicFont)';
+      }
+    }
     convertEncore(glyphs, drawings);
     // 오선·마디선을 한 경로에 몰아 그린 PDF(Finale 2004~2005 + Distiller 6 등): 선분마다 따로 나눈다
     for (let i = drawings.length - 1; i >= 0; i--) {
