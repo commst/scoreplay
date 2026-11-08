@@ -353,7 +353,7 @@ export async function extractPages(doc, OPS, onPage) {
     {
       const byFont = new Map();
       for (const g of glyphs) {
-                if (!/^CIDFont\+/i.test(g.font)) continue;
+        if (!/^CIDFont\+/i.test(g.font)) continue;
         const c = byFont.get(g.font) || {};
         c[g.code] = (c[g.code] || 0) + 1;
         byFont.set(g.font, c);
