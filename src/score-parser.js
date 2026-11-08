@@ -296,6 +296,22 @@ export async function extractPages(doc, OPS, onPage) {
       }
     }
     for (const d of drawings) { d.rect.width = d.rect.x1 - d.rect.x0; d.rect.height = d.rect.y1 - d.rect.y0; }
+    // Encore PDF를 Microsoft Print to PDF로 출력하면 글꼴 이름이 CIDFont+F1처럼 바뀌어
+    // Anastasia라는 원래 이름이 사라진다. 오선(=), 마디선, 겹세로줄 코드의 조합으로
+    // 해당 CID 글꼴을 찾아 Encore 전용 변환을 적용한다.
+    {
+      const byFont = new Map();
+      for (const g of glyphs) {
+        if (!/^CIDFont\+/i.test(g.font)) continue;
+        const c = byFont.get(g.font) || {};
+        c[g.code] = (c[g.code] || 0) + 1;
+        byFont.set(g.font, c);
+      }
+      for (const [font, c] of byFont) {
+        if ((c[61] || 0) < 30 || (c[108] || 0) < 5 || (c[210] || 0) + (c[211] || 0) < 1) continue;
+        for (const g of glyphs) if (g.font === font) g.font += ' (EncoreMusicFont)';
+      }
+    }
     // 이름이 감춰진 악보 글꼴(예: TTE18A08A0t00)은 글자 구성으로 알아낸다: 음표 머리 œ, 쉼표 Œ ‰, 타악기 음자리표 ÷ 등
     const MUSIC_MARK = new Set([0x153, 0x152, 0x2030, 0xF7, 0x2211, 0x2d9]);
     const cnt = {};
@@ -347,22 +363,6 @@ export async function extractPages(doc, OPS, onPage) {
         for (const g of glyphs) if (g.font === f) { const sc = SYMBOL_UNI.get(g.raw); if (sc != null) g.code = sc + 1; else if (g.raw > 32 && g.raw < 127) g.code = g.raw + 1; }   // ASCII 자리 글자도 하나씩 밀려 있다 (% → & 높은음자리표, > → ? 낮은음자리표, 숫자)
       }
     }
-    // Encore PDF를 Microsoft Print to PDF로 출력하면 글꼴 이름이 CIDFont+F1처럼 바뀌어
-    // Anastasia라는 원래 이름이 사라진다. 오선(=), 마디선, 겹세로줄 코드의 조합으로
-    // 해당 CID 글꼴을 찾아 Encore 전용 변환을 적용한다.
-    {
-      const byFont = new Map();
-      for (const g of glyphs) {
-        if (!/^CIDFont\+/i.test(g.font)) continue;
-        const c = byFont.get(g.font) || {};
-        c[g.code] = (c[g.code] || 0) + 1;
-        byFont.set(g.font, c);
-      }
-      for (const [font, c] of byFont) {
-        if ((c[61] || 0) < 30 || (c[108] || 0) < 5 || (c[210] || 0) + (c[211] || 0) < 1) continue;
-        for (const g of glyphs) if (g.font === font) g.font += ' (EncoreMusicFont)';
-      }
-    }
     // 굵게 보이려고 같은 글자를 살짝 어긋나게 여러 번 찍은 경우(가짜 굵은 글씨) 하나만 남긴다
     {
       const keep = [], grid = new Map();
@@ -411,7 +411,7 @@ export async function extractPages(doc, OPS, onPage) {
       const r = recognizeOutlines(kept);
       if (r.glyphs.length >= 10) { glyphs.push(...r.glyphs); kept = r.drawings; outlined = true; }
     }
-    pages.push({ glyphs, drawings: kept, width: vp.width, height: H, outlined, encore: glyphs.some(g => /Anastasia/i.test(g.font)) });
+    pages.push({ glyphs, drawings: kept, width: vp.width, height: H, outlined, encore: glyphs.some(g => isEncoreFont(g.font)) });
   }
   return pages;
 }
