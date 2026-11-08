@@ -1502,6 +1502,11 @@ body.all-panes { padding-bottom: 0; }
 
 
 <template id="histTpl">
+  <section class="hday"><h3>11월 8일</h3>
+    <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>Microsoft Print to PDF로 출력한 Encore 악보의 글꼴 이름이 바뀌어 인식하지 못하던 문제</summary><p>PDF 출력 과정에서 Anastasia 글꼴 이름이 CIDFont+F1처럼 바뀌는 경우를 찾아, 오선·마디선·겹세로줄 기호 조합으로 Encore 글꼴을 판별하고 기존 Encore 변환을 적용합니다. 소나기 총보로 감지 조건을 확인했으며, 실제 파서 실행과 전체 회귀 검사는 배포 전에 진행해야 합니다.</p></details></li>
+    </ul></details>
+  </section>
   <section class="hday"><h3>11월 6일</h3>
       <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
       <li><details><summary>첫 음의 늘임표를 마지막 음에서 늘이던 문제, 촘촘한 16분음표의 마지막 음이 안 들리던 문제, 재생 중 악보 보기 도구가 안 보이던 문제</summary><p>늘임표를 그 음 자리에서 늘이고 뒤 음들을 그만큼 늦춥니다(미락흘 129마디, MusicXML도 그 음에). 촘촘한 16분음표에서 두 음을 한 기둥의 화음으로 읽어 마지막 음이 앞 음과 함께 울리던 것(미락흘 208마디 소금·대금·피리)을 고쳤습니다. 악보 보기에서 화면을 굴리면 '연주 위치 따라가기'·'화면 가득 보기' 줄이 위로 말려 올라가 안 보이던 것은 위 막대 바로 아래에 붙어 있게 했습니다.</p></details></li>
