@@ -1422,6 +1422,7 @@ export function parseScore(pages, opts = {}) {
             n.kf = Object.values(key).reduce((a, v) => a + (v > 0 ? 1 : v < 0 ? -1 : 0), 0);   // 조표 (샵 개수 +, 플랫 개수 −) — MusicXML 내보내기용
             const alt = d in barAcc ? barAcc[d] : (key[d % 7] || 0);
             n.midi = 12 * (Math.floor(d / 7) + 1) + SEMI[((d % 7) + 7) % 7] + alt;
+            n.dia = d;   // 적힌 자리(온음계 번호, C4 = 28) — MusicXML 음 이름을 악보에 적힌 대로(♭도를 시로 적지 않게)
             const d1 = d + 1, alt1 = d1 in barAcc ? barAcc[d1] : (key[d1 % 7] || 0);
             n.upInt = 12 * (Math.floor(d1 / 7) + 1) + SEMI[((d1 % 7) + 7) % 7] + alt1 - n.midi;   // 트릴(떤음)로 오갈 위 음까지의 반음 수
           }
@@ -1824,18 +1825,18 @@ function timing(m, barLen) {
           prev._cs = new Set([n.midi]);
         }
         else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) prev._cs.add(n.midi);   // 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐
-        else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
+        else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], ...(n.dia != null ? { dia: { [n.midi]: n.dia } } : {}), x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
       }
       continue;
     }
     const key = n.voice + onset.get(n).toString();
     const ex = seen.get(key);
-    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) ex.midis.push(n.midi); if (n.slurS) ex.slurS = Math.max(ex.slurS || 0, n.slurS); if (n.slurE) ex.slurE = Math.max(ex.slurE || 0, n.slurE); continue; }
+    if (ex) { if (n.xh) ex.xh = true; ex.accent = ex.accent || n.accent; ex.roll = ex.roll || n.roll || !!n.tremolo; if (n.staccato) ex.stacc = true; if (n.tenuto) ex.ten = true; if (n.roll && n.midi != null) { ex.trill = true; if (!ex.trillInt) ex.trillInt = n.upInt; } if (n.midi != null && ex.midis && !ex.midis.includes(n.midi)) { ex.midis.push(n.midi); if (n.dia != null) (ex.dia = ex.dia || {})[n.midi] = n.dia; } if (n.slurS) ex.slurS = Math.max(ex.slurS || 0, n.slurS); if (n.slurE) ex.slurE = Math.max(ex.slurE || 0, n.slurE); continue; }
     const ev = { voice: n.voice, t: onset.get(n), dur: n.dur, accent: n.accent, grace: gcount.get(n) || 0, roll: n.roll || !!n.tremolo, x: n.x };   // x: 음표 가로 자리 (다른 줄과 세로로 맞춰 시각을 다시 읽을 때)
     if (n.pos != null) ev.pos = n.pos;
     if (n.xh) ev.xh = true;   // X 머리 음표   // 오선 가운데에서 몇 칸(반 칸 단위, 위가 -) — 모듬북처럼 자리마다 다른 북을 칠 때 음높이로
     if (n.tremolo && !n.roll) ev.rollDur = n.dur;
-    if (n.midi != null) { ev.midis = [n.midi]; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); if (n.kf != null) ev.kf = n.kf; if (n.cl != null) ev.cl = n.cl; }
+    if (n.midi != null) { ev.midis = [n.midi]; if (n.dia != null) ev.dia = { [n.midi]: n.dia }; if (graceMidi.has(n)) ev.graceMidis = graceMidi.get(n); if (n.kf != null) ev.kf = n.kf; if (n.cl != null) ev.cl = n.cl; }
     if (n.slurS) ev.slurS = n.slurS; if (n.slurE) ev.slurE = n.slurE;   // 이음줄 (MusicXML 내보내기용)
     if (n.staccato) ev.stacc = true;   // 스타카토: 선율은 짧게 끊어 낸다
     if (n.tenuto) ev.ten = true;   // 테누토: 길이를 꽉 채우고 조금 무게 있게
@@ -2404,6 +2405,8 @@ export function analyzeLine(score, line = null) {
       for (const n of m.notes || []) if (!n.grace && n.onset && n.x != null) { const f = Math.round(n.onset.v / L * 1000) / 1000; if (f >= 0 && f < 1 && (!seen.has(f) || n.x < seen.get(f))) seen.set(f, n.x); }
       const pts = [...seen].sort((a, c) => a[0] - c[0]).filter((p, i, A) => !i || p[1] > A[i - 1][1]);   // 오른쪽으로만 가는 점
       if (pts.length) g.pts = pts.map(([f, x]) => [f, Math.round(x * 10) / 10]);
+      // MusicXML 확인용: PDF에 그려진 음표 머리 자리(꾸밈음·쉼표 빼고, 보통 마디만)
+      if (m.kind === 'normal' || m.kind == null) g.heads = (m.notes || []).filter(n => !n.grace && !n.rest && n.x != null && n.y != null).map(n => [Math.round(n.x * 10) / 10, Math.round(n.y * 10) / 10]);
     }
     return g;
   });
