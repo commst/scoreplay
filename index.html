@@ -225,6 +225,20 @@ button { cursor: pointer; }
 .sv-ehl { position: absolute; border-radius: 4px; outline: 2px dashed var(--accent); background: rgba(80, 120, 220, .10); pointer-events: none; z-index: 2; }
 .sv-ehl b { position: absolute; left: 0; bottom: 100%; margin-bottom: 2px; padding: 0 5px; border-radius: 4px; background: var(--accent); color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
 .sv-mark { position: absolute; transform: translate(-30%, -70%); padding: 0 3px; border-radius: 4px; background: var(--accent); color: #fff; font: 700 10px/14px var(--font-body); pointer-events: none; z-index: 2; }
+.sv-ov { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.sv-ovn { position: absolute; transform: translate(-50%, -50%); border: 1.6px solid #1a73e8; border-radius: 50%; box-sizing: border-box; aspect-ratio: 1.35 / 1; background: rgba(26, 115, 232, .10); }
+.sv-ovn.bad { border-color: #d93025; background: rgba(217, 48, 37, .14); }
+.sv-ovn.rest { border-style: dashed; border-radius: 3px; aspect-ratio: auto; height: 1.1%; background: none; }
+.xchk-dlg h3 { font-size: 15px; margin: 14px 0 6px; }
+.xchk-sum { margin: 4px 0 10px; }
+.xchk-line { margin: 10px 0; }
+.xchk-line b { display: block; margin-bottom: 4px; }
+.xchk-bars { display: flex; flex-wrap: wrap; gap: 4px; }
+.xchk-bars button { min-width: 38px; padding: 3px 7px; border: 1px solid var(--line, #ccd); border-radius: 6px; background: var(--card); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.xchk-bars button.bad { border-color: #d93025; color: #b3261e; font-weight: 600; }
+.xchk-bars button:focus-visible { outline: 3px solid var(--now, #f5c400); }
+.xchk-more { font-size: 13px; opacity: .75; align-self: center; }
+.xchk-legend { font-size: 13px; opacity: .85; margin: 6px 0 0; }
 .sv-cur { position: absolute; width: 2px; margin-left: -1px; background: #d22; box-shadow: 0 0 0 1px #fff8; pointer-events: none; z-index: 3; }
 .sv-hl b { position: absolute; left: 0; top: -18px; padding: 0 5px; border-radius: 4px; background: #e0a100; color: #fff; font: 700 11px/16px var(--font-body); white-space: nowrap; }
 /* 화면 가득 보기: 악보 칸을 화면 전체로 */
@@ -1459,6 +1473,7 @@ body.all-panes { padding-bottom: 0; }
           <label class="chk"><input type="checkbox" id="svFollow" checked>연주 위치 따라가기</label>
           <label class="sv-part">보기 <select id="svPartSel" aria-label="악보 보기에서 볼 줄"><option value="">총보 전체</option></select></label>
           <button type="button" class="btn" id="svFull">화면 가득 보기</button>
+          <label class="chk" id="svOverLbl" title="내보낼 MusicXML의 음을 악보 위에 파란 동그라미로 겹쳐 그립니다. 동그라미가 음표 머리에서 벗어난 곳이 PDF와 다르게 읽은 곳입니다(빨간 동그라미는 인식 결과와도 다른 마디)"><input type="checkbox" id="svOver">MusicXML 겹쳐 보기</label>
           <button type="button" class="btn" id="svEdit" aria-pressed="false" title="켜면 마디를 눌렀을 때 재생 대신 그 마디의 음정·음 길이를 고치는 창이 열립니다">✎ 음 고치기</button>
           <span class="zoom">크기 <button type="button" id="svZoomOut" aria-label="작게">−</button><span id="svZoomVal">100%</span><button type="button" id="svZoomIn" aria-label="크게">+</button></span>
         </div>
@@ -1510,7 +1525,17 @@ body.all-panes { padding-bottom: 0; }
 
 
 <template id="histTpl">
-  <section class="hday"><h3>11월 5일</h3>
+  <section class="hday"><h3>11월 10일</h3>
+    <h4>기능 업데이트 <small>1</small></h4><ul class="hlist">
+      <li><details><summary>MusicXML 저장 뒤 확인 목록, 악보 위에 겹쳐 보기</summary><p>MusicXML을 저장하면 PDF와 다르게 읽었을 수 있는 마디를 줄별로 보여 줍니다(빨간 번호는 내보낸 파일이 인식 결과와도 다른 마디). 번호를 누르면 악보로 보기에서 그 마디로 가서, 내보낸 음을 악보 위에 파란 동그라미로 겹쳐 그립니다. 동그라미가 음표 머리에서 벗어난 곳을 확인해 ✎ 음 고치기로 바로잡은 뒤 다시 저장하면 됩니다. 악보로 보기의 [MusicXML 겹쳐 보기]로 언제든 켜고 끌 수 있습니다.</p></details></li>
+    </ul>
+    </section>
+    <section class="hday"><h3>11월 6일</h3>
+      <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>첫 음의 늘임표를 마지막 음에서 늘이던 문제, 촘촘한 16분음표의 마지막 음이 안 들리던 문제, 재생 중 악보 보기 도구가 안 보이던 문제</summary><p>늘임표를 그 음 자리에서 늘이고 뒤 음들을 그만큼 늦춥니다(미락흘 129마디, MusicXML도 그 음에). 촘촘한 16분음표에서 두 음을 한 기둥의 화음으로 읽어 마지막 음이 앞 음과 함께 울리던 것(미락흘 208마디 소금·대금·피리)을 고쳤습니다. 악보 보기에서 화면을 굴리면 '연주 위치 따라가기'·'화면 가득 보기' 줄이 위로 말려 올라가 안 보이던 것은 위 막대 바로 아래에 붙어 있게 했습니다.</p></details></li>
+      </ul></details>
+    </section>
+    <section class="hday"><h3>11월 5일</h3>
     <h4>기능 업데이트 <small>6</small></h4><ul class="hlist">
       <li><details><summary>총보와 파트보를 맞대어 보고 고친 인식 오류</summary><p>같은 곡의 총보와 파트보 37곡을 마디마다 맞대어 보며 찾은 오류를 고쳤습니다. 오선 아래 음의 빔을 '여러 마디 쉼표'로 잘못 봐서 음이 통째로 빠지던 마디(화랑 25현, 월광 대금 등 900여 마디)가 이제 소리 납니다. 마디선을 숨긴 쉬는 마디 때문에 파트보의 마디 수가 모자라던 것(얼씨구야 파트보)도 바로잡았습니다. 기둥 반대쪽에 그린 붙임줄과 화음의 붙임줄을 놓쳐 이어지는 음이 다시 울리던 것, 한 기둥 화음의 길이를 잘못 읽던 것, 간격이 넓은 4분음표 셋잇단을 못 읽던 것도 고쳤습니다.</p></details></li>
       <li><details><summary>선율 파트보를 더 정확하게: 한 성부 선율을 두 성부로 갈라 읽던 문제</summary><p>파트보의 한 성부 선율은 음 높이에 따라 음표 기둥이 위로도 아래로도 향합니다. 전에는 기둥 방향으로 성부를 나눠서, 한 줄 선율이 두 성부로 갈리고 '쉼표 일부 숨김' 경고가 많이 났습니다(프론티어 해금은 171마디 중 62마디). 그래서 붙임줄로 이어지는 음이 따로 다시 울리고, 꾸밈음이 엉뚱한 음 앞에 붙기도 했습니다. 이제 같은 때 울리는 음이 없고 이어 붙이면 마디 길이와 꼭 맞으면 한 성부로 읽습니다. 두 성부가 함께 쓰는 가운데 쉼표도 두 성부 모두에 넣습니다. 새 학습 악보 103개에서 경고 마디가 37% 줄었습니다.</p></details></li>
@@ -6250,7 +6275,7 @@ function buildScoreView() {
   const wrap = $('svWrap'), G = svGeo(), part = !!svPartRes();
   const key = G ? (G.sc.fp || G.sc.title) + '|' + svZoom + '|' + (part ? 'part:' + svPart + ':' + [...new Set(G.geo.filter(Boolean).map(g => g.page + '.' + g.staff))].join(',') : [...new Set(G.geo.filter(Boolean).map(g => g.page))].join(',')) : 'none';   // 음을 고쳐 마디 위치만 조금 바뀌어도 쪽을 다시 그리지 않는다
   if (key === svKey && wrap.firstChild) return;
-  svKey = key; svCurrent = -1;
+  svKey = key; svCurrent = -1; svOverData = null;
   if (svIO) { svIO.disconnect(); svIO = null; }
   svPages.clear(); wrap.textContent = ''; svHl = null; svCur = null; svEhl = null;
   if (!G) { wrap.appendChild(tipNode('div', 'sv-empty', state.score ? (state.score.xml || (state.sourceScores || []).some(x => x && x.xml) ? 'MusicXML 악보는 쪽 그림이 없어 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요. (같은 곡의 PDF를 올리면 악보로 볼 수 있습니다)' : '이 악보는 마디 위치를 읽지 못해 악보로 보기를 할 수 없습니다. 마디맵으로 보기를 써 주세요.') : '예시 장단에는 악보 그림이 없습니다. 악보 PDF를 올리면 그 악보를 보면서 연주 위치를 따라갈 수 있습니다.')); return; }
@@ -6332,7 +6357,7 @@ async function svRender(pi) {
       const src = await svPageCanvas(G.sc, P.page, (P.el.clientWidth || 600) * vpW / P.w, myKey); if (!src || svKey !== myKey) return;
       const s = src._s, c = document.createElement('canvas'); c.width = Math.ceil(P.w * s); c.height = Math.ceil(P.h * s);
       c.getContext('2d').drawImage(src, P.ox * s, P.oy * s, P.w * s, P.h * s, 0, 0, c.width, c.height);
-      P.el.insertBefore(c, P.el.firstChild); P.canvas = c;
+      P.el.insertBefore(c, P.el.firstChild); P.canvas = c; svOverPanel(P);
       const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
       if (drawn.length > 40) { drawn.sort((a, b) => Math.abs(b[0] - pi) - Math.abs(a[0] - pi)); for (const [qi, q] of drawn.slice(0, drawn.length - 40)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; } }
     } catch (e) { console.warn('악보 보기', e); }
@@ -6348,7 +6373,7 @@ async function svRender(pi) {
     const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
     await pg.render({ canvasContext: cx, viewport: vp }).promise;
     if (svKey !== myKey) return;
-    P.el.insertBefore(c, P.el.firstChild); P.canvas = c;
+    P.el.insertBefore(c, P.el.firstChild); P.canvas = c; svOverPanel(P);
     const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
     if (drawn.length > 6) {   // 지금 쪽에서 먼 것부터 지운다
       const G2 = svGeo(), ref = svCurrent >= 0 && G2 && G2.geo[svCurrent] ? G2.geo[svCurrent].page : pi;
@@ -8718,7 +8743,10 @@ $('exportMidiBtn').addEventListener('click', () => {
 $('exportXmlBtn').addEventListener('click', () => {
   if (!state.score || !state.bars.length) { showMsg('악보를 먼저 올려 주세요. 예시 장단은 내보낼 수 없습니다.'); return; }
   if (!exportLines().length) { showMsg('켠 줄이 없습니다. [악기] 탭에서 내보낼 줄을 켜 주세요.'); return; }
-  try { downloadBytes(buildMusicXml(), fileBase() + '.musicxml', 'application/vnd.recordare.musicxml+xml'); } catch (e) { console.error(e); showMsg('MusicXML 파일을 만들지 못했습니다.'); }
+  let xml;
+  try { xml = buildMusicXml(); downloadBytes(xml, fileBase() + '.musicxml', 'application/vnd.recordare.musicxml+xml'); } catch (e) { console.error(e); showMsg('MusicXML 파일을 만들지 못했습니다.'); return; }
+  // 저장한 뒤: 내보낸 파일을 다시 읽어 인식 결과와 맞춰 보고, PDF와 다르게 읽었을 수 있는 마디를 보여 준다
+  try { svOverData = null; openXmlCheck(xmlCheck(xml)); } catch (e) { console.warn('MusicXML 확인', e); }
 });
 $('pdfInput').addEventListener('change', e => { if (e.target.files.length) loadFullPdf([...e.target.files]); e.target.value = ''; });
 $('extraInput').addEventListener('change', e => { if (e.target.files.length) loadExtraPdfs([...e.target.files]); e.target.value = ''; });
@@ -8934,6 +8962,156 @@ $('speed').addEventListener('input', syncSpd); $('speed').addEventListener('chan
 new MutationObserver(syncSpd).observe($('speedVal'), { childList: true, subtree: true, characterData: true });
 syncSpd();
 updateTopbar();
+// ---------- MusicXML 내보내기 확인 (원본 PDF와 맞춰 보기) ----------
+// 내보낸 MusicXML을 다시 읽어 줄(오선)·마디마다 음 목록으로: { t: 마디 안 시각(온음표=1), step, oct, alter, rest, unp, tieStop, clef: {sign, line, oc}, lines }
+function xmlReadBack(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const out = [];   // 줄 차례(파트 안 오선 차례)대로 → [마디][음]
+  for (const part of doc.querySelectorAll('part')) {
+    const ms = [...part.children].filter(e => e.tagName === 'measure');
+    let div = 1, nst = 1; const clef = [], lines = [], base = out.length;
+    ms.forEach((m, mi) => {
+      let pos = 0, last = 0;
+      for (const el of m.children) {
+        const tg = el.tagName;
+        if (tg === 'attributes') {
+          const d = el.querySelector('divisions'); if (d) div = +d.textContent || div;
+          const sv = el.querySelector('staves'); if (sv) nst = +sv.textContent || 1;
+          for (const c of el.querySelectorAll('clef')) { const k = (+c.getAttribute('number') || 1) - 1; clef[k] = { sign: (c.querySelector('sign') || {}).textContent || 'G', line: +((c.querySelector('line') || {}).textContent || 2), oc: +((c.querySelector('clef-octave-change') || {}).textContent || 0) }; }
+          for (const sd of el.querySelectorAll('staff-details')) { const k = (+sd.getAttribute('number') || 1) - 1, ln = sd.querySelector('staff-lines'); if (ln) lines[k] = +ln.textContent; }
+          while (out.length < base + nst) out.push([]);
+        } else if (tg === 'backup') pos -= +el.querySelector('duration').textContent;
+        else if (tg === 'forward') pos += +el.querySelector('duration').textContent;
+        else if (tg === 'note') {
+          while (out.length < base + nst) out.push([]);
+          const grace = !!el.querySelector('grace'), chord = !!el.querySelector('chord'), dur = grace ? 0 : +((el.querySelector('duration') || {}).textContent || 0);
+          const st = (+((el.querySelector('staff') || {}).textContent || 1)) - 1, at = chord ? last : pos;
+          if (!grace) {
+            const pe = el.querySelector('pitch'), ue = el.querySelector('unpitched');
+            const g = q => q ? (q.textContent || '') : '';
+            const n = { t: at / (div * 4), rest: !!el.querySelector('rest'), tieStop: [...el.querySelectorAll('tie')].some(x => x.getAttribute('type') === 'stop'), clef: clef[st] || { sign: 'G', line: 2, oc: 0 }, lines: lines[st] || 5 };
+            if (pe) { n.step = g(pe.querySelector('step')); n.oct = +g(pe.querySelector('octave')); n.alter = +g(pe.querySelector('alter')) || 0; }
+            else if (ue) { n.unp = true; n.step = g(ue.querySelector('display-step')) || 'C'; n.oct = +g(ue.querySelector('display-octave')) || 5; }
+            const row = out[base + st]; (row[mi] = row[mi] || []).push(n);
+          }
+          if (!chord) { last = pos; pos += dur; }
+        }
+      }
+    });
+  }
+  return out;
+}
+// 인식 결과(재생·마디맵에 쓰는 음)와 다시 읽은 MusicXML의 '치는 때'가 다른 마디, 해석기가 경고를 붙인 마디
+function xmlCheck(xml) {
+  const back = xmlReadBack(xml), lines = exportLines(), R = 480, res = [];
+  lines.forEach((ln, li) => {
+    const r = state.lineRes[ln.key], xb = back[li] || []; if (!r) return;
+    const items = [];
+    state.bars.forEach((b, k) => {
+      const rb = r.bars[k]; if (!rb) return;
+      const a = [...new Set(rb.events.filter(e => !e.tie).map(e => Math.round(e.t.v * R)))].sort((p, q) => p - q).join(',');
+      const x = [...new Set((xb[k] || []).filter(n => !n.rest && !n.tieStop).map(n => Math.round(n.t * R)))].sort((p, q) => p - q).join(',');
+      const why = [];
+      if (a !== x) why.push('내보낸 MusicXML의 음 시각이 인식 결과와 다름');
+      for (const w of rb.warnings || []) if (!/세로 자리를 맞춰/.test(w)) why.push(w);
+      if (why.length) items.push({ k, number: b.number, bad: a !== x, why });
+    });
+    if (items.length) res.push({ key: ln.key, name: ln.name, items });
+  });
+  return { lines: res, back };
+}
+// 마디로 가서 그 줄을 겹쳐 보기와 함께 보여 준다
+function xmlCheckGo(key, k) {
+  setView('score');
+  try { $('scoreView').scrollIntoView({ block: 'start' }); } catch (e) {}
+  const sel = $('svPartSel'); renderPartSel();
+  if (sel && [...sel.options].some(o => o.value === key)) { svPart = key; sel.value = key; }
+  if (!$('svOver').checked) { $('svOver').checked = true; }
+  svKey = null; buildScoreView(); svCurrent = -1; svShow(k, true);
+}
+function openXmlCheck(chk) {
+  const back = document.createElement('div'); back.className = 'edit-back';
+  const dlg = tipNode('div', 'edit-dlg hist-dlg xchk-dlg'); dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-label', 'MusicXML 확인');
+  const n = chk.lines.reduce((a, l) => a + l.items.length, 0), nb = chk.lines.reduce((a, l) => a + l.items.filter(i => i.bad).length, 0);
+  dlg.append(tipNode('h2', '', 'MusicXML을 저장했습니다'));
+  const canSee = !!state.scoreGeo;
+  dlg.append(tipNode('p', 'xchk-sum', n ? `악보 PDF와 다르게 읽었을 수 있는 마디가 ${chk.lines.length}줄에 ${n}곳 있습니다${nb ? ` (그중 ${nb}곳은 내보낸 MusicXML이 인식 결과와도 다름)` : ''}. 마디 번호를 누르면 악보로 보기에서 그 줄·마디로 가서, 내보낸 음을 PDF 위에 파란 동그라미로 겹쳐 보여 줍니다. 동그라미가 음표 머리에서 벗어난 곳이 다르게 읽은 곳입니다.` : '해석기가 확인이 필요하다고 표시한 마디가 없습니다. 그래도 악보로 보기의 [MusicXML 겹쳐 보기]로 PDF 위에 내보낸 음을 겹쳐 확인할 수 있습니다.'));
+  if (!canSee && n) dlg.append(tipNode('p', 'xchk-legend', '이 악보는 쪽 그림이 없어(MusicXML로 올린 악보 등) 겹쳐 보기는 할 수 없습니다.'));
+  const close = () => { back.remove(); document.removeEventListener('keydown', esc, true); };
+  const esc = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); close(); } };
+  for (const L of chk.lines) {
+    const box = tipNode('div', 'xchk-line'); box.append(tipNode('b', '', `${L.name} · ${L.items.length}곳`));
+    const bars = tipNode('div', 'xchk-bars');
+    L.items.slice(0, 80).forEach(it => {
+      const bt = tipNode('button', it.bad ? 'bad' : '', String(it.number)); bt.type = 'button';
+      bt.title = `${it.number}마디: ${it.why.join(' / ')}`; bt.setAttribute('aria-label', bt.title);
+      bt.addEventListener('click', () => { close(); if (canSee) xmlCheckGo(L.key, it.k); else { setView('map'); } });
+      bars.append(bt);
+    });
+    if (L.items.length > 80) bars.append(tipNode('span', 'xchk-more', `외 ${L.items.length - 80}곳`));
+    box.append(bars); dlg.append(box);
+  }
+  if (n) dlg.append(tipNode('p', 'xchk-legend', '굵은 빨간 번호: 내보낸 MusicXML의 음 시각이 인식 결과와 다른 마디. 보통 번호: 해석기가 경고를 붙인 마디(번호 위에 마우스를 올리면 이유).'));
+  const foot = tipNode('div', 'hist-foot');
+  if (canSee) { const ov = tipNode('button', 'btn', '악보 위에 겹쳐 보기'); ov.type = 'button'; ov.addEventListener('click', () => { close(); setView('score'); $('svOver').checked = true; svOverToggle(); }); foot.append(ov); }
+  const cl = tipNode('button', 'btn primary', '닫기'); cl.type = 'button'; foot.append(cl); dlg.append(foot);
+  cl.addEventListener('click', close); back.addEventListener('click', ev => { if (ev.target === back) close(); });
+  document.addEventListener('keydown', esc, true);
+  back.append(dlg); document.body.append(back); cl.focus();
+}
+// 겹쳐 보기: 내보낼 MusicXML을 만들어 다시 읽고, 줄마다 음을 그 줄의 마디 칸(가로: 음표 자리, 세로: 오선 위치)에 동그라미로
+let svOverData = null;
+function svOverBuild() {
+  if (!state.score || !state.bars.length || !exportLines().length) return null;
+  let xml; try { xml = buildMusicXml(); } catch (e) { console.warn('겹쳐 보기', e); return null; }
+  const chk = xmlCheck(xml), bad = new Map(chk.lines.map(l => [l.key, new Set(l.items.filter(i => i.bad).map(i => i.k))]));
+  return { lines: exportLines().map((ln, li) => ({ key: ln.key, bars: chk.back[li] || [], bad: bad.get(ln.key) || new Set() })) };
+}
+const LETTER_D = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
+function svOverPanel(P) {
+  if (!P || !P.el) return;
+  const old = P.el.querySelector('.sv-ov'); if (old) old.remove();
+  if (!$('svOver').checked || !P.w) return;
+  const G = svGeo(); if (!G) return;
+  if (!svOverData) svOverData = svOverBuild();
+  if (!svOverData) return;
+  const box = document.createElement('div'); box.className = 'sv-ov';
+  const L = G.sc.layouts[P.page]; if (!L) return;
+  for (const ln of svOverData.lines) {
+    if (svPart && ln.key !== svPart) continue;
+    const r = state.lineRes[ln.key], item = state.lineList.find(l => cfgKey(l.id) === ln.key);
+    const sc = (item && item.sourceScore) || state.score;
+    if (!r || !r.geo || r.geo.length !== state.bars.length || sc !== G.sc) continue;
+    r.geo.forEach((g, k) => {
+      if (!g || g.page !== P.page || (P.staff != null && g.staff !== P.staff)) return;
+      const st = L.staves[g.staff], notes = ln.bars[k]; if (!st || !notes || !notes.length) return;
+      const barL = state.bars[k] && state.bars[k].barLen.v; if (!(barL > 0)) return;
+      let pts = g.pts && g.pts.length ? g.pts.slice() : [[0, g.x0 + 6]];
+      if (pts[0][0] > 0) pts.unshift([0, Math.max(g.x0 + 4, pts[0][1] - 12)]);
+      pts.push([1, Math.max(pts[pts.length - 1][1] + 2, g.x1 - 4)]);
+      const xAt = f => { for (let i = 1; i < pts.length; i++) if (f <= pts[i][0] + 1e-9) { const [f0, x0] = pts[i - 1], [f1, x1] = pts[i]; return x0 + (x1 - x0) * (f1 > f0 ? (f - f0) / (f1 - f0) : 0); } return pts[pts.length - 1][1]; };
+      const one = (n => n && n.lines === 1)(notes[0]) || st.oneLine;
+      const sp = one ? 5 : (st.bottom - st.top) / 4;
+      for (const n of notes) {
+        if (n.rest) continue;   // 쉼표는 그리지 않는다(숨긴 쉼표가 많아 어지러움)
+        const x = xAt(Math.min(1, n.t / barL)); let y;
+        if (one) y = (st.top + st.bottom) / 2;
+        else {
+          const c = n.clef, cp = c.sign === 'F' ? 24 : c.sign === 'C' ? 28 : 32;   // 음자리표가 가리키는 음 (G4·F3·C4, 타악은 높은음자리표의 아래 줄 E4 기준)
+          const bottomD = n.unp || c.sign === 'percussion' ? 30 : cp + 7 * (c.oc || 0) - 2 * ((c.line || 2) - 1);
+          const d = n.oct * 7 + (LETTER_D[n.step] ?? 0);
+          y = st.bottom - (d - bottomD) * sp / 2;
+        }
+        const e = document.createElement('span'); e.className = 'sv-ovn' + (ln.bad.has(k) ? ' bad' : '');
+        e.style.left = svPct(x, P.ox, P.w); e.style.top = svPct(y, P.oy, P.h); e.style.width = (sp * 1.35 / P.w * 100) + '%';
+        box.appendChild(e);
+      }
+    });
+  }
+  P.el.appendChild(box);
+}
+function svOverToggle() { svOverData = null; for (const P of svPages.values()) if (P.canvas) svOverPanel(P); }
+$('svOver').addEventListener('change', svOverToggle);
 // ---------- 업데이트 이력 창 ----------
 function openHistory() {
   const back = document.createElement('div'); back.className = 'edit-back';
@@ -8952,7 +9130,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-06 13:33';
+const APP_VERSION = '2026-11-10 06:55';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

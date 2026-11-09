@@ -12,6 +12,7 @@ const HTML = process.env.HTML || '/home/claude/web/deploy-hapju/index.html';
   try { await p.waitForFunction(() => document.querySelectorAll('#lineList .lcard').length >= 1 && /읽었습니다/.test(document.getElementById('fileInfo').textContent), null, { timeout: 90000 }); } catch (e) { console.log(pre, 'load fail'); await p.close(); continue; }
   await p.waitForTimeout(800); await p.click('#allOn').catch(() => {}); await p.waitForTimeout(1500);
   const dl = p.waitForEvent('download', { timeout: 30000 }); await p.click('#exportXmlBtn'); const d = await dl;
+  await p.waitForSelector(".xchk-dlg", { timeout: 60000 }).catch(() => {}); await p.keyboard.press("Escape");   // 저장 뒤 확인 창 닫기
   fs.copyFileSync(await d.path(), `xmlout/${pre}.musicxml`);
   const dj = p.waitForEvent('download', { timeout: 30000 }); await p.click('#exportJsonBtn'); fs.copyFileSync(await (await dj).path(), `xmlout/${pre}.json`);
   const info = await p.evaluate(() => ({ title: document.getElementById('tbSongName').textContent, lines: document.querySelectorAll('#lineList .lcard').length }));
