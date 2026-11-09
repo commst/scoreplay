@@ -949,7 +949,7 @@ export function parseScore(pages, opts = {}) {
     maestroCount += maestro.length;
     if (!staves.length) { scanned++; return; }
 
-    curPage = { sg: maestro, runs, segs, staffOf, sysOf, sysTop, smallSize };
+    curPage = { sg: maestro, all: pg.glyphs, runs, segs, staffOf, sysOf, sysTop, smallSize, normSize };
     // 큰 박자표 (Sibelius 등 '단 위에 크게' 쓰는 박자표): 오선 밖, 오선 높이보다 훨씬 큰 숫자를 위아래로 쌓은 것.
     // 바로 아래 오선이 속한 단의 모든 오선에 적용한다
     const bigTs = (() => {
@@ -1611,7 +1611,9 @@ export function parseScore(pages, opts = {}) {
     const outside = y => y > st.bottom + 2 || y < st.top - 2;
 
     // 셈여림 글자
-    const dg = sg.filter(g => staffOf(g.oy) === si && (DYN_COMPOSITE[g.code] || DYN_LETTER[g.code]) && g.size > pg.smallSize && outside(g.oy))
+    //  Sibelius 등은 셈여림을 글자 글꼴(Opus Text)로 음표보다 작게 찍는다: 글자 글꼴이면 크기 기준을 낮추되, 앞뒤에 다른 글자가 붙은 낱말(poco·cresc. 등)은 뺀다
+    const txtF = g => /Text/i.test(g.font);
+    const dg = sg.filter(g => staffOf(g.oy) === si && (DYN_COMPOSITE[g.code] || DYN_LETTER[g.code]) && (g.size > pg.smallSize || (txtF(g) && g.size > pg.normSize * 0.4)) && outside(g.oy))
       .sort((a, b) => a.ox - b.ox);
     const groups = [];
     for (const g of dg) {
@@ -1621,6 +1623,11 @@ export function parseScore(pages, opts = {}) {
     for (const grp of groups) {
       const lab = grp.map(g => DYN_COMPOSITE[g.code] || DYN_LETTER[g.code]).join('');
       if (!(lab in DYN_LEVEL) && !DYN_ACCENT.has(lab)) continue;
+      if (grp.some(g => g.size <= pg.smallSize)) {
+        const a = grp[0], z = grp[grp.length - 1];
+        if (pg.all.some(o => !grp.includes(o) && Math.abs(o.oy - a.oy) < 2 && /[A-Za-z\u3131-\uD7A3]/.test(o.uni || '') &&
+          ((o.x0 >= z.x1 - 0.5 && o.x0 - z.x1 < 4) || (o.x1 <= a.x0 + 0.5 && a.x0 - o.x1 < 4)))) continue;
+      }
       const x = (grp[0].x0 + grp[grp.length - 1].x1) / 2;
       const p = posAt(x), m = measures[p.mi];
       addLabel(m, lab);

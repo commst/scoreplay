@@ -1518,7 +1518,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 10일</h3>
-    <h4>기능 업데이트 <small>2</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>3</small></h4><ul class="hlist">
+      <li><details><summary>작은 글자로 찍은 셈여림(ff·mp 등)도 읽기</summary><p>시벨리우스 악보처럼 셈여림을 음표보다 작은 글자로 찍은 악보에서 ff·p·mp 등을 읽지 못해, 재생에 셈여림이 반영되지 않고 MusicXML에도 빠졌습니다. 이제 읽습니다(Frontier 총보 MusicXML 셈여림 27 → 214개, 바르도 0 → 1,095개). poco·cresc. 같은 낱말 속 글자는 셈여림으로 보지 않습니다.</p></details></li>
       <li><details><summary>MusicXML 확인을 악보 PDF의 음표 머리 기준으로</summary><p>저장 뒤 확인과 겹쳐 보기가 이제 인식 결과가 아니라 재생할 때 보는 악보 화면(PDF)의 음표 머리와 직접 맞춰 봅니다. 내보낸 음마다 악보 위 자리를 계산해 PDF 머리에 맞는 음이 없는 곳, 남는 음, 음 높이가 다른 음을 마디마다 알려 주고, 겹쳐 보기에서 안 맞은 음은 빨간 동그라미, 짝이 없는 PDF 머리는 빨간 네모로 보여 줍니다. 그래서 인식이 틀린 곳(예: Frontier 대금·해금 15마디)도 찾아집니다. 타악 줄과 옥타브·조옮김을 바꾼 줄은 시각만 맞춥니다. 음 이름도 악보에 적힌 대로 C♭·E♯를 지킵니다(미락흘 소금 253마디).</p></details></li>
       <li><details><summary>MusicXML 저장 뒤 확인 목록, 악보 위에 겹쳐 보기</summary><p>MusicXML을 저장하면 PDF와 다르게 읽었을 수 있는 마디를 줄별로 보여 줍니다(빨간 번호는 내보낸 파일이 인식 결과와도 다른 마디). 번호를 누르면 악보로 보기에서 그 마디로 가서, 내보낸 음을 악보 위에 파란 동그라미로 겹쳐 그립니다. 동그라미가 음표 머리에서 벗어난 곳을 확인해 ✎ 음 고치기로 바로잡은 뒤 다시 저장하면 됩니다. 악보로 보기의 [MusicXML 겹쳐 보기]로 언제든 켜고 끌 수 있습니다.</p></details></li>
     </ul>
