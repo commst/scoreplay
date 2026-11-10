@@ -2115,6 +2115,7 @@ export function resolveBars(measures, systemNumbers = []) {
   };
   let curM = null;
   measures.forEach((m, mi) => {
+    if (m.blankLead) { m._first = out.length; m._count = 0; return; }   // 표지의 빈 오선: 마디로 세지 않는다
     curM = m;
     if (m.timesig) { ts = m.timesig; tsLen = F(ts[0], ts[1]); inferredTs = false; tsExplicit = true; }
     // 악보에 인쇄된 단 첫 마디 번호에 맞춘다 (숨긴 마디선이 있으면 번호가 건너뜀)
@@ -2525,8 +2526,21 @@ function carryTieAccidentals(bars) {
   }
 }
 
+// 악보 앞쪽의 '음표·쉼표가 하나도 없는 쪽' 수: 표지에 빈 오선만 그려 둔 총보(월광: 표지 오선을 1마디로, 다음 쪽 인쇄 번호 8에 맞춰
+// 쉬는 마디 6개를 채워 곡 앞에 빈 마디 7개가 생김)에서 그 쪽은 악보가 아니다
+function blankLeadPages(score) {
+  if (score._blankLead != null) return score._blankLead;
+  const MUSIC = new Set([HEAD_FILLED, HEAD_WHOLE, HEAD_HALF, REST_Q, REST_8, REST_16, REST_32, REST_HALF, REST_WHOLE]);
+  let k = 0;
+  const has = pg => pg.glyphs.some(g => MUSIC.has(g.code) && isMaestro(g));
+  while (k < score.pages.length - 1 && !has(score.pages[k])) k++;
+  if (!has(score.pages[k])) k = 0;   // 음표를 하나도 못 읽는 악보(지원하지 않는 글꼴)는 건드리지 않는다
+  return (score._blankLead = k);
+}
 export function analyzeLine(score, line = null) {
   const res = parseScore(score.pages, line == null ? {} : { line, layouts: score.layouts });
+  const blank = blankLeadPages(score);
+  if (blank) for (const m of res.measures) if (m.page != null && m.page < blank && !(m.notes && m.notes.length)) m.blankLead = true;
   const bars = res.measures.length ? resolveBars(res.measures, res.systemNumbers) : [];
   const marks = bars.length ? resolveMarks(res.measures, res.marks) : { dyn: [], tempo: [] };
   carryTieAccidentals(bars);
@@ -2562,8 +2576,61 @@ export function analyzeLine(score, line = null) {
 // res: 고칠 줄의 analyzeLine 결과, others: 같은 악보의 다른 줄 결과들(마디 수가 같아야 함).
 // 마디의 모든 음이 다른 줄의 음 자리와 맞을 때만 바꾸고(아니면 그대로), 바꾼 마디 수를 res.aligned에 남긴다
 const ALIGN_BAD = /박자보다 김|마디 길이를 넘음/;
+// 마디선 없는 자유 박(rubato) 마디: 줄마다 음 길이의 합이 달라 '길이대로' 읽으면 줄끼리 어긋난다(늦게 들어오는 악기가 마디 처음에 놓임 —
+// 월광 첫 단의 가야금). 같은 단의 모든 줄에서 음의 가로 자리를 모아 왼쪽부터 시각을 정한다: 같은 줄·같은 성부의 앞 음이 끝나는 때(여러 줄이면 가장 늦은 때),
+// 앞 음이 없는 음(마디 중간에 들어오는 줄)은 그 자리를 지나며 울리는 다른 줄 음의 길이를 가로 자리 비율로 나눈 때. 마디 길이는 모든 줄이 같게
+const FREE_BAR = /마디선이 보이지 않아/;
+function alignFreeBars(res, others) {
+  const peers = (others || []).filter(o => o && o !== res && o.bars && o.geo);
+  if (!peers.length) return res;
+  const idxOf = peers.map(o => { const m = new Map(); o.bars.forEach((b, i) => { const g = o.geo[i]; if (g && g.page != null) m.set(b.number + '@' + g.page, i); }); return m; });
+  let changed = 0;
+  const bars = res.bars.map((b, i) => {
+    const g = res.geo[i]; if (!g || g.page == null || (b.kind !== 'normal' && b.kind !== 'rest')) return b;
+    const key = b.number + '@' + g.page;
+    const grp = [b]; peers.forEach((o, k) => { const j = idxOf[k].get(key); if (j != null && o.bars[j].kind === 'normal') grp.push(o.bars[j]); });
+    if (!grp.some(x => x.warnings && x.warnings.some(w => FREE_BAR.test(w)))) return b;
+    // 줄·성부마다 왼쪽부터의 음 사슬
+    const chains = [], xs = [];
+    for (const gb of grp) for (const v of ['R', 'L']) {
+      const ev = gb.events.filter(e => e.voice === v && e.x != null).sort((p, q) => p.x - q.x || p.t.v - q.t.v);
+      if (ev.length) { chains.push(ev); for (const e of ev) xs.push(e.x); }
+    }
+    if (xs.length < 2) return b;
+    xs.sort((p, q) => p - q);
+    const cols = []; for (const x of xs) { const c = cols[cols.length - 1]; if (c && x - c.x1 < 2) { c.x1 = x; c.n++; c.sum += x; } else cols.push({ x1: x, n: 1, sum: x }); }
+    const cx = cols.map(c => c.sum / c.n), colOf = x => { let best = 0; for (let k = 1; k < cx.length; k++) if (Math.abs(cx[k] - x) < Math.abs(cx[best] - x)) best = k; return best; };
+    const cons = [];   // [앞 음의 칸, 다음 음의 칸, 앞 음 길이]
+    for (const ev of chains) for (let k = 0; k + 1 < ev.length; k++) { const a = colOf(ev[k].x), c = colOf(ev[k + 1].x); if (c > a) cons.push([a, c, ev[k].dur]); }
+    const T = [F(0, 1)];
+    for (let k = 1; k < cx.length; k++) {
+      let t = null;
+      for (const [a, c, d] of cons) if (c === k) { const v = T[a].add(d); if (!t || v.gt(t)) t = v; }
+      if (!t) {   // 이 자리에서 처음 들어오는 음뿐: 이 자리를 지나며 울리는 음(가장 짧게 걸친 것)을 가로 비율로
+        let best = null; for (const cn of cons) if (cn[0] < k && cn[1] > k && (!best || cn[1] - cn[0] < best[1] - best[0])) best = cn;
+        if (best) { const fr = (cx[k] - cx[best[0]]) / (cx[best[1]] - cx[best[0]]); t = T[best[0]].add(F(Math.max(1, Math.round(best[2].v * fr * 32)), 32)); }
+        else { const rate = k > 1 && cx[k - 1] > cx[0] ? T[k - 1].v / (cx[k - 1] - cx[0]) : 1 / 160; t = T[k - 1].add(F(Math.max(1, Math.round((cx[k] - cx[k - 1]) * rate * 32)), 32)); }
+      }
+      if (!t.gt(T[k - 1])) t = T[k - 1].add(F(1, 32));
+      T.push(t);
+    }
+    let L = F(0, 1);
+    for (const ev of chains) { const e = ev[ev.length - 1], end = T[colOf(e.x)].add(e.dur); if (end.gt(L)) L = end; }
+    if (!(L.v > 0)) return b;
+    // 길이대로 읽은 것과 같으면(마디선만 안 보이는 보통 박자 마디) 그대로 둔다
+    if (L.eq(b.barLen) && b.events.every(e => e.x == null || T[colOf(e.x)].eq(e.t))) return b;
+    changed++;
+    if (!b.events.length) return { ...b, barLen: L };   // 쉬는 줄: 길이만 맞춤
+    const keep = (b.warnings || []).filter(w => !/보다 김|넘음|쉼표 일부 숨김/.test(w));
+    const warnings = [...keep, '자유 박(마디선 없음): 같은 단의 다른 줄과 가로 자리를 맞춰 읽음'];
+    const events = b.events.map(e => (e.x == null ? e : { ...e, t: T[colOf(e.x)] })).sort((p, q) => p.t.v - q.t.v);
+    return { ...b, events, barLen: L, warnings };
+  });
+  return changed ? { ...res, bars } : res;
+}
 export function alignToSystem(res, others) {
   if (!res || !res.bars || !res.geo) return res;
+  res = alignFreeBars(res, others);
   const n = res.bars.length, peers = (others || []).filter(o => o && o !== res && o.bars && o.bars.length === n && o.geo);
   if (!peers.length) return res;
   let changed = 0;
