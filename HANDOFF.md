@@ -24,6 +24,7 @@
 - 빌드: `python3 build.py` → `index.html` + `version.json`(판 번호 = 한국 시각) + `dist/`
 - 이전 세션은 `/home/claude/web`(melody.html = index.template.html, score-parser.js, build_melody.py → deploy-hapju/index.html)에서 고친 뒤 저장소 src로 복사했다. 새 세션은 저장소 src에서 바로 고쳐도 됨
 - 뮤즈스코어 4.4.4 AppImage: `/home/claude/mscore/squashfs-root/AppRun` (없으면 다시 받아 압축 풀기; test/msall.sh가 사용)
+- **샘플 악보는 비공개 저장소 commst/scoreplay_sample(밑줄)에 있음** — 새 대화(= 새 작업 공간)에서는 사용자에게 zip을 다시 받지 말고: add_repo commst/scoreplay_sample → `git clone --depth 1 https://github.com/commst/scoreplay_sample /home/claude/scoreplay_sample` → `mkdir -p /home/claude/samples && cp /home/claude/scoreplay_sample/pdf/*.pdf /home/claude/samples/`. 611개(약 300MB), manifest.json = md5 → 받은 zip·zip 안 경로. 새 악보를 받으면 ingest.py로 푼 뒤 그 저장소 pdf/와 manifest.json에도 더해 푸시(저작권 — 공개 저장소 scoreplay에는 PDF를 넣지 않음)
 - **작업 공간이 새로 만들어지면**(샘플·도구가 모두 사라짐): 저장소 다시 받기 → `npm install` → `mkdir -p /home/claude/web && ln -sfn /home/claude/scoreplay/node_modules /home/claude/web/node_modules` → `mkdir -p /home/claude/web/deploy-hapju && ln -sf /home/claude/scoreplay/index.html /home/claude/web/deploy-hapju/index.html`(fuzz2·pwxml 기본 경로). Playwright는 `NODE_PATH=/opt/npm-tools/node_modules`. MusicXML XSD는 `https://raw.githubusercontent.com/w3c/musicxml/v4.0/schema/{musicxml,xml,xlink}.xsd` → `/home/claude/work/xsd/`. 뮤즈스코어는 `https://github.com/musescore/MuseScore/releases/download/v4.4.4/MuseScore-Studio-4.4.4.243461245-x86_64.AppImage` 받아 `--appimage-extract`
 - **작업 공간 사양이 작음(메모리 7GB·코어 2개)**: regall.sh(8개 동시)는 메모리 부족 → `bash test/cmp/reg2.sh <이전 해석기 폴더> test/regrn.mjs`(2개씩, 약 10분). 회귀가 도는 동안 src/score-parser.js를 고치면 결과가 섞이므로 끝날 때까지 손대지 말 것(git stash도 금지)
 - 처음 돌릴 때 만들 폴더: `mkdir -p xmlout`(pwxml), `mkdir -p /home/claude/mscore/all`(msall.sh)
@@ -35,6 +36,7 @@
 ## 3. 샘플 악보
 
 ### 2026-11-10 다시 받은 zip 전체 (작업 공간이 새로 만들어져 다시 받음: 샘플 611개, 회귀에 쓰는 '읽히는' 악보 481개)
+- **이 611개는 비공개 저장소 commst/scoreplay_sample의 pdf/에 올려 둠**(2026-11-10). 2절의 방법으로 받는다
 - 받은 zip 36개를 `python3 test/cmp/ingest.py /mnt/user-data/uploads/*.zip`로 넣음. 34-2 프론티어는 34-1 zip 안에 함께 있음
 - **소나기는 새 판으로 바뀜(사용자 지정, 옛 pdfFactory 판은 무시)**: zip 63 'Microsoft Print To PDF'로 인쇄한 Encore 악보 — 총보 61c75dd1(22줄 355마디), 대금 031413dc, 소금 b181d587, 피리·태평소 6e27980d, 해금 54ebac86, 가야금 c8df8196·2 1dc61f3a, 거문고 ee2a16f2, 신디1 00cc3dc7·2 8ed32fe5, 타악기 3b5a0517 / 아쟁 a4736a85는 아이폰 사진 PDF(못 읽음). 아래 11-05 목록의 소나기 md5는 더 이상 없음
 - 아래 '이전 작업 공간의 샘플 (87개)' 중 이번 zip에 없는 것: 1fe03d65·26dd8f21·44e95fb3·52cfd0bf·59ee4663·9128e77f·9e386483·a05c32d0·b3a31a97·bfb7e6f7·d95ddafe 등 → pwv2는 `PRE=9203ad49`로 돌림(곡 제목 'Flower' 확인 1건만 실패하는 것은 정상), pwedit는 옛 샘플이 없어 못 돌림
