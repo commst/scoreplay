@@ -829,9 +829,11 @@ function findTempoMarks(glyphs) {
     let txt = '', last = g.x1 + 4;
     for (const h of right) { if (h.x0 - last > 9) break; txt += MUSIC_FONT.test(h.font) && OPT_CHAR[h.code] ? OPT_CHAR[h.code] : String.fromCodePoint(h.code); last = h.x1; }
     // 'Tempo I' 같은 글자가 음표와 '=' 사이에 끼어 있어도 읽는다
-    const m = txt.replace(/^[.k]/, '').match(/^\s*(?:[A-Za-z]\s*){0,2}=\s*(?:c(?:a|irca)?\.?\s*)?(\d+)(?:\s*[-~]\s*(\d+))?/i);
+    // 점 앞에 빈칸이 끼기도 한다(Encore: 'q' + 빈칸 + '.' + ' = 120' — 소나기 43·131·188마디)
+    const txt2 = txt.replace(/^\s*[.k]/, '');
+    const m = txt2.match(/^\s*(?:[A-Za-z]\s*){0,2}=\s*(?:c(?:a|irca)?\.?\s*)?(\d+)(?:\s*[-~]\s*(\d+))?/i);
     // 음표=음표 (빠르기 바꿈 없이 박 단위만 바꿈, 예: ♩=♪, ♪=♩)
-    const eq = !m && txt.replace(/^[.k]/, '').match(/^\s*=\s*([qeh])\s*([.k]?)/);
+    const eq = !m && txt2.match(/^\s*=\s*([qeh])\s*([.k]?)/);
     if (eq) {
       const unit = { 113: [1, 4], 101: [1, 8], 104: [1, 2] }[g.code];
       const ru = { q: [1, 4], e: [1, 8], h: [1, 2] }[eq[1]];
