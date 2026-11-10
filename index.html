@@ -1461,9 +1461,9 @@ body.all-panes { padding-bottom: 0; }
       </div>
       <div class="ghbox" id="ghBox">
         <div class="setbox-head"><h3 id="ghTitle">공유 설정 (GitHub 저장소)</h3><span class="set-state" id="ghState" aria-live="polite"></span></div>
-        <p class="hint">이 악보의 설정(악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정 등)을 합주연습기 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받아 쓸 수 있습니다. <b>불러오기</b>는 누구나, <b>저장</b>은 저장 토큰을 넣은 기기(관리자)만 됩니다.</p>
+        <p class="hint">이 악보의 설정(악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정 등)을 합주연습기 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받아 쓸 수 있습니다. <b>불러오기</b>는 누구나(저장소에 이 악보의 설정이 있을 때만 단추가 켜집니다), <b>저장</b>은 저장 토큰을 넣은 기기(관리자)만 됩니다. 이미 올린 설정이 있으면 업데이트할지 물어봅니다.</p>
         <div class="set-row">
-          <button class="btn" id="ghLoad" type="button">공유 설정 불러오기</button>
+          <button class="btn" id="ghLoad" type="button" disabled title="저장소에 이 악보의 공유 설정이 없습니다">공유 설정 불러오기</button>
           <button class="btn" id="ghSave" type="button">공유 저장소에 저장</button>
         </div>
         <details class="ghtoken" id="ghTokenBox">
@@ -1598,7 +1598,7 @@ body.all-panes { padding-bottom: 0; }
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
     <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
-      <li><details><summary>공유 설정: 악보별 설정을 저장소에 올리고 받기</summary><p>[저장] 칸 '이 악보의 설정' 아래에 <b>공유 설정 (GitHub 저장소)</b>가 생겼습니다. 악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정을 한 묶음으로 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받습니다. 이 기기에 저장한 설정이 없으면 악보를 열 때 자동으로 받고, 있으면 알려만 주며 [공유 설정 불러오기]를 눌러야 바뀝니다. 올리기는 저장 토큰을 넣은 기기(관리자)만 됩니다 — 토큰 만드는 방법은 그 칸의 '관리자: 저장 토큰 넣기·만드는 방법'과 사용설명서에 있습니다.</p></details></li>
+      <li><details><summary>공유 설정: 악보별 설정을 저장소에 올리고 받기</summary><p>[저장] 칸 '이 악보의 설정' 아래에 <b>공유 설정 (GitHub 저장소)</b>가 생겼습니다. 악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정을 한 묶음으로 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받습니다. 이 기기에 저장한 설정이 없으면 악보를 열 때 자동으로 받고, 있으면 알려만 주며 [공유 설정 불러오기]를 눌러야 바뀝니다. [공유 설정 불러오기]는 저장소에 그 악보의 설정이 있을 때만 켜지고, 올릴 때 이미 올린 설정이 있으면 업데이트할지 물어봅니다. 올리기는 저장 토큰을 넣은 기기(관리자)만 됩니다 — 토큰 만드는 방법은 그 칸의 '관리자: 저장 토큰 넣기·만드는 방법'과 사용설명서에 있습니다.</p></details></li>
       <li><details><summary>마디를 눌러 빠르기·rit. 넣기</summary><p>[빠르기] 칸의 <b>[마디 골라 넣기]</b>를 누른 뒤 악보나 마디맵에서 마디를 누르면, 그 마디에서 시작하는 빠르기 구간(또는 rit.)이 표의 제자리에 들어가고 값 칸으로 옮겨 갑니다. 취소는 Esc. 컴퓨터의 마디 미리보기 창에도 [빠르기 넣기]·[rit. 넣기] 단추가 있습니다. </p></details></li>
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
@@ -7934,13 +7934,15 @@ async function ghFetch(key) {
   return { S: await r.json(), sha: null };
 }
 let ghBusy = false;
+// [공유 설정 불러오기]는 저장소에 이 악보의 설정이 있을 때만 누를 수 있다
+function ghHas(v) { const b = $('ghLoad'); b.disabled = !v; b.title = v ? '' : '저장소에 이 악보의 공유 설정이 없습니다'; }
 async function ghLoad() {
   const key = settingsKey(); if (!key || ghBusy) return;
   ghBusy = true; ghSetState('저장소에서 찾는 중…');
   try {
     const got = await ghFetch(key);
     if (key !== settingsKey()) return;   // 그 사이 다른 악보를 올림
-    if (!got || !got.S || got.S.format !== 'hapju-settings') { ghSetState('이 악보로 올려 둔 공유 설정이 없습니다.'); return; }
+    if (!got || !got.S || got.S.format !== 'hapju-settings') { ghHas(false); ghSetState('이 악보로 올려 둔 공유 설정이 없습니다.'); return; }
     const editN = applyBundle(got.S, '공유 설정을 불러옴');
     writeSettings(false); ghSeen(key, got.S.saved || '');
     ghSetState(`공유 설정을 불러왔습니다 · ${fmtTime(got.S.saved)}에 올린 것` + (editN ? ' (음정·길이 수정 포함)' : ''), true);
@@ -7960,26 +7962,30 @@ async function ghSave() {
     if (cur.ok) {
       const j = await cur.json(); sha = j.sha;
       let old = null; try { old = JSON.parse(utf8b64(j.content)); } catch (e) {}
-      // 다른 기기에서 올린 것을 아직 받지 않았으면 덮기 전에 묻는다
-      if (old && old.saved && old.saved !== ghSeen(key) && !confirm(`저장소에 ${fmtTime(old.saved)}에 올린 공유 설정이 있고, 이 기기는 아직 그것을 받지 않았습니다. 지금 화면의 설정으로 덮어쓸까요?\n(취소하고 [공유 설정 불러오기]를 먼저 할 수 있습니다)`)) { ghSetState('저장하지 않았습니다.'); return; }
+      // 이미 올린 설정이 있으면 업데이트할지 묻는다. 다른 기기에서 올린 것을 아직 받지 않았으면 그것도 알린다
+      const when = old && old.saved ? fmtTime(old.saved) + '에 올린 ' : '', unseen = old && old.saved && old.saved !== ghSeen(key);
+      if (!confirm(`저장소에 이 악보의 ${when}공유 설정이 이미 있습니다.` + (unseen ? ' 이 기기는 아직 그것을 받지 않았습니다.' : '') + `\n지금 화면의 설정으로 업데이트할까요?` + (unseen ? '\n(취소하고 [공유 설정 불러오기]를 먼저 할 수 있습니다)' : ''))) { ghSetState('저장하지 않았습니다.'); return; }
     } else if (cur.status !== 404) throw new Error(cur.status === 403 ? '이 토큰으로는 저장소에 쓸 수 없습니다. 토큰의 저장소 선택과 Contents 권한(Read and write)을 확인해 주세요.' : '저장소를 읽지 못했습니다 (' + cur.status + ')');
     const body = { message: `설정: ${S.title || S.file || key}`, content: b64utf8(JSON.stringify(S, null, 1)), branch: GH_BRANCH };
     if (sha) body.sha = sha;
     const r = await fetch(api, { method: 'PUT', headers: H, body: JSON.stringify(body) });
     if (!r.ok) throw new Error(r.status === 403 || r.status === 404 ? '이 토큰으로는 저장소에 쓸 수 없습니다. 토큰의 저장소 선택과 Contents 권한(Read and write)을 확인해 주세요.' : r.status === 409 || r.status === 422 ? '그 사이 저장소의 설정이 바뀌었습니다. 다시 눌러 주세요.' : '저장소에 올리지 못했습니다 (' + r.status + ')');
-    ghSeen(key, S.saved);
+    ghSeen(key, S.saved); ghHas(true);
     ghSetState(`공유 저장소에 저장했습니다 · ${fmtTime(S.saved)}` + (S.edits.length ? ' (음정·길이 수정 포함)' : ''), true);
   } catch (e) { ghSetState(e && e.message ? e.message : '저장소에 올리지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
   finally { ghBusy = false; }
 }
 // 악보를 연 뒤: 공유 설정이 있는지 조용히 확인. 이 기기에 저장한 설정이 없으면 바로 입히고, 있으면 알려만 준다(덮어쓰지 않음)
 async function ghCheck(hadLocal) {
-  const key = settingsKey(); if (!key) return;
+  const key = settingsKey(); if (!key) { ghHas(false); return; }
   ghSetState(ghToken() ? '저장 토큰이 이 기기에 들어 있습니다.' : '');
-  if (!/^https?:$/.test(location.protocol)) return;   // 파일로 연 화면에서는 자동으로 찾지 않음(단추로는 됨)
+  if (!/^https?:$/.test(location.protocol)) { ghHas(true); return; }   // 파일로 연 화면에서는 자동으로 찾지 않음(있는지 몰라 단추는 켜 둠)
+  ghHas(false);
   try {
     const got = await ghFetch(key);
-    if (key !== settingsKey() || !got || !got.S || got.S.format !== 'hapju-settings') return;
+    if (key !== settingsKey()) return;
+    if (!got || !got.S || got.S.format !== 'hapju-settings') { ghSetState('이 악보로 올려 둔 공유 설정이 아직 없습니다.' + (ghToken() ? ' (저장 토큰 있음)' : '')); return; }
+    ghHas(true);
     const when = got.S.saved || '';
     if (when && when === ghSeen(key)) { ghSetState(`공유 설정(${fmtTime(when)})을 이미 받았습니다.`, true); return; }
     if (!hadLocal && prefs.autoLoad && !state.playing) {
@@ -7990,7 +7996,7 @@ async function ghCheck(hadLocal) {
       ghSetState(`새 공유 설정이 있습니다 · ${fmtTime(when)}에 올린 것. [공유 설정 불러오기]로 받을 수 있습니다.`);
       showMsg(`이 악보의 새 공유 설정(${fmtTime(when)})이 저장소에 있습니다. [저장] 칸의 [공유 설정 불러오기]를 누르면 받습니다. (지금 설정은 그대로 둡니다)`);
     }
-  } catch (e) { /* 인터넷이 없거나 저장소에 못 닿으면 조용히 넘어감 */ }
+  } catch (e) { ghSetState('저장소에 연결하지 못해 공유 설정이 있는지 확인하지 못했습니다.'); }
 }
 $('ghLoad').addEventListener('click', () => { if (readSettings(settingsKey()) && !confirm('지금 화면의 설정을 저장소의 공유 설정으로 바꿉니다. 계속할까요?')) return; ghLoad(); });
 $('ghSave').addEventListener('click', ghSave);
@@ -9601,7 +9607,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 07:19';
+const APP_VERSION = '2026-11-11 07:42';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

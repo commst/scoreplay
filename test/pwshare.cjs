@@ -5,7 +5,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
 (async () => { const b = await chromium.launch();
  for (const [name, vp] of [['desktop', { width: 1280, height: 860 }], ['phone', { width: 390, height: 844 }]]) {
   const ctx = await b.newContext({ viewport: vp, hasTouch: name === 'phone' }); const p = await ctx.newPage();
-  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
+  const errs = []; p.on('pageerror', e => errs.push(e.message)); const dlg = []; p.on('dialog', d => { dlg.push(d.message()); d.accept(); });
   const store = {}; const calls = [];
   await p.route('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/**', r => { const f = r.request().url().split('pdfjs-dist@4.10.38/')[1].replace('.min.mjs', '.mjs'); r.fulfill({ path: '/home/claude/web/node_modules/pdfjs-dist/' + f, contentType: 'text/javascript' }); });
   await p.route(/^https:\/\/api\.github\.com\/.*/, async r => { const q = r.request(), u = q.url().split('?')[0], path = u.split('/contents/')[1]; calls.push(q.method() + ' ' + path + ' auth=' + (q.headers().authorization || '').slice(0, 12));
@@ -78,12 +78,16 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   await p.$$eval('#tchgBody tr:not(.sum) .x', xs => xs[1].click()); await p.waitForTimeout(300);
   // --- 공유 설정
   await tab('save');
+  ok(await p.$eval('#ghLoad', e => e.disabled), name + ' 공유 설정이 없으면 [불러오기] 꺼짐');
   await p.click('#ghSave'); await p.waitForTimeout(400);
   ok(/토큰/.test(await p.textContent('#ghState')) && await p.evaluate(() => document.getElementById('ghTokenBox').open), name + ' 토큰 없으면 안내');
   await p.fill('#ghToken', 'WRONG'); await p.click('#ghTokenSave'); await p.click('#ghSave'); await p.waitForTimeout(800);
   ok(/맞지 않/.test(await p.textContent('#ghState')), name + ' 틀린 토큰 안내: ' + await p.textContent('#ghState'));
   await p.fill('#ghToken', 'TESTTOKEN'); await p.click('#ghTokenSave'); await p.click('#ghSave'); await p.waitForTimeout(1200);
   ok(/저장했습니다/.test(await p.textContent('#ghState')), name + ' 저장: ' + await p.textContent('#ghState'));
+  ok(!(await p.$eval('#ghLoad', e => e.disabled)), name + ' 저장 뒤 [불러오기] 켜짐');
+  dlg.length = 0; await p.click('#ghSave'); await p.waitForTimeout(1200);
+  ok(dlg.some(m => /이미 있습니다/.test(m) && /업데이트/.test(m)) && /저장했습니다/.test(await p.textContent('#ghState')), name + ' 이미 있으면 업데이트할지 물음: ' + (dlg[0] || '').slice(0, 60));
   const path = Object.keys(store)[0]; ok(path && /^settings\/[0-9a-z-]+\.json$/i.test(path), name + ' 파일 경로 ' + path);
   const S = JSON.parse(Buffer.from(store[path], 'base64').toString('utf8'));
   ok(S.format === 'hapju-settings' && S.tempoRows.some(r => r.start === 37) && (S.tempoChanges || []).some(c => c.bar === 54) && !!S.key, name + ' 올린 내용(빠르기 37·rit 50·제목 ' + S.title + ')');
@@ -91,7 +95,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   await p.evaluate(() => localStorage.clear()); await open(); await p.waitForTimeout(1500);
   const rows2 = await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value));
   ok(rows2.includes('37'), name + ' 새 기기: 공유 설정 자동 적용 ' + rows2.join(','));
-  ok(/불러왔습니다/.test(await p.textContent('#ghState')), name + ' 새 기기 상태: ' + await p.textContent('#ghState'));
+  ok(/불러왔습니다/.test(await p.textContent('#ghState')) && !(await p.$eval('#ghLoad', e => e.disabled)), name + ' 새 기기 상태: ' + await p.textContent('#ghState'));
   ok(calls.some(c => c.startsWith('RAW ')), name + ' 토큰 없이 raw 주소로 받음');
   // 이 기기에서 설정을 바꾼 뒤(로컬 있음) 저장소가 새로 바뀌면: 알리기만
   const S2 = { ...S, saved: new Date(Date.now() + 60000).toISOString(), tempoRows: S.tempoRows.filter(r => r.start !== 37) }; store[path] = Buffer.from(JSON.stringify(S2)).toString('base64');
