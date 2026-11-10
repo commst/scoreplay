@@ -233,6 +233,15 @@ MusicXML을 저장하면 내보낸 파일을 다시 읽어 악보 PDF의 음표 
 
 ---
 
+### 공유 설정 (GitHub 저장소) · 마디 골라 넣기
+
+- **공유 설정**: [저장] 칸 '이 악보의 설정' 아래. 악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정을 한 묶음으로 이 저장소 `settings/<악보 지문>.json`에 올리고 받는다. 받기는 누구나(같은 악보를 열면 자동으로 찾고, 이 기기에 저장한 설정이 없으면 바로 적용·있으면 알림만), 올리기는 저장 토큰을 넣은 기기만
+  - 저장 토큰: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token → Repository access: Only select repositories → `commst/scoreplay` → Permissions: Contents = Read and write → 만든 `github_pat_…`를 [저장] 칸 '관리자: 저장 토큰 넣기'에 붙여 넣고 [이 기기에 저장]. 토큰은 그 브라우저에만 보관(기기마다 한 번씩)
+  - 앱이 GitHub API로 main에 바로 커밋하므로, 이 저장소에 푸시하기 전에는 `git fetch origin main` 후 rebase
+- **마디 골라 넣기**: [빠르기] 칸의 [마디 골라 넣기](빠르기·rit. 각각)를 누르고 악보·마디맵에서 마디를 누르면 그 마디에 넣는다. 취소 Esc. 마디 미리보기 창의 [빠르기 넣기]·[rit. 넣기]도 같음
+- **뒤 구간 함께 옮기기**: 빠르기 표의 시작 마디를 바꾸면 뒤 구간과 rit.·accel.도 같은 만큼 옮긴다(표 아래 체크로 끔)
+
+
 ## 2. 저장소 구성
 
 ```
