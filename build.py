@@ -2,7 +2,7 @@
 #   dist/index.html        한 파일 배포판 (악기 녹음까지 모두 포함, 이 파일 하나만 올리면 됨)
 #   dist/split/index.html  가벼운 배포판 (banks/ 폴더와 함께 올림, 고른 악기 녹음만 받아 옴)
 #   index.html, version.json  GitHub Pages로 내보내는 판(= dist/index.html)과 판 번호
-import re, json, base64, os, glob, shutil
+import re, json, base64, os, glob, shutil, subprocess, sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 src = lambda f: open(os.path.join(ROOT, 'src', f), encoding='utf-8').read()
 strip = lambda s: re.sub(r'^import .*\n', '', re.sub(r'^export ', '', s, flags=re.M), flags=re.M)
@@ -33,3 +33,9 @@ open(os.path.join(ROOT, 'dist', 'index.html'), 'w', encoding='utf-8').write(one)
 open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(one)
 open(os.path.join(ROOT, 'version.json'), 'w', encoding='utf-8').write(json.dumps({'v': VER}, ensure_ascii=False))
 print('dist/index.html', len(one), '| dist/split/index.html', len(doc), '| index.html + version.json', VER)
+# 옛 브라우저 문법 검사(113번): ES2020을 넘는 문법이 있으면 Safari 13.x 등에서 앱이 시작되지 않는다
+try:
+    if subprocess.run(['node', os.path.join(ROOT, 'test', 'syntaxcheck.cjs'), os.path.join(ROOT, 'index.html'), '2020']).returncode:
+        sys.exit('빌드 중단: 옛 브라우저가 읽지 못하는 문법이 있음 (위 줄을 고칠 것)')
+except FileNotFoundError:
+    print('syntaxcheck: node 없음 — 건너뜀')

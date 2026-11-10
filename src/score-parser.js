@@ -314,7 +314,7 @@ export async function extractPages(doc, OPS, onPage) {
       const enc = {};
       for (const g of glyphs) if (!/Anastasia/i.test(g.font) && (!isMusicFont(g.font) || /\(MusicFont\)/.test(g.font))) {
         const c = g.raw >= 0xF020 && g.raw <= 0xF0FF ? g.raw - 0xF000 : g.raw;
-        const e = enc[g.font] ??= { 61: 0, 108: 0, 199: 0, 200: 0 };
+        const e = enc[g.font] || (enc[g.font] = { 61: 0, 108: 0, 199: 0, 200: 0 });
         if (c in e) e[c]++;
       }
       for (const [f, e] of Object.entries(enc)) if ((e[61] >= 10 && e[199] + e[200] >= 10 && e[108] >= 2) || (e[61] >= 40 && e[108] >= 8))   // 쉼표뿐인 쪽(기둥 없음: 소나기 총보 36쪽)

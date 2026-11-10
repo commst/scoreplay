@@ -289,6 +289,7 @@ python3 build.py
 1. `src/index.template.html`의 빈자리(`/*__PARSER__*/`, `/*__ENGINE__*/`, `/*__MELODY__*/`, `/*__SAMPLES__*/`, `/*__BANK_RANGES__*/`)에 `src/`의 모듈과 장구 녹음을 붙여 넣습니다. 모듈의 `import`/`export` 줄은 이때 지웁니다.
 2. 한 파일 판은 `banks/*.mp3`를 base64 글자로 바꿔 `<script type="text/plain" id="bank-<악기>">`로 html 끝에 붙이고, 음 목록(json)은 코드 안에 넣습니다.
 3. 웹 페이지 머리(`<!doctype html>` 등)를 씌워 저장합니다.
+4. **옛 브라우저 문법 검사**: `node test/syntaxcheck.cjs index.html 2020`으로 앱 스크립트가 ES2020 문법만 쓰는지 봅니다. `??=`·`||=`·`&&=`(ES2021) 같은 새 문법이 하나라도 있으면 Safari 13.x·Chrome 80~84 같은 브라우저는 스크립트 전체를 읽지 못해 앱이 시작되지 않으므로 빌드를 멈춥니다(검사 도구 acorn이 없으면 건너뜀).
 
 코드를 고칠 때는 `dist/`가 아니라 **`src/`를 고치고** 다시 빌드하세요. `dist/`는 저장소에 넣지 않습니다(`.gitignore`).
 
