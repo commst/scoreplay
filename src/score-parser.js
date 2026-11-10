@@ -134,7 +134,8 @@ function convertEncore(glyphs, drawings) {
       case 211: line(X(216), Y(1000), X(216), Y(0), 37 * s); line(X(380), Y(1000), X(380), Y(0), 150 * s); break;
       case 199: stems.push([X(291), Y(259), Y(0)]); break;                                                  // 위로 뻗는 기둥 한 토막
       case 200: stems.push([X(9), Y(0), Y(-259)]); break;                                                   // 아래로 뻗는 기둥 한 토막
-      case 95: case 76: case 194: case 105: case 96: break;                                                 // 덧줄, 단 괄호 끝, 조표 등은 버림
+      case 95: (drawings.ledgers || (drawings.ledgers = [])).push({ x0: g.x0, x1: Math.max(g.x1, g.x0 + g.size * 0.4), y: g.oy, g: true }); break;   // 덧줄: 오선 사이 음표가 어느 오선 것인지 가릴 때만 씀
+      case 76: case 194: case 105: case 96: break;                                                          // 단 괄호 끝, 조표 등은 버림
       case 123: {                                                                                           // 도돌이 점 두 개
         for (const fy of [370, 633]) out.push({ ...g, code: 46, uni: '.', ox: X(0), oy: Y(fy), x0: X(0), x1: X(126), y0: Y(fy + 63), y1: Y(fy - 63) });
         break;
@@ -409,6 +410,7 @@ export async function extractPages(doc, OPS, onPage) {
       const r = recognizeOutlines(kept);
       if (r.glyphs.length >= 10) { glyphs.push(...r.glyphs); kept = r.drawings; outlined = true; }
     }
+    if (drawings.ledgers) kept.ledgers = drawings.ledgers;
     pages.push({ glyphs, drawings: kept, width: vp.width, height: H, outlined, encore: glyphs.some(g => /Anastasia/i.test(g.font)) });
   }
   return pages;
@@ -947,6 +949,53 @@ function pagePrep(pg, layout, pi) {
   staves.forEach((s, i) => { if (s.top - 45 <= y && y <= s.bottom + 45) { const dd = Math.abs(y - s.mid); if (dd < bd) { best = i; bd = dd; } } });
   return best;
   };
+  // 오선 사이 음표 머리의 주인 오선: 가운데가 가장 가까운 오선(staffOf)이 기본이지만, 빽빽한 총보에서는 아래 오선의 높은 덧줄 음이
+  // 위 오선 가운데에 더 가깝다(소나기 총보: 소금의 높은 음을 장고 줄 음으로 읽음). 머리와 오선 사이에 그려진 덧줄이 어느 쪽 오선으로 이어지는지로 가린다:
+  // 이웃 오선 쪽으로는 덧줄이 빠짐없이 놓여 있고, 가까운 오선 쪽으로는 반도 없을 때만 이웃 오선 것으로 한다
+  const ownerFix = new Map();
+  if (staves.length > 1) {
+    const sp0 = staves.map(t => (t.bottom - t.top) / 4).filter(v => v > 1).sort((a, b) => a - b), spM = sp0[sp0.length >> 1] || 0;
+    let ledgers = drawings.ledgers || null;
+    const getLedgers = () => {
+      if (ledgers) return ledgers; ledgers = [];
+      const inStaff = y => staves.some(t => t.top - 0.3 <= y && y <= t.bottom + 0.3);
+      for (const d of drawings) { const r = d.rect; if (!r) continue;
+        const horiz = d.type === 's' ? d.items.length === 1 && d.items[0].op === 'l' && r.height < 0.3 : (d.type === 'f' && d.items.length === 1 && d.items[0].op === 're' && r.height < spM * 0.3);
+        if (!horiz || r.width < spM * 0.9 || r.width > spM * 4) continue;
+        const y = (r.y0 + r.y1) / 2; if (!inStaff(y)) ledgers.push({ x0: r.x0, x1: r.x1, y });
+      }
+      return ledgers;
+    };
+    const support = (g, t, up) => {   // up: 머리가 오선 t 위쪽에 있음
+      if (t.oneLine || t.lines.length !== 5) return [0, 0];
+      const sp = (t.bottom - t.top) / 4, out = up ? t.top - g.oy : g.oy - t.bottom, n = Math.floor(out / sp + 0.25);
+      if (n < 1) return [0, 0];
+      const cx = (g.x0 + g.x1) / 2; let c = 0;
+      for (let k = 1; k <= n; k++) { const y = up ? t.top - k * sp : t.bottom + k * sp; if (getLedgers().some(l => Math.abs(l.y - y) < sp * 0.22 && l.x0 - 1.5 <= cx && cx <= l.x1 + 1.5)) c++; }
+      return [c, n];
+    };
+    const HEADS = new Set([HEAD_FILLED, HEAD_HALF, HEAD_WHOLE]);
+    for (const g of maestro) {
+      if (!HEADS.has(g.code)) continue;
+      const i = staffOf(g.oy); if (i == null) continue; const t = staves[i];
+      const up = g.oy < t.top, out = up ? t.top - g.oy : g.oy - t.bottom; if (out < spM * 0.3) continue;   // 오선 바로 밖 칸(덧줄 없이 적는 자리)이어도 이웃 오선의 덧줄이 머리까지 이어져 있으면 이웃 것
+      const j = up ? i - 1 : i + 1, o = staves[j]; if (!o) continue;
+      const oOut = up ? g.oy - o.bottom : o.top - g.oy; if (oOut < 0 || oOut > 45) continue;
+      const [co, no] = support(g, o, !up), [cs, ns] = support(g, t, up);
+      if (no >= 1 && co === no && cs * 2 < Math.max(ns, 1)) ownerFix.set(g, j);
+    }
+    // 옮긴 머리에 딸린 기호(임시표·점·아티큘레이션)도 같은 오선으로
+    if (ownerFix.size) {
+      const moved = [...ownerFix.keys()];
+      for (const g of maestro) {
+        if (ownerFix.has(g) || HEADS.has(g.code)) continue;
+        const i = staffOf(g.oy); if (i == null) continue; const t = staves[i]; if (t.top - 0.5 <= g.oy && g.oy <= t.bottom + 0.5) continue;
+        const h = moved.find(h => staffOf(h.oy) === i && Math.abs(h.oy - g.oy) < spM * 1.3 && g.x1 > h.x0 - spM * 2.6 && g.x0 < h.x1 + spM * 2.6);
+        if (h) ownerFix.set(g, ownerFix.get(h));
+      }
+    }
+  }
+  const ownerOf = g => ownerFix.has(g) ? ownerFix.get(g) : staffOf(g.oy);
   // 템포 표시 → 바로 아래 단
   const pageMarks = findTempoMarks(glyphs).map(mk => {
   const below = staves.map((s, i) => [i, s.top - mk.y]).filter(([, d]) => d > -5 && d < 90).sort((a, b) => a[1] - b[1]);
@@ -955,7 +1004,7 @@ function pagePrep(pg, layout, pi) {
 
   // 오선별 악보 기호 (staffOf를 오선마다 다시 돌리지 않게)
   let byStaff = null;
-  const sgOf = si => { if (!byStaff) { byStaff = new Map(); for (const g of maestro) { const k = staffOf(g.oy); if (k == null) continue; if (!byStaff.has(k)) byStaff.set(k, []); byStaff.get(k).push(g); } } return byStaff.get(si) || []; };
+  const sgOf = si => { if (!byStaff) { byStaff = new Map(); for (const g of maestro) { const k = ownerOf(g); if (k == null) continue; if (!byStaff.has(k)) byStaff.set(k, []); byStaff.get(k).push(g); } } return byStaff.get(si) || []; };
   const v = { fills, rects, mrRects, flatPolys, tieRects, beamList, curves, thickH, boxes, brackets, maestro, normSize, smallSize, tupletNums, runs, segs, italicNums, sysNums, staffOf, pageMarks, sgOf };
   PAGE_PREP.set(pg, { layout, v });
   return fresh(v);
@@ -1104,8 +1153,11 @@ export function parseScore(pages, opts = {}) {
             const sideOk = c => c[1] < g.oy - 4 ? Math.abs(c[0] - g.x1) <= Math.abs(c[0] - g.x0) : Math.abs(c[0] - g.x0) <= Math.abs(c[0] - g.x1);
             // 단, 제자리 쪽 기둥의 머리 쪽 끝이 반대쪽 기둥보다 이 머리 높이에 더 가깝고 1.2pt 안일 때만 (2도 화음의 비켜 찍은 머리는 그대로)
             const headEnd = c => c[1] < g.oy - 4 ? c[2] : c[1], gap = c => Math.abs(headEnd(c) - g.oy);
+            // 같은 높이의 옆 머리가 그 기둥을 제자리 쪽에 달고 있으면 그 머리의 기둥이다 (같은 음을 촘촘히 되풀이한 16분음표: 머리가 겹쳐 앞 음의 기둥이
+            // 이 머리 왼쪽 끝에 더 가까움 — 아름다운 인생 가야금2 79마디에서 세 음 중 하나가 빠짐)
+            const ownedBySame = c => heads.some(h => h !== g && h.size === g.size && Math.abs(h.oy - g.oy) < g.size * 0.3 && Math.abs(h.ox - g.ox) > 1.5 && (c[1] < h.oy - 4 ? Math.abs(c[0] - h.x1) < 0.6 : Math.abs(c[0] - h.x0) < 0.6));
             const score = c => Math.min(Math.abs(c[0] - g.x0), Math.abs(c[0] - g.x1))
-              + (!sideOk(c) && cand.some(c2 => c2 !== c && sideOk(c2) && gap(c2) < 1.2 && gap(c2) + 0.3 < gap(c)) ? 0.8 : 0);
+              + (!sideOk(c) && cand.some(c2 => c2 !== c && sideOk(c2) && gap(c2) < 1.2 && (gap(c2) + 0.3 < gap(c) || ownedBySame(c))) ? 0.8 : 0);
             let v = forceStem || cand.reduce((b, v) => (score(v) < score(b) ? v : b));
             // 같은 자리에 머리가 두 개(두 성부가 같은 음): 하나는 위 기둥, 하나는 아래 기둥
             const twins = heads.filter(h => Math.abs(h.ox - g.ox) < 0.5 && Math.abs(h.oy - g.oy) < 0.5 && h.size === g.size);
@@ -1149,11 +1201,15 @@ export function parseScore(pages, opts = {}) {
               if (up && tip - 2 <= ry && ry <= tip + 10) beams++;
               if (!up && tip - 10 <= ry && ry <= tip + 2) beams++;
             }
+            // 꼬리: 기둥 끝 가까이의 꼬리 글자. 위 기둥 꼬리와 아래 기둥 꼬리가 함께 걸리면(두 성부의 기둥이 바로 붙어 있음 — 판놀음 장구 60마디:
+            // 옆 음의 아래 기둥 꼬리까지 세어 8분음표를 16분음표로 읽음) 이 기둥 방향의 꼬리만 센다
+            let fOwn = 0, fOther = 0;
             for (const f of sg) {
               const fl = (f.code === FLAG_UP || f.code === FLAG_DN) ? 1 : (f.code === FLAG16_UP || f.code === FLAG16_DN) ? 2 : 0;
               if (fl && Math.abs(f.x0 - v[0]) < 2.5 && Math.abs(f.size - g.size) < 3 &&
-                Math.min(Math.abs(f.y0 - tip), Math.abs(f.y1 - tip), Math.abs(f.oy - tip)) < 8) flags += fl;
+                Math.min(Math.abs(f.y0 - tip), Math.abs(f.y1 - tip), Math.abs(f.oy - tip)) < 8) { if ((f.code === FLAG_UP || f.code === FLAG16_UP) === up) fOwn += fl; else fOther += fl; }
             }
+            flags += fOwn && fOther ? fOwn : fOwn + fOther;
           }
           n.dur = (g.code === HEAD_HALF ? F(1, 2) : F(1, 4)).div(2 ** (beams + flags));
         }
@@ -1983,6 +2039,17 @@ function fixAmbigBeams(m, barLen) {
     const vn = m.notes.filter(n => n.voice === v && !n.grace && !n.chordOf);
     let tot = frSum(vn.map(n => n.dur));
     for (const n of vn.filter(n => n._ambigBeam && !n._ambigDone).sort((a, b) => a.x - b.x)) {
+      if (!tot.gt(barLen)) break;
+      const nd = n.dur.mul(F(1, 2)); tot = tot.sub(n.dur.sub(nd)); n.dur = nd; n._ambigDone = true;
+    }
+  }
+  // 기둥 방향만 바뀐 한 성부(두 '성부' 음이 같은 자리에 없음)는 성부마다 따로 재면 넘치지 않는다 → 모두 이어 붙인 길이로 한 번 더
+  // (같은 음을 되풀이하는 16분·16분·8분 묶음에서 둘째 음을 8분으로 읽어 마디가 5/4가 되던 것 — 7a23410d 82마디)
+  const all = m.notes.filter(n => !n.grace && !n.chordOf && !n.wholeRest);
+  const R = all.filter(n => n.voice === 'R'), L = all.filter(n => n.voice === 'L');
+  if (m.pitched && R.length && L.length && !R.some(a => L.some(b => Math.abs(a.x - b.x) < 2))) {
+    let tot = frSum(all.map(n => n.dur));
+    for (const n of all.filter(n => n._ambigBeam && !n._ambigDone).sort((a, b) => a.x - b.x)) {
       if (!tot.gt(barLen)) break;
       const nd = n.dur.mul(F(1, 2)); tot = tot.sub(n.dur.sub(nd)); n.dur = nd; n._ambigDone = true;
     }
