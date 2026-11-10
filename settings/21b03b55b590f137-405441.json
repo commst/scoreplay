@@ -3,7 +3,7 @@
  "v": 1,
  "title": "달해",
  "file": "달빛항해(Score).pdf",
- "saved": "2026-11-10T22:40:18.147Z",
+ "saved": "2026-11-10T23:02:02.961Z",
  "lastBar": 152,
  "lines": {
   "main:0": {
@@ -162,8 +162,8 @@
    "inst": null,
    "oct": 0,
    "vol": 1,
-   "R": "베이스드럼",
-   "L": "베이스드럼",
+   "R": "북짧게",
+   "L": "북녹음",
    "nong": false
   }
  },
@@ -185,9 +185,25 @@
   {
    "start": 107,
    "unit": "q",
-   "bpm": 72,
+   "bpm": 50,
    "auto": true,
-   "text": "♩=70-73"
+   "text": "♩=70-73",
+   "manual": true
+  },
+  {
+   "start": 116,
+   "unit": "q",
+   "bpm": 50,
+   "text": "",
+   "edited": true,
+   "manual": true
+  },
+  {
+   "start": 118,
+   "unit": "q",
+   "bpm": 72,
+   "text": "",
+   "edited": true
   }
  ],
  "tempoDet": [
