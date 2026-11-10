@@ -70,6 +70,7 @@ button { cursor: pointer; }
 .tchg { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
 .tchg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 .tchg-head b { font-size: 13.5px; }
+.ph-row { justify-content: space-between; }
 .tchg .auto { display: block; font-size: 11px; color: var(--muted); }
 .tchg tr.sum td { padding: 0 4px 8px; font-size: 12px; color: var(--muted); }
 .tchg tr.sum b { color: var(--ink); font-weight: 600; }
@@ -1132,12 +1133,11 @@ body.all-panes { padding-bottom: 0; }
       </div>
       <div class="pane2" id="pane-tempo" role="tabpanel" data-pane="tempo" aria-labelledby="tab-tempo">
       <section class="panel" aria-labelledby="tTempo">
-        <h2 class="step-h" id="tTempo"><span class="sn">3</span>빠르기</h2>
+        <div class="row ph-row"><h2 class="step-h" id="tTempo"><span class="sn">3</span>빠르기</h2><button class="btn" id="addRow" type="button">구간 추가</button></div>
         <table class="tempo">
           <thead><tr><th style="width:22%">시작 마디</th><th>끝</th><th style="width:26%">기준</th><th style="width:22%">BPM</th><th><span class="sr-only">지우기</span></th></tr></thead>
           <tbody id="tempoBody"></tbody>
         </table>
-        <div class="row"><button class="btn" id="addRow" type="button">구간 추가</button></div>
         <div class="two" id="ritRow" hidden>
           <div class="field"><label for="ritF">rit. 끝 빠르기 (%)</label><input type="number" id="ritF" min="30" max="100" step="5" value="80" class="num"></div>
           <div class="field"><label for="accF">accel. 끝 빠르기 (%)</label><input type="number" id="accF" min="100" max="200" step="5" value="120" class="num"></div>
@@ -1541,7 +1541,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 10일</h3>
-    <h4>기능 업데이트 <small>5</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>6</small></h4><ul class="hlist">
+      <li><details><summary>[구간 추가] 단추를 '빠르기' 제목 옆으로</summary><p>[빠르기] 칸의 [구간 추가] 단추가 빠르기 표 아래에 있어 구간이 많으면 찾기 어려웠습니다. 이제 '빠르기' 제목 오른쪽에 있어 표 길이와 관계없이 바로 보입니다(아래 'rit. 추가'와 같은 배치).</p></details></li>
       <li><details><summary>MusicXML 대조 결과 보는 법·고치는 법 설명, 사용설명서 9장</summary><p>[저장] 칸의 'MusicXML 대조 결과 보는 법과 고치는 법'을 펼치면, 저장 뒤 뜨는 빨간 마디 번호와 악보 위 동그라미의 뜻, 음 높이·길이가 다를 때 ✎로 고치고 다시 저장하는 법, 앱에서 못 고치는 경우(빠진 음 등)를 볼 수 있습니다. 사용설명서에도 9장 'MusicXML로 내보내 악보 프로그램에서 고치기'를 새로 넣었습니다.</p></details></li>
       <li><details><summary>윈도에서 'PDF로 인쇄'한 Encore 악보 읽기 (소나기 새 판)</summary><p>Encore 악보를 윈도의 'Microsoft PDF로 인쇄'로 만들면 악보 글꼴 이름이 감춰져, 오선을 하나도 찾지 못하고 '스캔 PDF'로 처리됐습니다. 이제 오선·마디선·기둥 기호 모양으로 Encore 글꼴을 알아봅니다. 이 방식의 PDF에서 붙임줄을 여러 마디 쉼표로 잘못 봐 마디가 비던 것, 채운 도형으로 그린 여러 마디 쉼표, 총보 큰보표(가야금·신디)의 토막 마디선, 쉼표뿐인 쪽, 두 겹 빔도 읽습니다. 소나기 총보 22줄과 파트보가 모두 355마디로 인쇄된 마디 번호와 맞습니다(아쟁 파트보는 사진으로 찍은 PDF라 읽을 수 없음).</p></details></li>
       <li><details><summary>작은 글자로 찍은 셈여림(ff·mp 등)도 읽기</summary><p>시벨리우스 악보처럼 셈여림을 음표보다 작은 글자로 찍은 악보에서 ff·p·mp 등을 읽지 못해, 재생에 셈여림이 반영되지 않고 MusicXML에도 빠졌습니다. 이제 읽습니다(Frontier 총보 MusicXML 셈여림 27 → 214개, 바르도 0 → 1,095개). poco·cresc. 같은 낱말 속 글자는 셈여림으로 보지 않습니다.</p></details></li>
