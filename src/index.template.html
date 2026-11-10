@@ -1301,7 +1301,7 @@ body.all-panes { padding-bottom: 0; }
           <summary>설명 보기</summary>
           <dl>
             <dt>MIDI 저장 · MusicXML 저장</dt>
-            <dd>읽은 악보를 다른 프로그램에서 쓸 수 있는 파일로 내보냅니다(켠 줄만). <b>MIDI</b>는 연주 순서(도돌이표대로 반복 설정)대로 펼친 전곡을 줄마다 한 트랙으로, 타악은 드럼 채널로 담습니다. 빠르기 표·박자표는 들어가고 rit.·accel.·연습 속도는 넣지 않습니다. <b>MusicXML</b>은 악보에 적힌 순서대로 줄마다 한 파트(윗성부·아랫성부는 1·2성부, 도돌이 세로줄 표시 포함)로 담아 뮤즈스코어·도리코·시벨리우스·피날레에서 열어 고칠 수 있습니다. 악보에서 읽은 조표·박자표·음자리표, 적힌 음 이름(E♭·C♭ 등), 붙임줄·이음줄·셈여림·빠르기·연습 번호·늘임표·1·2번 괄호, 원래 쪽 크기와 줄·쪽 바꿈까지 옮겨 원래 악보와 거의 같은 모양으로 열립니다. 옥타브·조옮김 설정은 들리는 높이대로 반영됩니다. 저장하면 내보낸 음을 원래 PDF와 자동으로 대조한 결과가 뜹니다([저장] 칸의 'MusicXML 대조 결과 보는 법과 고치는 법').</dd>
+            <dd>읽은 악보를 다른 프로그램에서 쓸 수 있는 파일로 내보냅니다(켠 줄만). <b>MIDI</b>는 연주 순서(도돌이표대로 반복 설정)대로 펼친 전곡을 줄마다 한 트랙으로, 타악은 드럼 채널로 담습니다. 빠르기 표·박자표는 들어가고 rit.·accel.·연습 속도는 넣지 않습니다. <b>MusicXML</b>은 악보에 적힌 순서대로 줄마다 한 파트(윗성부·아랫성부는 1·2성부, 도돌이 세로줄 표시 포함)로 담아 뮤즈스코어·도리코·시벨리우스·피날레에서 열어 고칠 수 있습니다. 악보에서 읽은 조표·박자표·음자리표, 적힌 음 이름(E♭·C♭ 등), 붙임줄·이음줄·셈여림·빠르기·연습 번호·늘임표·1·2번 괄호, 원래 쪽 크기와 줄·쪽 바꿈까지 옮겨 원래 악보와 거의 같은 모양으로 열립니다. 총보에서 몇 악기만 켜고(한 단 줄 수의 절반 이하) 내보내면 파트보처럼 A4·보통 크기 오선으로 담고 줄·쪽 나눔은 악보 프로그램에 맡깁니다. 옥타브·조옮김 설정은 들리는 높이대로 반영됩니다. 저장하면 내보낸 음을 원래 PDF와 자동으로 대조한 결과가 뜹니다([저장] 칸의 'MusicXML 대조 결과 보는 법과 고치는 법').</dd>
             <dt>재생 · 진행 막대</dt>
             <dd>재생 버튼으로 시작하고 다시 누르면 멈춥니다. 진행 막대를 누르면 그 위치로 건너뜁니다. 지금 연주 중인 마디는 마디 지도에서 노란색으로 표시됩니다.</dd>
             <dt>마디 ○부터 ○까지</dt>
@@ -1549,7 +1549,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>MusicXML 확인을 악보 PDF의 음표 머리 기준으로</summary><p>저장 뒤 확인과 겹쳐 보기가 이제 인식 결과가 아니라 재생할 때 보는 악보 화면(PDF)의 음표 머리와 직접 맞춰 봅니다. 내보낸 음마다 악보 위 자리를 계산해 PDF 머리에 맞는 음이 없는 곳, 남는 음, 음 높이가 다른 음을 마디마다 알려 주고, 겹쳐 보기에서 안 맞은 음은 빨간 동그라미, 짝이 없는 PDF 머리는 빨간 네모로 보여 줍니다. 그래서 인식이 틀린 곳(예: Frontier 대금·해금 15마디)도 찾아집니다. 타악 줄과 옥타브·조옮김을 바꾼 줄은 시각만 맞춥니다. 음 이름도 악보에 적힌 대로 C♭·E♯를 지킵니다(미락흘 소금 253마디).</p></details></li>
       <li><details><summary>MusicXML 저장 뒤 확인 목록, 악보 위에 겹쳐 보기</summary><p>MusicXML을 저장하면 PDF와 다르게 읽었을 수 있는 마디를 줄별로 보여 줍니다(빨간 번호는 내보낸 파일이 인식 결과와도 다른 마디). 번호를 누르면 악보로 보기에서 그 마디로 가서, 내보낸 음을 악보 위에 파란 동그라미로 겹쳐 그립니다. 동그라미가 음표 머리에서 벗어난 곳을 확인해 ✎ 음 고치기로 바로잡은 뒤 다시 저장하면 됩니다. 악보로 보기의 [MusicXML 겹쳐 보기]로 언제든 켜고 끌 수 있습니다.</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>6건</small></summary><ul class="hlist bug">
+      <li><details><summary>총보에서 한 악기만 내보낸 MusicXML이 빈 악보처럼 보이던 문제</summary><p>총보에서 해금만 켜고 MusicXML로 내보내면 원래 총보의 쪽 크기·작은 오선·쪽마다 한 단을 그대로 써서, 뮤즈스코어에서 쪽마다 아주 작은 오선 한 줄만 보였습니다. 이제 켠 악기가 총보 한 단의 절반 이하이면 파트보처럼 A4 쪽에 보통 크기 오선으로 담고, 줄·쪽 나눔은 악보 프로그램이 정합니다(Frontier 해금 27쪽 → 3쪽). 모든 악기를 켠 총보와 파트보는 예전과 같습니다.</p></details></li>
       <li><details><summary>MusicXML 겹쳐 보기가 바뀐 설정을 따라가지 않던 문제</summary><p>겹쳐 보기를 켜 둔 채 악기를 켜고 끄거나 옥타브를 바꾸거나 음을 고치면 예전 동그라미가 그대로 남던 것을 고쳤습니다. 이제 바뀔 때마다 다시 그립니다.</p></details></li>
       <li><details><summary>소나기 총보의 빠르기 숫자(♩.=120·♩.=60)를 못 읽던 문제</summary><p>음표와 점 사이에 빈칸이 들어간 빠르기 표시를 읽지 못해 43·131·188마디 빠르기 칸이 '?'로 남던 것을 고쳤습니다. 파트보에는 이 빠르기가 인쇄되어 있지 않으니 파트보만 올렸을 때는 빠르기 표에 직접 넣어 주세요.</p></details></li>
       <li><details><summary>붙임줄로 이어지는 음을 다시 치거나 쉬는 마디로 읽던 문제</summary><p>앞 마디에 제자리표가 붙은 음이 붙임줄로 다음 마디에 이어질 때 조표대로 읽어 다시 치던 것(바르도 대금 23마디), 일부 PDF가 긴 붙임줄을 반쪽씩 그려 붙임줄을 못 읽거나 온음표 마디를 쉬는 마디로 읽던 것(판놀음II 태평소 41마디, 소나기 총보 태평소, 방황 피리 178마디 뒤 마디 번호 밀림 등)을 고쳤습니다.</p></details></li>
@@ -4311,15 +4312,20 @@ function buildMusicXml() {
   // 원래 악보의 쪽 크기·오선 크기·오선 사이를 그대로 (피날레·뮤즈스코어가 한 단에 같은 마디 수를 넣고 쪽을 같게 나누도록)
   const sc0 = state.score && state.score.pages ? state.score : null;
   const pg0 = sc0 && (sc0.pages.find((p, i) => sc0.layouts && sc0.layouts[i] && sc0.layouts[i].staves && sc0.layouts[i].staves.length) || sc0.pages[0]);
-  const pgW = pg0 && pg0.width > 100 ? pg0.width : 595.3, pgH = pg0 && pg0.height > 100 ? pg0.height : 841.9;
   const med = a => { const v = a.filter(x => x > 0).sort((p, q) => p - q); return v.length ? v[v.length >> 1] : null; };
-  const LAY = (sc0 && sc0.layouts) || [];
+  const LAY0 = (sc0 && sc0.layouts) || [];
+  // 총보에서 몇 줄만 켜고 내보내면(원래 한 단 오선 수의 절반 이하) 원래 쪽 모양을 쓰지 않는다: 22줄 총보의 쪽 크기·작은 오선·쪽마다 한 단을
+  // 그대로 쓰면 뮤즈스코어에서 쪽마다 아주 작은 오선 한 줄만 보여 빈 악보처럼 보임 → 파트보처럼 A4·보통 오선 크기, 줄·쪽 나눔과 마디 폭은 악보 프로그램에 맡김
+  const origN = med(LAY0.flatMap(L => (L.systems || []).map(g => g.length))) || 0;
+  const extract = origN >= 4 && lines.length * 2 <= origN;
+  const LAY = extract ? [] : LAY0;
+  const pgW = !extract && pg0 && pg0.width > 100 ? pg0.width : 595.3, pgH = !extract && pg0 && pg0.height > 100 ? pg0.height : 841.9;
   const stH = med(LAY.flatMap(L => (L.staves || []).filter(st => !st.oneLine).map(st => st.bottom - st.top))) || 24;   // 오선 높이(pt)
   const stGap = med(LAY.flatMap(L => (L.systems || []).flatMap(g => g.slice(1).map((si, k) => { const a = L.staves[g[k]], b = L.staves[si]; return a && b ? b.top - a.bottom : 0; })))) || stH * 1.6;
   const sysGap = med(LAY.flatMap(L => (L.systems || []).slice(1).map((g, k) => { const a = L.staves[L.systems[k][L.systems[k].length - 1]], b = L.staves[g[0]]; return a && b ? b.top - a.bottom : 0; }))) || stH * 3;
   const firstTop = med(LAY.map(L => L.staves && L.staves.length ? Math.min(...L.staves.map(st => st.top)) : 0)) || 72;
   // 오선은 원래보다 20% 작게: 뮤즈스코어·피날레는 원래 악보(피날레 PDF)보다 음표 간격을 넓게 잡아, 같은 크기면 한 단에 넣은 마디가 넘쳐 다음 단·쪽으로 밀린다
-  const KS = 0.8, stU = stH * KS;   // 80%: 샘플 80곡을 뮤즈스코어로 열어 원래 쪽 수와 가장 가까웠던 값 (90% 39곡, 85% 47곡, 80% 54곡이 10% 안)
+  const KS = 0.8, stU = extract ? 19.8 : stH * KS;   // 따로 뽑을 때는 뮤즈스코어 기본 오선 크기(7mm)   // 80%: 샘플 80곡을 뮤즈스코어로 열어 원래 쪽 수와 가장 가까웠던 값 (90% 39곡, 85% 47곡, 80% 54곡이 10% 안)
   const T = pt => Math.round(pt / stU * 40 * 10) / 10;   // pt → tenths (오선 높이 = 40)
   // 여백: 원래 오선이 시작·끝나는 자리 (왼쪽 악기 이름 자리는 단 여백으로 — 이름이 원래처럼 오선 왼쪽에)
   const stX0 = med(LAY.flatMap(L => (L.staves || []).map(st => st.x0))) || 0.1 * pgW, stX1 = med(LAY.flatMap(L => (L.staves || []).map(st => st.x1))) || 0.95 * pgW;
@@ -4676,9 +4682,9 @@ function buildMusicXml() {
       const L = Math.round(b.barLen.v * W);
       // 못갖춘마디: 첫 마디가 박자표보다 짧으면 박자표는 그대로 두고 implicit
       const full = Math.round(b.timesig[0] / b.timesig[1] * W), pickup = bi === 0 && L < full;
-      const mw = geo && geo[bi] && geo[bi].x1 > geo[bi].x0 ? T(geo[bi].x1 - geo[bi].x0) : 0;   // 원래 마디 폭 (피날레가 레이아웃을 그대로 쓰게)
+      const mw = !extract && geo && geo[bi] && geo[bi].x1 > geo[bi].x0 ? T(geo[bi].x1 - geo[bi].x0) : 0;   // 원래 마디 폭 (피날레가 레이아웃을 그대로 쓰게)
       let m = `<measure number="${esc(b.number)}"${pickup ? ' implicit="yes"' : ''}${mw > 0 ? ` width="${mw}"` : ''}>\n`;
-      if (geo && bi > 0 && geo[bi] && geo[bi - 1]) { if (geo[bi].page !== geo[bi - 1].page) m += '<print new-page="yes"/>\n'; else if (geo[bi].staff !== geo[bi - 1].staff) m += '<print new-system="yes"/>\n'; }
+      if (!extract && geo && bi > 0 && geo[bi] && geo[bi - 1]) { if (geo[bi].page !== geo[bi - 1].page) m += '<print new-page="yes"/>\n'; else if (geo[bi].staff !== geo[bi - 1].staff) m += '<print new-system="yes"/>\n'; }
       const en = endings[bi];
       if (b.repeatStart || en) m += `<barline location="left">${b.repeatStart ? '<bar-style>heavy-light</bar-style>' : ''}${en ? `<ending number="${esc(en.num)}" type="start"/>` : ''}${b.repeatStart ? '<repeat direction="forward"/>' : ''}</barline>\n`;
       // 박자표는 마디 길이로 (적힌 박자표와 실제 마디 길이가 다른 마디: 박자 바뀌기 직전 등). 박자표와 길이가 같으면 적힌 그대로
