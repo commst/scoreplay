@@ -9,11 +9,16 @@ const states = {
   tabSave: { 'hapju.tab': 'save' },
   tabPlayScore: { 'hapju.tab': 'play', 'hapju-view': JSON.stringify({ mode: 'score' }) },
   prefsOff: { 'hapju-prefs': JSON.stringify({ autoSave: false, autoLoad: false }) },
+  broken: { 'hapju-view': '{bad json', 'hapju.tab': 'nope', 'hapju-prefs': '[' },
 };
+// 탭 × 보기 조합 전부
+for (const tab of ['inst', 'tempo', 'play', 'save']) for (const mode of ['map', 'score']) states[`${tab}-${mode}`] = { 'hapju.tab': tab, 'hapju-view': JSON.stringify({ mode, zoom: 2, follow: mode === 'map' }) };
+const VPS = { desktop: { width: 1280, height: 800 }, phone: { width: 390, height: 844, isMobile: true, hasTouch: true }, tabletLand: { width: 1180, height: 820, isMobile: true, hasTouch: true } };
 (async () => {
   const b = await chromium.launch(); let bad = 0;
-  for (const [name, ls] of Object.entries(states)) {
-    const ctx = await b.newContext(); const p = await ctx.newPage(); const errs = [];
+  for (const [vpn, vp] of Object.entries(VPS)) for (const [name0, ls] of Object.entries(states)) {
+    const name = vpn + ' ' + name0;
+    const ctx = await b.newContext({ viewport: { width: vp.width, height: vp.height }, isMobile: !!vp.isMobile, hasTouch: !!vp.hasTouch }); const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', e => errs.push(e.message));
     await p.route('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/**', r => { const f = r.request().url().split('pdfjs-dist@4.10.38/')[1].replace('.min.mjs', '.mjs'); r.fulfill({ path: '/home/claude/web/node_modules/pdfjs-dist/' + f, contentType: 'text/javascript' }); });
     await p.route(/^https:\/\/(?!cdn\.jsdelivr).*/, r => r.abort());
@@ -23,6 +28,8 @@ const states = {
     const shown = await p.evaluate(() => { const m = document.getElementById('bootMsg'); return m && !m.hidden ? document.getElementById('bootText').textContent.slice(0, 120) : ''; });
     if (!ok || shown || errs.length) bad++;
     console.log((ok && !shown && !errs.length ? 'ok  ' : 'FAIL') + ' ' + name + (errs.length ? ' · ' + errs.join(' | ').slice(0, 200) : '') + (shown ? ' · 안내: ' + shown : ''));
+    // 예시 장단 재생 한 번(시작 직후 단추가 동작하는지)
+    if (ok) { try { await p.evaluate(() => document.getElementById('playBtn') && document.getElementById('playBtn').click()); await p.waitForTimeout(400); } catch (e) {} if (errs.length) { bad++; console.log('FAIL ' + name + ' 재생 후 오류 · ' + errs.join(' | ').slice(0, 200)); } }
     await ctx.close();
   }
   await b.close(); process.exit(bad ? 1 : 0);

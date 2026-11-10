@@ -1,6 +1,6 @@
 # 합주연습기 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-10, CHANGELOG 114번까지)
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-10, CHANGELOG 116번까지)
 
 ## 1. 작업 규칙 (사용자 요청)
 
@@ -28,6 +28,7 @@
 - **샘플 악보는 비공개 저장소 commst/scoreplay_sample(밑줄)에 있음** — 새 대화(= 새 작업 공간)에서는 사용자에게 zip을 다시 받지 말고: add_repo commst/scoreplay_sample → `git clone --depth 1 https://github.com/commst/scoreplay_sample /home/claude/scoreplay_sample` → `mkdir -p /home/claude/samples && cp /home/claude/scoreplay_sample/pdf/*.pdf /home/claude/samples/`. 611개(약 300MB), manifest.json = md5 → 받은 zip·zip 안 경로. 새 악보를 받으면 ingest.py로 푼 뒤 그 저장소 pdf/와 manifest.json에도 더해 푸시(저작권 — 공개 저장소 scoreplay에는 PDF를 넣지 않음)
 - **작업 공간이 새로 만들어지면**(샘플·도구가 모두 사라짐): 저장소 다시 받기 → `npm install` → `mkdir -p /home/claude/web && ln -sfn /home/claude/scoreplay/node_modules /home/claude/web/node_modules` → `mkdir -p /home/claude/web/deploy-hapju && ln -sf /home/claude/scoreplay/index.html /home/claude/web/deploy-hapju/index.html`(fuzz2·pwxml 기본 경로). Playwright는 `NODE_PATH=/opt/npm-tools/node_modules`. MusicXML XSD는 `https://raw.githubusercontent.com/w3c/musicxml/v4.0/schema/{musicxml,xml,xlink}.xsd` → `/home/claude/work/xsd/`. 뮤즈스코어는 `https://github.com/musescore/MuseScore/releases/download/v4.4.4/MuseScore-Studio-4.4.4.243461245-x86_64.AppImage` 받아 `--appimage-extract`
 - **작업 공간 사양이 작음(메모리 7GB·코어 2개)**: regall.sh(8개 동시)는 메모리 부족 → `bash test/cmp/reg2.sh <이전 해석기 폴더> test/regrn.mjs`(2개씩, 약 10분). 회귀가 도는 동안 src/score-parser.js를 고치면 결과가 섞이므로 끝날 때까지 손대지 말 것(git stash도 금지)
+- **시험 도구용 샘플 별칭**: 샘플을 받은 뒤 `bash test/samples-alias.sh`(옛 접두어 b3a31a97·44e95fb3 → 지금 샘플). 회귀 목록은 `ls /home/claude/samples | grep -v ALIAS`로. axe는 `/home/claude/work/axetmp`에 `npm i axe-core@4.10`
 - 처음 돌릴 때 만들 폴더: `mkdir -p xmlout`(pwxml), `mkdir -p /home/claude/mscore/all`(msall.sh)
 - 작업 공간에서 github.io·jsdelivr CDN에는 접속이 막혀 배포 페이지를 직접 열 수 없음 → 배포본과 같은 index.html을 Playwright로(pdf.js는 node_modules로 바꿔 끼움) 시험
 - 샘플은 사용자에게 **zip으로** 받는다(PDF를 그대로 첨부하면 대화에 펼쳐져 토큰을 많이 씀). 맥에서 만든 zip은 파일 이름이 `#Uc18c` 꼴로 풀리므로 `#U(4자리)`를 글자로 바꿔 이름 붙임
@@ -141,7 +142,7 @@
 4. 세로 맞춤을 건드렸으면 `test/alignregr.mjs` (alt=0, lost 없음, broken=0)
 
 앱·MusicXML:
-5. 빌드 후 **`node test/pwboot.cjs index.html`(저장된 설정으로 시작되는지 — 113번)**, `node test/pwv2.cjs <html> desktop|tablet|phone`, `node test/fuzz2.cjs <씨앗> 50 [mobile]`, `node test/pwedit.cjs <html>`, 화면 관련이면 pwtabland·pwseek·pwspeed·pwpause·pwaxe·pwcontrast
+5. 빌드 후 **`node test/tdzcheck.cjs index.html`(선언 전 접근 후보)**, **`node test/pwboot.cjs index.html`(저장된 설정으로 시작되는지 — 113번)**, `node test/pwv2.cjs <html> desktop|tablet|phone`, `node test/fuzz2.cjs <씨앗> 50 [mobile]`, `node test/pwedit.cjs <html>`, 화면 관련이면 pwtabland·pwseek·pwspeed·pwpause·pwaxe·pwcontrast
 6. MusicXML: `node test/pwxml.cjs <접두어…>`(앱에서 모든 줄 켜고 내보내기 → test/xmlout/), `python3 test/xsdcheck.py xmlout/*.musicxml`(전부 VALID), `python3 test/xmlcheck.py <접두어…>`(원래 음 대비 빠짐·더함), `python3 test/integrity.py …`(붙임줄·이음줄·잇단 짝 0 오류), `bash test/msall.sh <절대경로…>`(뮤즈스코어로 열기 rc=0, 쪽 수)
 7. 이전 판과 견줄 때: `HTML=<이전 index.html> node test/pwxml.cjs …`
 
@@ -175,4 +176,5 @@
 - **111·112번(11-10)**: 소나기 새 판(윈도 인쇄 Encore) 읽기, 아래 기둥 화음의 아랫음 성부 갈림 고침. 남은 것: 바르도 대금 23마디 첫 화음으로 들어오는 붙임줄, 판놀음II 태평소 41마디 붙임줄 온음표, 소나기 타악기 MusicXML이 뮤즈스코어에서 8 → 15쪽
 - **이어 할 일(11-10 사용자 요청 '아랫성부 표기 누락·쉬는 마디·악상기호')**: ① 아랫성부 — **112번에서 고침(아래 내용은 기록)** — 한 기둥(아래로 향한) 화음의 아랫머리를 따로 성부 R로 갈라 읽는 문제. 예: Frontier 총보 9203ad49 대금(줄 1)·해금(줄 16) 15·19·47·51마디, Piano 윗줄 19마디: 아랫음 A♭을 쉼표 자리(0.625)에 놓고 셋잇단도 못 붙임 → MusicXML 성부1(위 기둥)=아랫음, 성부2=윗음으로 뒤바뀜. 해석기 makeNote 기둥 고르기·성부 나누기 쪽을 볼 것, 고친 뒤 regrn 전체 회귀. 확인 창(저장 뒤 확인)의 'PDF 머리에 맞는 음 없음/음 높이 다름' 마디가 이런 곳의 목록이 됨 ② 쉬는 마디 — MusicXML·뮤즈스코어에서는 정상, 사용자에게 곡·마디를 물어 볼 것 ③ 악상기호 — 셈여림은 110번에서 고침, 나머지(아티큘레이션·글자 지시)는 MusicXML에 들어감(Frontier: staccato 801·accent 768·slur 704·tenuto 97·words 64)
 - **113번(11-10)**: '악보로 보기'를 저장해 두면 시작이 멈추던 것(`svOverData` 선언 전 접근) 고침. 시작할 때 실행되는 코드가 쓰는 전역 `let`/`const`는 반드시 그 앞에 선언할 것(선언 전 접근 = 앱 전체 멈춤). 화면을 고친 뒤에는 `node test/pwboot.cjs index.html`(저장된 설정 여러 가지로 시작)을 꼭 돌릴 것. 114번: 바르도 대금 23마디 붙임줄 임시표·판놀음II 태평소 41마디(반쪽씩 그린 붙임줄 채움을 여러 마디 쉼표로 읽음) 고침. 남은 것: 판놀음II 태평소 37마디(두 성부 같은 음 온음표를 비켜 적음 → 붙임줄 이음으로 읽어 2/1)
+- 116번 점검에서 남긴 것(이전부터): 바르도 총보 대금 300마디 1/32 길게 읽음 → 301마디 붙임줄 음이 MusicXML에서 빠짐, 바르도 해금 42마디 셋잇단 16분, pwrange2는 84번 전 화면용 옛 시험
 - 앱의 기준 줄(master)은 경고가 가장 적은 줄 → 경고 수가 바뀌면 기준 줄이 바뀔 수 있음(103번에서 월광 8·16마디 MusicXML 박자가 바뀐 원인)

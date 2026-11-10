@@ -13,7 +13,7 @@ const pdf = '/home/claude/samples/' + fs.readdirSync('/home/claude/samples').fin
     await page.route('https://fonts.googleapis.com/**', r => r.fulfill({ body: '', contentType: 'text/css' }));
     await page.goto('file://' + FILE + '#allpanes');
     await page.setInputFiles('#pdfInput', pdf);
-    await page.waitForSelector('.lcard', { timeout: 120000 }); await page.waitForTimeout(800);
+    await page.waitForFunction(() => document.querySelectorAll('.lcard').length > 1, null, { timeout: 120000 }); await page.waitForTimeout(800);   // 예시 장단 카드 하나만 있을 때는 아직 읽는 중
     const names = await page.$$eval('.lcard .lname', e => e.map(x => x.textContent));
     const i = names.findIndex(n => /^대금/.test(n)); const b = page.locator('.lcard').nth(i).locator('.seg button').first();
     if (await b.getAttribute('aria-pressed') !== 'true') { await b.click(); await page.waitForTimeout(500); }
