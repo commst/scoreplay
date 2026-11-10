@@ -103,6 +103,19 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   ok((await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).includes('37') && /새 공유 설정/.test(await p.textContent('#ghState')), name + ' 로컬 설정이 있으면 덮지 않고 알림');
   await tab('save'); await p.click('#ghLoad'); await p.waitForTimeout(1500);
   { const rws = await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value)); ok(!rws.includes('37'), name + ' [공유 설정 불러오기]로 받음: ' + rws.join(',') + ' / ' + await p.textContent('#ghState')); }
+  // --- 같은 곡의 다른 파일(지문이 다름): 목록(index.json)에서 제목·파일 이름으로 찾아 불러오기
+  { const idxPath = 'settings/index.json'; ok(!!store[idxPath] && /9203ad49|pick/i.test(Buffer.from(store[idxPath], 'base64').toString('utf8')) || !!store[idxPath], name + ' 저장하면 목록(index.json)에 적힘');
+    const idx = JSON.parse(Buffer.from(store[idxPath], 'base64').toString('utf8')); const k0 = Object.keys(idx)[0];
+    store['settings/other-file-1.json'] = store[path]; const idx2 = { 'other-file-1': idx[k0] }; store[idxPath] = Buffer.from(JSON.stringify(idx2)).toString('base64'); delete store[path];
+    await p.evaluate(() => localStorage.clear()); await open(); await p.waitForTimeout(1500);
+    ok(!(await p.$eval('#ghLoad', e => e.disabled)) && /같은 곡의 다른 파일/.test(await p.textContent('#ghState')), name + ' 지문이 달라도 같은 파일 이름의 설정을 찾음: ' + (await p.textContent('#ghState')).slice(0, 70));
+    await tab('save'); await p.click('#ghLoad'); await p.waitForTimeout(1500);
+    ok(/불러왔습니다/.test(await p.textContent('#ghState')), name + ' 다른 파일의 설정 불러오기: ' + (await p.textContent('#ghState')).slice(0, 60)); }
+  // --- 토큰 지우기: 물어보고 지움
+  await p.evaluate(() => { localStorage.setItem('hapju-gh-token', 'X'); document.getElementById('ghTokenBox').open = true; }); dlg.length = 0;
+  await p.$eval('#ghTokenClear', e => e.click()); await p.waitForTimeout(300);
+  ok(dlg.some(m => /지울까요/.test(m)) && !(await p.evaluate(() => localStorage.getItem('hapju-gh-token'))), name + ' 토큰 지우기 전에 물음');
+  ok(await p.evaluate(() => { const b = document.getElementById('ghTokenClear'), ol = document.querySelector('.ghhow'); return !!(ol.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) && getComputedStyle(b).color !== getComputedStyle(document.getElementById('setClear')).color; }), name + ' 토큰 지우기 단추가 설명 아래·붉은색');
   ok(errs.length === 0, name + ' 페이지 오류 0 ' + errs.slice(0, 2).join(' | '));
   await ctx.close(); }
  await b.close(); console.log(fails ? `FAILED ${fails}` : 'ALL OK'); })();

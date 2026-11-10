@@ -84,6 +84,9 @@ button { cursor: pointer; }
 .ghtoken input { flex: 1; min-width: 160px; }
 .ghhow { margin: 8px 0 0; padding-left: 20px; font-size: 12.5px; line-height: 1.6; color: var(--muted, inherit); }
 .ghhow code { font-size: 12px; }
+.ghclear { margin-top: 10px; justify-content: flex-end; }
+.x.danger { color: #c0392b; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .x.danger { color: #ff8a7a; } }
 .ph-btns { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .ph-btns .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); }
 .pick-hint { margin: -2px 0 8px; }
@@ -1472,7 +1475,6 @@ body.all-panes { padding-bottom: 0; }
             <label class="sr-only" for="ghToken">GitHub 저장 토큰</label>
             <input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_… 붙여 넣기">
             <button class="btn" id="ghTokenSave" type="button">이 기기에 저장</button>
-            <button class="x" id="ghTokenClear" type="button">토큰 지우기</button>
           </div>
           <ol class="ghhow">
             <li>GitHub에 저장소 주인 계정으로 로그인하고, 오른쪽 위 프로필 사진 → <b>Settings</b> → 맨 아래 <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
@@ -1482,6 +1484,7 @@ body.all-panes { padding-bottom: 0; }
             <li><b>Generate token</b>을 누르면 나오는 <code>github_pat_…</code> 글자를 복사해 위 칸에 붙여 넣고 [이 기기에 저장]. 토큰은 이 기기의 이 브라우저에만 보관되고, 저장소에는 올라가지 않습니다.</li>
             <li>휴대폰·태블릿·노트북에서 모두 저장하려면 기기마다 한 번씩 같은 토큰을 넣습니다(비밀번호 관리 앱에 적어 두면 편합니다). 불러오기만 하는 기기에는 필요 없습니다.</li>
           </ol>
+          <div class="set-row ghclear"><button class="x danger" id="ghTokenClear" type="button">이 기기에서 토큰 지우기</button></div>
         </details>
       </div>
     </section>
@@ -7987,33 +7990,46 @@ function ghSeen(key, v) { try { if (v === undefined) return localStorage.getItem
 const b64utf8 = str => { const u = new TextEncoder().encode(str); let b = ''; for (let i = 0; i < u.length; i += 0x8000) b += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(b); };
 const utf8b64 = b64 => { const b = atob(b64.replace(/\s/g, '')), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new TextDecoder().decode(u); };
 // 저장소에서 이 악보의 묶음을 받는다. 없으면 null, 받지 못하면 오류
-async function ghFetch(key) {
+async function ghFetch(key, name) {
+  const path = name ? `${GH_DIR}/${name}.json` : ghPath(key);
   const tok = ghToken();
   if (tok) {   // 토큰이 있으면 API로(막 올린 것도 바로 보임)
-    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${ghPath(key)}?ref=${GH_BRANCH}`, { headers: { Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`, { headers: { Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
     if (r.status === 404) return null;
     if (r.status === 401 || r.status === 403) throw new Error('저장 토큰이 맞지 않거나 기간이 끝났습니다. 토큰을 새로 만들어 넣어 주세요.');
     if (!r.ok) throw new Error('저장소에서 받지 못했습니다 (' + r.status + ')');
     const j = await r.json(); return { S: JSON.parse(utf8b64(j.content)), sha: j.sha };
   }
-  const r = await fetch(`https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${ghPath(key)}?t=${Date.now()}`, { cache: 'no-store' });
+  const r = await fetch(`https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${path}?t=${Date.now()}`, { cache: 'no-store' });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error('저장소에서 받지 못했습니다 (' + r.status + ')');
   return { S: await r.json(), sha: null };
 }
-let ghBusy = false;
+let ghBusy = false, ghAlt = null;   // ghAlt: 지문은 다르지만 제목·파일 이름이 같은 악보로 올린 공유 설정(이름)
+const ghNorm = t => String(t || '').replace(/\.(pdf|musicxml|mxl|xml)$/i, '').replace(/[\s_()\[\]\-.]+/g, '').toLowerCase();
+const ghWho = () => { const sc = state.score || {}; return (sc.fileName || sc.title || '이 악보'); };
+// 올린 설정 목록(settings/index.json: 이름 → 제목·파일 이름·시각). 같은 곡인데 PDF 파일이 조금 달라 지문이 다른 경우를 찾는 데 쓴다
+async function ghIndex() {
+  try { const r = await fetch(`https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${GH_DIR}/index.json?t=${Date.now()}`, { cache: 'no-store' }); return r.ok ? await r.json() : {}; } catch (e) { return {}; }
+}
+async function ghFindAlt(key) {
+  const idx = await ghIndex(), sc = state.score || {}, mine = [ghNorm(sc.fileName), ghNorm(sc.title)].filter(v => v.length >= 2);
+  let best = null;
+  for (const [name, v] of Object.entries(idx)) { if (name === ghName(key) || !v) continue; if ([ghNorm(v.file), ghNorm(v.title)].some(x => x.length >= 2 && mine.includes(x)) && (!best || String(v.saved) > String(best.saved))) best = { name, ...v }; }
+  return best;
+}
 // [공유 설정 불러오기]는 저장소에 이 악보의 설정이 있을 때만 누를 수 있다
-function ghHas(v) { const b = $('ghLoad'); b.disabled = !v; b.title = v ? '' : '저장소에 이 악보의 공유 설정이 없습니다'; }
+function ghHas(v) { const b = $('ghLoad'); b.disabled = !v; b.title = v ? '' : '저장소에 이 악보의 공유 설정이 없습니다'; if (v !== 'alt') ghAlt = null; }
 async function ghLoad() {
   const key = settingsKey(); if (!key || ghBusy) return;
   ghBusy = true; ghSetState('저장소에서 찾는 중…');
   try {
-    const got = await ghFetch(key);
+    const alt = ghAlt, got = await ghFetch(key, alt ? alt.name : null);
     if (key !== settingsKey()) return;   // 그 사이 다른 악보를 올림
-    if (!got || !got.S || got.S.format !== 'hapju-settings') { ghHas(false); ghSetState('이 악보로 올려 둔 공유 설정이 없습니다.'); return; }
+    if (!got || !got.S || got.S.format !== 'hapju-settings') { ghHas(false); ghSetState(`'${ghWho()}'(으)로 올려 둔 공유 설정이 없습니다.`); return; }
     const editN = applyBundle(got.S, '공유 설정을 불러옴');
-    writeSettings(false); ghSeen(key, got.S.saved || '');
-    ghSetState(`공유 설정을 불러왔습니다 · ${fmtTime(got.S.saved)}에 올린 것` + (editN ? ' (음정·길이 수정 포함)' : ''), true);
+    writeSettings(false); if (!alt) ghSeen(key, got.S.saved || '');
+    ghSetState(`공유 설정을 불러왔습니다 · ${fmtTime(got.S.saved)}에 올린 것` + (alt ? ` ('${alt.file || alt.title}'로 올린 설정 — 파일이 달라 음정·길이 수정은 빼고 맞는 줄만)` : editN ? ' (음정·길이 수정 포함)' : ''), true);
   } catch (e) { ghSetState(e && e.message ? e.message : '저장소에서 받지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
   finally { ghBusy = false; }
 }
@@ -8039,7 +8055,14 @@ async function ghSave() {
     const r = await fetch(api, { method: 'PUT', headers: H, body: JSON.stringify(body) });
     if (!r.ok) throw new Error(r.status === 403 || r.status === 404 ? '이 토큰으로는 저장소에 쓸 수 없습니다. 토큰의 저장소 선택과 Contents 권한(Read and write)을 확인해 주세요.' : r.status === 409 || r.status === 422 ? '그 사이 저장소의 설정이 바뀌었습니다. 다시 눌러 주세요.' : '저장소에 올리지 못했습니다 (' + r.status + ')');
     ghSeen(key, S.saved); ghHas(true);
-    ghSetState(`공유 저장소에 저장했습니다 · ${fmtTime(S.saved)}` + (S.edits.length ? ' (음정·길이 수정 포함)' : ''), true);
+    try {   // 목록(index.json)에 이 악보를 적어 둔다 — 실패해도 저장은 된 것
+      const ia = `https://api.github.com/repos/${GH_REPO}/contents/${GH_DIR}/index.json`, ic = await fetch(ia + '?ref=' + GH_BRANCH, { headers: H, cache: 'no-store' });
+      let idx = {}, isha = null; if (ic.ok) { const j = await ic.json(); isha = j.sha; try { idx = JSON.parse(utf8b64(j.content)) || {}; } catch (e) {} }
+      idx[ghName(key)] = { title: S.title || '', file: S.file || '', saved: S.saved };
+      const ib = { message: '설정 목록', content: b64utf8(JSON.stringify(idx, null, 1)), branch: GH_BRANCH }; if (isha) ib.sha = isha;
+      await fetch(ia, { method: 'PUT', headers: H, body: JSON.stringify(ib) });
+    } catch (e) {}
+    ghSetState(`'${ghWho()}' 설정을 공유 저장소에 저장했습니다 · ${fmtTime(S.saved)}` + (S.edits.length ? ' (음정·길이 수정 포함)' : ''), true);
   } catch (e) { ghSetState(e && e.message ? e.message : '저장소에 올리지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
   finally { ghBusy = false; }
 }
@@ -8052,7 +8075,12 @@ async function ghCheck(hadLocal) {
   try {
     const got = await ghFetch(key);
     if (key !== settingsKey()) return;
-    if (!got || !got.S || got.S.format !== 'hapju-settings') { ghSetState('이 악보로 올려 둔 공유 설정이 아직 없습니다.' + (ghToken() ? ' (저장 토큰 있음)' : '')); return; }
+    if (!got || !got.S || got.S.format !== 'hapju-settings') {
+      const alt = await ghFindAlt(key); if (key !== settingsKey()) return;
+      if (alt) { ghHas('alt'); ghAlt = alt; ghSetState(`이 파일('${ghWho()}')로 올린 공유 설정은 없지만, 같은 곡의 다른 파일 '${alt.file || alt.title}'(으)로 ${fmtTime(alt.saved)}에 올린 설정이 있습니다. [공유 설정 불러오기]로 받을 수 있습니다.`); }
+      else ghSetState(`'${ghWho()}'(으)로 올려 둔 공유 설정이 아직 없습니다.` + (ghToken() ? ' (저장 토큰 있음)' : ''));
+      return;
+    }
     ghHas(true);
     const when = got.S.saved || '';
     if (when && when === ghSeen(key)) { ghSetState(`공유 설정(${fmtTime(when)})을 이미 받았습니다.`, true); return; }
@@ -8073,7 +8101,11 @@ $('ghTokenSave').addEventListener('click', () => {
   try { localStorage.setItem(GH_TOKEN_KEY, v); } catch (e) { ghSetState('이 브라우저에는 저장하지 못했습니다(사생활 보호 모드 등).'); return; }
   $('ghToken').value = ''; ghSetState('저장 토큰을 이 기기에 넣었습니다. 이제 [공유 저장소에 저장]을 쓸 수 있습니다.', true);
 });
-$('ghTokenClear').addEventListener('click', () => { try { localStorage.removeItem(GH_TOKEN_KEY); } catch (e) {} $('ghToken').value = ''; ghSetState('이 기기의 저장 토큰을 지웠습니다.'); });
+$('ghTokenClear').addEventListener('click', () => {
+  if (!ghToken()) { ghSetState('이 기기에는 저장 토큰이 들어 있지 않습니다.'); return; }
+  if (!confirm('이 기기에 넣어 둔 저장 토큰을 지울까요?\n지우면 이 기기에서는 토큰을 다시 넣기 전까지 공유 저장소에 저장할 수 없습니다. (GitHub의 토큰 자체는 그대로입니다)')) return;
+  try { localStorage.removeItem(GH_TOKEN_KEY); } catch (e) {} $('ghToken').value = ''; ghSetState('이 기기의 저장 토큰을 지웠습니다.');
+});
 $('ghRepoName').textContent = GH_REPO;
 
 // ---------- PDF 읽기 ----------
@@ -9675,7 +9707,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 08:28';
+const APP_VERSION = '2026-11-11 08:46';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
