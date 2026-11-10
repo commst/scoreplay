@@ -4,3 +4,4 @@ node_modules/
 !manual.pdf
 test/xmlout/
 test/u1/
+xmlout/
