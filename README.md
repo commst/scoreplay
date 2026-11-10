@@ -377,6 +377,7 @@ python3 tools/gen_outline_templates.py <fonts 폴더> src/outline-templates.js
 | `node test/dumpbars.mjs <폴더> 악보.pdf …`, `test/cmp/` | 총보↔파트보 대조: 마디 서명 뽑기 → 줄 짝짓기·마디 정렬 → 다른 마디 분류·그림 대조 (자세한 것은 test/cmp/README.md) |
 | `S=<출력 폴더> node test/vis.mjs <샘플 접두어> [개수]` | 다시 읽은 마디를 PDF에서 잘라 그림으로(눈으로 대조) |
 | `node test/pwv2.cjs <html> desktop\|tablet\|phone`, `fuzz2.cjs`, `pwedit.cjs <html>` 등 | 화면 자동 시험(Playwright). 한글 파일 이름은 올라가지 않아 샘플을 `/tmp/pick-<접두어>.pdf`로 복사해 씀. pwv2는 `PRE=<접두어>`로 다른 샘플 |
+| `node test/pwboot.cjs index.html` | 시작 시험: 저장된 설정(악보로 보기·탭·자동 저장 등) 여러 가지로 열어 끝까지 시작되는지. 화면 코드를 고치면 꼭 |
 | `node test/pwxml.cjs <접두어…>` → `xsdcheck.py`·`xmlcheck.py`·`integrity.py`·`msall.sh` | MusicXML 내보내기 검사(표준 규칙, 원래 음 대비, 붙임줄·이음줄·잇단 짝, 뮤즈스코어로 열기) |
 
 이어 작업할 때의 규칙·샘플 목록·검사 순서·남은 과제는 `HANDOFF.md`에 모아 두었습니다.
