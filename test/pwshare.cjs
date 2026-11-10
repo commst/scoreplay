@@ -57,6 +57,25 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   await p.uncheck('#tempoShift'); await p.$eval('#ts-1', e => { e.value = 37; e.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(400);
   ok((await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).join(',') === '1,37,121,125', name + ' 끄면 그 구간만');
   await p.check('#tempoShift');
+  // --- 줄마다 [+]·[−] (지금 1,37,121,125 / rit 54)
+  await tab('tempo');
+  ok(!(await p.$('#addRow')), name + ' [구간 추가] 단추 없음');
+  await p.$eval('#tempoBody tr:nth-child(2) .pmb', e => e.click()); await p.waitForTimeout(400);
+  let pr = (await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).join(',');
+  ok(pr === '1,37,79,121,125' && await p.evaluate(() => document.activeElement && document.activeElement.id === 'ts-2'), name + ' [+]: 가운데 마디에 넣고 시작 마디 칸으로 ' + pr);
+  await p.$eval('#ts-2', e => { e.value = 60; e.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(400);
+  pr = (await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).join(',');
+  ok(pr === '1,37,60,121,125', name + ' 방금 넣은 줄의 마디 입력은 뒤를 밀지 않음 ' + pr);
+  await p.$eval('#tempoBody tr:nth-child(3) .x', e => e.click()); await p.waitForTimeout(400);
+  pr = (await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).join(',');
+  ok(pr === '1,37,121,125', name + ' [−]: 그 줄 지움 ' + pr);
+  await p.$eval('#tempoBody tr:nth-child(3) .pmb', e => e.click()); await p.waitForTimeout(300);
+  ok((await p.$$eval('#tempoBody tr', x => x.length)) === 5, name + ' 121·125 사이(123)에 넣음'); await p.$eval('#tempoBody tr:nth-child(4) .x', e => e.click()); await p.waitForTimeout(300);
+  ok(await p.$eval('#tchgAdd', e => e.hidden), name + ' rit. 줄이 있으면 [rit. 추가] 숨김');
+  await p.$eval('#tchgBody tr:not(.sum) .pmb', e => e.click()); await p.waitForTimeout(400);
+  let rr2 = await p.$$eval('#tchgBody tr:not(.sum)', trs => trs.map(tr => tr.querySelector('input').value));
+  ok(rr2.join(',') === '54,56', name + ' rit. [+]: 끝나는 마디에 넣음 ' + rr2.join(','));
+  await p.$$eval('#tchgBody tr:not(.sum) .x', xs => xs[1].click()); await p.waitForTimeout(300);
   // --- 공유 설정
   await tab('save');
   await p.click('#ghSave'); await p.waitForTimeout(400);

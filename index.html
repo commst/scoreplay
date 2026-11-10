@@ -88,6 +88,10 @@ button { cursor: pointer; }
 .ph-btns .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); }
 .pick-hint { margin: -2px 0 8px; }
 .shift-chk { margin: 6px 0 2px; font-size: 13px; }
+td.pm { white-space: nowrap; text-align: right; }
+td.pm .pmb, td.pm .x { min-width: 30px; min-height: 30px; padding: 2px 6px; font-size: 17px; line-height: 1; font-weight: 700; border-radius: 8px; border: 1px solid var(--line); background: var(--btn-bg, transparent); color: var(--ink); cursor: pointer; }
+td.pm .pmb { color: var(--accent); margin-right: 4px; }
+td.pm .x[hidden] { display: inline-block !important; visibility: hidden; }
 body.picking .b, body.picking .sv-page, body.picking #svPages > * { cursor: crosshair; }
 .tchg .auto { display: block; font-size: 11px; color: var(--muted); }
 .tchg tr.sum td { padding: 0 4px 8px; font-size: 12px; color: var(--muted); }
@@ -1154,10 +1158,10 @@ body.all-panes { padding-bottom: 0; }
       </div>
       <div class="pane2" id="pane-tempo" role="tabpanel" data-pane="tempo" aria-labelledby="tab-tempo">
       <section class="panel" aria-labelledby="tTempo">
-        <div class="row ph-row"><h2 class="step-h" id="tTempo"><span class="sn">3</span>빠르기</h2><span class="ph-btns"><button class="btn" id="tempoPick" type="button" aria-pressed="false" title="누른 뒤 악보나 마디맵에서 마디를 누르면 그 마디에서 시작하는 빠르기 구간을 넣습니다">마디 골라 넣기</button><button class="btn" id="addRow" type="button">구간 추가</button></span></div>
-        <p class="hint pick-hint">곡 중간에 넣으려면 <b>[마디 골라 넣기]</b>를 누르고 악보·마디맵에서 그 마디를 누르세요. 표는 늘 마디 순서로 정렬됩니다.</p>
+        <div class="row ph-row"><h2 class="step-h" id="tTempo"><span class="sn">3</span>빠르기</h2><span class="ph-btns"><button class="btn" id="tempoPick" type="button" aria-pressed="false" title="누른 뒤 악보나 마디맵에서 마디를 누르면 그 마디에서 시작하는 빠르기 구간을 넣습니다">마디 골라 넣기</button></span></div>
+        <p class="hint pick-hint">줄 오른쪽 <b>[+]</b>는 그 줄 뒤에 구간을 넣고 <b>[−]</b>는 그 줄을 지웁니다. <b>[마디 골라 넣기]</b>를 누르고 악보·마디맵에서 마디를 눌러 넣을 수도 있습니다. 표는 늘 마디 순서로 정렬됩니다.</p>
         <table class="tempo">
-          <thead><tr><th style="width:22%">시작 마디</th><th>끝</th><th style="width:26%">기준</th><th style="width:22%">BPM</th><th><span class="sr-only">지우기</span></th></tr></thead>
+          <thead><tr><th style="width:22%">시작 마디</th><th>끝</th><th style="width:26%">기준</th><th style="width:22%">BPM</th><th><span class="sr-only">넣기·지우기</span></th></tr></thead>
           <tbody id="tempoBody"></tbody>
         </table>
         <label class="chk shift-chk"><input type="checkbox" id="tempoShift" checked>시작 마디를 바꾸면 뒤 구간과 rit.·accel.도 같은 만큼 함께 옮기기</label>
@@ -1168,7 +1172,7 @@ body.all-panes { padding-bottom: 0; }
         <div class="tchg" id="tchgBox">
           <div class="tchg-head"><b>rit. · accel. (점점 느리게·빠르게)</b><span class="ph-btns"><button class="btn" id="ritPick" type="button" aria-pressed="false" title="누른 뒤 악보나 마디맵에서 마디를 누르면 그 마디에 rit.를 넣습니다">마디 골라 넣기</button><button class="btn" id="tchgAdd" type="button">rit. 추가</button></span></div>
           <table class="tempo" id="tchgTable">
-            <thead><tr><th style="width:22%">시작 마디</th><th style="width:24%">종류</th><th style="width:20%">길이(마디수)</th><th style="width:22%">끝 %</th><th><span class="sr-only">지우기</span></th></tr></thead>
+            <thead><tr><th style="width:22%">시작 마디</th><th style="width:24%">종류</th><th style="width:20%">길이(마디수)</th><th style="width:22%">끝 %</th><th><span class="sr-only">넣기·지우기</span></th></tr></thead>
             <tbody id="tchgBody"></tbody>
           </table>
           <p class="hint" id="tchgHint"></p>
@@ -1209,7 +1213,7 @@ body.all-panes { padding-bottom: 0; }
             <p>예: 17~24마디 accel. 뒤 25마디부터 원래대로 → 시작 마디 25, 종류 a tempo 줄을 하나 더 넣습니다.</p>
 
             <h4>갑자기 바꾸고 싶을 때</h4>
-            <p>rit.·accel.이 아니라 위 <b>빠르기 표</b>에서 [구간 추가]를 눌러 그 마디부터 새 BPM을 넣습니다. 그 마디에서 바로 새 빠르기가 됩니다.</p>
+            <p>rit.·accel.이 아니라 위 <b>빠르기 표</b>에서 앞 구간 줄의 [+]를 눌러(또는 [마디 골라 넣기]) 그 마디부터 새 BPM을 넣습니다. 그 마디에서 바로 새 빠르기가 됩니다.</p>
           </details>
         </div>
         <p class="hint" id="tempoHint">악보에 적힌 템포 표시를 찾아 미리 채웁니다. 숫자를 못 읽은 칸은 노란색으로 표시됩니다.</p>
@@ -1241,15 +1245,15 @@ body.all-panes { padding-bottom: 0; }
               어느 쪽인지 모르겠으면 그 구간을 들어 보고, 2배 빠르거나 느리게 들리면 단추를 누르세요. 단추를 누르면 <b>그 악보의 ♩=♪ 표시 전체</b>가 함께 바뀝니다(보통 한 악보 안에서는 같은 방식으로 쓰기 때문). 바뀐 방향은 이 악보의 설정에 저장됩니다.
               <span class="eg">예: Frontier 새판은 117마디 ♩=♪(넓게, 절반 빠르기)와 121마디 ♪=♩(원래 빠르기로)를 '오른쪽이 새 박' 방식으로 썼습니다 → 단추를 눌러 '오른쪽이 새 박'으로 바꾸면 117~120마디 ♩=86, 121마디부터 ♩=172</span>
               이 단추가 있는 구간의 BPM을 직접 고치면 뒤의 ♩=♪ 구간이 그 숫자로 다시 계산되니, 방향이 틀렸을 때는 숫자보다 단추를 쓰세요.</dd>
-            <dt>구간 추가 · ✕</dt>
-            <dd>빠르기가 바뀌는 곳을 못 찾았으면 구간을 추가하고 시작 마디를 고칩니다. 첫 줄은 지울 수 없습니다.</dd>
+            <dt>줄마다 [+] · [−]</dt>
+            <dd>빠르기가 바뀌는 곳을 못 찾았으면 앞 구간 줄의 [+]로 구간을 넣고 시작 마디를 고칩니다(처음에는 앞뒤 구간의 가운데 마디가 들어갑니다). [−]는 그 줄을 지웁니다. 첫 줄은 지울 수 없습니다.</dd>
             <dt>rit. · accel. 끝 빠르기</dt>
             <dd>악보에 rit.(점점 느리게), accel.(점점 빠르게)이 있을 때만 보입니다. 그 표시가 끝나는 곳에서 원래 빠르기의 몇 %가 될지 정합니다.
               <span class="eg">rit. 80% → ♩=100이던 곳이 점점 느려져 ♩=80까지</span>
               읽는 글자: rit.·rall.·riten.·allargando·점점 느리게 / accel.·stringendo·점점 빠르게 (앞에 poco a poco·molto·약간 등이 붙어도 됨) / a tempo·in tempo·Tempo I(원래 빠르기로).
               바뀌는 길이: 뒤에 점선(- - -)이 있으면 점선 끝까지, 없으면 2마디, poco a poco는 다음 빠르기 표시까지(최대 16마디). 바뀐 빠르기는 a tempo나 빠르기 표의 다음 구간이 나올 때까지 이어집니다. 마디 지도에 rit.·accel. 글자가 붙은 마디에서 시작합니다.</dd>
             <dt>rit. · accel. 표</dt>
-            <dd>악보에서 읽은 rit.·accel.·a tempo가 나오고, 직접 더하거나 고치거나 뺄 수 있습니다. <b>rit. 추가</b>를 누르고 시작 마디·길이(마디 수)를 넣으면 그 마디부터 점점 느려집니다. <b>끝 %</b>를 비워 두면 위의 공통 끝 빠르기를 쓰고, 숫자를 넣으면 그 줄만 그 빠르기까지 바뀝니다. <b>a tempo</b>를 넣으면 그 마디에서 원래 빠르기로 돌아갑니다(빠르기 표의 다음 구간에서도 돌아갑니다). 고친 내용은 이 악보의 설정에 함께 저장됩니다.
+            <dd>악보에서 읽은 rit.·accel.·a tempo가 나오고, 직접 더하거나 고치거나 뺄 수 있습니다. 표가 비어 있으면 <b>rit. 추가</b>, 줄이 있으면 줄 오른쪽 <b>[+]</b>를 누르고 시작 마디·길이(마디 수)를 넣으면 그 마디부터 점점 느려집니다. <b>끝 %</b>를 비워 두면 위의 공통 끝 빠르기를 쓰고, 숫자를 넣으면 그 줄만 그 빠르기까지 바뀝니다. <b>a tempo</b>를 넣으면 그 마디에서 원래 빠르기로 돌아갑니다(빠르기 표의 다음 구간에서도 돌아갑니다). 고친 내용은 이 악보의 설정에 함께 저장됩니다.
               <span class="eg">마지막 2마디만 느리게 → rit. 추가 · 시작 마디 = 끝에서 둘째 마디 · 길이 2 · 끝 % 70</span></dd>
           </dl>
         </details>
@@ -1589,9 +1593,10 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>3</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
       <li><details><summary>공유 설정: 악보별 설정을 저장소에 올리고 받기</summary><p>[저장] 칸 '이 악보의 설정' 아래에 <b>공유 설정 (GitHub 저장소)</b>가 생겼습니다. 악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정을 한 묶음으로 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받습니다. 이 기기에 저장한 설정이 없으면 악보를 열 때 자동으로 받고, 있으면 알려만 주며 [공유 설정 불러오기]를 눌러야 바뀝니다. 올리기는 저장 토큰을 넣은 기기(관리자)만 됩니다 — 토큰 만드는 방법은 그 칸의 '관리자: 저장 토큰 넣기·만드는 방법'과 사용설명서에 있습니다.</p></details></li>
-      <li><details><summary>마디를 눌러 빠르기·rit. 넣기</summary><p>[빠르기] 칸의 <b>[마디 골라 넣기]</b>를 누른 뒤 악보나 마디맵에서 마디를 누르면, 그 마디에서 시작하는 빠르기 구간(또는 rit.)이 표의 제자리에 들어가고 값 칸으로 옮겨 갑니다. 취소는 Esc. 컴퓨터의 마디 미리보기 창에도 [빠르기 넣기]·[rit. 넣기] 단추가 있습니다. 연주 중에 [구간 추가]를 누르면 지금 마디에 들어갑니다.</p></details></li>
+      <li><details><summary>마디를 눌러 빠르기·rit. 넣기</summary><p>[빠르기] 칸의 <b>[마디 골라 넣기]</b>를 누른 뒤 악보나 마디맵에서 마디를 누르면, 그 마디에서 시작하는 빠르기 구간(또는 rit.)이 표의 제자리에 들어가고 값 칸으로 옮겨 갑니다. 취소는 Esc. 컴퓨터의 마디 미리보기 창에도 [빠르기 넣기]·[rit. 넣기] 단추가 있습니다. </p></details></li>
+      <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
     <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
@@ -6092,6 +6097,7 @@ function propagateEq() {
   });
 }
 function lastBar() { return state.bars.length ? state.bars[state.bars.length - 1].number : 1; }
+const freshRows = new WeakSet();   // [+]로 막 넣어 아직 시작 마디를 정하지 않은 줄
 function renderTempo() {
   const rows = state.tempoRows.sort((a, b) => a.start - b.start);
   const body = $('tempoBody'); body.textContent = '';
@@ -6102,7 +6108,7 @@ function renderTempo() {
       <td class="end num"></td>
       <td><select id="tu-${i}" aria-label="기준 음표">${Object.entries(UNIT_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></td>
       <td><input type="number" min="20" max="600" class="num" id="tb-${i}" aria-label="BPM" placeholder="?"></td>
-      <td><button class="x" type="button" aria-label="구간 삭제">✕</button></td>`;
+      <td class="pm"><button class="pmb" type="button" aria-label="이 구간 뒤에 구간 넣기" title="이 줄 뒤에 구간 넣기">＋</button><button class="x" type="button" aria-label="구간 삭제" title="이 줄 지우기">−</button></td>`;
     const [sIn] = tr.querySelectorAll('input');
     sIn.value = r.start; if (i === 0) { sIn.disabled = true; }
     tr.querySelector('.end').textContent = end >= r.start ? `~${end}` : '—';
@@ -6122,10 +6128,10 @@ function renderTempo() {
     sIn.addEventListener('change', () => {
       const v = Math.max(2, Math.min(lastBar(), Math.round(+sIn.value) || r.start));
       // 다른 구간과 같은 시작 마디가 되면 두 구간이 겹쳐 어느 빠르기로 연주할지 알 수 없다
-      const old = r.start, d = v - old;
+      const old = r.start, d = v - old, fresh = freshRows.has(r); freshRows.delete(r);   // 방금 [+]로 넣은 줄의 첫 마디 입력은 뒤 구간을 밀지 않는다
       // 뒤 구간과 rit.·accel.도 같은 만큼 함께 옮기기(체크 칸): 중간에 마디가 늘거나 줄어 뒤쪽이 통째로 밀릴 때 하나씩 고치지 않게
       const later = state.tempoRows.filter(o => o !== r && o.start > old);
-      if (d && $('tempoShift').checked && later.length) {
+      if (d && !fresh && $('tempoShift').checked && later.length) {
         const before = state.tempoRows.filter(o => o !== r && o.start < old);
         if (before.some(o => o.start >= v)) { sIn.value = old; showMsg(`${v}마디는 앞 구간(${Math.max(...before.map(o => o.start))}마디 시작)보다 뒤여야 합니다.`); return; }
         if (later.some(o => o.start + d > lastBar())) { sIn.value = old; showMsg(`뒤 구간을 함께 ${d}마디 옮기면 마지막 마디(${lastBar()})를 넘습니다. 뒤 구간을 먼저 고치거나, 표 아래 '함께 옮기기'를 끄고 이 구간만 바꿔 주세요.`); return; }
@@ -6151,6 +6157,15 @@ function renderTempo() {
     });
     // BPM 칸의 범위(20~600): 너무 작은 수(예: 1)는 소리가 몇 시간짜리가 되어 휴대폰이 멈출 수 있다
     bIn.addEventListener('change', () => { if (r.bpm > 0 && (r.bpm < 20 || r.bpm > 600)) { r.bpm = Math.max(20, Math.min(600, r.bpm)); bIn.value = r.bpm; propagateEq(); changed(); renderTempo(); } });
+    // [+]: 이 줄과 다음 줄 사이 가운데 마디(마지막 줄이면 8마디 뒤)에 새 구간. 시작 마디 칸으로 옮겨 가 바로 고칠 수 있게
+    tr.querySelector('.pmb').addEventListener('click', () => {
+      const nx = rows[i + 1], LB = lastBar();
+      const st = nx ? Math.floor((r.start + nx.start) / 2) : Math.min(LB, r.start + 8);
+      if (st <= r.start || (nx && st >= nx.start)) { showMsg(nx ? `${r.start}마디와 ${nx.start}마디 사이에는 구간을 넣을 마디가 없습니다.` : `${r.start}마디가 마지막 마디라 뒤에 구간을 넣을 수 없습니다.`); return; }
+      const nr = { start: st, unit: r.unit, bpm: r.bpm, text: '' };
+      freshRows.add(nr); state.tempoRows.push(nr); changed(); renderTempo();
+      focusLater('#ts-' + (i + 1));
+    });
     const del = tr.querySelector('.x');
     if (i === 0) del.hidden = true; else del.addEventListener('click', () => { state.tempoRows.splice(state.tempoRows.indexOf(r), 1); changed(); renderTempo(); });
     body.appendChild(tr);
@@ -6166,15 +6181,6 @@ function tempoHintText() {
     ? `템포를 인식하지 못했습니다: ${missing.map(r => r.start + '마디').join(', ')}. 노란 칸에 BPM 숫자를 넣어야 재생·저장할 수 있습니다.`
     : '악보에 적힌 템포 표시를 찾아 미리 채웠습니다. 기준 음표와 숫자를 악보와 맞춰 보세요.';
 }
-$('addRow').addEventListener('click', () => {
-  // 연주 중이면 지금 마디에 (rit. 추가와 같게), 아니면 마지막 구간 8마디 뒤
-  if (state.playing && lastNow > 1 && !state.tempoRows.some(r => r.start === lastNow)) { insertTempoAt(lastNow); return; }
-  const rows = state.tempoRows; const last = rows[rows.length - 1];
-  const start = Math.min(lastBar(), (last ? last.start : 1) + 8);
-  if (rows.some(r => r.start === start)) { showMsg(`${start}마디까지 빠르기 구간이 이미 있습니다. 구간의 시작 마디 칸을 고쳐 새 구간을 만들어 주세요.`); return; }
-  rows.push({ start, unit: last ? last.unit : 'q', bpm: last ? last.bpm : null, text: '' });
-  changed(); renderTempo();
-});
 
 // ---------- rit. · accel. 표 (악보에서 읽은 것 + 직접 넣은 것) ----------
 // 한 줄 = { kind: 'rit'|'accel'|'atempo', bar: 마디 번호, off: 마디 안 위치(0~1), len: 마디 수, pct: 끝 빠르기 %(비우면 공통), auto: 악보에서 읽음 }
@@ -6227,7 +6233,7 @@ function renderTempoChanges() {
       <td><select aria-label="종류"><option value="rit">rit.</option><option value="accel">accel.</option><option value="atempo">a tempo</option></select></td>
       <td><input type="number" min="0.5" max="32" step="0.5" class="num" aria-label="길이(마디)"></td>
       <td><input type="number" min="30" max="200" step="5" class="num" aria-label="끝 빠르기 %"></td>
-      <td><button class="x" type="button" aria-label="빼기">✕</button></td>`;
+      <td class="pm"><button class="pmb" type="button" aria-label="이 줄 뒤에 rit. 넣기" title="이 줄 뒤에 넣기">＋</button><button class="x" type="button" aria-label="빼기" title="이 줄 지우기">−</button></td>`;
     const [bIn, lIn, pIn] = tr.querySelectorAll('input'), sel = tr.querySelector('select');
     bIn.value = c.bar; sel.value = c.kind; lIn.value = c.kind === 'atempo' ? '' : c.len; pIn.value = c.pct > 0 ? c.pct : '';
     lIn.disabled = pIn.disabled = c.kind === 'atempo';
@@ -6238,6 +6244,12 @@ function renderTempoChanges() {
     lIn.addEventListener('change', () => { const v = +lIn.value; c.len = v > 0 ? Math.max(0.5, Math.min(32, v)) : 2; c.auto = false; tempoChEdited(); });
     pIn.addEventListener('change', () => { const v = +pIn.value; c.pct = v > 0 ? (c.kind === 'rit' ? Math.max(30, Math.min(100, v)) : Math.max(100, Math.min(200, v))) : null; c.auto = false; tempoChEdited(); });
     tr.querySelector('.x').addEventListener('click', () => { state.tempoChanges.splice(state.tempoChanges.indexOf(c), 1); tempoChEdited(); });
+    // [+]: 이 줄이 끝나는 마디에 2마디짜리 rit. — 시작 마디 칸으로
+    tr.querySelector('.pmb').addEventListener('click', () => {
+      const n = { kind: 'rit', bar: Math.min(lastBar(), c.bar + (c.kind === 'atempo' ? 1 : Math.max(1, Math.ceil(c.len || 2)))), off: 0, len: 2, pct: null, auto: false };
+      state.tempoChanges.push(n); tempoChEdited();
+      focusLater(() => { const k = state.tempoChanges.slice().sort((a, b) => a.bar - b.bar || (a.off || 0) - (b.off || 0)).indexOf(n); const t2 = [...document.querySelectorAll('#tchgBody tr:not(.sum)')][k]; return t2 && t2.querySelector('input'); });
+    });
     body.appendChild(tr);
     // 줄마다 풀어 쓴 설명: 몇 마디부터 몇 마디까지, 빠르기가 어떻게 바뀌는지
     const sum = document.createElement('tr'); sum.className = 'sum'; const td = document.createElement('td'); td.colSpan = 5; sum.appendChild(td);
@@ -6245,6 +6257,7 @@ function renderTempoChanges() {
     body.appendChild(sum);
   });
   $('tchgTable').hidden = !list.length;
+  $('tchgAdd').hidden = list.length > 0;   // 줄이 있으면 줄마다 [+]로 넣는다
   $('tchgHint').textContent = list.length ? '마디 지도에 rit.·accel. 글자로도 보입니다. 끝 %를 비우면 공통 끝 빠르기를 씁니다.' : '악보에서 읽은 rit.·accel.이 없습니다. [rit. 추가]로 원하는 마디에 넣을 수 있습니다.';
   $('ritRow').hidden = !list.some(c => c.kind !== 'atempo');
 }
@@ -9583,7 +9596,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 05:37';
+const APP_VERSION = '2026-11-11 07:09';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

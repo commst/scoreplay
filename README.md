@@ -239,6 +239,7 @@ MusicXML을 저장하면 내보낸 파일을 다시 읽어 악보 PDF의 음표 
   - 저장 토큰: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token → Repository access: Only select repositories → `commst/scoreplay` → Permissions: Contents = Read and write → 만든 `github_pat_…`를 [저장] 칸 '관리자: 저장 토큰 넣기'에 붙여 넣고 [이 기기에 저장]. 토큰은 그 브라우저에만 보관(기기마다 한 번씩)
   - 앱이 GitHub API로 main에 바로 커밋하므로, 이 저장소에 푸시하기 전에는 `git fetch origin main` 후 rebase
 - **마디 골라 넣기**: [빠르기] 칸의 [마디 골라 넣기](빠르기·rit. 각각)를 누르고 악보·마디맵에서 마디를 누르면 그 마디에 넣는다. 취소 Esc. 마디 미리보기 창의 [빠르기 넣기]·[rit. 넣기]도 같음
+- **줄마다 [+]·[−]**: 빠르기 표·rit. 표의 줄 오른쪽 [+]는 그 줄 뒤에 줄을 넣고(빠르기는 앞뒤 구간의 가운데 마디) [−]는 지운다. [구간 추가] 단추는 없앰, [rit. 추가]는 표가 비었을 때만
 - **뒤 구간 함께 옮기기**: 빠르기 표의 시작 마디를 바꾸면 뒤 구간과 rit.·accel.도 같은 만큼 옮긴다(표 아래 체크로 끔)
 
 
