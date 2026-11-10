@@ -1122,7 +1122,7 @@ body.all-panes { padding-bottom: 0; }
         <dt>좌우 위치</dt>
         <dd>선율 줄만. 소리 다듬기의 '좌우 배치'를 켰을 때 그 줄이 왼쪽·오른쪽 어디서 들릴지 정합니다. 처음에는 악기마다 국악관현악 자리처럼(자동) 정해 둡니다.</dd>
         <dt>음량</dt>
-        <dd>0~150%. 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
+        <dd>0~200%. 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
         <dt>옥타브</dt>
         <dd>선율 줄만. 악보에 적힌 음보다 한 옥타브(12음) 단위로 올리거나 내려 냅니다. 악보 음 대부분이 녹음한 악기 음역 밖이고 한 옥타브 옮기면 맞을 때(예: 실제보다 한 옥타브 낮게 적은 태평소)는 자동으로 맞추고 줄에 안내가 나옵니다. 직접 고르면 그대로 따릅니다.</dd>
         <dt>마디 기준</dt>
@@ -1541,7 +1541,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 10일</h3>
-    <h4>기능 업데이트 <small>6</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>7</small></h4><ul class="hlist">
+      <li><details><summary>악기 기본 음량 균형 맞춤 (거문고·가야금·아쟁 크게), 음량 0~200%</summary><p>같은 100%에서도 거문고·아쟁은 관악기보다 훨씬 작게 들리고, 가야금·양금은 뜯는 순간만 크고 곧 작아져 합주에 묻혔습니다. 총보 3곡에서 악기마다 따로 크기를 재어 기본 크기를 맞췄습니다: 거문고 약 2.2배, 아쟁 1.6배, 가야금 1.4배, 양금 1.25배, 피리·대피리 조금 크게, 해금·생황 조금 작게. 음량 막대는 150%에서 200%까지로 넓혔습니다. 저장해 둔 음량 설정은 그대로이며 그 위에 새 기본 크기가 적용됩니다.</p></details></li>
       <li><details><summary>[구간 추가] 단추를 '빠르기' 제목 옆으로</summary><p>[빠르기] 칸의 [구간 추가] 단추가 빠르기 표 아래에 있어 구간이 많으면 찾기 어려웠습니다. 이제 '빠르기' 제목 오른쪽에 있어 표 길이와 관계없이 바로 보입니다(아래 'rit. 추가'와 같은 배치).</p></details></li>
       <li><details><summary>MusicXML 대조 결과 보는 법·고치는 법 설명, 사용설명서 9장</summary><p>[저장] 칸의 'MusicXML 대조 결과 보는 법과 고치는 법'을 펼치면, 저장 뒤 뜨는 빨간 마디 번호와 악보 위 동그라미의 뜻, 음 높이·길이가 다를 때 ✎로 고치고 다시 저장하는 법, 앱에서 못 고치는 경우(빠진 음 등)를 볼 수 있습니다. 사용설명서에도 9장 'MusicXML로 내보내 악보 프로그램에서 고치기'를 새로 넣었습니다.</p></details></li>
       <li><details><summary>윈도에서 'PDF로 인쇄'한 Encore 악보 읽기 (소나기 새 판)</summary><p>Encore 악보를 윈도의 'Microsoft PDF로 인쇄'로 만들면 악보 글꼴 이름이 감춰져, 오선을 하나도 찾지 못하고 '스캔 PDF'로 처리됐습니다. 이제 오선·마디선·기둥 기호 모양으로 Encore 글꼴을 알아봅니다. 이 방식의 PDF에서 붙임줄을 여러 마디 쉼표로 잘못 봐 마디가 비던 것, 채운 도형으로 그린 여러 마디 쉼표, 총보 큰보표(가야금·신디)의 토막 마디선, 쉼표뿐인 쪽, 두 겹 빔도 읽습니다. 소나기 총보 22줄과 파트보가 모두 355마디로 인쇄된 마디 번호와 맞습니다(아쟁 파트보는 사진으로 찍은 PDF라 읽을 수 없음).</p></details></li>
@@ -4021,7 +4022,7 @@ function renderLineList() {
     if (c.role !== 'off') {
       const v = document.createElement('div'); v.className = 'wide k-vol';
       const id = 'vol-' + key;
-      v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="150" step="5"><span class="num"></span></div>`;
+      v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="200" step="5"><span class="num"></span></div>`;
       const inp = v.querySelector('input'), out = v.querySelector('span');
       inp.value = Math.round(c.vol * 100); out.textContent = inp.value + '%';
       inp.addEventListener('input', () => { out.textContent = inp.value + '%'; });

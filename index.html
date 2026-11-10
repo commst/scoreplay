@@ -1130,7 +1130,7 @@ body.all-panes { padding-bottom: 0; }
         <dt>좌우 위치</dt>
         <dd>선율 줄만. 소리 다듬기의 '좌우 배치'를 켰을 때 그 줄이 왼쪽·오른쪽 어디서 들릴지 정합니다. 처음에는 악기마다 국악관현악 자리처럼(자동) 정해 둡니다.</dd>
         <dt>음량</dt>
-        <dd>0~150%. 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
+        <dd>0~200%. 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
         <dt>옥타브</dt>
         <dd>선율 줄만. 악보에 적힌 음보다 한 옥타브(12음) 단위로 올리거나 내려 냅니다. 악보 음 대부분이 녹음한 악기 음역 밖이고 한 옥타브 옮기면 맞을 때(예: 실제보다 한 옥타브 낮게 적은 태평소)는 자동으로 맞추고 줄에 안내가 나옵니다. 직접 고르면 그대로 따릅니다.</dd>
         <dt>마디 기준</dt>
@@ -1549,7 +1549,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 10일</h3>
-    <h4>기능 업데이트 <small>6</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>7</small></h4><ul class="hlist">
+      <li><details><summary>악기 기본 음량 균형 맞춤 (거문고·가야금·아쟁 크게), 음량 0~200%</summary><p>같은 100%에서도 거문고·아쟁은 관악기보다 훨씬 작게 들리고, 가야금·양금은 뜯는 순간만 크고 곧 작아져 합주에 묻혔습니다. 총보 3곡에서 악기마다 따로 크기를 재어 기본 크기를 맞췄습니다: 거문고 약 2.2배, 아쟁 1.6배, 가야금 1.4배, 양금 1.25배, 피리·대피리 조금 크게, 해금·생황 조금 작게. 음량 막대는 150%에서 200%까지로 넓혔습니다. 저장해 둔 음량 설정은 그대로이며 그 위에 새 기본 크기가 적용됩니다.</p></details></li>
       <li><details><summary>[구간 추가] 단추를 '빠르기' 제목 옆으로</summary><p>[빠르기] 칸의 [구간 추가] 단추가 빠르기 표 아래에 있어 구간이 많으면 찾기 어려웠습니다. 이제 '빠르기' 제목 오른쪽에 있어 표 길이와 관계없이 바로 보입니다(아래 'rit. 추가'와 같은 배치).</p></details></li>
       <li><details><summary>MusicXML 대조 결과 보는 법·고치는 법 설명, 사용설명서 9장</summary><p>[저장] 칸의 'MusicXML 대조 결과 보는 법과 고치는 법'을 펼치면, 저장 뒤 뜨는 빨간 마디 번호와 악보 위 동그라미의 뜻, 음 높이·길이가 다를 때 ✎로 고치고 다시 저장하는 법, 앱에서 못 고치는 경우(빠진 음 등)를 볼 수 있습니다. 사용설명서에도 9장 'MusicXML로 내보내 악보 프로그램에서 고치기'를 새로 넣었습니다.</p></details></li>
       <li><details><summary>윈도에서 'PDF로 인쇄'한 Encore 악보 읽기 (소나기 새 판)</summary><p>Encore 악보를 윈도의 'Microsoft PDF로 인쇄'로 만들면 악보 글꼴 이름이 감춰져, 오선을 하나도 찾지 못하고 '스캔 PDF'로 처리됐습니다. 이제 오선·마디선·기둥 기호 모양으로 Encore 글꼴을 알아봅니다. 이 방식의 PDF에서 붙임줄을 여러 마디 쉼표로 잘못 봐 마디가 비던 것, 채운 도형으로 그린 여러 마디 쉼표, 총보 큰보표(가야금·신디)의 토막 마디선, 쉼표뿐인 쪽, 두 겹 빔도 읽습니다. 소나기 총보 22줄과 파트보가 모두 355마디로 인쇄된 마디 번호와 맞습니다(아쟁 파트보는 사진으로 찍은 PDF라 읽을 수 없음).</p></details></li>
@@ -5483,6 +5484,9 @@ function decodeRecorded(obj) {
 // 뜯는 악기(가야금·거문고·양금)는 Karplus-Strong 줄 모형, 부는·켜는 악기(대금·소금·피리·태평소·해금·아쟁)는
 // 배음 표(한 주기 파형)를 떨림(비브라토)과 함께 읽고 숨·활 소리를 섞는다.
 
+// 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
+// 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
+const LV = { gayageum: 1.4, geomungo: 2.2, yanggeum: 1.25, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7 };
 const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
@@ -5829,10 +5833,11 @@ function mixNotes(buf, notes, onProgress, bufR = null) {
     if (bufR) { const a = (Math.max(-1, Math.min(1, nt.pan || 0)) + 1) * Math.PI / 4; OUT.R = bufR; OUT.pl = Math.cos(a) * Math.SQRT2; OUT.pr = Math.sin(a) * Math.SQRT2; }
     else { OUT.R = null; OUT.pl = 1; OUT.pr = 0; }
     const ins = INSTRUMENTS[nt.inst] || INSTRUMENTS.gayageum;
+    const lv = LV[String(nt.inst).replace(/_syn$/, '')] || 1;
     const voices = nt.midis.length;
     const bank = ins.bank && BANKS[ins.bank];
     for (const m of nt.midis) {
-      if (bank) { addSampled(buf, ins, bank, m, Math.max(0.05, nt.dur), nt.gain / Math.sqrt(voices), nt.t, { trem: !!nt.trem, nong: nt.nong !== false }); continue; }
+      if (bank) { addSampled(buf, ins, bank, m, Math.max(0.05, nt.dur), nt.gain * lv / Math.sqrt(voices), nt.t, { trem: !!nt.trem, nong: nt.nong !== false }); continue; }
       // 뜯는 악기는 길이와 상관없이 비슷하므로 길이를 묶어 재사용
       const dk = ins.kind === 'pluck' || ins.kind === 'piano' ? Math.min(40, Math.round(nt.dur * 8)) / 8 : Math.round(nt.dur * 40) / 40;
       const opt = { trem: !!nt.trem, nong: nt.nong !== false };
@@ -5844,11 +5849,11 @@ function mixNotes(buf, notes, onProgress, bufR = null) {
         cacheSize += s.length; cache.set(ck, s);
         while (cacheSize > 6e6 && cache.size > 1) { const [k0, v0] = cache.entries().next().value; cache.delete(k0); cacheSize -= v0.length; }
       }
-      add(buf, s, nt.t, nt.gain / Math.sqrt(voices));
+      add(buf, s, nt.t, nt.gain * lv / Math.sqrt(voices));
     }
     if (nt.graces) nt.graces.forEach((m, i) => {
       const s = synthNote(nt.inst, m, 0.07, 1);
-      add(buf, s.subarray(0, Math.round(0.11 * SR)), nt.t - 0.07 * (nt.graces.length - i), nt.gain * 0.6);
+      add(buf, s.subarray(0, Math.round(0.11 * SR)), nt.t - 0.07 * (nt.graces.length - i), nt.gain * lv * 0.6);
     });
     if (onProgress && (++done % 200 === 0)) onProgress(done / notes.length);
   }
@@ -8086,7 +8091,7 @@ function renderLineList() {
     if (c.role !== 'off') {
       const v = document.createElement('div'); v.className = 'wide k-vol';
       const id = 'vol-' + key;
-      v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="150" step="5"><span class="num"></span></div>`;
+      v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="200" step="5"><span class="num"></span></div>`;
       const inp = v.querySelector('input'), out = v.querySelector('span');
       inp.value = Math.round(c.vol * 100); out.textContent = inp.value + '%';
       inp.addEventListener('input', () => { out.textContent = inp.value + '%'; });
@@ -9281,7 +9286,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-10 14:06';
+const APP_VERSION = '2026-11-10 20:45';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

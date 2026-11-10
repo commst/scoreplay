@@ -3,6 +3,9 @@
 // 배음 표(한 주기 파형)를 떨림(비브라토)과 함께 읽고 숨·활 소리를 섞는다.
 import { SR } from './audio-engine.js';
 
+// 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
+// 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
+const LV = { gayageum: 1.4, geomungo: 2.2, yanggeum: 1.25, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7 };
 export const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
@@ -349,10 +352,11 @@ export function mixNotes(buf, notes, onProgress, bufR = null) {
     if (bufR) { const a = (Math.max(-1, Math.min(1, nt.pan || 0)) + 1) * Math.PI / 4; OUT.R = bufR; OUT.pl = Math.cos(a) * Math.SQRT2; OUT.pr = Math.sin(a) * Math.SQRT2; }
     else { OUT.R = null; OUT.pl = 1; OUT.pr = 0; }
     const ins = INSTRUMENTS[nt.inst] || INSTRUMENTS.gayageum;
+    const lv = LV[String(nt.inst).replace(/_syn$/, '')] || 1;
     const voices = nt.midis.length;
     const bank = ins.bank && BANKS[ins.bank];
     for (const m of nt.midis) {
-      if (bank) { addSampled(buf, ins, bank, m, Math.max(0.05, nt.dur), nt.gain / Math.sqrt(voices), nt.t, { trem: !!nt.trem, nong: nt.nong !== false }); continue; }
+      if (bank) { addSampled(buf, ins, bank, m, Math.max(0.05, nt.dur), nt.gain * lv / Math.sqrt(voices), nt.t, { trem: !!nt.trem, nong: nt.nong !== false }); continue; }
       // 뜯는 악기는 길이와 상관없이 비슷하므로 길이를 묶어 재사용
       const dk = ins.kind === 'pluck' || ins.kind === 'piano' ? Math.min(40, Math.round(nt.dur * 8)) / 8 : Math.round(nt.dur * 40) / 40;
       const opt = { trem: !!nt.trem, nong: nt.nong !== false };
@@ -364,11 +368,11 @@ export function mixNotes(buf, notes, onProgress, bufR = null) {
         cacheSize += s.length; cache.set(ck, s);
         while (cacheSize > 6e6 && cache.size > 1) { const [k0, v0] = cache.entries().next().value; cache.delete(k0); cacheSize -= v0.length; }
       }
-      add(buf, s, nt.t, nt.gain / Math.sqrt(voices));
+      add(buf, s, nt.t, nt.gain * lv / Math.sqrt(voices));
     }
     if (nt.graces) nt.graces.forEach((m, i) => {
       const s = synthNote(nt.inst, m, 0.07, 1);
-      add(buf, s.subarray(0, Math.round(0.11 * SR)), nt.t - 0.07 * (nt.graces.length - i), nt.gain * 0.6);
+      add(buf, s.subarray(0, Math.round(0.11 * SR)), nt.t - 0.07 * (nt.graces.length - i), nt.gain * lv * 0.6);
     });
     if (onProgress && (++done % 200 === 0)) onProgress(done / notes.length);
   }
