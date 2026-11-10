@@ -1532,7 +1532,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>MusicXML 확인을 악보 PDF의 음표 머리 기준으로</summary><p>저장 뒤 확인과 겹쳐 보기가 이제 인식 결과가 아니라 재생할 때 보는 악보 화면(PDF)의 음표 머리와 직접 맞춰 봅니다. 내보낸 음마다 악보 위 자리를 계산해 PDF 머리에 맞는 음이 없는 곳, 남는 음, 음 높이가 다른 음을 마디마다 알려 주고, 겹쳐 보기에서 안 맞은 음은 빨간 동그라미, 짝이 없는 PDF 머리는 빨간 네모로 보여 줍니다. 그래서 인식이 틀린 곳(예: Frontier 대금·해금 15마디)도 찾아집니다. 타악 줄과 옥타브·조옮김을 바꾼 줄은 시각만 맞춥니다. 음 이름도 악보에 적힌 대로 C♭·E♯를 지킵니다(미락흘 소금 253마디).</p></details></li>
       <li><details><summary>MusicXML 저장 뒤 확인 목록, 악보 위에 겹쳐 보기</summary><p>MusicXML을 저장하면 PDF와 다르게 읽었을 수 있는 마디를 줄별로 보여 줍니다(빨간 번호는 내보낸 파일이 인식 결과와도 다른 마디). 번호를 누르면 악보로 보기에서 그 마디로 가서, 내보낸 음을 악보 위에 파란 동그라미로 겹쳐 그립니다. 동그라미가 음표 머리에서 벗어난 곳을 확인해 ✎ 음 고치기로 바로잡은 뒤 다시 저장하면 됩니다. 악보로 보기의 [MusicXML 겹쳐 보기]로 언제든 켜고 끌 수 있습니다.</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>2건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>3건</small></summary><ul class="hlist bug">
+      <li><details><summary>붙임줄로 이어지는 음을 다시 치거나 쉬는 마디로 읽던 문제</summary><p>앞 마디에 제자리표가 붙은 음이 붙임줄로 다음 마디에 이어질 때 조표대로 읽어 다시 치던 것(바르도 대금 23마디), 일부 PDF가 긴 붙임줄을 반쪽씩 그려 붙임줄을 못 읽거나 온음표 마디를 쉬는 마디로 읽던 것(판놀음II 태평소 41마디, 소나기 총보 태평소, 방황 피리 178마디 뒤 마디 번호 밀림 등)을 고쳤습니다.</p></details></li>
       <li><details><summary>'악보로 보기'로 두고 닫으면 다음에 앱이 시작되지 않던 문제</summary><p>마지막에 '악보로 보기' 화면으로 두었으면 다음에 열 때 '프로그램이 시작되지 않았습니다' 문구만 나오고 앱이 멈췄습니다(아이폰·아이패드·컴퓨터 모두). 오늘 앞선 판에 들어간 MusicXML 겹쳐 보기 기능의 순서 문제였고, 고쳤습니다. 시작 중 오류가 나면 그 오류 내용이 그대로 보이게도 했습니다.</p></details></li>
       <li><details><summary>아래로 기둥이 달린 화음의 아랫음을 다른 성부로 갈라 읽던 문제</summary><p>한 기둥에 머리가 둘 이상인 화음에서 기둥이 아래로 향하면, 아랫음을 위 성부로 따로 읽었습니다. 그래서 그 음이 쉼표 자리에 놓이거나 셋잇단에서 빠지고, MusicXML에서 1·2성부가 위아래로 뒤바뀌었습니다(Frontier 총보 대금·해금 15·19·47·51마디). 이제 한 성부의 화음으로 읽어 붙임줄도 화음 전체에 이어지고(바르도 대금 22마디 등), 이런 마디의 경고가 2천여 마디 줄었습니다.</p></details></li>
       </ul></details>
@@ -2801,7 +2802,10 @@ function pagePrep(pg, layout, pi) {
   const tieRect = r => curveStrokes.some(c => Math.abs(c.x0 - r.x0) < 0.6 && Math.abs(c.x1 - r.x1) < 0.6 && Math.abs(c.y0 - r.y0) < 1 && Math.abs(c.y1 - r.y1) < 1);
   const tieRects = rects.filter(tieRect);
   // 여러 마디 쉼표 막대를 고를 때 빼는 붙임줄 채움: 곡선 테두리 안에 들어가는 납작한 사각형 (Microsoft Print to PDF는 크기 차이가 1pt 가까이 남)
-  const looseTie = r => curveStrokes.some(c => c.x0 - 1 <= r.x0 && r.x1 <= c.x1 + 1 && c.y0 - 1 <= r.y0 && r.y1 <= c.y1 + 1 && c.width < r.width + 2);
+  // doPDF는 긴 붙임줄을 반쪽씩(곡선 둘 + 채운 사각형) 그리는데 채움이 곡선 끝까지 닿지 않아 폭 차이가 2pt를 넘기도 한다(판놀음II 태평소 41마디: 곡선 60.3pt, 채움 58.1pt)
+  //  → 한쪽 끝이 곡선 끝과 1pt 안에 맞으면 폭 차이 4pt까지 붙임줄 채움으로 본다
+  const looseTie = r => curveStrokes.some(c => c.x0 - 1 <= r.x0 && r.x1 <= c.x1 + 1 && c.y0 - 1 <= r.y0 && r.y1 <= c.y1 + 1
+    && (c.width < r.width + 2 || ((Math.abs(c.x0 - r.x0) < 1 || Math.abs(c.x1 - r.x1) < 1) && c.width < r.width + 4)));
   const mrRects = rects.filter(r => !tieRects.includes(r) && !looseTie(r));
   const beamList = rects.filter(r => r.height <= 4 && r.width >= 2 && !tieRects.includes(r)).map(r => ({ x0: r.x0, x1: r.x1, yAt: () => (r.y0 + r.y1) / 2 }));
   // 선 4개로 닫아 채운 납작한 가로 사각형(Microsoft Print to PDF의 여러 마디 쉼표 막대: 소나기 대금 124마디 '7'): 여러 마디 쉼표 후보에 함께 넣는다
@@ -2833,7 +2837,17 @@ function pagePrep(pg, layout, pi) {
   }
   // 곡선(붙임줄·이음줄). 피날레 PDF 가운데에는 곡선을 짧은 직선 수십 개로 펴서 그린 것도 있다(채운 다각형, 납작하고 가로로 긴 모양)
   const polyCurve = d => d.type.includes('f') && d.items.length >= 12 && d.items.every(i => i.op === 'l') && d.rect.width > 6 && d.rect.width > d.rect.height * 2.2 && d.rect.height < 30;
-  const curves = [...fills.filter(d => d.items.some(i => i.op === 'c')).map(d => d.rect), ...drawings.filter(polyCurve).map(d => d.rect), ...tieRects];
+  const curves0 = [...fills.filter(d => d.items.some(i => i.op === 'c')).map(d => d.rect), ...drawings.filter(polyCurve).map(d => d.rect), ...tieRects,
+    ...rects.filter(r => !tieRects.includes(r) && r.height <= 6 && r.width > 8 && looseTie(r))];   // 곡선 테두리 안 채움(폭이 조금 다른 붙임줄 채움)
+  // doPDF: 긴 붙임줄을 반쪽 둘로 그린다(판놀음II 태평소 41→42마디). 끝과 끝이 맞닿은 같은 높이의 조각은 하나로 이어 본다
+  const curves = [];
+  for (const r of [...curves0].sort((a, b) => a.x0 - b.x0)) {
+    // 이어지는 두 붙임줄(♩⌒𝅗𝅥.⌒♩.)은 가운데 음표 머리에서 만나므로, 맞닿는 자리에 악보 글자(머리)가 없을 때만 잇는다
+    const prev = curves.find(c => c._chain && Math.abs(c.x1 - r.x0) < 1.5 && Math.abs((c.y0 + c.y1) / 2 - (r.y0 + r.y1) / 2) < 2.5 && r.height <= 6 && c.height <= 6
+      && !glyphs.some(g => isMusicFont(g.font) && g.x0 - 4 < r.x0 && r.x0 < g.x1 + 4 && Math.abs(g.oy - (r.y0 + r.y1) / 2) < 14));
+    if (prev) { prev.x1 = Math.max(prev.x1, r.x1); prev.y0 = Math.min(prev.y0, r.y0); prev.y1 = Math.max(prev.y1, r.y1); prev.width = prev.x1 - prev.x0; prev.height = prev.y1 - prev.y0; }
+    else curves.push({ x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1, width: r.width, height: r.height, _chain: true });
+  }
   const thickH = drawings.filter(d => d.type === 's' && d.items.length === 1 && (d.width || 0) > 1.5 && d.rect.height < 0.2 && d.rect.width > 20).map(d => d.rect);
   const boxes = drawings.filter(d => d.type === 's' && ((d.items.length === 1 && d.items[0].op === 're') ||
   (d.items.length >= 4 && d.items.length <= 5 && d.items.every(i => i.op === 'l' && (Math.abs(i.p[0] - i.q[0]) < 0.1 || Math.abs(i.p[1] - i.q[1]) < 0.1)))) &&
@@ -4354,10 +4368,30 @@ async function loadScore(pdfjs, data, onPage) {
 }
 
 // 한 줄(파트보면 null)을 해석한다
+// 마디를 넘는 붙임줄은 앞 마디의 임시표를 이어 간다: 마디 첫머리의 '이어진 음'(tie)을 조표대로 읽어 앞 마디 끝 음과
+// 음높이가 달라지면(바르도 대금 22→23마디: D♮ → 조표대로 D♭) 붙임줄이 끊겨 다시 친다. 같은 성부·같은 자리(dia)의
+// 음이 앞 마디 끝까지 울리고 있으면 그 음높이로 바꾼다(앞 마디에 같은 음높이가 이미 있으면 그대로)
+function carryTieAccidentals(bars) {
+  for (let k = 1; k < bars.length; k++) {
+    const b = bars[k], p = bars[k - 1];
+    if (!p.barLen || !b.events || !p.events) continue;
+    for (const e of b.events) {
+      if (!e.tie || !e.t || e.t.v !== 0 || !e.midis || e.midis.length !== 1 || !e.dia) continue;
+      const m = e.midis[0], d = e.dia[m]; if (d == null) continue;
+      const ends = p.events.filter(o => o.voice === e.voice && o.midis && o.dia && o.t.add(o.sus || o.dur).eq(p.barLen));
+      if (ends.some(o => o.midis.includes(m))) continue;
+      const cand = [...new Set(ends.flatMap(o => o.midis.filter(x => o.dia[x] === d && Math.abs(x - m) <= 2)))];
+      if (cand.length !== 1) continue;
+      e.midis = [cand[0]]; e.dia = { [cand[0]]: d };
+    }
+  }
+}
+
 function analyzeLine(score, line = null) {
   const res = parseScore(score.pages, line == null ? {} : { line, layouts: score.layouts });
   const bars = res.measures.length ? resolveBars(res.measures, res.systemNumbers) : [];
   const marks = bars.length ? resolveMarks(res.measures, res.marks) : { dyn: [], tempo: [] };
+  carryTieAccidentals(bars);
   // 인쇄된 마디 번호와 대조 (번호를 맞춘 뒤에도 다른 곳)
   const mismatches = res.systemNumbers.filter(([mi, printed]) => res.measures[mi] && bars[res.measures[mi]._first] && bars[res.measures[mi]._first].number !== printed);
   // 악보 보기용: 마디마다 PDF의 어느 쪽·어느 오선·가로 어디인지 (마디 지도 순번과 같은 순서)
@@ -9207,7 +9241,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-10 10:48';
+const APP_VERSION = '2026-11-10 11:19';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

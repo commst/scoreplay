@@ -871,7 +871,10 @@ function pagePrep(pg, layout, pi) {
   const tieRect = r => curveStrokes.some(c => Math.abs(c.x0 - r.x0) < 0.6 && Math.abs(c.x1 - r.x1) < 0.6 && Math.abs(c.y0 - r.y0) < 1 && Math.abs(c.y1 - r.y1) < 1);
   const tieRects = rects.filter(tieRect);
   // 여러 마디 쉼표 막대를 고를 때 빼는 붙임줄 채움: 곡선 테두리 안에 들어가는 납작한 사각형 (Microsoft Print to PDF는 크기 차이가 1pt 가까이 남)
-  const looseTie = r => curveStrokes.some(c => c.x0 - 1 <= r.x0 && r.x1 <= c.x1 + 1 && c.y0 - 1 <= r.y0 && r.y1 <= c.y1 + 1 && c.width < r.width + 2);
+  // doPDF는 긴 붙임줄을 반쪽씩(곡선 둘 + 채운 사각형) 그리는데 채움이 곡선 끝까지 닿지 않아 폭 차이가 2pt를 넘기도 한다(판놀음II 태평소 41마디: 곡선 60.3pt, 채움 58.1pt)
+  //  → 한쪽 끝이 곡선 끝과 1pt 안에 맞으면 폭 차이 4pt까지 붙임줄 채움으로 본다
+  const looseTie = r => curveStrokes.some(c => c.x0 - 1 <= r.x0 && r.x1 <= c.x1 + 1 && c.y0 - 1 <= r.y0 && r.y1 <= c.y1 + 1
+    && (c.width < r.width + 2 || ((Math.abs(c.x0 - r.x0) < 1 || Math.abs(c.x1 - r.x1) < 1) && c.width < r.width + 4)));
   const mrRects = rects.filter(r => !tieRects.includes(r) && !looseTie(r));
   const beamList = rects.filter(r => r.height <= 4 && r.width >= 2 && !tieRects.includes(r)).map(r => ({ x0: r.x0, x1: r.x1, yAt: () => (r.y0 + r.y1) / 2 }));
   // 선 4개로 닫아 채운 납작한 가로 사각형(Microsoft Print to PDF의 여러 마디 쉼표 막대: 소나기 대금 124마디 '7'): 여러 마디 쉼표 후보에 함께 넣는다
@@ -903,7 +906,17 @@ function pagePrep(pg, layout, pi) {
   }
   // 곡선(붙임줄·이음줄). 피날레 PDF 가운데에는 곡선을 짧은 직선 수십 개로 펴서 그린 것도 있다(채운 다각형, 납작하고 가로로 긴 모양)
   const polyCurve = d => d.type.includes('f') && d.items.length >= 12 && d.items.every(i => i.op === 'l') && d.rect.width > 6 && d.rect.width > d.rect.height * 2.2 && d.rect.height < 30;
-  const curves = [...fills.filter(d => d.items.some(i => i.op === 'c')).map(d => d.rect), ...drawings.filter(polyCurve).map(d => d.rect), ...tieRects];
+  const curves0 = [...fills.filter(d => d.items.some(i => i.op === 'c')).map(d => d.rect), ...drawings.filter(polyCurve).map(d => d.rect), ...tieRects,
+    ...rects.filter(r => !tieRects.includes(r) && r.height <= 6 && r.width > 8 && looseTie(r))];   // 곡선 테두리 안 채움(폭이 조금 다른 붙임줄 채움)
+  // doPDF: 긴 붙임줄을 반쪽 둘로 그린다(판놀음II 태평소 41→42마디). 끝과 끝이 맞닿은 같은 높이의 조각은 하나로 이어 본다
+  const curves = [];
+  for (const r of [...curves0].sort((a, b) => a.x0 - b.x0)) {
+    // 이어지는 두 붙임줄(♩⌒𝅗𝅥.⌒♩.)은 가운데 음표 머리에서 만나므로, 맞닿는 자리에 악보 글자(머리)가 없을 때만 잇는다
+    const prev = curves.find(c => c._chain && Math.abs(c.x1 - r.x0) < 1.5 && Math.abs((c.y0 + c.y1) / 2 - (r.y0 + r.y1) / 2) < 2.5 && r.height <= 6 && c.height <= 6
+      && !glyphs.some(g => isMusicFont(g.font) && g.x0 - 4 < r.x0 && r.x0 < g.x1 + 4 && Math.abs(g.oy - (r.y0 + r.y1) / 2) < 14));
+    if (prev) { prev.x1 = Math.max(prev.x1, r.x1); prev.y0 = Math.min(prev.y0, r.y0); prev.y1 = Math.max(prev.y1, r.y1); prev.width = prev.x1 - prev.x0; prev.height = prev.y1 - prev.y0; }
+    else curves.push({ x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1, width: r.width, height: r.height, _chain: true });
+  }
   const thickH = drawings.filter(d => d.type === 's' && d.items.length === 1 && (d.width || 0) > 1.5 && d.rect.height < 0.2 && d.rect.width > 20).map(d => d.rect);
   const boxes = drawings.filter(d => d.type === 's' && ((d.items.length === 1 && d.items[0].op === 're') ||
   (d.items.length >= 4 && d.items.length <= 5 && d.items.every(i => i.op === 'l' && (Math.abs(i.p[0] - i.q[0]) < 0.1 || Math.abs(i.p[1] - i.q[1]) < 0.1)))) &&
@@ -2424,10 +2437,30 @@ export async function loadScore(pdfjs, data, onPage) {
 }
 
 // 한 줄(파트보면 null)을 해석한다
+// 마디를 넘는 붙임줄은 앞 마디의 임시표를 이어 간다: 마디 첫머리의 '이어진 음'(tie)을 조표대로 읽어 앞 마디 끝 음과
+// 음높이가 달라지면(바르도 대금 22→23마디: D♮ → 조표대로 D♭) 붙임줄이 끊겨 다시 친다. 같은 성부·같은 자리(dia)의
+// 음이 앞 마디 끝까지 울리고 있으면 그 음높이로 바꾼다(앞 마디에 같은 음높이가 이미 있으면 그대로)
+function carryTieAccidentals(bars) {
+  for (let k = 1; k < bars.length; k++) {
+    const b = bars[k], p = bars[k - 1];
+    if (!p.barLen || !b.events || !p.events) continue;
+    for (const e of b.events) {
+      if (!e.tie || !e.t || e.t.v !== 0 || !e.midis || e.midis.length !== 1 || !e.dia) continue;
+      const m = e.midis[0], d = e.dia[m]; if (d == null) continue;
+      const ends = p.events.filter(o => o.voice === e.voice && o.midis && o.dia && o.t.add(o.sus || o.dur).eq(p.barLen));
+      if (ends.some(o => o.midis.includes(m))) continue;
+      const cand = [...new Set(ends.flatMap(o => o.midis.filter(x => o.dia[x] === d && Math.abs(x - m) <= 2)))];
+      if (cand.length !== 1) continue;
+      e.midis = [cand[0]]; e.dia = { [cand[0]]: d };
+    }
+  }
+}
+
 export function analyzeLine(score, line = null) {
   const res = parseScore(score.pages, line == null ? {} : { line, layouts: score.layouts });
   const bars = res.measures.length ? resolveBars(res.measures, res.systemNumbers) : [];
   const marks = bars.length ? resolveMarks(res.measures, res.marks) : { dyn: [], tempo: [] };
+  carryTieAccidentals(bars);
   // 인쇄된 마디 번호와 대조 (번호를 맞춘 뒤에도 다른 곳)
   const mismatches = res.systemNumbers.filter(([mi, printed]) => res.measures[mi] && bars[res.measures[mi]._first] && bars[res.measures[mi]._first].number !== printed);
   // 악보 보기용: 마디마다 PDF의 어느 쪽·어느 오선·가로 어디인지 (마디 지도 순번과 같은 순서)
