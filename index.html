@@ -1526,11 +1526,15 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 10일</h3>
-    <h4>기능 업데이트 <small>3</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
+      <li><details><summary>윈도에서 'PDF로 인쇄'한 Encore 악보 읽기 (소나기 새 판)</summary><p>Encore 악보를 윈도의 'Microsoft PDF로 인쇄'로 만들면 악보 글꼴 이름이 감춰져, 오선을 하나도 찾지 못하고 '스캔 PDF'로 처리됐습니다. 이제 오선·마디선·기둥 기호 모양으로 Encore 글꼴을 알아봅니다. 이 방식의 PDF에서 붙임줄을 여러 마디 쉼표로 잘못 봐 마디가 비던 것, 채운 도형으로 그린 여러 마디 쉼표, 총보 큰보표(가야금·신디)의 토막 마디선, 쉼표뿐인 쪽, 두 겹 빔도 읽습니다. 소나기 총보 22줄과 파트보가 모두 355마디로 인쇄된 마디 번호와 맞습니다(아쟁 파트보는 사진으로 찍은 PDF라 읽을 수 없음).</p></details></li>
       <li><details><summary>작은 글자로 찍은 셈여림(ff·mp 등)도 읽기</summary><p>시벨리우스 악보처럼 셈여림을 음표보다 작은 글자로 찍은 악보에서 ff·p·mp 등을 읽지 못해, 재생에 셈여림이 반영되지 않고 MusicXML에도 빠졌습니다. 이제 읽습니다(Frontier 총보 MusicXML 셈여림 27 → 214개, 바르도 0 → 1,095개). poco·cresc. 같은 낱말 속 글자는 셈여림으로 보지 않습니다.</p></details></li>
       <li><details><summary>MusicXML 확인을 악보 PDF의 음표 머리 기준으로</summary><p>저장 뒤 확인과 겹쳐 보기가 이제 인식 결과가 아니라 재생할 때 보는 악보 화면(PDF)의 음표 머리와 직접 맞춰 봅니다. 내보낸 음마다 악보 위 자리를 계산해 PDF 머리에 맞는 음이 없는 곳, 남는 음, 음 높이가 다른 음을 마디마다 알려 주고, 겹쳐 보기에서 안 맞은 음은 빨간 동그라미, 짝이 없는 PDF 머리는 빨간 네모로 보여 줍니다. 그래서 인식이 틀린 곳(예: Frontier 대금·해금 15마디)도 찾아집니다. 타악 줄과 옥타브·조옮김을 바꾼 줄은 시각만 맞춥니다. 음 이름도 악보에 적힌 대로 C♭·E♯를 지킵니다(미락흘 소금 253마디).</p></details></li>
       <li><details><summary>MusicXML 저장 뒤 확인 목록, 악보 위에 겹쳐 보기</summary><p>MusicXML을 저장하면 PDF와 다르게 읽었을 수 있는 마디를 줄별로 보여 줍니다(빨간 번호는 내보낸 파일이 인식 결과와도 다른 마디). 번호를 누르면 악보로 보기에서 그 마디로 가서, 내보낸 음을 악보 위에 파란 동그라미로 겹쳐 그립니다. 동그라미가 음표 머리에서 벗어난 곳을 확인해 ✎ 음 고치기로 바로잡은 뒤 다시 저장하면 됩니다. 악보로 보기의 [MusicXML 겹쳐 보기]로 언제든 켜고 끌 수 있습니다.</p></details></li>
     </ul>
+      <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>아래로 기둥이 달린 화음의 아랫음을 다른 성부로 갈라 읽던 문제</summary><p>한 기둥에 머리가 둘 이상인 화음에서 기둥이 아래로 향하면, 아랫음을 위 성부로 따로 읽었습니다. 그래서 그 음이 쉼표 자리에 놓이거나 셋잇단에서 빠지고, MusicXML에서 1·2성부가 위아래로 뒤바뀌었습니다(Frontier 총보 대금·해금 15·19·47·51마디). 이제 한 성부의 화음으로 읽어 붙임줄도 화음 전체에 이어지고(바르도 대금 22마디 등), 이런 마디의 경고가 2천여 마디 줄었습니다.</p></details></li>
+      </ul></details>
     </section>
     <section class="hday"><h3>11월 6일</h3>
       <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
@@ -2233,6 +2237,21 @@ async function extractPages(doc, OPS, onPage) {
         g.font = f + ' (MusicFont)';
       }
     }
+    // 이름이 감춰진 Encore 글꼴(Anastasia를 Microsoft Print to PDF로 'CIDFont+F1'처럼 넣은 것: 소나기 2026-11 판):
+    // 오선 토막(=)·기둥 토막(199·200)·마디선(l)을 글자로 찍는 것으로 알아본다 → 아래 convertEncore가 선으로 바꾼다
+    {
+      const enc = {};
+      for (const g of glyphs) if (!/Anastasia/i.test(g.font) && (!isMusicFont(g.font) || /\(MusicFont\)/.test(g.font))) {
+        const c = g.raw >= 0xF020 && g.raw <= 0xF0FF ? g.raw - 0xF000 : g.raw;
+        const e = enc[g.font] ??= { 61: 0, 108: 0, 199: 0, 200: 0 };
+        if (c in e) e[c]++;
+      }
+      for (const [f, e] of Object.entries(enc)) if ((e[61] >= 10 && e[199] + e[200] >= 10 && e[108] >= 2) || (e[61] >= 40 && e[108] >= 8))   // 쉼표뿐인 쪽(기둥 없음: 소나기 총보 36쪽)
+        for (const g of glyphs) if (g.font === f) {
+          g.code = g.raw >= 0xF020 && g.raw <= 0xF0FF ? g.raw - 0xF000 : g.code;
+          g.font = f.replace(/ \(MusicFont\)$/, '') + ' Anastasia (MusicFont)';
+        }
+    }
     // MuseScore 2.1+(MScore 글꼴)·SMuFL 글꼴(Bravura, Leland, Emmentaler 등: MuseScore 3·4, Dorico)로 찍은 기호를 Maestro 코드로
     for (const g of glyphs) {
       const tab = /MScore(?!Text)/i.test(g.font) ? MSCORE_PUA : /Bravura|Leland|Petaluma|Gootville|Emmentaler|Edwin|Leipzig|Sebastian|Finale ?(Maestro|Broadway|Ash|Jazz|Legacy)/i.test(g.font) && !/Text/i.test(g.font) ? SMUFL_PUA : null;
@@ -2780,11 +2799,20 @@ function pagePrep(pg, layout, pi) {
   const curveStrokes = drawings.filter(d => d.type === 's' && d.items.some(i => i.op === 'c')).map(d => d.rect);
   const tieRect = r => curveStrokes.some(c => Math.abs(c.x0 - r.x0) < 0.6 && Math.abs(c.x1 - r.x1) < 0.6 && Math.abs(c.y0 - r.y0) < 1 && Math.abs(c.y1 - r.y1) < 1);
   const tieRects = rects.filter(tieRect);
+  // 여러 마디 쉼표 막대를 고를 때 빼는 붙임줄 채움: 곡선 테두리 안에 들어가는 납작한 사각형 (Microsoft Print to PDF는 크기 차이가 1pt 가까이 남)
+  const looseTie = r => curveStrokes.some(c => c.x0 - 1 <= r.x0 && r.x1 <= c.x1 + 1 && c.y0 - 1 <= r.y0 && r.y1 <= c.y1 + 1 && c.width < r.width + 2);
+  const mrRects = rects.filter(r => !tieRects.includes(r) && !looseTie(r));
   const beamList = rects.filter(r => r.height <= 4 && r.width >= 2 && !tieRects.includes(r)).map(r => ({ x0: r.x0, x1: r.x1, yAt: () => (r.y0 + r.y1) / 2 }));
-  for (const d of fills) {
-  if (!(d.items.length >= 3 && d.items.length <= 5 && d.items.every(i => i.op === 'l'))) continue;
+  // 선 4개로 닫아 채운 납작한 가로 사각형(Microsoft Print to PDF의 여러 마디 쉼표 막대: 소나기 대금 124마디 '7'): 여러 마디 쉼표 후보에 함께 넣는다
+  const flatPolys = fills.filter(d => d.items.length >= 3 && d.items.length <= 5 && d.items.every(i => i.op === 'l') && d.rect.width > 20 && d.rect.height >= 1 && d.rect.height <= 5
+    && d.items.every(i => Math.abs(i.p[0] - i.q[0]) < 0.1 || Math.abs(i.p[1] - i.q[1]) < 0.1)).map(d => d.rect)
+    .filter(r => !looseTie(r));   // 붙임줄 채움(곡선 테두리와 같은 크기)은 빼고
+  // 한 도형에 사각형 여러 개(선 4개씩)를 담아 그린 빔(Microsoft Print to PDF의 16분음표 두 겹 빔: 소나기 총보 북)은 4개씩 나눠 본다
+  const quadParts = d => d.items.length >= 3 && d.items.length <= 5 ? [d.items] : d.items.length % 4 === 0 && d.items.length <= 16 && d.rect.width >= d.rect.height * 1.5 ? Array.from({ length: d.items.length / 4 }, (_, k) => d.items.slice(k * 4, k * 4 + 4)) : [];
+  for (const d of fills) for (const items of quadParts(d)) {
+  if (!items.every(i => i.op === 'l')) continue;
   const pts = [];
-  for (const it of d.items) for (const p of [it.p, it.q]) if (p && !pts.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 0.05)) pts.push(p);
+  for (const it of items) for (const p of [it.p, it.q]) if (p && !pts.some(q => Math.hypot(q[0] - p[0], q[1] - p[1]) < 0.05)) pts.push(p);
   if (pts.length !== 4) continue;
   pts.sort((a, b) => a[0] - b[0]);
   const [l1, l2, r1, r2] = pts;
@@ -2842,7 +2870,7 @@ function pagePrep(pg, layout, pi) {
   // 오선별 악보 기호 (staffOf를 오선마다 다시 돌리지 않게)
   let byStaff = null;
   const sgOf = si => { if (!byStaff) { byStaff = new Map(); for (const g of maestro) { const k = staffOf(g.oy); if (k == null) continue; if (!byStaff.has(k)) byStaff.set(k, []); byStaff.get(k).push(g); } } return byStaff.get(si) || []; };
-  const v = { fills, rects, tieRects, beamList, curves, thickH, boxes, brackets, maestro, normSize, smallSize, tupletNums, runs, segs, italicNums, sysNums, staffOf, pageMarks, sgOf };
+  const v = { fills, rects, mrRects, flatPolys, tieRects, beamList, curves, thickH, boxes, brackets, maestro, normSize, smallSize, tupletNums, runs, segs, italicNums, sysNums, staffOf, pageMarks, sgOf };
   PAGE_PREP.set(pg, { layout, v });
   return fresh(v);
 }
@@ -2870,7 +2898,7 @@ function parseScore(pages, opts = {}) {
     for (const d of pg.drawings) if (d.type === 's') for (const it of d.items) if (it.op === 'l' && Math.abs(it.p[0] - it.q[0]) < 0.1 && Math.abs(it.p[1] - it.q[1]) > 20) vlsRaw.push([it.p[0], Math.min(it.p[1], it.q[1]), Math.max(it.p[1], it.q[1]), d.width || 0, !!d.stem]);
     const sysOf = i => (i == null ? -1 : layout.sysOf[i]);
     const sysTop = si => staves[layout.systems[layout.sysOf[si]][0]];
-    const { fills, rects, tieRects, beamList, curves, thickH, boxes, brackets, maestro, normSize, smallSize, tupletNums, runs, segs, italicNums, sysNums, staffOf, pageMarks, sgOf } = pagePrep(pg, layout, pi);
+    const { fills, rects, mrRects, flatPolys, tieRects, beamList, curves, thickH, boxes, brackets, maestro, normSize, smallSize, tupletNums, runs, segs, italicNums, sysNums, staffOf, pageMarks, sgOf } = pagePrep(pg, layout, pi);
     maestroCount += maestro.length;
     if (!staves.length) { scanned++; return; }
 
@@ -2917,8 +2945,12 @@ function parseScore(pages, opts = {}) {
       const touchesHead = v => !(Math.abs(v[1] - st.top) < 0.15 && Math.abs(v[2] - st.bottom) < 0.15) && stemHeads.some(g => g.x0 - 0.8 <= v[0] && v[0] <= g.x1 + 0.8 && (Math.abs(g.oy - v[1]) < 2.5 || Math.abs(g.oy - v[2]) < 2.5));
       // 줄이 2~4개인 타악 오선(피날레): 마디선이 오선 위·아래로 같은 만큼(3~9pt) 삐져나오게 그려짐
       const shortBar = v => st.lines && st.lines.length > 1 && st.lines.length < 5 && !st.oneLine && v[1] < st.top - 3 && v[1] > st.top - 9 && v[2] > st.bottom + 3 && v[2] < st.bottom + 9 && Math.abs((st.top - v[1]) - (v[2] - st.bottom)) < 1;
-      const isBar = v => !v[4] && !touchesHead(v) && ((Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6) || shortBar(v))
-        || (v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20
+      // 큰보표 마디선을 토막으로 그렸는데 오선이 작아 이은 선이 짧은 경우(소나기 총보 가야금·신디 윗오선, 오선 높이 12pt):
+      // 이 오선 맨 윗줄에서 시작해 아래 오선 안에서 끝나고, 같은 자리 다른 토막이 아래 오선 맨 아랫줄까지 이어짐
+      const gsBar = v => !v[4] && Math.abs(v[1] - st.top) < 0.6 && v[2] > st.bottom + 3 && staves.some((o, oi) => oi !== si && o.top > st.bottom && v[2] >= o.top - 0.5 && v[2] < o.bottom
+        && vls.some(w => w !== v && !w[4] && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && w[1] > v[1] && Math.abs(w[2] - o.bottom) < 1.5));
+      const isBar = v => gsBar(v) || !v[4] && !touchesHead(v) && ((Math.abs(v[1] - st.top) < 0.6 && Math.abs(v[2] - st.bottom) < 0.6) || shortBar(v))
+        || (!v[4] && v[1] <= st.top + 1.2 && v[2] >= st.bottom - 1.2 && v[2] - v[1] > (st.bottom - st.top) + 20   // !v[4]: Encore 글자 기둥(두 오선에 걸친 화음)은 마디선이 아니다 (소나기 총보 신디 101마디)
           // 마디선은 어떤 오선의 맨 윗줄에서 시작해 어떤 오선의 맨 아랫줄에서 끝난다 (두 오선에 걸친 화음 기둥은 위·아래로 삐져나옴)
           && staves.some(o => Math.abs(v[1] - o.top) < 1.5 || (o.oneLine && v[1] <= o.mid + 1.5 && v[1] >= o.mid - 9)) && staves.some(o => Math.abs(v[2] - o.bottom) < 1.5 || (o.oneLine && v[2] >= o.mid - 1.5 && v[2] <= o.mid + 9) || vls.some(w => w !== v && Math.abs(w[0] - v[0]) < 0.3 && w[1] <= v[2] + 0.5 && Math.abs(w[2] - o.bottom) < 1.5))
           && staves.some((o, oi) => oi !== si && v[1] <= o.top + 1.5 && (v[2] >= o.bottom - 1.5
@@ -3009,7 +3041,9 @@ function parseScore(pages, opts = {}) {
               // 지금 기둥 끝으로 본 쪽에는 꼬리·빔이 없고 반대쪽 끝에만 있을 때 (그때만 길이가 틀린다)
               const marksAt = y => beamList.some(r => r.x0 - 0.6 <= v[0] && v[0] <= r.x1 + 0.6 && Math.abs(r.yAt(v[0]) - y) < 10)
                 || sg.some(f => [FLAG_UP, FLAG_DN, FLAG16_UP, FLAG16_DN].includes(f.code) && Math.abs(f.x0 - v[0]) < 2.5 && Math.min(Math.abs(f.y0 - y), Math.abs(f.y1 - y), Math.abs(f.oy - y)) < 8);
-              if (topH !== botH && marksAt(botH ? v[1] : v[2]) && !marksAt(up ? v[1] : v[2])) up = botH;
+              // 선율 오선은 꼬리·빔이 없어도(4분·2분 화음) 머리가 붙은 끝이 기둥 시작: 아래 기둥 화음의 아랫머리를 위 성부로 갈라
+              // 쉼표 자리에 놓고 셋잇단도 못 붙이던 것(Frontier 총보 대금·해금 15·19·47·51마디)
+              if (topH !== botH && (pitchedStaff || (marksAt(botH ? v[1] : v[2]) && !marksAt(up ? v[1] : v[2])))) up = botH;
             }
             n.voice = up ? 'R' : 'L';
             n._stem = v[0]; n._up = up;
@@ -3289,7 +3323,8 @@ function parseScore(pages, opts = {}) {
         const isBeam = r => beamList.some(bm => bm.x0 - 2 <= r.x0 && r.x1 <= bm.x1 + 2 && Math.abs(bm.yAt((r.x0 + r.x1) / 2) - (r.y0 + r.y1) / 2) < 3) && (notes.filter(n => !n.rest && n.x >= r.x0 - 4 && n.x <= r.x1 + 4).length >= 2
           || glyphs.filter(g => isMaestro(g) && (g.code === HEAD_FILLED || g.code === HEAD_HALF) && g.ox >= r.x0 - 6 && g.ox <= r.x1 + 4 && Math.abs(g.oy - st.mid) < 45).length >= 2);   // 빔 아래(옆 오선 포함)에는 음표가 있다 (여러 마디 쉼표 막대에는 없음)
         // 마디 안의 굵은 가로 막대(여러 마디 쉼표)로 마디를 나눈다. 가운데 줄 높이에 놓인 빔(16분음표 묶음 등)은 제외
-        const r = [...rects, ...thickH].find(r => a <= r.x0 && r.x1 <= b && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3 && !isBeam(r));
+        // 붙임줄을 곡선 테두리 + 채운 사각형으로 그린 PDF(doPDF, Microsoft Print to PDF): 그 사각형은 여러 마디 쉼표 막대가 아니다 (소나기 대금 95마디)
+        const r = [...mrRects, ...flatPolys, ...thickH].find(r => a <= r.x0 && r.x1 <= b && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3 && !isBeam(r));
         if (r && notes.some(n => n.x > r.x1 + 3 && n.x < b)) { regions.splice(i, 1, [a, r.x1 + 2], [r.x1 + 2, b]); leftDouble.splice(i + 1, 0, false); i++; }
       }
       // ---- 음높이: 음자리표·조표·임시표로 음표마다 MIDI 번호를 붙인다 (오선 5줄, 타악기 음자리표가 아닐 때) ----
@@ -3402,7 +3437,7 @@ function parseScore(pages, opts = {}) {
         if (sg.some(g => g.code === TWO_BAR_REPEAT && rx0 + 3 < cx(g) && cx(g) <= rx1 + 3)) { m.kind = 'repeat2a'; content = true; pendingTwoBarNext = true; }
         // 막대 밑에 음표가 둘 이상이면 빔(오선 아래 덧줄 음에서 기둥이 올라와 빔이 가운데 줄에 걸린 경우 등)이지 여러 마디 쉼표가 아니다
         // (화랑 25현 147~166마디가 모두 빈 마디로 읽히던 원인)
-        const mr = [...rects, ...thickH].filter(r => inr(r.x0 + 1) && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3
+        const mr = [...mrRects, ...flatPolys, ...thickH].filter(r => inr(r.x0 + 1) && r.width > 20 && Math.abs((r.y0 + r.y1) / 2 - st.mid) < 3
           && m.notes.filter(n => !n.rest && !n.grace && n.x >= r.x0 - 4 && n.x <= r.x1 + 4).length < 2);
         if (mr.length) {
           const r = mr[0];
@@ -4010,6 +4045,9 @@ function resolveBars(measures, systemNumbers = []) {
             if (r.length && l.length && r.length + l.length >= 3 && (Math.max(...r) < Math.min(...l) - 4 || Math.max(...l) < Math.min(...r) - 4)) { L = null; strong = false; }   // 음 둘(비켜 찍은 화음 머리)은 빼고
           }
         }
+        // 한 기둥 화음의 한 성부(예전에는 아래 기둥 화음의 아랫머리를 다른 성부로 갈라 '두 성부 길이가 같음'으로 박자를 알아봄):
+        // 화음이 있는 한 성부 마디도 같은 근거로 본다 (월광 대아쟁 15마디부터 12/8)
+        if (!L && vals.length === 1 && m.pitched && vals[0][0].eq(vals[0][1]) && vals[0][0].lt(tsLen) && m.notes.some(n => n.chordOf && !n.grace)) { L = vals[0][0]; strong = true; }   // 줄어드는 쪽만(다음 마디도 같아야 바꿈)
         if (!L) { const mx = vals.flat().reduce((a, b) => (b.gt(a) ? b : a)); if (mx.gt(tsLen)) L = mx; }
         if (L && L.lt(tsLen)) {
           // 짧은 쪽은 다음 마디도 같을 때만 새 박자로 본다 (쉼표를 못 읽었을 수 있음)
@@ -9168,7 +9206,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-10 08:47';
+const APP_VERSION = '2026-11-10 10:21';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

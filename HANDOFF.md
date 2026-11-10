@@ -1,6 +1,6 @@
 # 합주연습기 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-10, CHANGELOG 110번까지)
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-10, CHANGELOG 112번까지)
 
 ## 1. 작업 규칙 (사용자 요청)
 
@@ -25,11 +25,21 @@
 - 이전 세션은 `/home/claude/web`(melody.html = index.template.html, score-parser.js, build_melody.py → deploy-hapju/index.html)에서 고친 뒤 저장소 src로 복사했다. 새 세션은 저장소 src에서 바로 고쳐도 됨
 - 뮤즈스코어 4.4.4 AppImage: `/home/claude/mscore/squashfs-root/AppRun` (없으면 다시 받아 압축 풀기; test/msall.sh가 사용)
 - **작업 공간이 새로 만들어지면**(샘플·도구가 모두 사라짐): 저장소 다시 받기 → `npm install` → `mkdir -p /home/claude/web && ln -sfn /home/claude/scoreplay/node_modules /home/claude/web/node_modules` → `mkdir -p /home/claude/web/deploy-hapju && ln -sf /home/claude/scoreplay/index.html /home/claude/web/deploy-hapju/index.html`(fuzz2·pwxml 기본 경로). Playwright는 `NODE_PATH=/opt/npm-tools/node_modules`. MusicXML XSD는 `https://raw.githubusercontent.com/w3c/musicxml/v4.0/schema/{musicxml,xml,xlink}.xsd` → `/home/claude/work/xsd/`. 뮤즈스코어는 `https://github.com/musescore/MuseScore/releases/download/v4.4.4/MuseScore-Studio-4.4.4.243461245-x86_64.AppImage` 받아 `--appimage-extract`
+- **작업 공간 사양이 작음(메모리 7GB·코어 2개)**: regall.sh(8개 동시)는 메모리 부족 → `bash test/cmp/reg2.sh <이전 해석기 폴더> test/regrn.mjs`(2개씩, 약 10분). 회귀가 도는 동안 src/score-parser.js를 고치면 결과가 섞이므로 끝날 때까지 손대지 말 것(git stash도 금지)
+- 처음 돌릴 때 만들 폴더: `mkdir -p xmlout`(pwxml), `mkdir -p /home/claude/mscore/all`(msall.sh)
+- 작업 공간에서 github.io·jsdelivr CDN에는 접속이 막혀 배포 페이지를 직접 열 수 없음 → 배포본과 같은 index.html을 Playwright로(pdf.js는 node_modules로 바꿔 끼움) 시험
 - 샘플은 사용자에게 **zip으로** 받는다(PDF를 그대로 첨부하면 대화에 펼쳐져 토큰을 많이 씀). 맥에서 만든 zip은 파일 이름이 `#Uc18c` 꼴로 풀리므로 `#U(4자리)`를 글자로 바꿔 이름 붙임
 - 한글 파일 이름은 Playwright setInputFiles로 올라가지 않음 → 시험 도구는 `/tmp/pick-<접두어>.pdf`로 복사해 올림(이미 반영)
 - 시험 스크립트 대부분은 `/home/claude/samples`(샘플 PDF), `/home/claude/web/node_modules/pdfjs-dist`(앱 시험 때 CDN 대신 쓰는 pdf.js) 경로를 씀. 환경이 새로 만들어졌으면 경로를 맞추거나 SAMPLES 환경변수 사용
 
 ## 3. 샘플 악보
+
+### 2026-11-10 다시 받은 zip 전체 (작업 공간이 새로 만들어져 다시 받음: 샘플 611개, 회귀에 쓰는 '읽히는' 악보 481개)
+- 받은 zip 36개를 `python3 test/cmp/ingest.py /mnt/user-data/uploads/*.zip`로 넣음. 34-2 프론티어는 34-1 zip 안에 함께 있음
+- **소나기는 새 판으로 바뀜(사용자 지정, 옛 pdfFactory 판은 무시)**: zip 63 'Microsoft Print To PDF'로 인쇄한 Encore 악보 — 총보 61c75dd1(22줄 355마디), 대금 031413dc, 소금 b181d587, 피리·태평소 6e27980d, 해금 54ebac86, 가야금 c8df8196·2 1dc61f3a, 거문고 ee2a16f2, 신디1 00cc3dc7·2 8ed32fe5, 타악기 3b5a0517 / 아쟁 a4736a85는 아이폰 사진 PDF(못 읽음). 아래 11-05 목록의 소나기 md5는 더 이상 없음
+- 아래 '이전 작업 공간의 샘플 (87개)' 중 이번 zip에 없는 것: 1fe03d65·26dd8f21·44e95fb3·52cfd0bf·59ee4663·9128e77f·9e386483·a05c32d0·b3a31a97·bfb7e6f7·d95ddafe 등 → pwv2는 `PRE=9203ad49`로 돌림(곡 제목 'Flower' 확인 1건만 실패하는 것은 정상), pwedit는 옛 샘플이 없어 못 돌림
+- 회귀 목록 /tmp/readable = 샘플 전체에서 소나기 새 판 12개를 뺀 599개(읽히지 않는 것은 도구가 건너뜀)
+
 
 ### 2026-11-05 사용자 zip 전체 (샘플 613개, 읽을 수 있는 PDF 542개)
 - 받은 zip: /mnt/user-data/uploads/*.zip (곡마다 하나, 이름 앞 번호 = 곡 번호). `python3 test/cmp/ingest.py <zip…>`로 풀어 넣고, zip 안 경로(폴더 = 곡·판) 목록은 manifest.json으로 다시 만든다(ingest.py와 같은 이름 풀기로 zip을 읽어 경로·md5를 적음)
@@ -159,5 +169,6 @@
 - 108번: MusicXML 저장 뒤 확인 창(xmlCheck/openXmlCheck)과 겹쳐 보기(svOverPanel, #svOver). 확인 창은 '치는 때'만 비교(음높이 비교는 옥타브·조옮김 설정 때문에 안 함). 겹쳐 보기 세로 자리는 MusicXML 음 이름 + 음자리표로 계산
 - 109번: 확인 창·겹쳐 보기를 PDF 음표 머리(geo.heads, 해석기가 normal 마디에 넣음) 기준으로. xmlNoteXY가 음의 쪽 좌표 계산, 허용 가로 1.4칸·세로 0.3칸. 타악 줄(role perc)·옥타브·조옮김 줄은 가로만(pitchOk). 이벤트에 dia(적힌 온음 번호)를 실어 MusicXML 음 이름을 적힌 대로(C♭ 등). 남은 일: 확인 창에 뜬 마디(Frontier 대금·해금 15·19·47·51마디의 아랫성부 쉼표 자리 A♭ 등)는 실제 인식 오류 — 다음 해석기 개선 후보
 - 110번: Sibelius의 작은 글자 셈여림(Opus Text) 읽기. 셈여림을 건드리면 `TOOL=test/regdyn.mjs bash test/cmp/regall.sh <이전 해석기 폴더>`
-- **이어 할 일(11-10 사용자 요청 '아랫성부 표기 누락·쉬는 마디·악상기호')**: ① 아랫성부 — 한 기둥(아래로 향한) 화음의 아랫머리를 따로 성부 R로 갈라 읽는 문제. 예: Frontier 총보 9203ad49 대금(줄 1)·해금(줄 16) 15·19·47·51마디, Piano 윗줄 19마디: 아랫음 A♭을 쉼표 자리(0.625)에 놓고 셋잇단도 못 붙임 → MusicXML 성부1(위 기둥)=아랫음, 성부2=윗음으로 뒤바뀜. 해석기 makeNote 기둥 고르기·성부 나누기 쪽을 볼 것, 고친 뒤 regrn 전체 회귀. 확인 창(저장 뒤 확인)의 'PDF 머리에 맞는 음 없음/음 높이 다름' 마디가 이런 곳의 목록이 됨 ② 쉬는 마디 — MusicXML·뮤즈스코어에서는 정상, 사용자에게 곡·마디를 물어 볼 것 ③ 악상기호 — 셈여림은 110번에서 고침, 나머지(아티큘레이션·글자 지시)는 MusicXML에 들어감(Frontier: staccato 801·accent 768·slur 704·tenuto 97·words 64)
+- **111·112번(11-10)**: 소나기 새 판(윈도 인쇄 Encore) 읽기, 아래 기둥 화음의 아랫음 성부 갈림 고침. 남은 것: 바르도 대금 23마디 첫 화음으로 들어오는 붙임줄, 판놀음II 태평소 41마디 붙임줄 온음표, 소나기 타악기 MusicXML이 뮤즈스코어에서 8 → 15쪽
+- **이어 할 일(11-10 사용자 요청 '아랫성부 표기 누락·쉬는 마디·악상기호')**: ① 아랫성부 — **112번에서 고침(아래 내용은 기록)** — 한 기둥(아래로 향한) 화음의 아랫머리를 따로 성부 R로 갈라 읽는 문제. 예: Frontier 총보 9203ad49 대금(줄 1)·해금(줄 16) 15·19·47·51마디, Piano 윗줄 19마디: 아랫음 A♭을 쉼표 자리(0.625)에 놓고 셋잇단도 못 붙임 → MusicXML 성부1(위 기둥)=아랫음, 성부2=윗음으로 뒤바뀜. 해석기 makeNote 기둥 고르기·성부 나누기 쪽을 볼 것, 고친 뒤 regrn 전체 회귀. 확인 창(저장 뒤 확인)의 'PDF 머리에 맞는 음 없음/음 높이 다름' 마디가 이런 곳의 목록이 됨 ② 쉬는 마디 — MusicXML·뮤즈스코어에서는 정상, 사용자에게 곡·마디를 물어 볼 것 ③ 악상기호 — 셈여림은 110번에서 고침, 나머지(아티큘레이션·글자 지시)는 MusicXML에 들어감(Frontier: staccato 801·accent 768·slur 704·tenuto 97·words 64)
 - 앱의 기준 줄(master)은 경고가 가장 적은 줄 → 경고 수가 바뀌면 기준 줄이 바뀔 수 있음(103번에서 월광 8·16마디 MusicXML 박자가 바뀐 원인)
