@@ -1263,9 +1263,16 @@ export function parseScore(pages, opts = {}) {
       // 선율 악보에서 한 기둥에 붙은 여러 머리(화음): 첫 머리만 길이 계산에 쓰고 나머지는 같은 때 함께 울린다
       if (pitchedStaff) {
         const groups = new Map();
+        // 같은 기둥: 기둥 가로 자리가 0.6pt 안이면 한 묶음(예전에는 0.25pt 칸으로 반올림해, 222.77·222.95처럼 칸 경계에 걸친 2도 화음이
+        // 두 묶음으로 갈려 윗머리가 뒤 음으로 밀렸다 — 연변목가 양금 2마디)
+        const stemKeys = [];
         for (const n of headNotesAll) {
           if (n.grace) continue;
-          const k = n.voice + (n._stem != null ? 's' + Math.round(n._stem * 4) : 'x' + Math.round(n.x));
+          let k;
+          if (n._stem != null) {
+            const hit = stemKeys.find(q => q.v === n.voice && Math.abs(q.s - n._stem) < 0.6);
+            if (hit) k = hit.k; else { k = n.voice + 's' + stemKeys.length; stemKeys.push({ v: n.voice, s: n._stem, k }); }
+          } else k = n.voice + 'x' + Math.round(n.x);
           if (!groups.has(k)) groups.set(k, []); groups.get(k).push(n);
         }
         for (const g of groups.values()) if (g.length > 1) {

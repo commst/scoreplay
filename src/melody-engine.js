@@ -343,10 +343,28 @@ function expandTrills(notes) {
   }
   return out;
 }
+// 트레몰로: 녹음 트레몰로가 없는 치는·뜯는 악기(양금·거문고·피아노 녹음)는 음을 약 0.075초마다 되풀이해 친다.
+// 예전에는 녹음 트레몰로가 없으면 한 번만 치고 끝나 '커졌다 작아졌다'(꺾쇠)가 들리지 않았다. nt.env(0.04초마다 크기 비율)를 따라 세기를 바꾼다
+function expandTremolo(notes) {
+  if (!notes.some(n => n.trem)) return notes;
+  const out = [];
+  for (const nt of notes) {
+    const ins = INSTRUMENTS[nt.inst], bank = ins && ins.bank ? BANKS[ins.bank] : null;
+    const struck = ins && (ins.kind === 'pluck' || ins.kind === 'piano');
+    if (!nt.trem || !struck || !bank || (bank.t && bank.t.length) || nt.dur < 0.15) { out.push(nt); continue; }
+    const step = 0.075, n = Math.max(2, Math.round(nt.dur / step)), st = nt.dur / n;
+    for (let i = 0; i < n; i++) {
+      const t = i * st, e = nt.env ? nt.env[Math.min(nt.env.length - 1, Math.floor(t / (nt.envStep || 0.04)))] : 1;
+      out.push({ ...nt, trem: false, nong: false, env: null, graces: i ? null : nt.graces, t: nt.t + t, dur: Math.min(st * 2, nt.dur - t + 0.05),
+        gain: nt.gain * e * (i === 0 ? 1 : i % 2 ? 0.86 : 0.94) });   // 두 채를 번갈아 치는 것처럼 세기를 조금씩 다르게
+    }
+  }
+  return out;
+}
 // bufR를 주면 좌우 두 줄로 섞는다: 음마다 nt.pan(-1 왼쪽 ~ 1 오른쪽, 같은 힘 법칙. 가운데는 양쪽 1)
 export function mixNotes(buf, notes, onProgress, bufR = null) {
   const cache = mixNotes.cache || (mixNotes.cache = new Map());
-  notes = expandTrills(notes);
+  notes = expandTremolo(expandTrills(notes));
   let done = 0;
   for (const nt of notes) {
     if (bufR) { const a = (Math.max(-1, Math.min(1, nt.pan || 0)) + 1) * Math.PI / 4; OUT.R = bufR; OUT.pl = Math.cos(a) * Math.SQRT2; OUT.pr = Math.sin(a) * Math.SQRT2; }

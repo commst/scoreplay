@@ -113,15 +113,21 @@ const KG = 2.8;
 const BUK_MID = 4, BUK_CLICK = 0.6;
 const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.8 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG,
   // 11월 1일 넣은 녹음: 녹음 크기가 제각각이라 들리는 크기로 맞춤 (봉고 ≈ 장구 따, 탬버린·트라이앵글 ≈ 심벌·바라, 카바사는 조금 작게)
-  '봉고': 1.6, '봉고높게': 1.6, '카바사': 2.25, '탬버린': 1.5, '트라이앵글': 0.85, '윈드차임': 0.5 };
+  '봉고': 1.6, '봉고높게': 1.6, '팀파니': 1.3, '팀파니높게': 1.3, '카바사': 2.25, '탬버린': 1.5, '트라이앵글': 0.85, '윈드차임': 0.5 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
 export function dynLevelAt(items, p) {
   let level = 0.75;
-  for (const it of items) {
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
     if (it.p0 > p) break;
     if (it.kind === 'mark') { level = it.level; continue; }
-    const target = it.target != null ? it.target : Math.max(0.2, Math.min(1, level + it.dir * 0.15));
-    if (p < it.p1) return level + (target - level) * (p - it.p0) / Math.max(1e-6, it.p1 - it.p0);
+    // 그린 꺾쇠(hp)는 셈여림 글자가 없어도 귀에 들리게 0.25(약 4dB), 글자 cresc.·dim.은 0.15
+    const amt = it.hp ? 0.25 : 0.15;
+    const target = it.target != null ? it.target : Math.max(0.2, Math.min(1, level + it.dir * amt));
+    // 다음 셈여림(꺾쇠·글자)이 이 꺾쇠가 끝나기 전에 시작하면 거기서 끝낸다(< 뒤 바로 > 가 겹쳐 > 가 들리지 않던 것 — 연변목가 양금 1마디)
+    let p1 = it.p1;
+    for (let j = i + 1; j < items.length; j++) if (items[j].p0 > it.p0 + 1e-6) { p1 = Math.min(p1, items[j].p0); break; }
+    if (p < p1) return level + (target - level) * (p - it.p0) / Math.max(1e-6, p1 - it.p0);
     level = target;
   }
   return level;
@@ -260,6 +266,7 @@ export function renderPlan(bars, order, opts) {
         // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
         const sdur = e.stacc && !e.ten && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
         notes.push({ t: tsH, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
+          dynL: e.dynL || null, dynOff: e.dynOff || 0,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
           graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
         continue;
@@ -310,6 +317,20 @@ export function renderPlan(bars, order, opts) {
       }
     }
   });
+  // 트레몰로 음: 음 길이 동안의 셈여림 변화(꺾쇠 < >)를 0.04초마다 적어 둔다(첫 값 대비 비율) → 녹음 트레몰로가 없는 악기는 이 크기로 되풀이해 친다
+  if ((opts.dyn || opts.useLvl) && barTimes.length) {
+    const ends = barTimes.map((b, j) => j + 1 < barTimes.length ? barTimes[j + 1].abs : cur);
+    const posAt = t => { let j = 0; while (j + 1 < barTimes.length && barTimes[j + 1].abs <= t + 1e-9) j++; const b = barTimes[j], d = Math.max(1e-6, ends[j] - b.abs); return b.idx + Math.min(0.9999, Math.max(0, (t - b.abs) / d)); };
+    for (const nt of notes) {
+      if (!nt.trem || nt.dur < 0.2) continue;
+      // 그 줄의 셈여림(dynL)이 있으면 그것으로(앱은 음마다 그 줄의 셈여림을 쓴다), 없으면 곡 전체 셈여림
+      const lv = nt.dynL && opts.useLvl ? (q => dynLevelAt(nt.dynL, q + nt.dynOff)) : dynAt;
+      const base = lv(posAt(nt.t)) || 1, env = [];
+      for (let t = 0; t < nt.dur; t += 0.04) env.push(Math.max(0.15, Math.min(4, lv(posAt(nt.t + t)) / base)));
+      if (env.some(v => Math.abs(v - 1) > 0.02)) { nt.env = env; nt.envStep = 0.04; }
+    }
+    for (const nt of notes) { delete nt.dynL; delete nt.dynOff; }
+  }
   return { hits, notes, barTimes, total: cur + (notes.length ? 2.2 : 1.2), t0 };
 }
 
@@ -348,7 +369,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   let lastTa = -9, flip = 0;
   // 북·바라·심벌·베이스드럼은 울림이 길다. 같은 악기를 다시 치면 앞 울림을 짧게 줄여 낮은 소리가 쌓여 뭉개지지 않게 한다
   // 같은 악기(같은 북)를 다시 치면 앞 소리의 울림을 줄인다. 높이가 다른 북·다른 북 소리끼리는 서로 끊지 않는다
-  const fam = (k, ex) => k === '북녹음' || k === '북짧게' || k === '북' ? k + ':' + ((ex && ex.sh) || 0) : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : k === '봉고' || k === '봉고높게' ? k : null;
+  const fam = (k, ex) => k === '북녹음' || k === '북짧게' || k === '북' ? k + ':' + ((ex && ex.sh) || 0) : k === '바라' ? 'r' : k === '심벌' ? 'c' : k === '하이햇' ? 'h' : k === '베이스드럼' ? 'd' : k === '봉고' || k === '봉고높게' || k === '팀파니' || k === '팀파니높게' ? k : null;
   const nextSame = new Float64Array(hits.length).fill(Infinity);
   { const ord = hits.map((_, i) => i).sort((a, b) => hits[a][0] - hits[b][0]), last = {};
     for (let j = ord.length - 1; j >= 0; j--) { const i = ord[j], f = fam(hits[i][1], hits[i][4]); if (!f) continue;
@@ -614,6 +635,9 @@ export function decodeRecorded(obj) {
   }
   // 징: 녹음은 6초 가까이 울려 다음 소리를 덮는다 → 0.4초 뒤부터 빨리 줄여 3초 안에 끝나게
   // 봉고 한 쌍: 높은 봉고는 녹음을 반음 5개 높여 만든다
+  // 팀파니(타악으로 칠 때): 선율용 팀파니 녹음(약 E3)에서 한 번 친 소리를 잘라 둔 것 → 낮은 음 C3(−4.2반음)·높은 음 G3(+2.8반음)
+  { const rs = (y, st) => { const r = Math.pow(2, st / 12), n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; };
+    if (out['팀파니']) { const raw = out['팀파니']; out['팀파니높게'] = raw.map(y => rs(y, 55 - 52.2)); out['팀파니'] = raw.map(y => rs(y, 48 - 52.2)); } }
   if (out['봉고']) out['봉고높게'] = out['봉고'].map(y => { const r = Math.pow(2, 5 / 12), n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; });
   if (out['징']) out['징'] = out['징'].map(y => {
     const n = Math.min(y.length, Math.round(3 * SR)), z = y.slice(0, n), a = Math.round(0.4 * SR), fo = Math.round(0.3 * SR);
