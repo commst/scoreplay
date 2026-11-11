@@ -1,0 +1,317 @@
+{
+ "format": "hapju-settings",
+ "v": 1,
+ "title": "연변목가",
+ "titleRead": "연변목가",
+ "file": "Finale 2005 - 연변목가.pdf",
+ "saved": "2026-11-11T11:36:43.794Z",
+ "lastBar": 158,
+ "lines": {
+  "main:0": {
+   "name": "소금",
+   "role": "melody",
+   "inst": "sogeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:1": {
+   "name": "대금",
+   "role": "melody",
+   "inst": "daegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:2": {
+   "name": "피리",
+   "role": "melody",
+   "inst": "piri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:3": {
+   "name": "대피리",
+   "role": "melody",
+   "inst": "daepiri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:4": {
+   "name": "해금",
+   "role": "melody",
+   "inst": "haegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:5": {
+   "name": "저해금",
+   "role": "melody",
+   "inst": "haegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:6": {
+   "name": "대아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:7": {
+   "name": "가야금 (윗줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:8": {
+   "name": "가야금 (아랫줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:9": {
+   "name": "거문고",
+   "role": "melody",
+   "inst": "geomungo",
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:10": {
+   "name": "양금",
+   "role": "melody",
+   "inst": "yanggeum",
+   "oct": 0,
+   "vol": 0.5,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:11": {
+   "name": "북",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:12": {
+   "name": "징",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "징",
+   "L": "징",
+   "nong": false
+  },
+  "main:13": {
+   "name": "장고",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:14": {
+   "name": "목탁 / (작은것) / 꽹과리",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "꽹과리",
+   "L": "꽹과리",
+   "nong": false
+  }
+ },
+ "tempoRows": [
+  {
+   "start": 1,
+   "unit": "dq",
+   "bpm": 40,
+   "auto": true,
+   "text": "♩.=52",
+   "manual": true
+  },
+  {
+   "start": 33,
+   "unit": "q",
+   "bpm": 132,
+   "auto": true,
+   "text": "♩=132"
+  },
+  {
+   "start": 43,
+   "unit": "q",
+   "bpm": 140,
+   "auto": true,
+   "text": "♩=136-144"
+  },
+  {
+   "start": 77,
+   "unit": "dq",
+   "bpm": 100,
+   "auto": true,
+   "text": "♩.=100"
+  },
+  {
+   "start": 119,
+   "unit": "dq",
+   "bpm": 40,
+   "auto": true,
+   "text": "♩.=♩",
+   "eq": {
+    "left": 0.375,
+    "right": 0.25
+   },
+   "eqFrom": 77,
+   "eqUnit": "dq",
+   "manual": true,
+   "eqFlip": false
+  },
+  {
+   "start": 136,
+   "unit": "dq",
+   "bpm": 40,
+   "auto": true,
+   "text": "♩.=52",
+   "manual": true
+  }
+ ],
+ "tempoDet": [
+  "1|dq|52",
+  "33|q|132",
+  "43|q|140",
+  "77|dq|100",
+  "119|dq|150",
+  "136|dq|52"
+ ],
+ "speed": 100,
+ "ritF": "80",
+ "accF": "120",
+ "play": {
+  "from": 1,
+  "to": 158,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "metroVol": 1,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "loop": false,
+  "rest": "sub",
+  "ramp": false,
+  "rampStart": 70,
+  "rampStep": 5
+ },
+ "save": {
+  "from": 1,
+  "to": 158,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "linked": true,
+  "format": "mp3"
+ },
+ "order": null,
+ "tempoChanges": [
+  {
+   "kind": "rit",
+   "bar": 31,
+   "off": 0.9929206993443636,
+   "len": 0.45,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "rit",
+   "bar": 32,
+   "off": 0.4452850356294533,
+   "len": 0.02,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "rit",
+   "bar": 32,
+   "off": 0.4699881235154386,
+   "len": 2,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "accel",
+   "bar": 42,
+   "off": 0,
+   "len": 2,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "atempo",
+   "bar": 63,
+   "off": 0.0005753385994324844,
+   "len": 0,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "rit",
+   "bar": 118,
+   "off": 0,
+   "len": 1,
+   "pct": 100,
+   "auto": false
+  }
+ ],
+ "sound": {
+  "transpose": 0,
+  "tune": 440,
+  "fermata": 2,
+  "reverb": 0.22,
+  "artic": true,
+  "stereo": true,
+  "human": true
+ },
+ "extras": [],
+ "edits": [],
+ "key": "b3b30226721a0d4b-1336691"
+}
