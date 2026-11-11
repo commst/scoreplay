@@ -1048,11 +1048,12 @@ body.all-panes { padding-bottom: 0; }
 .set-btns > .x { grid-column: 1 / -1; justify-self: center; }
 #lineFilters { flex-direction: column; align-items: stretch; }
 /* 곡 제목 바꾸기 (악보 파일 창) */
-.song-rename { display: grid; gap: 6px; margin: 12px 0 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.song-rename { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 12px 0 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .song-rename > label { font-weight: 700; font-size: 14px; }
 .song-rename .rn-row { display: flex; gap: 8px; align-items: center; }
-.song-rename input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line-2, var(--line)); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; }
+.song-rename input { flex: 1 1 0; min-width: 0; width: 0; padding: 8px 10px; border: 1px solid var(--line-2, var(--line)); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; }
 .song-rename .hint { margin: 0; }
+.song-rename .rn-row .btn { flex: none; white-space: nowrap; }   /* [악보 제목으로]가 보일 때 휴대폰에서 창이 화면보다 넓어지던 것(152번) */
 /* ===== ScoreWorks: 이름·아이콘·글꼴 (2026-11-11) ===== */
 /* 글꼴: 본문 Pretendard, 이름(워드마크) Outfit */
 body, button, input, select, textarea { font-family: var(--font-body); }
@@ -1767,6 +1768,9 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 대금·피리·해금·소금·꽹과리는 조금 작게, 태평소·가야금·피아노·장구는 조금 크게 했습니다. 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
+      <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <li><details><summary>휴대폰에서 악보 파일 창이 화면보다 넓어지던 문제</summary><p>곡 제목을 바꾼 뒤 [악보]를 누르면 창이 화면보다 넓어져 왼쪽이 잘렸습니다. 제목 칸이 화면 폭에 맞춰 줄어들게 고쳤습니다.</p></details></li>
+    </ul></details>
   </section>
   <section class="hday"><h3>11월 11일</h3>
     <h4>기능 업데이트 <small>16</small></h4><ul class="hlist">
