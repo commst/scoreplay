@@ -1,14 +1,19 @@
 // 사용설명서용 화면 캡처
 const { chromium } = require('playwright'); const fs = require('fs');
-const SM = '/home/claude/samples/', pick = p => SM + fs.readdirSync(SM).find(f => f.startsWith(p));
+const NICE = { b3a31a97: 'Yeonbyeon-Mokga-score', '44e95fb3': 'Flowers-of-K-score', b36addce: 'Yeonbyeon-Mokga-Janggo', '952d391a': 'Yeonbyeon-Mokga-Moktak', '70437fac': 'Yeonbyeon-Mokga-Buk' };   // 그림에 보이는 파일 이름
+fs.mkdirSync('/tmp/manual-pick', { recursive: true });
+const SM = '/home/claude/samples/', pick = p => { const t = '/tmp/manual-pick/' + (NICE[p] || p) + '.pdf'; fs.copyFileSync(SM + fs.readdirSync(SM).find(f => f.startsWith(p)), t); return t; };   // 한글 파일 이름은 Playwright로 올라가지 않아 영어 이름으로 복사
 const O = '/home/claude/work/manual/img/';
 const HTML = 'file:///home/claude/web/deploy-hapju/index.html';
 async function setup(b, w, h, mobile) {
   const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: !!mobile, hasTouch: !!mobile, colorScheme: 'light', acceptDownloads: true });
   const p = await ctx.newPage();
   await p.route('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/**', r => { const f = r.request().url().split('pdfjs-dist@4.10.38/')[1].replace('.min.mjs', '.mjs'); r.fulfill({ path: '/home/claude/web/node_modules/pdfjs-dist/' + f, contentType: 'text/javascript' }); });
-  await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ body: '', contentType: 'text/css' }));
-  await p.goto(HTML); await p.waitForTimeout(400);
+  await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ contentType: 'text/css', body: "@font-face{font-family:'Outfit';font-weight:100 900;font-display:swap;src:url(https://fonts.gstatic.com/outfit.woff2) format('woff2')}" }));
+  // 글꼴: 작업 공간에서는 CDN에 못 닿으므로 npm으로 받은 파일 (/home/claude/work/fonts에서 npm i pretendard@1.3.9 @fontsource-variable/outfit)
+  await p.route('https://fonts.gstatic.com/**', r => r.fulfill({ path: '/home/claude/work/fonts/node_modules/@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2', contentType: 'font/woff2' }));
+  await p.route('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/**', r => { const fp = '/home/claude/work/fonts/node_modules/pretendard/dist/web/variable/' + r.request().url().split('/variable/')[1].replace('.min.css', '.css'); return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
+  await p.goto(HTML); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(600);
   return p;
 }
 const loadFull = async (p, id) => { await p.setInputFiles('#pdfInput', pick(id)); await p.waitForFunction(() => !document.body.classList.contains('welcome') && document.querySelectorAll('#lineList .lcard').length >= 1, null, { timeout: 90000 }); await p.waitForTimeout(1200); };
@@ -69,7 +74,7 @@ const el = async (p, sel, n, pad = 6) => { const bx = await p.locator(sel).first
   await p.click('#playBtn'); await p.waitForTimeout(900); await shot(p, '09_tempo_missing');
   await p.context().close();
   // 파트보
-  p = await setup(b, 1280, 800); await p.setInputFiles('#partsInput', [pick('d95ddafe'), pick('26dd8f21'), pick('5b6313b5')]);
+  p = await setup(b, 1280, 800); await p.setInputFiles('#partsInput', [pick('b36addce'), pick('952d391a'), pick('70437fac')]   /* 연변목가 장고·목탁꽹과리·북 파트보 (지금 샘플) */);
   await p.waitForFunction(() => !document.body.classList.contains('welcome') && document.querySelectorAll('#lineList .lcard').length >= 3, null, { timeout: 90000 }); await p.waitForTimeout(1200);
   await shot(p, '20_parts'); await p.context().close();
   // 휴대폰

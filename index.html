@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
-<title>합주연습기</title>
+<title>ScoreWorks</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233d5a99'/%3E%3Cstop offset='.55' stop-color='%236b5bd2'/%3E%3Cstop offset='1' stop-color='%23d4688f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='13' fill='url(%23g)'/%3E%3Cpath d='M6 30c4-7 8-7 12 0s8 7 12 0 8-7 12 0' fill='none' stroke='%23fff' stroke-opacity='.45' stroke-width='2.6' stroke-linecap='round'/%3E%3Cellipse cx='19' cy='31' rx='5.2' ry='3.9' transform='rotate(-22 19 31)' fill='%23fff'/%3E%3Cpath d='M23.6 30V11c5 1.4 8.4 4.4 8 10' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233d5a99'/%3E%3Cstop offset='.55' stop-color='%236b5bd2'/%3E%3Cstop offset='1' stop-color='%23d4688f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='13' fill='url(%23g)'/%3E%3Cpath d='M6 30c4-7 8-7 12 0s8 7 12 0 8-7 12 0' fill='none' stroke='%23fff' stroke-opacity='.45' stroke-width='2.6' stroke-linecap='round'/%3E%3Cellipse cx='19' cy='31' rx='5.2' ry='3.9' transform='rotate(-22 19 31)' fill='%23fff'/%3E%3Cpath d='M23.6 30V11c5 1.4 8.4 4.4 8 10' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&display=swap">
 <style>
 /* 레이아웃: 위 = 악보 올리기, 아래 = 왼쪽 설정 열 + 오른쪽 연주·마디 지도 (좁으면 한 열) */
 :root {
@@ -22,9 +25,10 @@
   --warn: #a8670f;
   --warn-bg: #f7ecd9;
   --now: #fde7a6;
-  --font-display: "Gowun Batang", "Noto Serif KR", serif;
-  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-display: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-logo: "Outfit", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --r: 10px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -421,7 +425,7 @@ body.sv-lock #mini { display: none; }
   --paper: #edf0f4; --card: #ffffff; --ink: #19202e; --muted: #5d697b; --line: #d6dce5; --line-2: #c3cbd7;
   --accent: #283c8e; --accent-ink: #ffffff; --accent-soft: #e6e9f6;
   --chae: #c2453a; --buk: #2c5da8; --now: #fbe7a1; --warn: #9a5d0c; --warn-bg: #fbf0dc;
-  --font-num: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --font-num: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --r: 14px; --r-s: 8px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -1051,6 +1055,82 @@ body.all-panes { padding-bottom: 0; }
 .song-rename .rn-row { display: flex; gap: 8px; align-items: center; }
 .song-rename input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line-2, var(--line)); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; }
 .song-rename .hint { margin: 0; }
+/* ===== ScoreWorks: 이름·아이콘·글꼴 (2026-11-11) ===== */
+/* 글꼴: 본문 Pretendard, 이름(워드마크) Outfit */
+body, button, input, select, textarea { font-family: var(--font-body); }
+.num, .bt-num b, .bt-scale span, .lcard .no { font-variant-numeric: tabular-nums; }
+.step-h, .lv-title { letter-spacing: -0.02em; }
+.wm { font-family: var(--font-logo); font-weight: 700; letter-spacing: -0.025em; white-space: nowrap; }
+.wm-a { color: var(--wm-a, var(--ink)); }
+.wm-b { background: linear-gradient(100deg, var(--wm-b1, #3d5a99), var(--wm-b2, #6b5bd2) 55%, var(--wm-b3, #d4688f)); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+@media (prefers-color-scheme: dark) { :root:not(#_):not([data-theme="light"]) { --wm-a: #eef1fb; --wm-b1: #9db2ee; --wm-b2: #b6a6ff; --wm-b3: #f29ab8; } }
+.sw-mark { display: block; flex: none; }
+
+/* 악기 카드: 내용(긴 단추 글·그림)이 카드 폭을 넓히지 않게 (펼친 카드에서 [악보 이름으로]·[이 소리로 바꾸기]가 카드 밖으로 넘치던 것) */
+.lcard { grid-template-columns: minmax(0, 1fr); }
+.lcard > * { min-width: 0; }
+.lrename .rn-sug { white-space: normal; max-width: 100%; }
+.lrename { grid-template-columns: minmax(0, 1fr); }
+.lrename > * { min-width: 0; }
+.lrename .rn-row > .rn-reset { flex: none; }
+/* 위 막대: 가운데 이름, 왼쪽 곡 이름·상태, 오른쪽 단추 */
+.topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.tb-left { display: flex; align-items: center; gap: 10px; min-width: 0; justify-self: start; max-width: 100%; }
+.tb-right { display: flex; align-items: center; gap: 8px; min-width: 0; justify-self: end; }
+.topbar .tb-logo { display: inline-flex; align-items: center; gap: 9px; justify-self: center; margin: 0; font: 700 23px/1 var(--font-logo); letter-spacing: -0.025em; }
+.topbar .tb-logo .sw-mark { width: 30px; height: 30px; filter: drop-shadow(0 2px 5px rgba(61, 90, 153, .25)); }
+.tb-song { max-width: 100%; }
+.tb-btn .ls { display: none; }
+/* 단추는 같은 너비(화면 폭에 따라 긴 이름 132px / 짧은 이름 80·70px), [신고]는 조금 떼어 둠 */
+@media (min-width: 901px) {
+  .topbar .tb-btn { width: 132px; min-width: 0; padding: 7px 4px; font-size: 13.5px; border-radius: 999px; text-align: center; justify-content: center; }
+  .tb-btn#reportBtn { margin-left: 10px; }
+}
+@media (min-width: 901px) and (max-width: 1799px) { .topbar .tb-btn { width: 80px; } }
+@media (min-width: 901px) and (max-width: 1180px) { .topbar .tb-btn { width: 68px; font-size: 13px; } .tb-right { gap: 6px; } }
+@media (max-width: 1799px) { .tb-btn .ll { display: none; } .tb-btn .ls { display: inline; } }
+
+@media (max-width: 900px) {
+  .topbar { gap: 8px; }
+  .topbar .tb-logo { font-size: 20px; gap: 7px; }
+  .topbar .tb-logo .sw-mark { width: 26px; height: 26px; }
+  .tb-left .tb-song { flex: 1 1 auto; }
+}
+@media (max-width: 560px) {
+  .topbar .tb-logo { font-size: 18px; gap: 6px; }
+  .topbar .tb-logo .sw-mark { width: 24px; height: 24px; }
+  .tb-song { padding: 6px 9px; }
+  .tb-right { gap: 6px; }
+}
+@media (max-width: 370px) { .topbar .tb-logo .wm { display: none; } }
+
+/* 첫 화면: 아이콘·이름·설명을 가운데로 */
+.load-view .hero { text-align: center; padding: 46px 44px 34px; }
+.load-view .hero .hero-mark { display: none; }
+.hero-waves { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 110px; pointer-events: none; }
+.hero-waves path { fill: none; stroke: var(--accent); stroke-width: 2; opacity: .13; vector-effect: non-scaling-stroke; }
+.hero-waves path + path { opacity: .08; }
+.hero-brand { position: relative; display: flex; justify-content: center; }
+.hero-brand .sw-mark { width: 76px; height: 76px; filter: drop-shadow(0 10px 22px rgba(61, 90, 153, .28)); }
+.load-view .hero h1.wm { position: relative; margin: 16px 0 0; font: 800 clamp(46px, 7.4vw, 76px)/1.02 var(--font-logo); letter-spacing: -0.04em; color: var(--hero-ink); }
+.load-view .hero h1.wm .wm-a { color: var(--wm-a, var(--hero-ink)); }
+.hero-tag { position: relative; margin: 10px 0 0; font: 600 15px/1.45 var(--font-body); letter-spacing: .08em; color: var(--hero-sub); }
+.load-view .hero .lede { margin: 18px auto 0; max-width: 60ch; text-wrap: pretty; }
+.load-view .hero .caution { margin: 14px auto 0; max-width: 62ch; border-left: 0; border-top: 0; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(226, 177, 58, .45); text-align: center; }
+.load-view .hero .hero-steps { margin: 28px auto 0; max-width: 1040px; text-align: left; }
+.load-view .hero .hero-steps li { flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 16px 14px 14px; }
+.load-view .hero .hero-steps li b { display: block; margin-bottom: 2px; font-size: 14.5px; }
+.load-view .hero .hero-steps .hs-n { margin: 0; }
+.load-view .hero .hero-steps li > span:last-child { display: block; }
+.lv-demo { justify-content: center; }
+@media (max-width: 560px) {
+  .load-view .hero { padding: 30px 18px 22px; }
+  .hero-brand .sw-mark { width: 60px; height: 60px; }
+  .load-view .hero h1.wm { margin-top: 12px; }
+  .hero-tag { font-size: 13.5px; letter-spacing: .04em; }
+  .load-view .hero .hero-steps li { flex-direction: row; align-items: flex-start; text-align: left; padding: 11px 13px; gap: 10px; }
+  .hero-waves { height: 70px; }
+}
 </style>
 </head>
 <body>
@@ -1063,15 +1143,22 @@ body.all-panes { padding-bottom: 0; }
   <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
     <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
   <header class="topbar" id="topbar">
-    <h1 class="tb-logo">합주연습기</h1>
-    <button class="tb-song" id="tbSong" type="button" title="악보 파일 보기 · 곡 제목 바꾸기"><b id="tbSongName">예시 장단</b><span id="tbSongInfo"></span></button>
-    <span class="tb-gap"></span>
-    <span class="tb-state" id="tbState" aria-live="polite"></span>
-    <button class="btn tb-btn" id="filesBtn" type="button">악보 파일</button>
-    <button class="btn tb-btn" id="histBtn" type="button">업데이트 이력</button>
-    <button class="btn tb-btn" id="helpBtn" type="button">프로그램 사용법</button>
-    <a class="btn tb-btn" id="manualBtn" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기</a>
-    <button class="btn tb-btn tb-report" id="reportBtn" type="button">문제점 신고하기</button>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+      <linearGradient id="swGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d5a99"/><stop offset=".55" stop-color="#6b5bd2"/><stop offset="1" stop-color="#d4688f"/></linearGradient>
+      <symbol id="swMark" viewBox="0 0 48 48"><rect width="48" height="48" rx="13" fill="url(#swGrad)"/><path d="M6 30c4-7 8-7 12 0s8 7 12 0 8-7 12 0" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="19" cy="31" rx="5.2" ry="3.9" transform="rotate(-22 19 31)" fill="#fff"/><path d="M23.6 30V11c5 1.4 8.4 4.4 8 10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs></svg>
+    <div class="tb-left">
+      <button class="tb-song" id="tbSong" type="button" title="악보 파일 보기 · 곡 제목 바꾸기"><b id="tbSongName">예시 장단</b><span id="tbSongInfo"></span></button>
+      <span class="tb-state" id="tbState" aria-live="polite"></span>
+    </div>
+    <h1 class="tb-logo"><svg class="sw-mark" aria-hidden="true"><use href="#swMark"/></svg><span class="wm"><span class="wm-a">Score</span><span class="wm-b">Works</span></span></h1>
+    <div class="tb-right">
+      <button class="btn tb-btn" id="filesBtn" type="button"><span class="ll">악보 파일</span><span class="ls">악보</span></button>
+      <button class="btn tb-btn" id="histBtn" type="button" title="업데이트 이력"><span class="ll">업데이트 이력</span><span class="ls">이력</span></button>
+      <button class="btn tb-btn" id="helpBtn" type="button" title="프로그램 사용법"><span class="ll">프로그램 사용법</span><span class="ls">사용법</span></button>
+      <a class="btn tb-btn manual-link" id="manualBtn" href="https://commst.github.io/scoreplay/manual.pdf" download="ScoreWorks_사용설명서.pdf" target="_blank" rel="noopener" title="사용설명서 받기 (PDF)"><span class="ll">사용설명서 받기</span><span class="ls">설명서</span></a>
+      <button class="btn tb-btn tb-report" id="reportBtn" type="button" title="문제점 신고하기"><span class="ll">문제점 신고하기</span><span class="ls">신고</span></button>
+    </div>
   </header>
   <div class="msg" id="msg" hidden></div>
 
@@ -1079,15 +1166,17 @@ body.all-panes { padding-bottom: 0; }
     <div class="lv-inner">
       <div class="lv-head"><span class="lv-title">악보 파일</span><button class="btn" id="filesClose" type="button">닫기</button></div>
       <section class="hero" aria-label="소개">
-    <svg class="hero-mark" viewBox="0 0 120 150" aria-hidden="true"><path d="M30 18 L104 4 L104 108" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><path d="M30 18 L30 122" fill="none" stroke="currentColor" stroke-width="7"/><path d="M30 18 L104 4 L104 24 L30 38 Z" fill="currentColor"/><ellipse cx="18" cy="124" rx="18" ry="13" transform="rotate(-20 18 124)" fill="currentColor"/><ellipse cx="92" cy="110" rx="18" ry="13" transform="rotate(-20 92 110)" fill="currentColor"/></svg>
-    <h1>합주연습기</h1>
+    <svg class="hero-waves" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 C150 30 300 30 450 70 S750 110 900 70 S1100 40 1200 60"/><path d="M0 92 C160 62 320 62 480 92 S800 122 960 92 S1120 70 1200 84"/></svg>
+    <div class="hero-brand"><svg class="sw-mark" aria-hidden="true"><use href="#swMark"/></svg></div>
+    <h1 class="wm"><span class="wm-a">Score</span><span class="wm-b">Works</span></h1>
+    <p class="hero-tag">국악관현악 악보 분석 및 재생 도구</p>
     <p class="lede">국악 악보 PDF를 올리면 가야금·대금·해금 같은 선율과 장구·꽹과리 장단을 직접 녹음한 국악기 소리로 함께 들려줍니다. 내 가락을 장단에 맞춰 들어 보거나, 내 줄만 빼고 반주로 틀어 놓고 연습하세요. 악보 파일은 이 브라우저 안에서만 처리됩니다.</p>
     <p class="caution">악보를 자동으로 읽기 때문에 템포·악기 이름·음표가 실제와 다르게 인식될 수 있습니다. 재생하기 전에 줄 이름과 빠르기 표를 악보와 한 번 맞춰 보세요.</p>
     <ol class="hero-steps">
-      <li><span class="hs-n">1</span><span><b>악보 PDF 올리기</b> · 총보 또는 파트보. 악보 프로그램에서 저장한 PDF.</span></li>
-      <li><span class="hs-n">2</span><span><b>악기 선택</b> · 줄마다 선율 / 타악 / 끄기, 악기 소리·음량.</span></li>
-      <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
-      <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
+      <li><span class="hs-n">1</span><span><b>악보 PDF 올리기</b>총보 또는 파트보. 악보 프로그램에서 저장한 PDF.</span></li>
+      <li><span class="hs-n">2</span><span><b>악기 선택</b>줄마다 선율 / 타악 / 끄기, 악기 소리·음량.</span></li>
+      <li><span class="hs-n">3</span><span><b>템포·범위·속도</b>노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
+      <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b>마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
     </ol>
   </section>
       <section class="step" aria-labelledby="stepLoad">
@@ -1160,7 +1249,7 @@ body.all-panes { padding-bottom: 0; }
 
   <div class="help-view" id="helpView" role="dialog" aria-labelledby="helpTitle">
     <div class="hv-inner">
-      <div class="lv-head"><span class="lv-title" id="helpTitle">프로그램 사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn tb-report" id="reportBtn3" type="button">문제점 신고하기</button><button class="btn" id="helpClose" type="button">닫기</button></span></div>
+      <div class="lv-head"><span class="lv-title" id="helpTitle">프로그램 사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="ScoreWorks_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn tb-report" id="reportBtn3" type="button">문제점 신고하기</button><button class="btn" id="helpClose" type="button">닫기</button></span></div>
       <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
@@ -1537,7 +1626,7 @@ body.all-panes { padding-bottom: 0; }
       </div>
       <div class="ghbox" id="ghBox">
         <div class="setbox-head"><h3 id="ghTitle">공유 설정 (GitHub 저장소)</h3><span class="set-state" id="ghState" aria-live="polite"></span></div>
-        <p class="hint">이 악보의 설정(악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정 등)을 합주연습기 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받아 쓸 수 있습니다. <b>불러오기</b>는 누구나(저장소에 이 악보의 설정이 있을 때만 단추가 켜집니다), <b>저장</b>은 저장 토큰을 넣은 기기(관리자)만 됩니다. 이미 올린 설정이 있으면 업데이트할지 물어봅니다.</p>
+        <p class="hint">이 악보의 설정(악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정 등)을 ScoreWorks 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받아 쓸 수 있습니다. <b>불러오기</b>는 누구나(저장소에 이 악보의 설정이 있을 때만 단추가 켜집니다), <b>저장</b>은 저장 토큰을 넣은 기기(관리자)만 됩니다. 이미 올린 설정이 있으면 업데이트할지 물어봅니다.</p>
         <div class="btn-grid">
           <button class="btn" id="ghLoad" type="button" disabled title="저장소에 이 악보의 공유 설정이 없습니다">공유 설정 불러오기</button>
           <button class="btn" id="ghSave" type="button">공유 저장소에 저장</button>
@@ -1551,7 +1640,7 @@ body.all-panes { padding-bottom: 0; }
           </div>
           <ol class="ghhow">
             <li>GitHub에 저장소 주인 계정으로 로그인하고, 오른쪽 위 프로필 사진 → <b>Settings</b> → 맨 아래 <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
-            <li><b>Token name</b>은 알아볼 이름(예: 합주연습기 설정), <b>Expiration</b>은 원하는 기간(끝나면 새로 만들어 다시 넣습니다).</li>
+            <li><b>Token name</b>은 알아볼 이름(예: ScoreWorks 설정), <b>Expiration</b>은 원하는 기간(끝나면 새로 만들어 다시 넣습니다).</li>
             <li><b>Repository access</b>에서 <b>Only select repositories</b>를 고르고 <b id="ghRepoName">commst/scoreplay</b> 저장소 하나만 선택.</li>
             <li><b>Permissions</b> → Repository permissions → <b>Contents</b>를 <b>Read and write</b>로. 다른 권한은 그대로 둡니다.</li>
             <li><b>Generate token</b>을 누르면 나오는 <code>github_pat_…</code> 글자를 복사해 위 칸에 붙여 넣고 [이 기기에 저장]. 토큰은 이 기기의 이 브라우저에만 보관되고, 저장소에는 올라가지 않습니다.</li>
@@ -1675,7 +1764,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>9</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>10</small></h4><ul class="hlist">
+      <li><details><summary>새 이름 ScoreWorks, 새 글꼴과 첫 화면</summary><p>프로그램 이름을 '합주연습기'에서 <b>ScoreWorks</b>(국악관현악 악보 분석 및 재생 도구)로 바꿨습니다. 새 아이콘을 만들고, 이름을 위 막대 가운데에 두었습니다. 첫 화면은 아이콘·이름·설명을 가운데로 다시 배치했습니다. 글꼴은 Pretendard(본문)와 Outfit(이름)입니다. 위 막대 단추는 화면 폭에 따라 짧은 이름(이력·사용법·설명서·신고)으로 보입니다. 사용설명서도 새 이름과 새 화면으로 바꿨습니다. 저장한 설정과 음 수정은 그대로입니다.</p></details></li>
       <li><details><summary>♩=♪ 표시는 처음부터 '오른쪽이 새 박'으로</summary><p>박을 바꾸는 ♩=♪ 같은 표시를 악보 표기 관례대로 '앞의 왼쪽 음표 길이 = 새 오른쪽 음표'로 읽습니다. 예: 프론티어 117마디 ♩=♪는 앞의 ♩=172 길이가 새 ♪가 되어 ♩=86, 121마디부터 다시 ♩=172. 반대로 쓴 악보는 빠르기 칸의 단추로 '왼쪽이 새 박'으로 바꾸면 되고, 이미 단추로 고른 방향은 그대로입니다.</p></details></li>
       <li><details><summary>곡 제목 바꾸기</summary><p>악기 이름처럼 곡 제목도 바꿀 수 있습니다. 위 막대의 곡 이름을 누르면 열리는 악보 파일 창 맨 위 <b>곡 제목</b> 칸에 적고 Enter를 누르세요. 바꾼 제목은 위 막대, 음원·MIDI·MusicXML 파일에 쓰이고 이 악보의 설정에 저장됩니다. [악보 제목으로]를 누르면 악보에서 읽은 제목으로 돌아갑니다.</p></details></li>
       <li><details><summary>단추 색·크기와 제목 정리</summary><p>단추를 화면 색에 맞는 연한 파랑으로 바꾸고, 위 막대 단추(악보 파일·업데이트 이력·프로그램 사용법·사용설명서 받기·문제점 신고하기)를 같은 크기로 맞췄습니다. 칸마다 제목을 가운데로(빠르기 칸은 왼쪽), 함께 쓰는 단추는 같은 너비로 맞췄습니다. '사용법'은 '프로그램 사용법', '화면 가득 보기'는 '전체화면 보기', '재생할 때'는 '재생 설정'으로 이름을 바꿨고, 첫 화면 소개 아래의 단추 줄은 위 막대와 겹쳐 뺐습니다.</p></details></li>
@@ -7177,7 +7267,7 @@ $('editExport').addEventListener('click', () => {
 $('editImport').addEventListener('change', async ev => {
   const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
   let data; try { data = JSON.parse(await f.text()); } catch (e) { showMsg('수정 파일을 읽지 못했습니다.'); return; }
-  if (!data || data.format !== 'hapju-edits' || !Array.isArray(data.scores)) { showMsg('합주연습기에서 내보낸 수정 파일이 아닙니다.'); return; }
+  if (!data || data.format !== 'hapju-edits' || !Array.isArray(data.scores)) { showMsg('ScoreWorks에서 내보낸 수정 파일이 아닙니다.'); return; }
   const srcs = loadedSources(); if (!srcs.length) { showMsg('먼저 악보를 올린 뒤 수정을 가져와 주세요.'); return; }
   let used = 0;
   for (const s of data.scores) {
@@ -8081,7 +8171,7 @@ $('setExport').addEventListener('click', () => {
 $('setImport').addEventListener('change', async ev => {
   const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
   let S; try { S = JSON.parse(await f.text()); } catch (e) { setState('설정 파일을 읽지 못했습니다.'); showMsg('설정 파일을 읽지 못했습니다. [저장] 칸의 [설정 파일로 내보내기]로 만든 .json 파일을 골라 주세요.'); return; }
-  if (!S || S.format !== 'hapju-settings') { setState('합주연습기에서 내보낸 설정 파일이 아닙니다.'); showMsg('합주연습기에서 내보낸 설정 파일이 아닙니다. [저장] 칸의 [설정 파일로 내보내기]로 만든 파일을 골라 주세요.'); return; }
+  if (!S || S.format !== 'hapju-settings') { setState('ScoreWorks에서 내보낸 설정 파일이 아닙니다.'); showMsg('ScoreWorks에서 내보낸 설정 파일이 아닙니다. [저장] 칸의 [설정 파일로 내보내기]로 만든 파일을 골라 주세요.'); return; }
   if (S.key && S.key !== settingsKey() && !confirm(`이 설정은 다른 악보 파일(${S.file || S.title || '이름 없음'})에서 만든 것입니다. 지금 악보에 적용할까요? 줄이 맞지 않는 곳은 건너뜁니다.`)) return;
   const editN = applyBundle(S, '파일에서 불러옴');
   if (writeSettings(false)) setState('설정 파일을 불러와 이 악보 설정으로 저장했습니다' + (editN ? ' (음정·길이 수정 포함)' : ''), true);
@@ -8933,7 +9023,7 @@ function buildMusicXml() {
   const stX0 = med(LAY.flatMap(L => (L.staves || []).map(st => st.x0))) || 0.1 * pgW, stX1 = med(LAY.flatMap(L => (L.staves || []).map(st => st.x1))) || 0.95 * pgW;
   const mL = Math.min(0.06 * pgW, Math.max(10, stX0 * 0.35)), sysL = Math.max(0, stX0 - mL), mR = Math.max(10, Math.min(0.12 * pgW, pgW - stX1)), mT = Math.max(20, Math.min(firstTop - 10, 0.12 * pgH)), mB = 0.05 * pgH;
   const credits = state.title ? `<credit page="1"><credit-type>title</credit-type><credit-words default-x="${T(pgW / 2)}" default-y="${T(pgH - Math.max(24, mT * 0.45))}" justify="center" valign="top" font-size="20">${esc(state.title)}</credit-words></credit>\n` : '';
-  out += `<work><work-title>${esc(state.title || '')}</work-title></work>\n<movement-title>${esc(state.title || '')}</movement-title>\n<identification><encoding><software>합주연습기</software><encoding-date>${new Date().toISOString().slice(0, 10)}</encoding-date>`
+  out += `<work><work-title>${esc(state.title || '')}</work-title></work>\n<movement-title>${esc(state.title || '')}</movement-title>\n<identification><encoding><software>ScoreWorks</software><encoding-date>${new Date().toISOString().slice(0, 10)}</encoding-date>`
     + `<supports element="accidental" type="yes"/><supports element="beam" type="yes"/><supports attribute="new-system" element="print" type="yes" value="yes"/><supports attribute="new-page" element="print" type="yes" value="yes"/></encoding></identification>\n`
     + `<defaults><scaling><millimeters>${(stU * 25.4 / 72).toFixed(4)}</millimeters><tenths>40</tenths></scaling>`
     + `<page-layout><page-height>${T(pgH)}</page-height><page-width>${T(pgW)}</page-width><page-margins type="both"><left-margin>${T(mL)}</left-margin><right-margin>${T(mR)}</right-margin><top-margin>${T(mT)}</top-margin><bottom-margin>${T(mB)}</bottom-margin></page-margins></page-layout>`
@@ -9875,7 +9965,7 @@ function openReport() {
     const kind = (dlg.querySelector('input[name=repKind]:checked') || {}).value || '문제';
     const R = { song: song.value.trim(), bar: bar.value.trim(), text: body.value.trim() };
     if (!R.text && !confirm('내용 칸이 비어 있습니다. 이대로 보낼까요?')) { body.focus(); return; }
-    const subject = `[합주연습기 ${kind}] ${R.song || '곡명 없음'}${R.bar ? ' · ' + R.bar + '마디' : ''}`;
+    const subject = `[ScoreWorks ${kind}] ${R.song || '곡명 없음'}${R.bar ? ' · ' + R.bar + '마디' : ''}`;
     const env = reportEnv();
     const plain = `분류: ${kind}\n곡명: ${R.song || '-'}\n마디 위치: ${R.bar || '-'}\n\n내용:\n${R.text || '-'}\n\n----\n${env}`;
     sending = true; send.disabled = true; st.className = 'rep-state'; st.textContent = '보내는 중…';
@@ -9910,8 +10000,8 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 14:32';
-$('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
+const APP_VERSION = '2026-11-11 15:19';
+$('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
   let dismissed = '';

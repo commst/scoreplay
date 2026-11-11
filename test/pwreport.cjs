@@ -25,7 +25,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   if (wide) { const ws = await p.$$eval('.topbar .tb-btn', bs => bs.filter(b => b.getBoundingClientRect().width > 0).map(b => [b.id, Math.round(b.getBoundingClientRect().width)]));
     ok(ws.map(x => x[0]).join() === 'histBtn,helpBtn,manualBtn,reportBtn' && new Set(ws.map(x => x[1])).size === 1, name + ' 첫 화면 위 막대 단추 순서·같은 너비 ' + JSON.stringify(ws));
     ok(await p.$eval('#reportBtn', e => { const c = getComputedStyle(e).color.match(/\d+/g).map(Number); return c[0] > c[1] + 60 && c[0] > c[2] + 60; }), name + ' 신고 단추 빨간 글씨');
-    ok((await p.textContent('#helpBtn')).trim() === '프로그램 사용법', name + ' 사용법 → 프로그램 사용법'); }
+    ok((await p.textContent('#helpBtn .ll')).trim() === '프로그램 사용법' && /사용법/.test(await p.evaluate(() => [...document.querySelectorAll('#helpBtn span')].filter(e => e.offsetWidth).map(e => e.textContent).join(''))) && (await p.getAttribute('#helpBtn', 'title')) === '프로그램 사용법', name + ' 사용법 단추(넓으면 \'프로그램 사용법\', 좁으면 \'사용법\', 마우스를 올리면 전체 이름)'); }
   // 예시 장단(악보 없음)에서 열기: 곡명·마디 빈 칸
   if (wide) await p.click('#reportBtn'); else { await p.click('#helpBtn'); await p.waitForTimeout(300); await p.evaluate(() => document.getElementById('reportBtn3').click()); } await p.waitForTimeout(300);
   ok(await p.evaluate(() => !!document.querySelector('.rep-dlg') && document.getElementById('repSong').value === '' && document.getElementById('repBar').value === '' && document.querySelector('input[name=repKind]:checked').value === '문제'), name + ' 창 열림·빈 칸·분류 기본 문제');

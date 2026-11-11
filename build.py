@@ -1,4 +1,4 @@
-# 합주연습기 빌드: src/ + banks/ → dist/
+# ScoreWorks 빌드: src/ + banks/ → dist/
 #   dist/index.html        한 파일 배포판 (악기 녹음까지 모두 포함, 이 파일 하나만 올리면 됨)
 #   dist/split/index.html  가벼운 배포판 (banks/ 폴더와 함께 올림, 고른 악기 녹음만 받아 옴)
 #   index.html, version.json  GitHub Pages로 내보내는 판(= dist/index.html)과 판 번호
@@ -15,7 +15,7 @@ import datetime
 VER = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
 h = (src('index.template.html').replace('/*__VERSION__*/', VER).replace('/*__BANK_RANGES__*/{}', json.dumps(ranges)).replace('/*__SAMPLES__*/', src('samples.json'))
      .replace('/*__PARSER__*/', parser).replace('/*__ENGINE__*/', strip(src('audio-engine.js'))).replace('/*__MELODY__*/', strip(src('melody-engine.js'))))
-mm = re.match(r'(<title>.*?</title>\s*<meta[^>]*>\s*<link[^>]*>\s*<style>.*?</style>)(.*)', h, re.S)
+mm = re.match(r'(<title>.*?</title>\s*<meta[^>]*>\s*(?:<link[^>]*>\s*)*<style>.*?</style>)(.*)', h, re.S)
 doc = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
        '<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>\n'
        + mm.group(1) + '\n</head>\n<body>' + mm.group(2) + '\n</body>\n</html>\n')
