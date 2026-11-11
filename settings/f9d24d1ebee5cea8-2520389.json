@@ -4,7 +4,7 @@
  "title": "소나기",
  "titleRead": "소나기",
  "file": "소나기-총보.pdf.pdf",
- "saved": "2026-11-11T07:14:03.811Z",
+ "saved": "2026-11-11T07:20:08.795Z",
  "lastBar": 355,
  "lines": {
   "main:0": {
@@ -238,11 +238,12 @@
   },
   {
    "start": 43,
-   "unit": "dq",
+   "unit": "q",
    "bpm": 200,
    "auto": true,
    "text": "♩.=120",
-   "manual": true
+   "manual": true,
+   "edited": true
   },
   {
    "start": 131,
