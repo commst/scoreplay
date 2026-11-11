@@ -1,12 +1,12 @@
 # ScoreWorks(옛 이름 합주연습기) 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-11, CHANGELOG 136번까지)
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-11, CHANGELOG 137번까지)
 
 ## 1. 작업 규칙 (사용자 요청)
 
-- **프로그램 이름은 ScoreWorks**(부제 '국악관현악 악보 분석 및 재생 도구', 11-11에 합주연습기에서 바꿈). 글꼴 Pretendard(본문)·Outfit(이름), 아이콘은 src/index.template.html의 `<symbol id="swMark">`(파비콘은 같은 그림의 data URI). 저장 키(hapju-*)·저장소 이름(scoreplay)·내보낸 파일 형식 이름(hapju-settings 등)은 예전 것과 맞도록 그대로 둠
+- **프로그램 이름은 ScoreWorks**(부제 '국악관현악 악보 분석 및 재생 도구', 11-11에 합주연습기에서 바꿈). 글꼴 Pretendard(본문)·Outfit(이름), 아이콘은 src/index.template.html의 `<symbol id="swMark">`(파비콘은 같은 그림의 data URI). 저장 키(hapju-*)·내보낸 파일 형식 이름(hapju-settings 등)은 예전 것과 맞도록 그대로 둠. **저장소는 11-11에 commst/scoreplay → commst/scoreworks로 이름을 바꿈**(실행 링크 https://commst.github.io/scoreworks/ — 옛 링크 commst.github.io/scoreplay는 GitHub이 넘겨주지 않아 404, 사용자가 넘겨주는 페이지는 두지 않기로 함)
 
-- 고칠 때마다 **GitHub main에 바로 올리고**(https://github.com/commst/scoreplay), 답은 **짧게 + 실행 링크** https://commst.github.io/scoreplay/
+- 고칠 때마다 **GitHub main에 바로 올리고**(https://github.com/commst/scoreworks), 답은 **짧게 + 실행 링크** https://commst.github.io/scoreworks/
 - **독립실행 html 파일은 만들지 않는다.** html·zip을 따로 보내지 않는다(단원은 링크로만 씀)
 - 고칠 때마다 함께 갱신:
   1. CHANGELOG.md — 날짜 + 일련번호 `## 2026-MM-DD (번호) · 제목`, 원인·고친 방법·확인 결과
@@ -22,7 +22,7 @@
 
 ## 2. 작업 환경
 
-- 저장소 클론: `/home/claude/scoreplay` (없으면 add_repo commst/scoreplay 후 clone). `npm install`(pdfjs-dist 4.10.38) 후 test/의 .mjs가 돈다
+- 저장소 클론: `/home/claude/scoreplay` — 저장소 이름은 scoreworks지만 시험 도구들이 이 로컬 경로를 쓰므로 폴더 이름은 그대로(없으면 add_repo commst/scoreworks 후 `git clone https://github.com/commst/scoreworks /home/claude/scoreplay`). `npm install`(pdfjs-dist 4.10.38) 후 test/의 .mjs가 돈다
 - 소스: `src/index.template.html`(앱 화면·MusicXML 내보내기 buildMusicXml·재생 흐름), `src/score-parser.js`(PDF 해석기), `src/audio-engine.js`(소리), `src/musicxml.js`(MusicXML 읽기), `src/outline-*.js`
 - 빌드: `python3 build.py` → `index.html` + `version.json`(판 번호 = 한국 시각) + `dist/`
 - 이전 세션은 `/home/claude/web`(melody.html = index.template.html, score-parser.js, build_melody.py → deploy-hapju/index.html)에서 고친 뒤 저장소 src로 복사했다. 새 세션은 저장소 src에서 바로 고쳐도 됨
@@ -163,6 +163,8 @@
 
 - [문제점 신고하기]: FormSubmit(`REPORT_TO`, 사용자 계정 메일 — 공개 소스에 두는 것에 사용자 동의)로 전송, 실패하면 mailto. **사용자가 첫 제보 뒤 확인 메일의 [Activate Form]을 눌러야 도착함 — 눌렀는지 아직 확인 전.** 확인되면 FormSubmit이 주는 무작위 별칭 주소로 `REPORT_TO`를 바꿔 메일 주소를 소스에서 숨길 수 있음(사용자가 원하면)
 - 음 수정 공유: 같은 파일은 122번부터 이미 됨. 다른 파일(판)로 받을 때도 원래 음이 같은 곳에 적용하도록 고침. 시험 test/pwreport.cjs, test/pwshare.cjs(음 수정 항목 추가)
+
+**137번(11-11)**: 저장소 이름 scoreworks로 — 앱 안 주소(GH_REPO, APP_URL, 사용설명서 링크, 브라우저에서 실행), README·설명서·시험 도구(라우팅 주소)를 새 주소로
 
 **136번(11-11)**: 이 기기에 설정이 없는 곡에 공유 설정이 있으면 #ghOffer 알림으로 물어 [확인]으로 적용(전에는 바로 적용)
 

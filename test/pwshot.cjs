@@ -12,8 +12,8 @@ const tag = process.argv[2] || 'before', pre = '9203ad49', SM = process.env.SAMP
   await p.route('https://fonts.googleapis.com/**', r => r.fulfill({ contentType: 'text/css', body: "@font-face{font-family:'Outfit';font-weight:100 900;font-display:swap;src:url(https://fonts.gstatic.com/outfit.woff2) format('woff2')}" }));
   await p.route('https://fonts.gstatic.com/**', r => r.fulfill({ path: FD + '@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2', contentType: 'font/woff2' }));
   await p.route(/^https:\/\/(?!cdn\.jsdelivr|fonts\.g|commst\.github\.io).*/, r => r.abort());
-  await p.route('https://commst.github.io/scoreplay/**', r => { const f = r.request().url().split('/scoreplay/')[1].split('?')[0] || 'index.html'; const fp = '/home/claude/scoreplay/' + f; return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
-  await p.goto('https://commst.github.io/scoreplay/'); await p.waitForFunction(() => window.__appReady === 'ok'); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(900);
+  await p.route('https://commst.github.io/scoreworks/**', r => { const f = r.request().url().split('/scoreworks/')[1].split('?')[0] || 'index.html'; const fp = '/home/claude/scoreplay/' + f; return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
+  await p.goto('https://commst.github.io/scoreworks/'); await p.waitForFunction(() => window.__appReady === 'ok'); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(900);
   await p.screenshot({ path: `/tmp/shot-${tag}-${nm}-welcome.png`, fullPage: nm.startsWith('phone') });
   if (dark) { await ctx.close(); continue; }
   await p.setInputFiles('#pdfInput', t);

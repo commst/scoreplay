@@ -1131,7 +1131,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <div class="app2" id="app2">
   <div class="msg openext" id="bootMsg" role="alert"><span id="bootText">이 화면에서는 프로그램이 실행되지 않습니다. 카카오톡·파일 앱·메일에서 html 파일을 누르면 미리보기로 열려 버튼이 동작하지 않습니다. 컴퓨터에서는 파일을 내려받아 두 번 누르면 브라우저에서 열리고, 안드로이드는 파일을 저장한 뒤 [다른 앱으로 열기] → Chrome을 고르세요. 아이폰·아이패드는 파일로는 열 수 없어 웹 주소(링크)로 열어야 합니다.</span>
-    <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
+    <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreworks/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
   <div class="msg openext" id="updateBar" role="status" hidden><span id="updateText">새 판이 나왔습니다. 새로 고치면 최신 판으로 바뀝니다(저장한 설정은 그대로 남습니다).</span>
     <span class="openext-btns"><button class="btn primary" id="updateGo" type="button">새로 고침</button><button class="btn" id="updateLater" type="button">나중에</button></span></div>
   <div class="msg openext" id="ghOffer" role="alertdialog" aria-labelledby="ghOfferText" hidden><span id="ghOfferText"></span>
@@ -1152,7 +1152,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <button class="btn tb-btn" id="filesBtn" type="button"><span class="ll">악보 파일</span><span class="ls">악보</span></button>
       <button class="btn tb-btn" id="histBtn" type="button" title="업데이트 이력"><span class="ll">업데이트 이력</span><span class="ls">이력</span></button>
       <button class="btn tb-btn" id="helpBtn" type="button" title="프로그램 사용법"><span class="ll">프로그램 사용법</span><span class="ls">사용법</span></button>
-      <a class="btn tb-btn manual-link" id="manualBtn" href="https://commst.github.io/scoreplay/manual.pdf" download="ScoreWorks_사용설명서.pdf" target="_blank" rel="noopener" title="사용설명서 받기 (PDF)"><span class="ll">사용설명서 받기</span><span class="ls">설명서</span></a>
+      <a class="btn tb-btn manual-link" id="manualBtn" href="https://commst.github.io/scoreworks/manual.pdf" download="ScoreWorks_사용설명서.pdf" target="_blank" rel="noopener" title="사용설명서 받기 (PDF)"><span class="ll">사용설명서 받기</span><span class="ls">설명서</span></a>
       <button class="btn tb-btn tb-report" id="reportBtn" type="button" title="문제점 신고하기"><span class="ll">문제점 신고하기</span><span class="ls">신고</span></button>
     </div>
   </header>
@@ -1245,7 +1245,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
   <div class="help-view" id="helpView" role="dialog" aria-labelledby="helpTitle">
     <div class="hv-inner">
-      <div class="lv-head"><span class="lv-title" id="helpTitle">프로그램 사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="ScoreWorks_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn tb-report" id="reportBtn3" type="button">문제점 신고하기</button><button class="btn" id="helpClose" type="button">닫기</button></span></div>
+      <div class="lv-head"><span class="lv-title" id="helpTitle">프로그램 사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreworks/manual.pdf" download="ScoreWorks_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn tb-report" id="reportBtn3" type="button">문제점 신고하기</button><button class="btn" id="helpClose" type="button">닫기</button></span></div>
       <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
@@ -1637,7 +1637,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
           <ol class="ghhow">
             <li>GitHub에 저장소 주인 계정으로 로그인하고, 오른쪽 위 프로필 사진 → <b>Settings</b> → 맨 아래 <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
             <li><b>Token name</b>은 알아볼 이름(예: ScoreWorks 설정), <b>Expiration</b>은 원하는 기간(끝나면 새로 만들어 다시 넣습니다).</li>
-            <li><b>Repository access</b>에서 <b>Only select repositories</b>를 고르고 <b id="ghRepoName">commst/scoreplay</b> 저장소 하나만 선택.</li>
+            <li><b>Repository access</b>에서 <b>Only select repositories</b>를 고르고 <b id="ghRepoName">commst/scoreworks</b> 저장소 하나만 선택.</li>
             <li><b>Permissions</b> → Repository permissions → <b>Contents</b>를 <b>Read and write</b>로. 다른 권한은 그대로 둡니다.</li>
             <li><b>Generate token</b>을 누르면 나오는 <code>github_pat_…</code> 글자를 복사해 위 칸에 붙여 넣고 [이 기기에 저장]. 토큰은 이 기기의 이 브라우저에만 보관되고, 저장소에는 올라가지 않습니다.</li>
             <li>휴대폰·태블릿·노트북에서 모두 저장하려면 기기마다 한 번씩 같은 토큰을 넣습니다(비밀번호 관리 앱에 적어 두면 편합니다). 불러오기만 하는 기기에는 필요 없습니다.</li>
@@ -1944,7 +1944,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
   <section class="hday"><h3>10월 28일</h3>
     <h4>기능 업데이트 <small>5</small></h4><ul class="hlist">
       <li><details><summary>악보별 설정 저장</summary><p>템포·연습 속도·줄 설정·재생 옵션을 악보마다 자동 저장하고, 같은 악보를 열면 자동으로 불러옴. 파일로 내보내기·가져오기</p></details></li>
-      <li><details><summary>웹 주소</summary><p>commst.github.io/scoreplay. 카카오톡 등 앱 안 브라우저에서는 [브라우저에서 실행] 단추</p></details></li>
+      <li><details><summary>웹 주소</summary><p>commst.github.io/scoreworks. 카카오톡 등 앱 안 브라우저에서는 [브라우저에서 실행] 단추</p></details></li>
       <li><details><summary>판 번호와 새 판 안내</summary><p>화면 아래 판 번호, 새 판이 나오면 [새로 고침] 안내</p></details></li>
       <li><details><summary>읽을 수 있는 PDF 안내, 첫 화면 디자인</summary><p>'읽을 수 있는 악보 PDF' 안내, 머리 부분 새 디자인, 휴대폰 화면 순서</p></details></li>
       <li><details><summary>아이패드 등에서 동작하지 않을 때 원인 안내</summary><p>아이패드 등에서 동작하지 않을 때 원인 안내</p></details></li>
@@ -2000,7 +2000,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
   function show(t) { var m = document.getElementById('bootMsg'), x = document.getElementById('bootText'); if (!m) return; m.hidden = false; if (x) x.textContent = t; else m.textContent = t; }
   window.__bootShow = show;
   // 카카오톡·네이버·인스타그램 같은 앱 안의 브라우저: 바깥 브라우저(Safari·Chrome)로 넘기는 단추
-  var APP_URL = 'https://commst.github.io/scoreplay/';   // GitHub Pages 주소. claude.ai 링크는 휴대폰에서 Claude 앱이 열려 쓰지 않는다
+  var APP_URL = 'https://commst.github.io/scoreworks/';   // GitHub Pages 주소. claude.ai 링크는 휴대폰에서 Claude 앱이 열려 쓰지 않는다
   function pageUrl() { try { if (window.top === window && /^https?:/.test(location.href) && !/claude\.ai/.test(location.host)) return location.href; } catch (e) {} return APP_URL; }
   function openExternal() {
     var url = pageUrl(), ua = navigator.userAgent || '';
@@ -3774,7 +3774,7 @@ $('saveBtn').addEventListener('click', async () => {
 // ---------- 이 악보의 설정 저장·불러오기 ----------
 // 악보 PDF 내용으로 만든 지문(fp)마다 이 브라우저(localStorage)에 저장한다. 파트보 묶음은 파트보 지문들을 모아 하나의 열쇠로
 const SET_KEY = 'hapju-settings:', PREF_KEY = 'hapju-prefs';
-const GH_REPO = 'commst/scoreplay', GH_BRANCH = 'main', GH_DIR = 'settings', GH_TOKEN_KEY = 'hapju-gh-token', GH_SEEN_KEY = 'hapju-gh-seen:';
+const GH_REPO = 'commst/scoreworks', GH_BRANCH = 'main', GH_DIR = 'settings', GH_TOKEN_KEY = 'hapju-gh-token', GH_SEEN_KEY = 'hapju-gh-seen:';
 const prefs = (() => { const d = { autoSave: true, autoLoad: true, tempoShift: true }; try { return { ...d, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') }; } catch (e) { return d; } })();
 function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) {} }
 let setRestoring = false, setTimer = 0;

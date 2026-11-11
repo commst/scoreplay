@@ -13,8 +13,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
     if (mode === 'activate') return r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":"false","message":"This form needs Activation."}' });
     return r.abort(); });
   await p.route(/^https:\/\/(?!cdn\.jsdelivr|formsubmit|commst\.github\.io).*/, r => r.abort());
-  await p.route('https://commst.github.io/scoreplay/**', r => { const f = r.request().url().split('/scoreplay/')[1].split('?')[0] || 'index.html'; const fp = '/home/claude/scoreplay/' + f; return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
-  await p.goto('https://commst.github.io/scoreplay/'); await p.waitForTimeout(800);
+  await p.route('https://commst.github.io/scoreworks/**', r => { const f = r.request().url().split('/scoreworks/')[1].split('?')[0] || 'index.html'; const fp = '/home/claude/scoreplay/' + f; return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
+  await p.goto('https://commst.github.io/scoreworks/'); await p.waitForTimeout(800);
   const vis = id => p.evaluate(id => { const e = document.getElementById(id); if (!e) return false; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden'; }, id);
   // 위 막대: 넓은 화면에서는 [사용설명서 받기] 오른쪽에 간격을 두고, 좁은 화면에서는 숨김(첫 화면·사용법 창에 있음)
   const wide = vp.width > 900;

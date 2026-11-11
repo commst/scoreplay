@@ -246,7 +246,7 @@ MusicXML을 저장하면 내보낸 파일을 다시 읽어 악보 PDF의 음표 
 ### 공유 설정 (GitHub 저장소) · 마디 골라 넣기
 
 - **공유 설정**: [저장] 칸 '이 악보의 설정' 아래. 악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정을 한 묶음으로 이 저장소 `settings/<악보 지문>.json`에 올리고 받는다. 받기는 누구나(같은 악보를 열면 자동으로 찾고, 이 기기에 저장한 설정이 없으면 위쪽 알림 '불러와 적용할까요?'의 [확인]으로 적용·[나중에]는 그대로, 있으면 알림만), 올리기는 저장 토큰을 넣은 기기만
-  - 저장 토큰: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token → Repository access: Only select repositories → `commst/scoreplay` → Permissions: Contents = Read and write → 만든 `github_pat_…`를 [저장] 칸 '관리자: 저장 토큰 넣기'에 붙여 넣고 [이 기기에 저장]. 토큰은 그 브라우저에만 보관(기기마다 한 번씩)
+  - 저장 토큰: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token → Repository access: Only select repositories → `commst/scoreworks` → Permissions: Contents = Read and write → 만든 `github_pat_…`를 [저장] 칸 '관리자: 저장 토큰 넣기'에 붙여 넣고 [이 기기에 저장]. 토큰은 그 브라우저에만 보관(기기마다 한 번씩)
   - 앱이 GitHub API로 main에 바로 커밋하므로, 이 저장소에 푸시하기 전에는 `git fetch origin main` 후 rebase
   - 같은 곡의 다른 PDF 파일(지문이 다름)이면 `settings/index.json` 목록에서 파일 이름·제목이 같은 설정을 찾아 [공유 설정 불러오기]로 받는다. 맞는 줄의 설정만 입히고, 음정·길이 수정은 원래 음(시각·길이·음높이)이 같은 곳에만 적용
 - **마디 골라 넣기**: [빠르기] 칸의 [마디 골라 넣기](빠르기·rit. 각각)를 누르고 악보·마디맵에서 마디를 누르면 그 마디에 넣는다. 취소 Esc. 마디 미리보기 창의 [빠르기 넣기]·[rit. 넣기]도 같음
@@ -265,7 +265,7 @@ MusicXML을 저장하면 내보낸 파일을 다시 읽어 악보 PDF의 음표 
 ## 2. 저장소 구성
 
 ```
-scoreplay/
+scoreworks/
 ├─ build.py                 html 만들기 (src + banks → dist)
 ├─ src/
 │  ├─ index.template.html   화면(HTML·CSS)과 앱 코드. 빌드 때 아래 모듈이 빈자리에 들어감
@@ -320,7 +320,7 @@ python3 build.py
 | 결과 | 내용 |
 |---|---|
 | `dist/index.html` | **한 파일 배포판**. 녹음까지 모두 들어 있어 이 파일 하나만 올리면 됩니다(약 9MB). 저장소 맨 위 `index.html`과 같습니다. |
-| `index.html` + `version.json` (저장소 맨 위) | **GitHub Pages로 나가는 판**(= `dist/index.html`)과 판 번호. `python3 build.py`가 함께 만듭니다. 웹 주소: https://commst.github.io/scoreplay/ |
+| `index.html` + `version.json` (저장소 맨 위) | **GitHub Pages로 나가는 판**(= `dist/index.html`)과 판 번호. `python3 build.py`가 함께 만듭니다. 웹 주소: https://commst.github.io/scoreworks/ |
 | `dist/split/index.html` + `dist/split/banks/` | **가벼운 배포판**. 처음 약 2MB만 받고 고른 악기 녹음만 따로 받아 옵니다. 폴더째 웹 서버에 올려야 하고, PC에서 파일을 더블클릭해 열면 녹음을 못 받아 합성음으로 연주합니다. |
 
 빌드가 하는 일
