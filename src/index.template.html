@@ -738,7 +738,9 @@ body { padding: 0 0 calc(var(--dockh) + 8px); background: var(--paper); }
   .stage { grid-column: 2; }
 }
 @media (min-width: 901px) and (max-width: 1180px) { .sidebar { width: 340px; } }
-.tabs2 { position: sticky; top: 0; z-index: 3; display: flex; gap: 2px; padding: 6px 10px 0; background: var(--card); border-bottom: 1px solid var(--line); }
+/* 탭 줄과 서랍 ✕를 한 머리로 묶어 함께 붙여 둠 (✕만 절대 위치라 굴리면 말려 올라가던 것) */
+.side-head { position: sticky; top: 0; z-index: 3; background: var(--card); }
+.tabs2 { position: relative; z-index: 3; display: flex; gap: 2px; padding: 6px 10px 0; background: var(--card); border-bottom: 1px solid var(--line); }
 .tab2 { flex: 1; min-width: 0; height: 42px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--muted); font-weight: 500; font-size: 15px; white-space: nowrap; }
 .tab2[aria-selected="true"] { border-bottom-color: var(--accent); color: var(--accent); font-weight: 700; }
 .pane2 { display: none; flex-direction: column; gap: 12px; padding: 12px; }
@@ -852,7 +854,7 @@ body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 
   body.sheet-open .sidebar { transform: none; visibility: visible; transition: transform .22s ease; }
   body.all-panes .sidebar { position: static; transform: none; visibility: visible; height: auto; }
   .sheet-grab { display: block; width: 40px; height: 4px; margin: 8px auto 2px; border-radius: 2px; background: var(--line-2); }
-  .sheet-close { display: inline-grid; place-items: center; position: absolute; z-index: 4; top: 14px; right: 8px; width: 40px; height: 40px; border: 0; background: none; color: var(--muted); font-size: 16px; }
+  .sheet-close { display: inline-grid; place-items: center; position: absolute; z-index: 4; top: 0; right: 8px; width: 40px; height: 40px; border: 0; background: none; color: var(--muted); font-size: 16px; }
   .tabs2 { padding-right: 52px; }
   body.sheet-open .sheet-back { display: block; position: fixed; inset: 0; bottom: var(--dockh); z-index: 43; background: rgba(30, 36, 51, .25); }
   .dock { gap: 7px; padding-top: 8px; }
@@ -1173,7 +1175,7 @@ body.all-panes { padding-bottom: 0; }
   <div class="shell" id="shell">
     <aside class="sidebar" id="sidebar" aria-label="설정">
       <div class="sheet-grab" id="sheetGrab" aria-hidden="true"></div>
-      <nav class="tabs2" role="tablist" aria-label="설정 칸"><button class="tab2" type="button" role="tab" data-tab="inst" id="tab-inst" aria-controls="pane-inst">악기</button><button class="tab2" type="button" role="tab" data-tab="tempo" id="tab-tempo" aria-controls="pane-tempo">빠르기</button><button class="tab2" type="button" role="tab" data-tab="play" id="tab-play" aria-controls="pane-play">연주</button><button class="tab2" type="button" role="tab" data-tab="save" id="tab-save" aria-controls="pane-save">저장</button></nav><button class="sheet-close" id="sheetClose" type="button" aria-label="서랍 닫기">✕</button>
+      <div class="side-head"><nav class="tabs2" role="tablist" aria-label="설정 칸"><button class="tab2" type="button" role="tab" data-tab="inst" id="tab-inst" aria-controls="pane-inst">악기</button><button class="tab2" type="button" role="tab" data-tab="tempo" id="tab-tempo" aria-controls="pane-tempo">빠르기</button><button class="tab2" type="button" role="tab" data-tab="play" id="tab-play" aria-controls="pane-play">연주</button><button class="tab2" type="button" role="tab" data-tab="save" id="tab-save" aria-controls="pane-save">저장</button></nav><button class="sheet-close" id="sheetClose" type="button" aria-label="서랍 닫기">✕</button></div>
       <div class="pane2" id="pane-inst" role="tabpanel" data-pane="inst" aria-labelledby="tab-inst">
       <section class="panel" id="linesPanel" aria-labelledby="tLines">
     <div class="ttl-row">
@@ -1668,7 +1670,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>4건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
+      <li><details><summary>휴대폰 설정 서랍을 굴리면 닫기(✕)가 사라지던 문제</summary><p>휴대폰·태블릿 세로 화면에서 악기 칸처럼 긴 칸을 아래로 굴리면 서랍 오른쪽 위의 ✕가 함께 말려 올라가 보이지 않았습니다. 이제 ✕가 탭 줄(악기·빠르기·연주·저장)과 함께 서랍 맨 위에 붙어 있습니다.</p></details></li>
       <li><details><summary>Sibelius 악보의 X 머리 음표(꽹과리·징 등)가 빠지던 문제</summary><p>Sibelius로 만든 악보의 X 머리 음표를 읽지 못해 그 음이 빠지고 뒤 음들이 앞으로 당겨졌습니다. 예: 프론티어 총보 12마디 꽹과리의 ♪♩♪♩…가 8분음표만 이어진 것처럼 들림. 이제 X 머리 음을 읽어 악보대로 연주하고 MusicXML에도 X 머리로 들어갑니다. 바르도 장고·대고, 미락흘 타악, 프론티어 타악·가야금 파트보 등도 함께 고쳐졌습니다.</p></details></li>
       <li><details><summary>마디선 없는 자유 박 마디에서 악기가 어긋나던 문제, 표지의 빈 오선을 마디로 세던 문제</summary><p>월광 첫 부분처럼 마디선 없이 길게 적은 자유 박(rubato) 마디에서, 늦게 들어오는 악기(가야금 등)가 마디 맨 처음에 놓이고 줄마다 마디 길이가 달라 서로 어긋났습니다. 이제 같은 단의 모든 줄에서 음표의 가로 자리를 맞춰 시각을 정하고 마디 길이도 같게 합니다. 또 표지 쪽에 빈 오선만 그려 둔 악보에서 곡 앞에 빈 마디가 여러 개 생기던 것을 없앴습니다(월광은 이제 인쇄 번호대로 8마디부터 시작합니다). 이 구간은 빠르기 표 첫 줄의 값으로 연주됩니다.</p></details></li>
       <li><details><summary>빠르기 표·안내 글이 잘려 보이던 문제</summary><p>빠르기 구간이 많은 악보에서 빠르기 표가 왼쪽 설정 칸보다 넓어져 오른쪽 단추가 잘렸고, 넓은 화면에서는 위쪽 안내 글의 앞부분이 왼쪽 칸 밑에 가려졌습니다. 표는 칸 폭에 맞추고, 안내 글은 가운데 칸에서 시작하게 고쳤습니다.</p></details></li>
