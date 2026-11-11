@@ -5,7 +5,7 @@
  "titleRead": "양방언",
  "songTitle": "프론티어",
  "file": "FRONTIER - Full Score.pdf",
- "saved": "2026-11-11T10:33:48.913Z",
+ "saved": "2026-11-11T11:45:05.931Z",
  "lastBar": 170,
  "lines": {
   "main:0": {
@@ -153,7 +153,7 @@
    "role": "melody",
    "inst": "piano",
    "oct": 0,
-   "vol": 1.6,
+   "vol": 2,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -163,7 +163,7 @@
    "role": "melody",
    "inst": "piano",
    "oct": 0,
-   "vol": 1.6,
+   "vol": 2,
    "R": "따",
    "L": "궁",
    "nong": false
