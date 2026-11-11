@@ -4,8 +4,8 @@
  "title": "멋으로사는세상",
  "titleRead": "멋으로사는세상",
  "file": "멋으로 사는 세상 - 총보.pdf",
- "saved": "2026-11-11T09:10:52.686Z",
- "lastBar": 240,
+ "saved": "2026-11-11T10:22:31.725Z",
+ "lastBar": 239,
  "lines": {
   "main:0": {
    "name": "소금",
@@ -203,7 +203,7 @@
  "accF": "120",
  "play": {
   "from": 1,
-  "to": 240,
+  "to": 239,
   "repeats": true,
   "countIn": true,
   "metronome": false,
@@ -219,7 +219,7 @@
  },
  "save": {
   "from": 1,
-  "to": 240,
+  "to": 239,
   "repeats": true,
   "countIn": true,
   "metronome": false,
@@ -230,7 +230,24 @@
   "format": "mp3"
  },
  "order": null,
- "tempoChanges": null,
+ "tempoChanges": [
+  {
+   "kind": "rit",
+   "bar": 85,
+   "off": 0,
+   "len": 4,
+   "pct": 40,
+   "auto": false
+  },
+  {
+   "kind": "rit",
+   "bar": 143,
+   "off": 0,
+   "len": 2,
+   "pct": null,
+   "auto": true
+  }
+ ],
  "sound": {
   "transpose": 0,
   "tune": 440,
