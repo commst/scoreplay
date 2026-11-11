@@ -660,6 +660,21 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hist-dlg h5.bug, :root:not([data-theme="light"]) .hist-dlg ul.bug { color: #ff8a7a; } }
 :root[data-theme="dark"] .hist-dlg h5.bug, :root[data-theme="dark"] .hist-dlg ul.bug { color: #ff8a7a; }
 .hist-dlg .hist-foot { position: sticky; bottom: -16px; display: flex; justify-content: flex-end; padding: 10px 0 0; background: var(--card); }
+/* 문제점 신고하기 */
+.tb-btn#reportBtn { margin-left: 10px; }
+.rep-dlg { width: min(520px, 100%); }
+.rep-dlg label.rep-f { display: block; margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--ink); }
+.rep-dlg label.rep-f small { font-weight: 400; color: var(--muted); }
+.rep-dlg input[type=text], .rep-dlg textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; }
+.rep-dlg textarea { min-height: 120px; resize: vertical; }
+.rep-dlg .rep-kind { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; border: 0; padding: 0; }
+.rep-dlg .rep-kind legend { font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 4px; }
+.rep-dlg .rep-kind label { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 13.5px; cursor: pointer; }
+.rep-dlg .rep-note { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+.rep-dlg .rep-state { font-size: 13px; margin: 8px 0 0; min-height: 1.2em; }
+.rep-dlg .rep-state.ok { color: #1e7d3a; font-weight: 600; }
+.rep-dlg .rep-state.bad { color: var(--warn); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rep-dlg .rep-state.ok { color: #7ddc95; } }
 #updateBar { position: sticky; top: 8px; z-index: 50; box-shadow: 0 6px 20px #0002; }
 .msg.openext { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px; }
 .msg.openext > span:first-child { flex: 1 1 260px; }
@@ -856,7 +871,7 @@ body.files-open .lv-inner, body.help-open .hv-inner { max-width: 900px; margin: 
   .dock-speed { order: 4; margin-left: auto; }
   #dockLoop { order: 3; }
   .dock-save { display: none; }
-  .tb-btn#histBtn, .tb-btn#manualBtn { display: none; }
+  .tb-btn#histBtn, .tb-btn#manualBtn, .tb-btn#reportBtn { display: none; }
   .tb-song { max-width: none; flex: 1; }
   .tb-gap { display: none; }
 }
@@ -1006,6 +1021,7 @@ body.all-panes { padding-bottom: 0; }
     <button class="btn tb-btn" id="helpBtn" type="button">사용법</button>
     <button class="btn tb-btn" id="histBtn" type="button">업데이트 이력</button>
     <a class="btn tb-btn" id="manualBtn" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기</a>
+    <button class="btn tb-btn" id="reportBtn" type="button">문제점 신고하기</button>
   </header>
   <div class="msg" id="msg" hidden></div>
 
@@ -1023,7 +1039,7 @@ body.all-panes { padding-bottom: 0; }
       <li><span class="hs-n">3</span><span><b>템포·범위·속도</b> · 노란 칸에 빠르기 숫자를 넣고, 어려운 마디만 천천히.</span></li>
       <li><span class="hs-n">4</span><span><b>재생 또는 음원 저장</b> · 마디 범위를 정해 MP3·WAV로 받아 두고 연습.</span></li>
     </ol>
-    <span class="hero-btns"><button class="btn hist-btn" id="histBtn3" type="button">업데이트 이력 보기</button><a class="btn hist-btn" id="manualBtn2" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a></span>
+    <span class="hero-btns"><button class="btn hist-btn" id="histBtn3" type="button">업데이트 이력 보기</button><a class="btn hist-btn" id="manualBtn2" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn hist-btn" id="reportBtn2" type="button">문제점 신고하기</button></span>
   </section>
       <section class="step" aria-labelledby="stepLoad">
     <h2 class="step-h" id="stepLoad"><span class="sn">1</span>악보 올리기</h2>
@@ -1090,7 +1106,7 @@ body.all-panes { padding-bottom: 0; }
 
   <div class="help-view" id="helpView" role="dialog" aria-labelledby="helpTitle">
     <div class="hv-inner">
-      <div class="lv-head"><span class="lv-title" id="helpTitle">사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn" id="helpClose" type="button">닫기</button></span></div>
+      <div class="lv-head"><span class="lv-title" id="helpTitle">사용법</span><span class="row" style="gap:8px"><a class="btn" id="manualBtn3" class="manual-link" href="https://commst.github.io/scoreplay/manual.pdf" download="합주연습기_사용설명서.pdf" target="_blank" rel="noopener">사용설명서 받기 (PDF)</a><button class="btn" id="reportBtn3" type="button">문제점 신고하기</button><button class="btn" id="helpClose" type="button">닫기</button></span></div>
       <details class="help panel" id="fullHelp">
     <summary>사용법 (처음 쓰신다면)</summary>
     <dl>
@@ -1600,7 +1616,9 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>6</small></h4><ul class="hlist">
+      <li><details><summary>문제점 신고하기</summary><p>위 막대([사용설명서 받기] 옆), 첫 화면, 사용법 창에 <b>[문제점 신고하기]</b> 단추가 생겼습니다. 분류(문제/기능개선)·곡명·마디 위치·내용을 적어 [전송]하면 관리자에게 메일로 바로 갑니다. 모든 칸은 비워도 되고, 곡명과 마디 위치는 지금 연 악보와 재생 위치로 미리 채워 둡니다. 원인을 찾을 수 있게 앱 판 번호와 기기·브라우저 종류가 함께 가며, 악보 파일은 보내지 않습니다. 바로 보내지 못하면 메일 앱을 열어 같은 내용으로 보낼 수 있습니다. 휴대폰에서는 첫 화면과 사용법 창의 단추를 써 주세요.</p></details></li>
+      <li><details><summary>같은 곡의 다른 파일로 공유 설정을 받을 때도 음 수정 적용</summary><p>공유 설정에는 원래부터 음정·길이 수정이 함께 저장됩니다. 이제 같은 곡의 다른 PDF 파일로 공유 설정을 받을 때도 음 수정을 입힙니다. 원래 음이 같은 곳에만 적용하므로 판이 달라 음이 다른 마디는 건너뜁니다.</p></details></li>
       <li><details><summary>공유 설정: 악보별 설정을 저장소에 올리고 받기</summary><p>[저장] 칸 '이 악보의 설정' 아래에 <b>공유 설정 (GitHub 저장소)</b>가 생겼습니다. 악기 이름·소리·음량, 빠르기·rit. 표, 음정·길이 수정을 한 묶음으로 저장소에 올려 두면, 같은 악보를 여는 다른 기기·단원이 그대로 받습니다. 이 기기에 저장한 설정이 없으면 악보를 열 때 자동으로 받고, 있으면 알려만 주며 [공유 설정 불러오기]를 눌러야 바뀝니다. [공유 설정 불러오기]는 저장소에 그 악보의 설정이 있을 때만 켜지고, 올릴 때 이미 올린 설정이 있으면 업데이트할지 물어봅니다. 올리기는 저장 토큰을 넣은 기기(관리자)만 됩니다 — 토큰 만드는 방법은 그 칸의 '관리자: 저장 토큰 넣기·만드는 방법'과 사용설명서에 있습니다.</p></details></li>
       <li><details><summary>마디를 눌러 빠르기·rit. 넣기</summary><p>[빠르기] 칸의 <b>[마디 골라 넣기]</b>를 누른 뒤 악보나 마디맵에서 마디를 누르면, 그 마디에서 시작하는 빠르기 구간(또는 rit.)이 표의 제자리에 들어가고 값 칸으로 옮겨 갑니다. 취소는 Esc. 컴퓨터의 마디 미리보기 창에도 [빠르기 넣기]·[rit. 넣기] 단추가 있습니다. </p></details></li>
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
@@ -7948,11 +7966,22 @@ function bundleSettings() {
   return S;
 }
 // 묶음을 지금 악보에 입힌다 (음정·길이 수정은 합침). 돌려주는 값: 수정을 입힌 악보 수
+// 파일 이름·제목 비교용 (공백·괄호·확장자 무시)
+const ghNorm = t => String(t || '').replace(/\.(pdf|musicxml|mxl|xml)$/i, '').replace(/[\s_()\[\]\-.]+/g, '').toLowerCase();
+// 지문(fp)이 같은 악보에 입히고, 같은 곡의 다른 파일(판)이면 파일 이름·제목이 같은 악보(또는 악보가 하나씩일 때 그 악보)에 입힌다.
+// 수정마다 원래 음(시각·길이·음높이)을 적어 두었으므로 원래 음이 다른 곳은 applyEdits가 건너뛴다(엉뚱한 음을 고치지 않음)
 function applyBundle(S, how) {
   stop();
   let editN = 0;
-  for (const s2 of S.edits || []) {
-    const tgt = loadedSources().find(x => x.fp === s2.fp); if (!tgt) continue;
+  const srcs = loadedSources(), list = S.edits || [], used = new Set();
+  const pick = s2 => {
+    let t = srcs.find(x => x.fp === s2.fp);
+    if (!t) { const n = [ghNorm(s2.file), ghNorm(s2.title)].filter(v => v.length >= 2); t = srcs.find(x => !used.has(x) && list.every(o => o.fp !== x.fp) && [ghNorm(x.fileName), ghNorm(x.title)].some(v => v.length >= 2 && n.includes(v))); }
+    if (!t && srcs.length === 1 && list.length === 1) t = srcs[0];
+    return t;
+  };
+  for (const s2 of list) {
+    const tgt = pick(s2); if (!tgt) continue; used.add(tgt);
     const E = editsFor(tgt.fp);
     for (const [lk, L] of Object.entries(s2.lines || {})) { const D = E.lines[lk] || (E.lines[lk] = {}); for (const [bi, B] of Object.entries(L)) D[bi] = { ...(D[bi] || {}), ...B }; }
     saveEdits(tgt); editN++;
@@ -8006,7 +8035,6 @@ async function ghFetch(key, name) {
   return { S: await r.json(), sha: null };
 }
 let ghBusy = false, ghAlt = null;   // ghAlt: 지문은 다르지만 제목·파일 이름이 같은 악보로 올린 공유 설정(이름)
-const ghNorm = t => String(t || '').replace(/\.(pdf|musicxml|mxl|xml)$/i, '').replace(/[\s_()\[\]\-.]+/g, '').toLowerCase();
 const ghWho = () => { const sc = state.score || {}; return (sc.fileName || sc.title || '이 악보'); };
 // 올린 설정 목록(settings/index.json: 이름 → 제목·파일 이름·시각). 같은 곡인데 PDF 파일이 조금 달라 지문이 다른 경우를 찾는 데 쓴다
 async function ghIndex() {
@@ -8029,7 +8057,7 @@ async function ghLoad() {
     if (!got || !got.S || got.S.format !== 'hapju-settings') { ghHas(false); ghSetState(`'${ghWho()}'(으)로 올려 둔 공유 설정이 없습니다.`); return; }
     const editN = applyBundle(got.S, '공유 설정을 불러옴');
     writeSettings(false); if (!alt) ghSeen(key, got.S.saved || '');
-    ghSetState(`공유 설정을 불러왔습니다 · ${fmtTime(got.S.saved)}에 올린 것` + (alt ? ` ('${alt.file || alt.title}'로 올린 설정 — 파일이 달라 음정·길이 수정은 빼고 맞는 줄만)` : editN ? ' (음정·길이 수정 포함)' : ''), true);
+    ghSetState(`공유 설정을 불러왔습니다 · ${fmtTime(got.S.saved)}에 올린 것` + (alt ? ` ('${alt.file || alt.title}'로 올린 설정 — 파일이 달라 맞는 줄만` + (editN ? ', 음정·길이 수정은 원래 음이 같은 곳만' : '') + ')' : editN ? ' (음정·길이 수정 포함)' : ''), true);
   } catch (e) { ghSetState(e && e.message ? e.message : '저장소에서 받지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
   finally { ghBusy = false; }
 }
@@ -9702,12 +9730,83 @@ function openHistory() {
   document.addEventListener('keydown', esc, true);
   back.append(dlg); document.body.append(back); cl.focus();
 }
+// ---------- 문제점 신고하기 ----------
+// 서버 없는 페이지라 폼 전달 서비스(FormSubmit)로 메일을 보낸다. 보내지 못하면 기기의 메일 앱으로 넘긴다(mailto).
+// 처음 한 번은 FormSubmit이 받는 주소로 확인 메일을 보내며, 그 메일의 [Activate]를 누른 뒤부터 제보가 도착한다
+const REPORT_TO = 'comstapp@gmail.com';
+const REPORT_URL = 'https://formsubmit.co/ajax/' + REPORT_TO;
+// 지금 재생 위치의 마디 번호(재생한 적이 없으면 빈 칸)
+function reportBarNow() {
+  try { const r = state.rendered, t = audio ? audio.currentTime || 0 : 0; if (r && r.plan && t > 0) { const b = barAtT(r.plan, t); if (b) return String(b.number); } } catch (e) {}
+  return '';
+}
+function reportEnv() {
+  const ver = APP_VERSION && !APP_VERSION.startsWith('/*') ? APP_VERSION : '(빌드 전)';
+  const sc = state.score || {}, nav = window.navigator || {};
+  return [`앱 판: ${ver}`, `악보 파일: ${state.score ? (sc.fileName || state.fileName || '-') : '(예시 장단)'}`, `화면: ${window.innerWidth}×${window.innerHeight}`, `기기·브라우저: ${nav['user' + 'Agent'] || '-'}`].join('\n');
+}
+function openReport() {
+  const back = document.createElement('div'); back.className = 'edit-back';
+  const dlg = tipNode('form', 'edit-dlg rep-dlg'); dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-labelledby', 'repTitle'); dlg.noValidate = true;
+  const h = tipNode('h2', '', '문제점 신고하기'); h.id = 'repTitle';
+  dlg.append(h, tipNode('p', 'ed-sub', '잘못 읽힌 음, 이상한 동작, 있었으면 하는 기능을 알려 주세요. 모든 칸은 비워 두어도 됩니다.'));
+  const fs = tipNode('fieldset', 'rep-kind'); fs.append(tipNode('legend', '', '분류'));
+  for (const v of ['문제', '기능개선']) { const l = tipNode('label'), r = document.createElement('input'); r.type = 'radio'; r.name = 'repKind'; r.value = v; r.checked = v === '문제'; l.append(r, document.createTextNode(v)); fs.append(l); }
+  const field = (label, el, hint) => { const l = tipNode('label', 'rep-f', label); if (hint) l.append(' ', tipNode('small', '', hint)); l.append(el); return l; };
+  const song = document.createElement('input'); song.type = 'text'; song.id = 'repSong'; song.autocomplete = 'off'; song.value = state.score ? (state.title || state.fileName || '') : '';
+  const bar = document.createElement('input'); bar.type = 'text'; bar.id = 'repBar'; bar.autocomplete = 'off'; bar.placeholder = '예: 35, 40~42'; bar.value = state.score ? reportBarNow() : '';
+  const body = document.createElement('textarea'); body.id = 'repBody'; body.placeholder = '무엇이 어떻게 다른지, 어느 줄(악기)인지 적어 주시면 찾기 쉽습니다.';
+  dlg.append(fs, field('곡명', song), field('마디 위치', bar, bar.value ? '(지금 재생 위치를 넣어 두었습니다)' : ''), field('내용', body));
+  dlg.append(tipNode('p', 'rep-note', '앱 판 번호와 기기·브라우저 종류가 함께 전송됩니다(원인 찾기용). 악보 파일은 보내지 않습니다.'));
+  const st = tipNode('p', 'rep-state'); st.setAttribute('aria-live', 'polite');
+  const foot = tipNode('div', 'ed-foot'), cancel = tipNode('button', 'btn', '닫기'), send = tipNode('button', 'btn primary', '전송');
+  cancel.type = 'button'; send.type = 'submit'; foot.append(cancel, send); dlg.append(st, foot);
+  const close = () => { back.remove(); document.removeEventListener('keydown', esc, true); };
+  const esc = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); close(); } };
+  cancel.addEventListener('click', close); back.addEventListener('click', ev => { if (ev.target === back) close(); });
+  document.addEventListener('keydown', esc, true);
+  let sending = false;
+  dlg.addEventListener('submit', async ev => {
+    ev.preventDefault(); if (sending) return;
+    const kind = (dlg.querySelector('input[name=repKind]:checked') || {}).value || '문제';
+    const R = { song: song.value.trim(), bar: bar.value.trim(), text: body.value.trim() };
+    if (!R.text && !confirm('내용 칸이 비어 있습니다. 이대로 보낼까요?')) { body.focus(); return; }
+    const subject = `[합주연습기 ${kind}] ${R.song || '곡명 없음'}${R.bar ? ' · ' + R.bar + '마디' : ''}`;
+    const env = reportEnv();
+    const plain = `분류: ${kind}\n곡명: ${R.song || '-'}\n마디 위치: ${R.bar || '-'}\n\n내용:\n${R.text || '-'}\n\n----\n${env}`;
+    sending = true; send.disabled = true; st.className = 'rep-state'; st.textContent = '보내는 중…';
+    let ok = false, why = '';
+    try {
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = ctl ? setTimeout(() => ctl.abort(), 20000) : 0;
+      const r = await fetch(REPORT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, signal: ctl ? ctl.signal : undefined,
+        body: JSON.stringify({ _subject: subject, _template: 'box', _captcha: 'false', 분류: kind, 곡명: R.song || '-', '마디 위치': R.bar || '-', 내용: R.text || '-', 환경: env }) });
+      clearTimeout(tm);
+      let j = null; try { j = await r.json(); } catch (e) {}
+      ok = r.ok && !!j && String(j.success) === 'true';
+      if (!ok) why = (j && j.message) || ('응답 ' + r.status);
+    } catch (e) { why = e && e.name === 'AbortError' ? '응답이 없음' : '인터넷 연결 문제'; }
+    sending = false; send.disabled = false;
+    if (ok) {
+      st.className = 'rep-state ok'; st.textContent = '보냈습니다. 알려 주셔서 고맙습니다.';
+      body.value = ''; send.hidden = true; cancel.classList.add('primary'); cancel.focus();
+      return;
+    }
+    st.className = 'rep-state bad'; st.textContent = `바로 보내지 못했습니다(${why}).`;
+    if (confirm('제보를 바로 보내지 못했습니다. 메일 앱을 열어 같은 내용으로 보낼까요?\n(메일 앱에서 [보내기]를 눌러 주세요)')) {
+      location.href = `mailto:${REPORT_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plain)}`;
+      st.textContent += ' 메일 앱으로 넘겼습니다.';
+    }
+  });
+  back.append(dlg); document.body.append(back);
+  (state.score ? body : song).focus();
+}
+['reportBtn', 'reportBtn2', 'reportBtn3'].forEach(id => $(id).addEventListener('click', openReport));
 try { if (/^https?:/.test(location.href) && /github\.io$/.test(location.hostname)) document.querySelectorAll('a.manual-link').forEach(a => { a.href = new URL('manual.pdf', location.href).href; a.removeAttribute('target'); }); } catch (e) {}
 $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListener('click', openHistory); $('histBtn3').addEventListener('click', openHistory);
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 08:46';
+const APP_VERSION = '2026-11-11 09:43';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
