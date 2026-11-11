@@ -200,13 +200,8 @@ export function renderPlan(bars, order, opts) {
     const c = bukRef[e.line] || (bukRef[e.line] = {}); c[e.pos] = (c[e.pos] || 0) + 1;
   }
   for (const l of Object.keys(bukRef)) { const c = bukRef[l]; bukRef[l] = +Object.keys(c).reduce((a, b) => c[b] > c[a] ? b : a); }
-  // 꽹과리 막음: 윗성부에 X 머리 음표가 있을 때만. 단, 윗성부를 모두(9할 넘게) X 머리로 적은 악보는 X가 그냥 꽹과리 표기라 막음으로 치지 않는다
-  const kkX = {};
-  for (const b of bars) for (const e of b.events) {
-    if (e.line == null || e.voice !== 'R' || e.tie || keyOf(e.line, 'R') !== '꽹과리') continue;
-    const c = kkX[e.line] || (kkX[e.line] = [0, 0]); c[0]++; if (e.xh) c[1]++;
-  }
-  const kkMute = l => { const c = kkX[l]; return !!c && c[1] > 0 && c[1] <= c[0] * 0.9; };
+  // 꽹과리 막음: 꽹과리 소리로 치는 줄의 X 머리 음표는 성부와 상관없이 막음 소리(사용자 규칙, 143번).
+  // 예전에는 윗성부의 X만, 그리고 윗성부를 거의 다 X로 적은 악보는 막음으로 치지 않았다 → 연변목가 꽹과리 73마디(아랫성부 X)가 열린 소리로 났음
   let hum = 12345;   // 사람이 치는 것처럼 세기·때를 조금씩 흔든다 (늘 같은 결과가 나오게 정해진 난수)
   const rnd = () => { hum = (hum * 1664525 + 1013904223) >>> 0; return hum / 4294967296 * 2 - 1; };
   // 쉬는 마디: 칠 음이 없는 마디(롤이 이어지는 마디는 제외). 연주 순서에서 연속된 묶음마다 몇 번째인지
@@ -278,7 +273,7 @@ export function renderPlan(bars, order, opts) {
       let dl = (opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L)) * lg;
       let sh = 0;
       if (e.ten && opts.stacc !== false) dl *= 1.08;   // 타악 테누토: 조금 세게
-      if (key === '꽹과리' && e.voice === 'R' && e.xh && kkMute(e.line)) key = '꽹과리막음';
+      if (key === '꽹과리' && e.xh) key = '꽹과리막음';
       if (BUKS.has(key)) {
         if (e.line != null && bukRef[e.line] != null && e.pos != null) {
           const d = bukRef[e.line] - e.pos;   // 기본 북보다 몇 칸 위
