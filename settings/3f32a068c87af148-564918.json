@@ -1,0 +1,353 @@
+{
+ "format": "hapju-settings",
+ "v": 1,
+ "title": "월광",
+ "titleRead": "경기도립국악단위촉작품",
+ "songTitle": "월광",
+ "file": "월광-스코어.pdf",
+ "saved": "2026-11-11T05:06:56.218Z",
+ "lastBar": 205,
+ "lines": {
+  "main:0": {
+   "name": "소금",
+   "role": "melody",
+   "inst": "sogeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:1": {
+   "name": "대금",
+   "role": "melody",
+   "inst": "daegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:2": {
+   "name": "피리",
+   "role": "melody",
+   "inst": "piri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:3": {
+   "name": "대피리",
+   "role": "melody",
+   "inst": "daepiri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:4": {
+   "name": "태평소",
+   "role": "melody",
+   "inst": "taepyeongso",
+   "oct": 1,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:5": {
+   "name": "해금",
+   "role": "melody",
+   "inst": "haegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:6": {
+   "name": "소아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:7": {
+   "name": "대아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:8": {
+   "name": "양금",
+   "role": "melody",
+   "inst": "yanggeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:9": {
+   "name": "가야금 (윗줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1.7,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:10": {
+   "name": "가야금 (아랫줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1.7,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:11": {
+   "name": "거문고",
+   "role": "melody",
+   "inst": "geomungo",
+   "oct": 0,
+   "vol": 1.7,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:12": {
+   "name": "신디 (윗줄)",
+   "role": "melody",
+   "inst": "piano",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:13": {
+   "name": "신디 (아랫줄)",
+   "role": "melody",
+   "inst": "piano",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:14": {
+   "name": "장구",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:15": {
+   "name": "쇠",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "꽹과리",
+   "L": "꽹과리",
+   "nong": false
+  },
+  "main:16": {
+   "name": "징",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "징",
+   "L": "징",
+   "nong": false
+  },
+  "main:17": {
+   "name": "모듬북",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:18": {
+   "name": "S.CYMBAL / W.CHIMES",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1.05,
+   "R": "심벌",
+   "L": "심벌",
+   "nong": false
+  },
+  "main:19": {
+   "name": "대고 / 공",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 0.9,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  }
+ },
+ "tempoRows": [
+  {
+   "start": 1,
+   "unit": "q",
+   "bpm": 80,
+   "auto": false,
+   "text": "",
+   "manual": true
+  },
+  {
+   "start": 16,
+   "unit": "dq",
+   "bpm": 50,
+   "auto": true,
+   "text": "♩.=50",
+   "manual": true
+  },
+  {
+   "start": 58,
+   "unit": "q",
+   "bpm": 84,
+   "auto": true,
+   "text": "♩=84"
+  },
+  {
+   "start": 66,
+   "unit": "q",
+   "bpm": 135,
+   "auto": true,
+   "text": "♩=130-140"
+  },
+  {
+   "start": 136,
+   "unit": "q",
+   "bpm": 64,
+   "auto": true,
+   "text": "♩=64",
+   "edited": true,
+   "manual": true
+  },
+  {
+   "start": 151,
+   "unit": "q",
+   "bpm": 135,
+   "text": "",
+   "edited": true,
+   "manual": true
+  }
+ ],
+ "tempoDet": [
+  "1|q|",
+  "16|dq|50",
+  "58|q|84",
+  "66|q|135",
+  "136|q|64"
+ ],
+ "speed": 100,
+ "ritF": "80",
+ "accF": "120",
+ "play": {
+  "from": 1,
+  "to": 205,
+  "repeats": true,
+  "countIn": false,
+  "metronome": false,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "loop": false,
+  "rest": "sub",
+  "ramp": false,
+  "rampStart": 70,
+  "rampStep": 5
+ },
+ "save": {
+  "from": 1,
+  "to": 205,
+  "repeats": true,
+  "countIn": false,
+  "metronome": false,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "linked": false,
+  "format": "mp3"
+ },
+ "order": null,
+ "tempoChanges": [
+  {
+   "kind": "rit",
+   "bar": 134,
+   "off": 0,
+   "len": 0.96,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "rit",
+   "bar": 134,
+   "off": 0,
+   "len": 0.97,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "rit",
+   "bar": 56,
+   "off": 0,
+   "len": 2,
+   "pct": 60,
+   "auto": false
+  },
+  {
+   "kind": "rit",
+   "bar": 203,
+   "off": 0,
+   "len": 0.21,
+   "pct": null,
+   "auto": true
+  },
+  {
+   "kind": "rit",
+   "bar": 135,
+   "off": 0,
+   "len": 2,
+   "pct": null,
+   "auto": false
+  }
+ ],
+ "sound": {
+  "transpose": 0,
+  "tune": 440,
+  "fermata": 2,
+  "reverb": 0.12,
+  "artic": true,
+  "stereo": true,
+  "human": true
+ },
+ "extras": [],
+ "edits": [],
+ "key": "3f32a068c87af148-564918"
+}
