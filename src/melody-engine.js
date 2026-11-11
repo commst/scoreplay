@@ -3,11 +3,9 @@
 // 배음 표(한 주기 파형)를 떨림(비브라토)과 함께 읽고 숨·활 소리를 섞는다.
 import { SR } from './audio-engine.js';
 
-// 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
-// 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
-// 악기별 기본 크기. 150번(11-12): 프론티어 음원(양방언)과 악기마다 드러난 대목의 크기를 맞대어 다듬음
-//  태평소 +2.5dB, 가야금 +2.5, 피아노 +2 (test/frontier/ 도구). 대금·소금·피리·해금은 다른 곡에서 너무 작아 원래 값으로(154번). 155번: 관악(대금·소금·피리·대피리·태평소) +3dB — 달빛항해에서 장구·북보다 5dB쯤 작았음
-const LV = { gayageum: 1.86, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 1.6, daepiri: 1.6, haegeum: 0.85, saenghwang: 0.7, daegeum: 1.4, sogeum: 1.4, taepyeongso: 1.6, piano: 1.26 };
+// 악기별 기본 크기(157번, 11-12): 곡과 상관없는 시험 악보(test/levelref.py — 악기마다 편한 음역의 음계·긴 음)를 줄마다 재서(K 가중, 0.1·0.4초 창 상위 10%의 평균)
+// 모두 같은 크기로 맞춘 뒤 역할 보정: 대금·소금 +3dB, 가야금 +2, 태평소 −3(원래 큼), 아쟁 −2(받침), 양금 −5(밝은 소리가 튐), 나머지 0. 곡마다 다른 것은 음량 막대로
+const LV = { gayageum: 3.13, geomungo: 2.37, yanggeum: 1.14, daegeum: 1.61, sogeum: 1.58, piri: 1.33, daepiri: 1.5, taepyeongso: 0.89, saenghwang: 1.01, haegeum: 1.08, ajaeng: 1.3, piano: 1.74 };
 export const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
