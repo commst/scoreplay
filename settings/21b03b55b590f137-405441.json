@@ -1,9 +1,11 @@
 {
  "format": "hapju-settings",
  "v": 1,
- "title": "달해",
+ "title": "달빛항해",
+ "titleRead": "달해",
+ "songTitle": "달빛항해",
  "file": "달빛항해(Score).pdf",
- "saved": "2026-11-10T23:02:12.433Z",
+ "saved": "2026-11-11T06:02:38.044Z",
  "lastBar": 152,
  "lines": {
   "main:0": {
