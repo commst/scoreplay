@@ -1771,7 +1771,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>15</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>16</small></h4><ul class="hlist">
+      <li><details><summary>심벌 롤도 꺾쇠를 따라 커지고 작아지게</summary><p>심벌 굴림(롤)도 녹음한 롤 소리 그대로, 그 줄의 꺾쇠·셈여림을 따라 커지고 작아집니다. 작아지는 롤은 큰 소리에서 바로 시작해 끝으로 갈수록 확 사그라듭니다.</p></details></li>
       <li><details><summary>양금 소리 줄임, 트레몰로·북 굴림의 셈여림을 드라마틱하게</summary><p>양금이 다른 악기보다 튀지 않도록 약 3dB 줄였습니다. 북·장구·꽹과리 같은 타악기 굴림(트레몰로)도 이제 그 줄의 꺾쇠·셈여림을 따라 굴리는 동안 커지고 작아집니다. 트레몰로와 굴림 안에서 커지고 작아질 때는 일정하게 변하지 않고 끝으로 갈수록 확 사그라들거나 확 부풉니다.</p></details></li>
       <li><details><summary>작아지는 꺾쇠(&gt;)를 더 뚜렷하게</summary><p>셈여림 글자 없이 그린 작아지는 꺾쇠(&gt;)는 그 순간 크기의 4분의 1쯤(약 −12dB)까지, 글자 dim.은 절반 가까이 줄어듭니다. 전에는 커질 때와 같은 작은 폭만 줄어 작아지는 느낌이 거의 없었습니다(연변목가 양금 트레몰로).</p></details></li>
       <li><details><summary>타악 소리에 팀파니</summary><p>타악 줄의 소리 목록에 팀파니(높은 음 G·낮은 음 C)를 넣었습니다. 윗성부에서 높은 음을 고르면 아랫성부는 낮은 음으로 짝지어집니다. 예: 연변목가 북 줄의 '팀파니(C.G)를 써도 됨'. 음 높이대로 치려면 지금처럼 그 줄을 선율로 바꾸고 '팀파니 (녹음)'을 고르세요.</p></details></li>
@@ -5729,7 +5730,8 @@ function bounceRoll(buf, S, key, t, dur, gain, pick, strokes) {
 // 심벌 롤: 녹음은 0.6초쯤 가장 커진 뒤 울리며 줄어든다.
 //  짧은 롤은 커지는 부분의 뒤쪽부터 시작해 롤 끝에서 가장 크게, 긴 롤은 가장 큰 부분을 겹쳐 이어 붙인 뒤 울림으로 끝낸다
 const PEAK_CACHE = new WeakMap();
-function cymbalRoll(buf, r, t, dur, gain) {
+// envAt(초)가 있으면 굴리는 동안 그 셈여림 곡선을 곱한다(울림은 끝 값). 작아지는 곡선이면 녹음의 '점점 커지는' 앞부분을 빼고 큰 부분부터
+function cymbalRoll(buf, r, t, dur, gain, envAt = null, dim = false) {
   const n = buf.length, i0 = Math.round(t * SR), X = Math.round(0.15 * SR);
   let P = PEAK_CACHE.get(r);
   if (P == null) { const w = Math.round(0.05 * SR); let best = -1; P = 0;
@@ -5739,14 +5741,15 @@ function cymbalRoll(buf, r, t, dur, gain) {
     const len = to - from;
     for (let i = 0; i < len; i++) { const k = at + i; if (k < 0) continue; if (k >= n) break;
       let w = 1; if (fin && i < fin) w *= Math.sin(Math.PI / 2 * i / fin); if (fout && i > len - fout) w *= Math.sin(Math.PI / 2 * (len - i) / fout);
-      buf[k] += r[from + i] * gain * w; }
+      buf[k] += r[from + i] * gain * w * (envAt ? envAt(Math.min(dur, (k - i0) / SR)) : 1); }
   };
   const D = Math.round(dur * SR), tail = Math.min(r.length, P + 3 * SR);
-  if (D <= P) { add(P - D, tail, i0, Math.round(0.01 * SR), Math.round(0.4 * SR)); return; }
-  add(0, P + X, i0, 0, X);                       // 커지는 부분
+  if (D <= P && !dim) { add(P - D, tail, i0, Math.round(0.01 * SR), Math.round(0.4 * SR)); return; }
   const a = Math.max(0, P - Math.round(0.15 * SR)), L = Math.round(0.5 * SR);
+  if (!dim) add(0, P + X, i0, 0, X);             // 커지는 부분
+  else add(a, a + X, i0, Math.round(0.01 * SR), X);   // 작아지는 롤: 큰 부분으로 바로 시작
   let seed = (i0 * 2654435761) >>> 0;
-  for (let at = i0 + P; at < i0 + D; at += L - X) {   // 가장 큰 부분을 겹쳐 이어 붙임
+  for (let at = i0 + (dim ? X >> 1 : P); at < i0 + D; at += L - X) {   // 가장 큰 부분을 겹쳐 이어 붙임
     seed = (seed * 1664525 + 1013904223) >>> 0; const off = a + Math.floor((seed / 4294967296) * 0.1 * SR);
     add(off, Math.min(r.length, off + L), at, X, X);
   }
@@ -5776,7 +5779,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}, env = null, envSt
   // 윈드차임: 한 번 훑는 소리 자체가 굴림이라 그대로 한 번
   if (key === '윈드차임') { const s = pick(key); if (s) put(s, i0, gain); return; }
   // 심벌 롤: 녹음한 롤(점점 커졌다 울리는 소리)을 길이에 맞춰
-  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌'] && !env) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9); return; }
+  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌']) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9, env ? envAt : null, !!env && env[env.length - 1] < 0.8); return; }
   // 꽹과리: 녹음한 '개르르르'를 길이에 맞춰 (길면 이어 붙임)
   if (/^꽹과리/.test(key) && Array.isArray(S['꽹과리굴림']) && !custom['꽹과리']) {
     const r = S['꽹과리굴림'][0], seg = dur <= 1.1 ? dur + 1 : dur / Math.ceil(dur / 0.85);   // 길면 0.85초쯤마다 다시 친다
@@ -10131,7 +10134,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 21:47';
+const APP_VERSION = '2026-11-11 23:30';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

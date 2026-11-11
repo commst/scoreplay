@@ -466,7 +466,8 @@ function bounceRoll(buf, S, key, t, dur, gain, pick, strokes) {
 // 심벌 롤: 녹음은 0.6초쯤 가장 커진 뒤 울리며 줄어든다.
 //  짧은 롤은 커지는 부분의 뒤쪽부터 시작해 롤 끝에서 가장 크게, 긴 롤은 가장 큰 부분을 겹쳐 이어 붙인 뒤 울림으로 끝낸다
 const PEAK_CACHE = new WeakMap();
-function cymbalRoll(buf, r, t, dur, gain) {
+// envAt(초)가 있으면 굴리는 동안 그 셈여림 곡선을 곱한다(울림은 끝 값). 작아지는 곡선이면 녹음의 '점점 커지는' 앞부분을 빼고 큰 부분부터
+function cymbalRoll(buf, r, t, dur, gain, envAt = null, dim = false) {
   const n = buf.length, i0 = Math.round(t * SR), X = Math.round(0.15 * SR);
   let P = PEAK_CACHE.get(r);
   if (P == null) { const w = Math.round(0.05 * SR); let best = -1; P = 0;
@@ -476,14 +477,15 @@ function cymbalRoll(buf, r, t, dur, gain) {
     const len = to - from;
     for (let i = 0; i < len; i++) { const k = at + i; if (k < 0) continue; if (k >= n) break;
       let w = 1; if (fin && i < fin) w *= Math.sin(Math.PI / 2 * i / fin); if (fout && i > len - fout) w *= Math.sin(Math.PI / 2 * (len - i) / fout);
-      buf[k] += r[from + i] * gain * w; }
+      buf[k] += r[from + i] * gain * w * (envAt ? envAt(Math.min(dur, (k - i0) / SR)) : 1); }
   };
   const D = Math.round(dur * SR), tail = Math.min(r.length, P + 3 * SR);
-  if (D <= P) { add(P - D, tail, i0, Math.round(0.01 * SR), Math.round(0.4 * SR)); return; }
-  add(0, P + X, i0, 0, X);                       // 커지는 부분
+  if (D <= P && !dim) { add(P - D, tail, i0, Math.round(0.01 * SR), Math.round(0.4 * SR)); return; }
   const a = Math.max(0, P - Math.round(0.15 * SR)), L = Math.round(0.5 * SR);
+  if (!dim) add(0, P + X, i0, 0, X);             // 커지는 부분
+  else add(a, a + X, i0, Math.round(0.01 * SR), X);   // 작아지는 롤: 큰 부분으로 바로 시작
   let seed = (i0 * 2654435761) >>> 0;
-  for (let at = i0 + P; at < i0 + D; at += L - X) {   // 가장 큰 부분을 겹쳐 이어 붙임
+  for (let at = i0 + (dim ? X >> 1 : P); at < i0 + D; at += L - X) {   // 가장 큰 부분을 겹쳐 이어 붙임
     seed = (seed * 1664525 + 1013904223) >>> 0; const off = a + Math.floor((seed / 4294967296) * 0.1 * SR);
     add(off, Math.min(r.length, off + L), at, X, X);
   }
@@ -513,7 +515,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}, env = null, envSt
   // 윈드차임: 한 번 훑는 소리 자체가 굴림이라 그대로 한 번
   if (key === '윈드차임') { const s = pick(key); if (s) put(s, i0, gain); return; }
   // 심벌 롤: 녹음한 롤(점점 커졌다 울리는 소리)을 길이에 맞춰
-  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌'] && !env) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9); return; }
+  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌']) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9, env ? envAt : null, !!env && env[env.length - 1] < 0.8); return; }
   // 꽹과리: 녹음한 '개르르르'를 길이에 맞춰 (길면 이어 붙임)
   if (/^꽹과리/.test(key) && Array.isArray(S['꽹과리굴림']) && !custom['꽹과리']) {
     const r = S['꽹과리굴림'][0], seg = dur <= 1.1 ? dur + 1 : dur / Math.ceil(dur / 0.85);   // 길면 0.85초쯤마다 다시 친다
