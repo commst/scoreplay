@@ -347,6 +347,31 @@ function pitched(y, sh) {
   for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; }
   m.set(sh, z); return z;
 }
+// ---------- 음색(3대역 EQ) ----------
+// 낮은음(250Hz 아래 선반) · 가운데(1kHz 봉우리) · 높은음(3.5kHz 위 선반)을 dB로. RBJ 쌍2차 필터(158번)
+function biq(type, f0, dB, q) {
+  const A = Math.pow(10, dB / 40), w = 2 * Math.PI * f0 / SR, c = Math.cos(w), sn = Math.sin(w);
+  let b0, b1, b2, a0, a1, a2;
+  if (type === 'peak') { const al = sn / (2 * q); b0 = 1 + al * A; b1 = -2 * c; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * c; a2 = 1 - al / A; }
+  else { const al = sn / 2 * Math.SQRT2, sq = 2 * Math.sqrt(A) * al;
+    if (type === 'low') { b0 = A * ((A + 1) - (A - 1) * c + sq); b1 = 2 * A * ((A - 1) - (A + 1) * c); b2 = A * ((A + 1) - (A - 1) * c - sq); a0 = (A + 1) + (A - 1) * c + sq; a1 = -2 * ((A - 1) + (A + 1) * c); a2 = (A + 1) + (A - 1) * c - sq; }
+    else { b0 = A * ((A + 1) + (A - 1) * c + sq); b1 = -2 * A * ((A - 1) + (A + 1) * c); b2 = A * ((A + 1) + (A - 1) * c - sq); a0 = (A + 1) - (A - 1) * c + sq; a1 = 2 * ((A - 1) - (A + 1) * c); a2 = (A + 1) - (A - 1) * c - sq; } }
+  return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+}
+export function toneFlat(t) { return !t || (!(+t.lo) && !(+t.mid) && !(+t.hi)); }
+// x를 제자리에서 걸러 돌려준다(t = { lo, mid, hi } dB)
+export function applyTone(x, t) {
+  if (toneFlat(t)) return x;
+  const fs = [];
+  if (+t.lo) fs.push(biq('low', 250, +t.lo)); if (+t.mid) fs.push(biq('peak', 1000, +t.mid, 0.9)); if (+t.hi) fs.push(biq('high', 3500, +t.hi));
+  for (const [b0, b1, b2, a1, a2] of fs) { let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    for (let i = 0; i < x.length; i++) { const v = x[i], y = b0 * v + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = v; y2 = y1; y1 = y; x[i] = y; } }
+  return x;
+}
+// 타악 소리별 사용자 음량(전역, 음색 탭). 소리 이름 → 배율
+let PV = {};
+export function setPercVolumes(map) { PV = map || {}; }
+const pv = k => PV[k] == null ? 1 : PV[k];
 export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
   custom = custom || {};
   const S = { ...sounds, ...custom };
@@ -381,7 +406,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
       if (last[f] == null || last[f] - hits[i][0] > 0.02) last[f] = hits[i][0]; } }
   for (let hi = 0; hi < hits.length; hi++) {
     const [t, key, g, , extra] = hits[hi];
-    if (extra && extra.roll) { addRoll(buf, S, key, t, extra.roll, g * (GAIN[key] || 1), vary, custom, extra.env, extra.envStep); continue; }
+    if (extra && extra.roll) { addRoll(buf, S, key, t, extra.roll, g * (GAIN[key] || 1) * pv(key), vary, custom, extra.env, extra.envStep); continue; }
     let k = key, gg = g;
     if (extra && extra.grace) {
       // 꾸밈음: 녹음한 꾸밈 소리(장구 '기', 꽹과리 '그·라·지')가 있으면 그것으로, 없으면 같은 소리를 작게
@@ -389,7 +414,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
       const gs = gk && S[gk];
       if (Array.isArray(gs) && gs.length) {
         const idx = gk === '꽹과리꾸밈' && gs.length >= 3 ? (extra.of >= 2 ? (extra.grace === extra.of ? 1 : 0) : ((vary.gr = (vary.gr || 0) + 1) % 2 ? 1 : 2)) : 0;
-        put1(buf, gs[idx], t, gg * (gk === '따꾸밈' ? 2.2 : 1.1) * (GAIN[key] || 1));
+        put1(buf, gs[idx], t, gg * (gk === '따꾸밈' ? 2.2 : 1.1) * (GAIN[key] || 1) * pv(key));
         continue;
       }
       gg *= 0.53;
@@ -405,7 +430,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
     const i0 = Math.round(t * SR);
     if (i0 < 0) continue;
     let m = Math.min(s.length, n - i0);
-    const gain = gg * (GAIN[key] || 1);
+    const gain = gg * (GAIN[key] || 1) * pv(key);
     const nx = nextSame[hi];
     if (nx < Infinity) {
       const isBuk = key === '북' || key === '북녹음' || key === '북짧게';   // 북은 다시 쳐도 앞 울림이 조금 남는다

@@ -1,7 +1,7 @@
 // 선율 악기 소리 합성 (녹음 없이). 음 하나 = midi 번호 + 길이(초) + 세기
 // 뜯는 악기(가야금·거문고·양금)는 Karplus-Strong 줄 모형, 부는·켜는 악기(대금·소금·피리·태평소·해금·아쟁)는
 // 배음 표(한 주기 파형)를 떨림(비브라토)과 함께 읽고 숨·활 소리를 섞는다.
-import { SR } from './audio-engine.js';
+import { SR, applyTone, toneFlat } from './audio-engine.js';
 
 // 악기별 기본 크기(157번, 11-12): 곡과 상관없는 시험 악보(test/levelref.py — 악기마다 편한 음역의 음계·긴 음)를 줄마다 재서(K 가중, 0.1·0.4초 창 상위 10%의 평균)
 // 모두 같은 크기로 맞춘 뒤 역할 보정: 대금·소금 +3dB, 가야금 +2, 태평소 −3(원래 큼), 아쟁 −2(받침), 양금 −5(밝은 소리가 튐), 나머지 0. 곡마다 다른 것은 음량 막대로
@@ -174,7 +174,22 @@ export function setBank(name, meta, pcm) {
     bank[kind].push({ m, y });
   }
   BANKS[name] = bank;
+  for (const [key, ins] of Object.entries(INSTRUMENTS)) if (ins.bank === name && !key.endsWith('_syn') && !toneFlat(TONE[key])) toneBank(bank, TONE[key]);
 }
+// ---------- 음색 탭(전역): 악기마다 음량 배율과 3대역 EQ (158번) ----------
+// 녹음 음원은 원본(y0)을 두고 거른 것을 y로 쓴다. 합성음은 음 캐시에 넣기 전에 거른다
+const TONE = {};   // 악기 이름(_syn 뺀 것) → { vol, lo, mid, hi }
+export function setInstTones(map) {
+  const old = JSON.stringify(TONE); for (const k of Object.keys(TONE)) delete TONE[k]; Object.assign(TONE, map || {});
+  if (JSON.stringify(TONE) === old) return false;
+  for (const [key, ins] of Object.entries(INSTRUMENTS)) { const b = ins.bank && BANKS[ins.bank]; if (b && !key.endsWith('_syn')) toneBank(b, TONE[key]); }
+  clearNoteCache(); return true;
+}
+function toneBank(bank, t) {
+  for (const kind of ['p', 'n', 't']) for (const c of bank[kind]) { if (!c.y0) c.y0 = c.y; c.y = toneFlat(t) ? c.y0 : applyTone(c.y0.slice(), t); }
+}
+const tvol = inst => { const t = TONE[String(inst).replace(/_syn$/, '')]; return t && t.vol != null ? t.vol : 1; };
+const ttone = inst => TONE[String(inst).replace(/_syn$/, '')];
 export const NONG_MIN = 0.7;   // 이 길이(초) 이상인 음에 농현
 
 // 4점 보간으로 rate배 빠르게 읽기 (음높이 바꾸기)
@@ -370,7 +385,7 @@ export function mixNotes(buf, notes, onProgress, bufR = null) {
     if (bufR) { const a = (Math.max(-1, Math.min(1, nt.pan || 0)) + 1) * Math.PI / 4; OUT.R = bufR; OUT.pl = Math.cos(a) * Math.SQRT2; OUT.pr = Math.sin(a) * Math.SQRT2; }
     else { OUT.R = null; OUT.pl = 1; OUT.pr = 0; }
     const ins = INSTRUMENTS[nt.inst] || INSTRUMENTS.gayageum;
-    const lv = LV[String(nt.inst).replace(/_syn$/, '')] || 1;
+    const lv = (LV[String(nt.inst).replace(/_syn$/, '')] || 1) * tvol(nt.inst);
     const voices = nt.midis.length;
     const bank = ins.bank && BANKS[ins.bank];
     for (const m of nt.midis) {
@@ -382,6 +397,7 @@ export function mixNotes(buf, notes, onProgress, bufR = null) {
       let s = cache.get(ck);
       if (!s) {
         s = synthNote(nt.inst, m, Math.max(0.05, opt.trem ? Math.round(nt.dur * 40) / 40 : dk), 1, opt);
+        if (!toneFlat(ttone(nt.inst))) s = applyTone(s.slice(), ttone(nt.inst));
         // 휴대폰 메모리: 저장해 두는 소리는 모두 합쳐 약 600만 표본(24MB)까지만
         cacheSize += s.length; cache.set(ck, s);
         while (cacheSize > 6e6 && cache.size > 1) { const [k0, v0] = cache.entries().next().value; cache.delete(k0); cacheSize -= v0.length; }

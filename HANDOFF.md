@@ -2,6 +2,29 @@
 
 새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-11, CHANGELOG 157번까지)
 
+## 다음 대화에서 바로 할 일 — 158번 음색·음량 탭 + 신고 파일 첨부 (11-12 사용자 요청, 작업 중 멈춤)
+
+진행 중인 작업은 브랜치 **wip-158**에 있음(main에는 아직 없음): `git fetch origin wip-158 && git checkout wip-158` 후 이어서, 끝나면 main에 합쳐 올리고 브랜치는 사용자에게 지워 달라고 하기
+
+요청 내용(사용자 말 그대로 정리):
+1. 설정 탭을 하나 더 만들어 **전체 악기의 음색과 기본 음량을 전역적으로**(곡과 상관없이) 조절. 악기별로 음색·음량을 조절
+2. **바뀐 소리를 들어 볼 수 있는 단추**
+3. **기본값으로 되돌리기**(악기 하나, 전체)
+4. 문제점 신고하기 폼에 **악보 파일 첨부**
+
+wip-158에 이미 한 것(엔진, 시험 안 함):
+- audio-engine: `applyTone(x, {lo,mid,hi})`(낮은음 250Hz 선반·가운데 1kHz 봉우리·높은음 3.5kHz 선반, dB), `toneFlat`, `setPercVolumes(map)`(타악 소리 이름 → 배율, GAIN 쓰는 세 곳에 `* pv(key)`)
+- melody-engine: `setInstTones({ 악기: {vol, lo, mid, hi} })` — 녹음 음원 클립 원본 y0를 두고 거른 것을 y로(setBank 뒤에도 적용), mixNotes의 lv에 `tvol(inst)`, 합성음은 음 캐시에 넣기 전에 거름. 바뀌면 clearNoteCache
+
+남은 일(계획):
+- 앱: 전역 설정 localStorage `hapju-tone` = { master:{lo,mid,hi}, inst:{gayageum:{vol,lo,mid,hi}…}, perc:{장구:{vol,lo,mid,hi}…} }. vol은 음량 막대와 같은 '들리는 크기 %'(pctToVol)
+- 타악 묶음 → 소리 이름: 장구(따 따약 궁 덩 굴림타 따꾸밈), 꽹과리(꽹과리 꽹과리길게 꽹과리막음 꽹과리굴림 꽹과리꾸밈), 징, 북(북 북테 북녹음 북짧게), 바라, 심벌(심벌 심벌롤), 하이햇, 베이스드럼, 스네어, 봉고(봉고 봉고높게), 탬버린, 트라이앵글, 카바사, 윈드차임, 팀파니(팀파니 팀파니높게). 클릭·쉼박은 제외
+- 타악 음색: state.sounds 원본을 두고(3363줄 근처 makeSounds+decodeRecorded) 음색이 바뀌면 거른 사본으로(배열 또는 배열 목록 둘 다 있음)
+- 전체(master) 음색: buildAudio에서 fitLevel 전에 raw·rawR에 applyTone
+- 화면: 5번째 탭 '음색'(src/index.template.html 1282줄 .tabs2, 1734줄 .dock-tabs 서랍 단추, pane-*), 악기마다 음량·낮은음·가운데·높은음 막대(±6dB), [▶ 들어보기](짧은 음계 8음 + 긴 음 / 타악 8타를 mixNotes·mix로 만들어 따로 재생, 녹음 뱅크는 loadBank로 먼저), [기본값으로](악기·전체). 바뀌면 state.dirty → 다음 재생에 반영
+- 신고 첨부: openReport(5805줄 근처)에 '열린 악보 파일 첨부' 체크 + 파일 고르기, FormSubmit에 FormData(multipart)로(총 10MB까지), 실패하면 메일 앱(mailto는 첨부 불가 → 직접 붙이라고 안내)
+- 시험: pwboot, pwreport(첨부 항목 추가), 새 pwtone(탭·막대·저장·되돌리기·들어보기), levelstems로 음량·음색 바뀌는지. 그다음 CHANGELOG 158·이력·README·HANDOFF
+
 ## 1. 작업 규칙 (사용자 요청)
 
 - **프로그램 이름은 ScoreWorks**(부제 '국악관현악 악보 분석 및 재생 도구', 11-11에 합주연습기에서 바꿈). 글꼴 Pretendard(본문)·Outfit(이름), 아이콘은 src/index.template.html의 `<symbol id="swMark">`(파비콘은 같은 그림의 data URI). 저장 키(hapju-*)·내보낸 파일 형식 이름(hapju-settings 등)은 예전 것과 맞도록 그대로 둠. **저장소는 11-11에 commst/scoreplay → commst/scoreworks로 이름을 바꿈**(실행 링크 https://commst.github.io/scoreworks/ — 옛 링크 commst.github.io/scoreplay는 GitHub이 넘겨주지 않아 404, 사용자가 넘겨주는 페이지는 두지 않기로 함)
