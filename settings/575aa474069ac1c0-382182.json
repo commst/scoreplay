@@ -4,7 +4,7 @@
  "title": "판놀음",
  "titleRead": "판놀음",
  "file": "판놀음II 스코아.pdf",
- "saved": "2026-11-11T14:39:54.465Z",
+ "saved": "2026-11-11T14:41:05.599Z",
  "lastBar": 109,
  "lines": {
   "main:0": {
@@ -274,7 +274,7 @@
   "transpose": 0,
   "tune": 440,
   "fermata": 2,
-  "reverb": 0.12,
+  "reverb": 0.22,
   "artic": true,
   "stereo": true,
   "human": true
