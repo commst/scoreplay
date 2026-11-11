@@ -1473,7 +1473,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
             <div class="field"><label for="sFermata">늘임표(페르마타)</label>
               <select id="sFermata"><option value="0">늘이지 않음</option><option value="1">1박 늘이기</option><option value="2" selected>2박 늘이기</option><option value="3">3박 늘이기</option><option value="4">4박 늘이기</option></select></div>
             <div class="field"><label for="sReverb">잔향(울림)</label>
-              <select id="sReverb"><option value="0">없음</option><option value="0.12" selected>조금</option><option value="0.22">보통</option><option value="0.34">많이</option></select></div>
+              <select id="sReverb"><option value="0">없음</option><option value="0.12">조금</option><option value="0.22" selected>보통</option><option value="0.34">많이</option></select></div>
           </div>
           <div class="checks">
             <label><input type="checkbox" id="sArtic" checked>스타카토·트릴 연주</label>
@@ -1522,7 +1522,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
             <dd>악보의 p, mf, f, 크레셴도 등을 소리 크기에 반영합니다. 끄면 모든 음을 같은 크기로 냅니다. 악센트(&gt;)는 어느 쪽이든 강하게 납니다.</dd>
             <dt>소리 다듬기</dt>
             <dd><b>조옮김</b>: 선율 악기를 반음 단위로 올리거나 내립니다(타악은 그대로). <b>기준음 A4</b>: 라(A4) 높이를 Hz로 정합니다. 보통 440, 악기를 442에 맞췄다면 442.
-              <b>늘임표</b>: 악보의 늘임표(𝄐가 있는 마디)에서 울리던 음을 몇 박 더 늘이고 그만큼 쉽니다. <b>잔향</b>: 방에서 울리는 것처럼 소리에 울림을 더합니다.
+              <b>늘임표</b>: 악보의 늘임표(𝄐가 있는 마디)에서 울리던 음을 몇 박 더 늘이고 그만큼 쉽니다. <b>잔향</b>: 방에서 울리는 것처럼 소리에 울림을 더합니다(처음 값 '보통').
               <b>스타카토·트릴 연주</b>: 스타카토 점이 찍힌 선율 음은 절반쯤 짧게 끊고, 물결선 트릴은 바로 위 음(조표·임시표 따름)과 빠르게 오갑니다.
               <b>좌우 배치</b>: 국악관현악 자리처럼 가야금·거문고·양금은 왼쪽, 아쟁·대금·소금은 오른쪽, 피리는 가운데쯤으로 나눠 들리게 합니다. 줄마다 '좌우 위치'로 바꿀 수 있고, 타악은 가운데입니다. 긴 소리(휴대폰·태블릿 5분, 컴퓨터 10분 넘게)는 메모리를 생각해 한 줄(모노)로 만듭니다.
               모두 재생과 음원 저장에 함께 적용되고, 이 악보의 설정에 저장됩니다.</dd>
@@ -1761,7 +1761,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>11</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>12</small></h4><ul class="hlist">
+      <li><details><summary>잔향 처음 값을 '보통'으로</summary><p>[연주] 칸 소리 다듬기의 잔향(울림) 처음 값을 '조금'에서 '보통'으로 바꿨습니다. 이미 설정을 저장한 곡은 저장한 값 그대로입니다.</p></details></li>
       <li><details><summary>공유 설정이 있으면 물어보고 [확인]으로 적용</summary><p>이 기기에서 처음 여는 곡에 저장소의 공유 설정이 있으면, 위쪽에 "공유 설정이 저장소에 있습니다… 불러와 적용할까요?" 알림이 뜹니다. [확인]을 누르면 바로 불러와 적용하고, [나중에]를 누르면 그대로 둡니다(나중에 [저장] 칸의 [공유 설정 불러오기]로 받을 수 있음). 같은 곡의 다른 파일로 올린 설정을 찾았을 때도 같이 묻습니다. 전에는 묻지 않고 바로 적용했습니다.</p></details></li>
       <li><details><summary>새 이름 ScoreWorks, 새 글꼴과 첫 화면</summary><p>프로그램 이름을 '합주연습기'에서 <b>ScoreWorks</b>(국악관현악 악보 분석 및 재생 도구)로 바꿨습니다. 새 아이콘을 만들고, 이름을 위 막대 가운데에 두었습니다. 첫 화면은 아이콘·이름·설명을 가운데로 다시 배치했습니다. 글꼴은 Pretendard(본문)와 Outfit(이름)입니다. 위 막대 단추는 화면 폭에 따라 짧은 이름(이력·사용법·설명서·신고)으로 보입니다. 사용설명서도 새 이름과 새 화면으로 바꿨습니다. 저장한 설정과 음 수정은 그대로입니다.</p></details></li>
       <li><details><summary>♩=♪ 표시는 처음부터 '오른쪽이 새 박'으로</summary><p>박을 바꾸는 ♩=♪ 같은 표시를 악보 표기 관례대로 '앞의 왼쪽 음표 길이 = 새 오른쪽 음표'로 읽습니다. 예: 프론티어 117마디 ♩=♪는 앞의 ♩=172 길이가 새 ♪가 되어 ♩=86, 121마디부터 다시 ♩=172. 반대로 쓴 악보는 빠르기 칸의 단추로 '왼쪽이 새 박'으로 바꾸면 되고, 이미 단추로 고른 방향은 그대로입니다.</p></details></li>
