@@ -1772,9 +1772,10 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>2</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>3</small></h4><ul class="hlist">
+      <li><details><summary>관악기 소리 키움</summary><p>대금·소금·피리·대피리·태평소를 약 3dB 키우고, 음원에 맞춰 올렸던 장구는 원래대로 두었습니다. 달빛항해 등에서 관악이 장구·북보다 작게 묻히던 것을 고쳤습니다.</p></details></li>
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
-      <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노·장구는 조금 크게 했습니다(대금·소금·해금·피리는 다른 곡에서 너무 작아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
+      <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노는 조금 크게 했습니다(대금·소금·해금·피리·장구는 다른 곡에서 밸런스가 맞지 않아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
       <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
       <li><details><summary>휴대폰에서 악보 파일 창이 화면보다 넓어지던 문제</summary><p>곡 제목을 바꾼 뒤 [악보]를 누르면 창이 화면보다 넓어져 왼쪽이 잘렸습니다. 제목 칸이 화면 폭에 맞춰 줄어들게 고쳤습니다.</p></details></li>
@@ -5394,7 +5395,7 @@ function makeSounds() {
 }
 
 // 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB, 10월 31일 북을 장구 덩만큼 더 키움)
-const JG = 2.4, BK = 1.4;   // 장구 2.0 → 2.4(150번: 프론티어 음원에 맞춰 +1.5dB)
+const JG = 2.0, BK = 1.4;   // 장구 (150번에 2.4로 올렸다가 155번에 되돌림 — 관악이 묻힘)
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
 const KG = 2.1;   // 꽹과리 크기(150번에서 프론티어 음원에 맞춰 2.8 → 2.1, −2.5dB)
 const BUK_MID = 4, BUK_CLICK = 0.6;
@@ -5977,8 +5978,8 @@ function decodeRecorded(obj) {
 // 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
 // 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
 // 악기별 기본 크기. 150번(11-12): 프론티어 음원(양방언)과 악기마다 드러난 대목의 크기를 맞대어 다듬음
-//  태평소 +2.5dB, 가야금 +2.5, 피아노 +2 (test/frontier/ 도구). 대금·소금·피리·해금은 다른 곡에서 너무 작아 원래 값으로(154번)
-const LV = { gayageum: 1.86, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7, taepyeongso: 1.33, piano: 1.26 };
+//  태평소 +2.5dB, 가야금 +2.5, 피아노 +2 (test/frontier/ 도구). 대금·소금·피리·해금은 다른 곡에서 너무 작아 원래 값으로(154번). 155번: 관악(대금·소금·피리·대피리·태평소) +3dB — 달빛항해에서 장구·북보다 5dB쯤 작았음
+const LV = { gayageum: 1.86, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 1.6, daepiri: 1.6, haegeum: 0.85, saenghwang: 0.7, daegeum: 1.4, sogeum: 1.4, taepyeongso: 1.6, piano: 1.26 };
 const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
@@ -10162,7 +10163,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-12 07:57';
+const APP_VERSION = '2026-11-12 08:06';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
