@@ -1306,14 +1306,14 @@ body.all-panes { padding-bottom: 0; }
             <dd>악보에서 읽어 낸 원래 표기입니다. 범위로 적힌 경우 가운데 값을 넣어 둡니다.</dd>
             <dt>악보: ♩=♪ 처럼 음표끼리 같다는 표시</dt>
             <dd>빠르기 숫자 대신 "앞으로는 ♩ 하나를 지금까지의 ♪ 하나 길이로" 같은 박 단위 바꿈입니다. 바로 앞 구간 빠르기에서 자동으로 계산합니다.
-              <span class="eg">앞 구간 ♩=172 → ♩=♪ 구간은 ♩=344, 이어서 ♪=♩ 구간은 ♪=344(다시 ♩=172와 같은 빠르기)</span>
+              <span class="eg">앞 구간 ♩=172 → ♩=♪ 구간은 ♪=172(♩=86), 이어서 ♪=♩ 구간은 ♩=172(원래 빠르기)</span>
               앞 구간 숫자를 고치면 이런 구간도 함께 바뀝니다. 직접 숫자를 고친 구간은 그대로 둡니다.</dd>
             <dt>'왼쪽이 새 박' · '오른쪽이 새 박' 단추</dt>
             <dd>♩=♪ 같은 표시는 악보(작곡가·사보가)마다 읽는 방향이 다릅니다. 이런 구간의 '끝' 칸에 있는 단추로 방향을 정합니다.
-              <span class="eg"><b>왼쪽이 새 박</b>(처음 값): "이제부터 왼쪽 음표(♩)를, 앞에서 오른쪽 음표(♪)가 걸리던 시간만큼" → ♩=♪이면 <b>두 배 빨라짐</b>. 앞이 ♩=172면 ♩=344</span>
-              <span class="eg"><b>오른쪽이 새 박</b>: "앞에서 왼쪽 음표(♩)가 걸리던 시간을, 이제부터 오른쪽 음표(♪) 하나로" → ♩=♪이면 <b>절반으로 느려짐</b>. 앞이 ♩=172면 ♪=172(♩=86)</span>
+              <span class="eg"><b>오른쪽이 새 박</b>(처음 값, 보통의 표기 관례 '앞 박 = 새 박'): "앞에서 왼쪽 음표(♩)가 걸리던 시간을, 이제부터 오른쪽 음표(♪) 하나로" → ♩=♪이면 <b>절반으로 느려짐</b>. 앞이 ♩=172면 ♪=172(♩=86)</span>
+              <span class="eg"><b>왼쪽이 새 박</b>: "이제부터 왼쪽 음표(♩)를, 앞에서 오른쪽 음표(♪)가 걸리던 시간만큼" → ♩=♪이면 <b>두 배 빨라짐</b>. 앞이 ♩=172면 ♩=344</span>
               어느 쪽인지 모르겠으면 그 구간을 들어 보고, 2배 빠르거나 느리게 들리면 단추를 누르세요. 단추를 누르면 <b>그 악보의 ♩=♪ 표시 전체</b>가 함께 바뀝니다(보통 한 악보 안에서는 같은 방식으로 쓰기 때문). 바뀐 방향은 이 악보의 설정에 저장됩니다.
-              <span class="eg">예: Frontier 새판은 117마디 ♩=♪(넓게, 절반 빠르기)와 121마디 ♪=♩(원래 빠르기로)를 '오른쪽이 새 박' 방식으로 썼습니다 → 단추를 눌러 '오른쪽이 새 박'으로 바꾸면 117~120마디 ♩=86, 121마디부터 ♩=172</span>
+              <span class="eg">예: Frontier 새판 117마디 ♩=♪(넓게, 절반 빠르기)와 121마디 ♪=♩(원래 빠르기로) → 117~120마디 ♩=86, 121마디부터 ♩=172</span>
               이 단추가 있는 구간의 BPM을 직접 고치면 뒤의 ♩=♪ 구간이 그 숫자로 다시 계산되니, 방향이 틀렸을 때는 숫자보다 단추를 쓰세요.</dd>
             <dt>줄마다 [+] · [−]</dt>
             <dd>빠르기가 바뀌는 곳을 못 찾았으면 앞 구간 줄의 [+]로 구간을 넣고 시작 마디를 고칩니다(처음에는 앞뒤 구간의 가운데 마디가 들어갑니다). [−]는 그 줄을 지웁니다. 첫 줄은 지울 수 없습니다.</dd>
@@ -1665,7 +1665,8 @@ body.all-panes { padding-bottom: 0; }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>8</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>9</small></h4><ul class="hlist">
+      <li><details><summary>♩=♪ 표시는 처음부터 '오른쪽이 새 박'으로</summary><p>박을 바꾸는 ♩=♪ 같은 표시를 악보 표기 관례대로 '앞의 왼쪽 음표 길이 = 새 오른쪽 음표'로 읽습니다. 예: 프론티어 117마디 ♩=♪는 앞의 ♩=172 길이가 새 ♪가 되어 ♩=86, 121마디부터 다시 ♩=172. 반대로 쓴 악보는 빠르기 칸의 단추로 '왼쪽이 새 박'으로 바꾸면 되고, 이미 단추로 고른 방향은 그대로입니다.</p></details></li>
       <li><details><summary>곡 제목 바꾸기</summary><p>악기 이름처럼 곡 제목도 바꿀 수 있습니다. 위 막대의 곡 이름을 누르면 열리는 악보 파일 창 맨 위 <b>곡 제목</b> 칸에 적고 Enter를 누르세요. 바꾼 제목은 위 막대, 음원·MIDI·MusicXML 파일에 쓰이고 이 악보의 설정에 저장됩니다. [악보 제목으로]를 누르면 악보에서 읽은 제목으로 돌아갑니다.</p></details></li>
       <li><details><summary>단추 색·크기와 제목 정리</summary><p>단추를 화면 색에 맞는 연한 파랑으로 바꾸고, 위 막대 단추(악보 파일·업데이트 이력·프로그램 사용법·사용설명서 받기·문제점 신고하기)를 같은 크기로 맞췄습니다. 칸마다 제목을 가운데로(빠르기 칸은 왼쪽), 함께 쓰는 단추는 같은 너비로 맞췄습니다. '사용법'은 '프로그램 사용법', '화면 가득 보기'는 '전체화면 보기', '재생할 때'는 '재생 설정'으로 이름을 바꿨고, 첫 화면 소개 아래의 단추 줄은 위 막대와 겹쳐 뺐습니다.</p></details></li>
       <li><details><summary>문제점 신고하기</summary><p>위 막대([사용설명서 받기] 옆), 첫 화면, 사용법 창에 <b>[문제점 신고하기]</b> 단추가 생겼습니다. 분류(문제/기능개선)·곡명·마디 위치·내용을 적어 [전송]하면 관리자에게 메일로 바로 갑니다. 모든 칸은 비워도 되고, 곡명과 마디 위치는 지금 연 악보와 재생 위치로 미리 채워 둡니다. 원인을 찾을 수 있게 앱 판 번호와 기기·브라우저 종류가 함께 가며, 악보 파일은 보내지 않습니다. 바로 보내지 못하면 메일 앱을 열어 같은 내용으로 보낼 수 있습니다. 휴대폰에서는 첫 화면과 사용법 창의 단추를 써 주세요.</p></details></li>
@@ -6226,6 +6227,7 @@ const EXAMPLE_MARKS = { dyn: [{ kind: 'mark', p0: 0, level: 0.75 }, { kind: 'mar
 
 // ---------- 화면: 템포 표 ----------
 // 악보의 '♩=♪'(박 단위만 바꿈) 구간: 바로 앞 구간 빠르기에서 계산한다 (직접 고친 구간은 그대로)
+function eqRight(r) { return r.eqFlip !== false; }   // ♩=♪ 읽는 방향: 오른쪽이 새 박(처음 값, 2026-11-11부터)
 function propagateEq() {
   const UF = { q: 1 / 4, e: 1 / 8, h: 1 / 2, dq: 3 / 8 };
   const rows = [...state.tempoRows].sort((a, b) => a.start - b.start);
@@ -6235,10 +6237,11 @@ function propagateEq() {
     if (r.restoreOf != null && !r.manual) { const base = rows.find(x => x.start === r.restoreOf); if (base) { r.unit = base.unit; r.bpm = base.bpm; } return; }
     if (!r.eq || r.manual || i === 0) return;
     const p = rows[i - 1];
-    // 보통은 '새 음표 = 앞 음표'(왼쪽이 새 빠르기)로 읽는다. 반대로 쓴 악보(왼쪽이 앞 빠르기)는 eqFlip
-    if (r.eqFlip) r.unit = UNIT_OF[r.eq.right] || r.unit;
-    else if (r.eqUnit) r.unit = r.eqUnit;
-    const ratio = r.eqFlip ? r.eq.right / r.eq.left : r.eq.left / r.eq.right;
+    // 보통의 표기 관례 '앞 박 = 새 박'(오른쪽이 새 박)으로 읽는다. eqFlip: true/없음 = 오른쪽이 새 박, false = 왼쪽이 새 박(단추로 고른 것)
+    const flip = eqRight(r);
+    if (flip) r.unit = UNIT_OF[r.eq.right] || r.unit;
+    else r.unit = UNIT_OF[r.eq.left] || r.eqUnit || r.unit;   // 왼쪽이 새 박: 왼쪽 음표 단위
+    const ratio = flip ? r.eq.right / r.eq.left : r.eq.left / r.eq.right;
     r.bpm = p.bpm > 0 ? Math.round(p.bpm * UF[p.unit] * ratio / UF[r.unit]) : null;
   });
 }
@@ -6263,10 +6266,10 @@ function renderTempo() {
       // '♩=♪' 같은 표시는 악보마다 읽는 방향이 다르다: 왼쪽이 새 빠르기인지, 앞 빠르기인지
       if (!r.eqUnit) r.eqUnit = r.unit;
       const b = document.createElement('button'); b.type = 'button'; b.className = 'eqflip';
-      b.textContent = r.eqFlip ? '오른쪽이 새 박' : '왼쪽이 새 박';
+      b.textContent = eqRight(r) ? '오른쪽이 새 박' : '왼쪽이 새 박';
       b.title = '이 악보의 ♩=♪ 같은 표시를 모두 반대 방향으로 읽습니다 (악보마다 쓰는 방식이 달라서). 그 구간이 2배 빠르거나 느리게 들리면 눌러 보세요.';
       b.setAttribute('aria-label', `${r.start}마디 ${r.text}: 읽는 방향 바꾸기 (지금 ${b.textContent})`);
-      b.addEventListener('click', () => { const v = !r.eqFlip; for (const x of state.tempoRows) if (x.eq) { x.eqFlip = v; x.manual = false; } propagateEq(); changed(); renderTempo(); });
+      b.addEventListener('click', () => { const v = !eqRight(r); for (const x of state.tempoRows) if (x.eq) { x.eqFlip = v; x.manual = false; } propagateEq(); changed(); renderTempo(); });
       tr.cells[1].appendChild(b);
     }
     const sel = tr.querySelector('select'); sel.value = r.unit;
@@ -8476,6 +8479,7 @@ function applySelection(first = false) {
     const keep = state.tempoRows.filter(r => r.start <= bars[bars.length - 1].number);
     state.tempoRows = keep.some(r => r.start === 1) && keep.some(r => r.manual) ? keep : defaultTempoRows(bars).map(x => ({ ...x }));
   }
+  propagateEq();   // ♩=♪ 구간: 해석기는 '왼쪽이 새 박'으로 계산해 두므로 지금 읽는 방향(처음 값 '오른쪽이 새 박')으로 다시
   // rit.·accel. 표: 직접 고치지 않았으면 기준 줄에서 읽은 것으로 (고쳤으면 마디 번호로 그대로 둔다)
   if (first) state.tempoChEdited = false;
   if (!state.tempoChEdited) state.tempoChanges = deriveTempoChanges(master.r.marks.tempo, bars);
@@ -9881,7 +9885,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 11:09';
+const APP_VERSION = '2026-11-11 12:00';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

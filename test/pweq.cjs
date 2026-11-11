@@ -1,0 +1,32 @@
+// ♩=♪ 읽는 방향: 처음 값 '오른쪽이 새 박'(Frontier 117마디 ♩=86, 121마디 ♩=172), 단추로 바꾸기·저장·다시 열기, 예전에 '왼쪽'으로 고른 설정은 그대로
+const { chromium } = require('playwright'); const fs = require('fs');
+const pre = '9203ad49', SM = process.env.SAMPLES || '/home/claude/samples/'; const t = '/tmp/pick-' + pre + '.pdf'; fs.copyFileSync(SM + fs.readdirSync(SM).find(f => f.startsWith(pre)), t);
+let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) fails++; };
+(async () => { const b = await chromium.launch();
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 860 } }); const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
+  await p.route('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/**', r => { const f = r.request().url().split('pdfjs-dist@4.10.38/')[1].replace('.min.mjs', '.mjs'); r.fulfill({ path: '/home/claude/web/node_modules/pdfjs-dist/' + f, contentType: 'text/javascript' }); });
+  await p.route(/^https:\/\/(?!cdn\.jsdelivr|commst\.github\.io).*/, r => r.abort());
+  await p.route('https://commst.github.io/scoreplay/**', r => { const f = r.request().url().split('/scoreplay/')[1].split('?')[0] || 'index.html'; const fp = '/home/claude/scoreplay/' + f; return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
+  const open = async () => { await p.goto('https://commst.github.io/scoreplay/'); await p.setInputFiles('#pdfInput', t);
+    await p.waitForFunction(() => document.querySelectorAll('#lineList .lcard').length >= 1 && /읽었습니다/.test(document.getElementById('fileInfo').textContent), null, { timeout: 150000 }); await p.waitForTimeout(1200);
+    await p.evaluate(() => { const m = document.getElementById('msg'); if (m && !m.hidden) m.click(); }); await p.click('#tab-tempo'); await p.waitForTimeout(300); };
+  const rows = () => p.evaluate(() => [...document.querySelectorAll('#tempoBody tr')].map(tr => ({ s: +tr.querySelector('input').value, u: tr.querySelector('select').value, b: tr.querySelectorAll('input')[1].value, f: (tr.querySelector('.eqflip') || {}).textContent || '' })));
+  const at = (rs, n) => rs.find(r => r.s === n) || {};
+  await open(); let rs = await rows();
+  ok(at(rs, 117).u === 'e' && at(rs, 117).b === '172' && at(rs, 117).f === '오른쪽이 새 박', '처음 값: 117마디 ♪=172(♩=86), 오른쪽이 새 박 ' + JSON.stringify(at(rs, 117)));
+  ok(at(rs, 121).u === 'q' && at(rs, 121).b === '172', '121마디 원래 빠르기 ♩=172 ' + JSON.stringify(at(rs, 121)));
+  await p.click('#tempoBody .eqflip'); await p.waitForTimeout(800); rs = await rows();
+  ok(at(rs, 117).u === 'q' && at(rs, 117).b === '344' && at(rs, 117).f === '왼쪽이 새 박', '단추: 왼쪽이 새 박 117마디 ♩=344 ' + JSON.stringify(at(rs, 117)));
+  ok(at(rs, 121).u === 'e' && at(rs, 121).b === '344', '왼쪽이어도 121마디 ♪=344(= ♩=172) ' + JSON.stringify(at(rs, 121)));
+  await p.waitForTimeout(1500); await open(); rs = await rows();
+  ok(at(rs, 117).f === '왼쪽이 새 박' && at(rs, 117).b === '344', '고른 방향(왼쪽)은 다시 열어도 그대로');
+  await p.click('#tempoBody .eqflip'); await p.waitForTimeout(800); rs = await rows();
+  ok(at(rs, 117).f === '오른쪽이 새 박' && at(rs, 117).u === 'e' && at(rs, 117).b === '172', '다시 누르면 오른쪽 ♪=172');
+  // 예전 판에서 손대지 않고 저장한 설정(eqFlip 없음, bpm 344)은 새 처음 값으로
+  await p.evaluate(() => { for (const k of Object.keys(localStorage)) if (/^hapju-set/.test(k)) { const S = JSON.parse(localStorage.getItem(k)); if (S && S.tempoRows) { S.tempoRows.forEach(r => { if (r.eq) { delete r.eqFlip; if (r.start === 117) { r.unit = 'q'; r.bpm = 344; } } }); localStorage.setItem(k, JSON.stringify(S)); } } });
+  await open(); rs = await rows();
+  ok(at(rs, 117).f === '오른쪽이 새 박' && at(rs, 117).b === '172', '예전 판에서 손대지 않은 설정 → 오른쪽이 새 박 ' + JSON.stringify(at(rs, 117)));
+  ok(!errs.length, '페이지 오류 0 ' + errs.join(' | '));
+  await b.close(); console.log(fails ? 'FAILS ' + fails : 'ALL OK'); process.exit(fails ? 1 : 0);
+})();
