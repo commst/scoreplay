@@ -5,7 +5,7 @@ import { SR } from './audio-engine.js';
 
 // 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
 // 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
-const LV = { gayageum: 1.4, geomungo: 2.2, yanggeum: 1.25, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7 };
+const LV = { gayageum: 1.4, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7 };
 export const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
@@ -356,7 +356,7 @@ function expandTremolo(notes) {
     for (let i = 0; i < n; i++) {
       const t = i * st, e = nt.env ? nt.env[Math.min(nt.env.length - 1, Math.floor(t / (nt.envStep || 0.04)))] : 1;
       out.push({ ...nt, trem: false, nong: false, env: null, graces: i ? null : nt.graces, t: nt.t + t, dur: Math.min(st * 2, nt.dur - t + 0.05),
-        gain: nt.gain * e * (i === 0 ? 1 : i % 2 ? 0.86 : 0.94) });   // 두 채를 번갈아 치는 것처럼 세기를 조금씩 다르게
+        gain: nt.gain * e * (i === 0 ? 1 : i % 2 ? 0.74 : 0.8) });   // 겹쳐 울리므로 첫 타 뒤는 조금 작게   // 두 채를 번갈아 치는 것처럼 세기를 조금씩 다르게
     }
   }
   return out;

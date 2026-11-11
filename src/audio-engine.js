@@ -294,7 +294,7 @@ export function renderPlan(bars, order, opts) {
         const rd = e.rollDur ? e.rollDur.v : e.dur.v;
         const dur = rd <= L - e.t.v + 1e-9 ? clk(e.t.v + rd) - clk(e.t.v) : rd * s / (tempoItems ? tempoFactorAt(tempoItems, bi + e.t.v / L, resets, ritF, accF) : 1);
         // 롤(굴림)은 한 덩어리로 넘기고 mix에서 사람이 굴리는 것처럼 만든다
-        hits.push([ts, key, (e.accent ? 1.05 : 0.75) * dl, e.voice, { roll: Math.max(0.08, dur) }]);
+        hits.push([ts, key, (e.accent ? 1.05 : 0.75) * dl, e.voice, { roll: Math.max(0.08, dur), dynL: e.dynL || null, dynOff: e.dynOff || 0 }]);
         continue;
       }
       for (let gi = 0; gi < e.grace; gi++) hits.push([ts - 0.055 * (e.grace - gi), key, 0.68 * dl, e.voice, sh ? { grace: gi + 1, of: e.grace, sh } : { grace: gi + 1, of: e.grace }]);
@@ -322,11 +322,23 @@ export function renderPlan(bars, order, opts) {
       // 그 줄의 셈여림(dynL)이 있으면 그것으로(앱은 음마다 그 줄의 셈여림을 쓴다), 없으면 곡 전체 셈여림
       const lv = nt.dynL && opts.useLvl ? (q => dynLevelAt(nt.dynL, q + nt.dynOff)) : dynAt;
       const base = lv(posAt(nt.t)) || 1, env = [];
-      for (let t = 0; t < nt.dur; t += 0.04) env.push(Math.max(0.15, Math.min(4, lv(posAt(nt.t + t)) / base)));
+      for (let t = 0; t < nt.dur; t += 0.04) env.push(dramatic(lv(posAt(nt.t + t)) / base));
       if (env.some(v => Math.abs(v - 1) > 0.02)) { nt.env = env; nt.envStep = 0.04; }
     }
     for (const nt of notes) { delete nt.dynL; delete nt.dynOff; }
+    // 타악기 굴림(북·장구 트레몰로 등)도 같은 방식: 굴리는 동안 셈여림을 따라 커지고 작아진다
+    for (const h of hits) {
+      const x = h[4]; if (!x || !x.roll) continue;
+      if (x.roll >= 0.2) {
+        const lv = x.dynL && opts.useLvl ? (q => dynLevelAt(x.dynL, q + x.dynOff)) : dynAt;
+        const base = lv(posAt(h[0])) || 1, env = [];
+        for (let t = 0; t < x.roll; t += 0.04) env.push(dramatic(lv(posAt(h[0] + t)) / base));
+        if (env.some(v => Math.abs(v - 1) > 0.02)) { x.env = env; x.envStep = 0.04; }
+      }
+      delete x.dynL; delete x.dynOff;
+    }
   }
+  for (const h of hits) if (h[4] && h[4].roll) { delete h[4].dynL; delete h[4].dynOff; }
   return { hits, notes, barTimes, total: cur + (notes.length ? 2.2 : 1.2), t0 };
 }
 
@@ -373,7 +385,7 @@ export function mix(plan, sounds, custom = {}, extra = null, normalize = true) {
       if (last[f] == null || last[f] - hits[i][0] > 0.02) last[f] = hits[i][0]; } }
   for (let hi = 0; hi < hits.length; hi++) {
     const [t, key, g, , extra] = hits[hi];
-    if (extra && extra.roll) { addRoll(buf, S, key, t, extra.roll, g * (GAIN[key] || 1), vary, custom); continue; }
+    if (extra && extra.roll) { addRoll(buf, S, key, t, extra.roll, g * (GAIN[key] || 1), vary, custom, extra.env, extra.envStep); continue; }
     let k = key, gg = g;
     if (extra && extra.grace) {
       // 꾸밈음: 녹음한 꾸밈 소리(장구 '기', 꽹과리 '그·라·지')가 있으면 그것으로, 없으면 같은 소리를 작게
@@ -477,8 +489,19 @@ function cymbalRoll(buf, r, t, dur, gain) {
   }
   add(P, tail, i0 + D, X, Math.round(0.4 * SR));  // 울림
 }
-function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
+// 트레몰로·굴림 안의 셈여림 변화: 비율을 dB로 1.8배 키운다 → 줄어들 땐 끝으로 갈수록 확 사그라들고, 커질 땐 끝에서 확 부푼다
+function dramatic(r) { const db = 20 * Math.log10(Math.max(1e-4, r)) * 1.8; return Math.max(0.03, Math.min(4, Math.pow(10, db / 20))); }
+function addRoll(buf, S, key, t, dur, gain, vary, custom = {}, env = null, envStep = 0.04) {
   const n = buf.length, i0 = Math.round(t * SR);
+  // 셈여림 곡선(env): tt초 때의 크기 비율 (사이는 이어서)
+  const envAt = tt => { if (!env) return 1; const f = tt / envStep, j = Math.min(env.length - 1, Math.floor(f)), j2 = Math.min(env.length - 1, j + 1), w = Math.max(0, Math.min(1, f - j)); return env[j] + (env[j2] - env[j]) * w; };
+  // 녹음 굴림 소리를 셈여림 곡선대로 크기를 바꿔 넣는다
+  const putEnv = (x, at, g, fadeLen, off) => {
+    if (!env) { put(x, at, g, fadeLen); return; }
+    const m = Math.min(x.length, n - at); if (at < 0 || m <= 0) return;
+    const fl = Math.min(fadeLen || 0, m);
+    for (let i = 0; i < m; i++) buf[at + i] += x[i] * g * envAt(off + i / SR) * (fl && i > m - fl ? (m - i) / fl : 1);
+  };
   const put = (x, at, g, fadeLen) => {
     const m = Math.min(x.length, n - at); if (at < 0 || m <= 0) return;
     const fl = Math.min(fadeLen || 0, m);
@@ -490,14 +513,14 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   // 윈드차임: 한 번 훑는 소리 자체가 굴림이라 그대로 한 번
   if (key === '윈드차임') { const s = pick(key); if (s) put(s, i0, gain); return; }
   // 심벌 롤: 녹음한 롤(점점 커졌다 울리는 소리)을 길이에 맞춰
-  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌']) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9); return; }
+  if (key === '심벌' && Array.isArray(S['심벌롤']) && !custom['심벌'] && !env) { cymbalRoll(buf, S['심벌롤'][0], t, dur, gain * 0.9); return; }
   // 꽹과리: 녹음한 '개르르르'를 길이에 맞춰 (길면 이어 붙임)
   if (/^꽹과리/.test(key) && Array.isArray(S['꽹과리굴림']) && !custom['꽹과리']) {
     const r = S['꽹과리굴림'][0], seg = dur <= 1.1 ? dur + 1 : dur / Math.ceil(dur / 0.85);   // 길면 0.85초쯤마다 다시 친다
     for (let st = 0; st < dur; st += seg) {
       const left = dur - st, len = Math.min(r.length, Math.round((left + 0.25) * SR));
       const len2 = Math.min(len, Math.round((Math.min(left, seg) + 0.12) * SR) + (left > seg + 1e-6 ? 0 : len));
-      put(r.subarray(0, Math.min(len, len2)), i0 + Math.round(st * SR), gain * (st ? 0.78 : 1) * (key === '꽹과리막음' ? 0.8 : 1), Math.round((left > seg + 1e-6 ? 0.12 : Math.min(0.25, left / 2 + 0.1)) * SR));
+      putEnv(r.subarray(0, Math.min(len, len2)), i0 + Math.round(st * SR), gain * (st ? 0.78 : 1) * (key === '꽹과리막음' ? 0.8 : 1), Math.round((left > seg + 1e-6 ? 0.12 : Math.min(0.25, left / 2 + 0.1)) * SR), st);
     }
     return;
   }
@@ -505,7 +528,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   if (rollRec && dur <= 1.2) {
     const r = pick('굴림'); if (!r) return;
     const m = Math.min(r.length, Math.round((dur + 0.08) * SR));
-    put(r.subarray(0, m), i0, gain * 1.1, Math.round(0.06 * SR));
+    putEnv(r.subarray(0, m), i0, gain * 1.1, Math.round(0.06 * SR), 0);
     if (key === '덩' && S['궁']) put(pick('궁'), i0, gain * 0.8);
     return;
   }
@@ -513,7 +536,7 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
   // 꽹과리: 쇳소리가 이어지도록 긴 울림을 밑에 깐다
   if ((key === '꽹과리' || key === '꽹과리길게') && S['꽹과리길게']) {
     const bed = pick('꽹과리길게'), m = Math.min(bed.length, Math.round((dur + 0.15) * SR));
-    put(bed.subarray(0, m), i0, gain * 0.45, Math.round(0.12 * SR));
+    putEnv(bed.subarray(0, m), i0, gain * 0.45, Math.round(0.12 * SR), 0);
   }
   let seed = (i0 * 2654435761) >>> 0;
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -527,8 +550,12 @@ function addRoll(buf, S, key, t, dur, gain, vary, custom = {}) {
     const left = dur - tt;
     const step = (1 / rate) * (0.85 + 0.3 * rnd());
     const hand = k % 2 ? 0.86 : 1;                           // 양손(양 채) 세기 차이
-    const swell = 0.75 + 0.25 * Math.sin(Math.PI * Math.min(1, tt / dur));
-    const g = gain * (k === 0 ? 1 : 0.42 * hand * swell * (0.85 + 0.3 * rnd())) * (left < 0.12 ? left / 0.12 : 1);
+    // 셈여림 곡선이 있으면 그대로 따르고(가운데 부풂은 아주 조금만), 없으면 사람이 굴리듯 가운데가 조금 부푼다
+    const swell = env ? 0.92 + 0.08 * Math.sin(Math.PI * Math.min(1, tt / dur)) : 0.75 + 0.25 * Math.sin(Math.PI * Math.min(1, tt / dur));
+    const eg = envAt(tt);
+    // 여려질수록 끝맺음도 부드럽게: 마지막 0.12초(env가 줄어드는 중이면 0.25초) 동안 사그라든다
+    const tail = env && eg < 0.6 ? 0.25 : 0.12;
+    const g = gain * eg * (k === 0 ? 1 : 0.42 * hand * swell * (0.85 + 0.3 * rnd())) * (left < tail ? left / tail : 1);
     // 쇳소리 작은 악기(트라이앵글·탬버린·카바사)는 고음을 깎지 않고, 트라이앵글은 울림이 이어지게 길게 겹친다
     const x = k === 0 || metal ? base : soft;
     const len = Math.min(x.length, Math.round((key === '트라이앵글' ? Math.max(0.25, step * 6) : k === 0 ? 0.25 : step * 2.2) * SR));
