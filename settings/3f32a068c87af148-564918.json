@@ -5,7 +5,7 @@
  "titleRead": "경기도립국악단위촉작품",
  "songTitle": "월광",
  "file": "월광-스코어.pdf",
- "saved": "2026-11-11T05:06:56.218Z",
+ "saved": "2026-11-11T10:35:12.746Z",
  "lastBar": 205,
  "lines": {
   "main:0": {
@@ -106,7 +106,8 @@
    "vol": 1.7,
    "R": "따",
    "L": "궁",
-   "nong": false
+   "nong": false,
+   "pan": 0
   },
   "main:10": {
    "name": "가야금 (아랫줄)",
@@ -274,6 +275,7 @@
   "repeats": true,
   "countIn": false,
   "metronome": false,
+  "metroVol": 1,
   "restCount": "sub",
   "dyn": true,
   "speed": 100,
@@ -342,7 +344,7 @@
   "transpose": 0,
   "tune": 440,
   "fermata": 2,
-  "reverb": 0.12,
+  "reverb": 0.22,
   "artic": true,
   "stereo": true,
   "human": true
