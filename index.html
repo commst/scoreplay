@@ -1771,7 +1771,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>13</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>14</small></h4><ul class="hlist">
+      <li><details><summary>작아지는 꺾쇠(&gt;)를 더 뚜렷하게</summary><p>셈여림 글자 없이 그린 작아지는 꺾쇠(&gt;)는 그 순간 크기의 4분의 1쯤(약 −12dB)까지, 글자 dim.은 절반 가까이 줄어듭니다. 전에는 커질 때와 같은 작은 폭만 줄어 작아지는 느낌이 거의 없었습니다(연변목가 양금 트레몰로).</p></details></li>
       <li><details><summary>타악 소리에 팀파니</summary><p>타악 줄의 소리 목록에 팀파니(높은 음 G·낮은 음 C)를 넣었습니다. 윗성부에서 높은 음을 고르면 아랫성부는 낮은 음으로 짝지어집니다. 예: 연변목가 북 줄의 '팀파니(C.G)를 써도 됨'. 음 높이대로 치려면 지금처럼 그 줄을 선율로 바꾸고 '팀파니 (녹음)'을 고르세요.</p></details></li>
       <li><details><summary>잔향 처음 값을 '보통'으로</summary><p>[연주] 칸 소리 다듬기의 잔향(울림) 처음 값을 '조금'에서 '보통'으로 바꿨습니다. 이미 설정을 저장한 곡은 저장한 값 그대로입니다.</p></details></li>
       <li><details><summary>공유 설정이 있으면 물어보고 [확인]으로 적용</summary><p>이 기기에서 처음 여는 곡에 저장소의 공유 설정이 있으면, 위쪽에 "공유 설정이 저장소에 있습니다… 불러와 적용할까요?" 알림이 뜹니다. [확인]을 누르면 바로 불러와 적용하고, [나중에]를 누르면 그대로 둡니다(나중에 [저장] 칸의 [공유 설정 불러오기]로 받을 수 있음). 같은 곡의 다른 파일로 올린 설정을 찾았을 때도 같이 묻습니다. 전에는 묻지 않고 바로 적용했습니다.</p></details></li>
@@ -5383,8 +5384,9 @@ function dynLevelAt(items, p) {
     if (it.p0 > p) break;
     if (it.kind === 'mark') { level = it.level; continue; }
     // 그린 꺾쇠(hp)는 셈여림 글자가 없어도 귀에 들리게 0.25(약 4dB), 글자 cresc.·dim.은 0.15
+    // 작아질 때(>·dim.)는 더 뚜렷하게: 그 순간 크기의 25%까지(약 −12dB, 글자 dim.은 45%) — 같은 양만 빼면 거의 들리지 않았음(연변목가 양금 트레몰로)
     const amt = it.hp ? 0.25 : 0.15;
-    const target = it.target != null ? it.target : Math.max(0.2, Math.min(1, level + it.dir * amt));
+    const target = it.target != null ? it.target : it.dir < 0 ? Math.max(0.08, level * (it.hp ? 0.25 : 0.45)) : Math.max(0.2, Math.min(1, level + amt));
     // 다음 셈여림(꺾쇠·글자)이 이 꺾쇠가 끝나기 전에 시작하면 거기서 끝낸다(< 뒤 바로 > 가 겹쳐 > 가 들리지 않던 것 — 연변목가 양금 1마디)
     let p1 = it.p1;
     for (let j = i + 1; j < items.length; j++) if (items[j].p0 > it.p0 + 1e-6) { p1 = Math.min(p1, items[j].p0); break; }
@@ -10101,7 +10103,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 20:22';
+const APP_VERSION = '2026-11-11 20:38';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

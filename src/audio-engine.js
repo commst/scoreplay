@@ -122,8 +122,9 @@ export function dynLevelAt(items, p) {
     if (it.p0 > p) break;
     if (it.kind === 'mark') { level = it.level; continue; }
     // 그린 꺾쇠(hp)는 셈여림 글자가 없어도 귀에 들리게 0.25(약 4dB), 글자 cresc.·dim.은 0.15
+    // 작아질 때(>·dim.)는 더 뚜렷하게: 그 순간 크기의 25%까지(약 −12dB, 글자 dim.은 45%) — 같은 양만 빼면 거의 들리지 않았음(연변목가 양금 트레몰로)
     const amt = it.hp ? 0.25 : 0.15;
-    const target = it.target != null ? it.target : Math.max(0.2, Math.min(1, level + it.dir * amt));
+    const target = it.target != null ? it.target : it.dir < 0 ? Math.max(0.08, level * (it.hp ? 0.25 : 0.45)) : Math.max(0.2, Math.min(1, level + amt));
     // 다음 셈여림(꺾쇠·글자)이 이 꺾쇠가 끝나기 전에 시작하면 거기서 끝낸다(< 뒤 바로 > 가 겹쳐 > 가 들리지 않던 것 — 연변목가 양금 1마디)
     let p1 = it.p1;
     for (let j = i + 1; j < items.length; j++) if (items[j].p0 > it.p0 + 1e-6) { p1 = Math.min(p1, items[j].p0); break; }
