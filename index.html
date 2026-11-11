@@ -1322,7 +1322,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
         <dt>좌우 위치</dt>
         <dd>선율 줄만. 소리 다듬기의 '좌우 배치'를 켰을 때 그 줄이 왼쪽·오른쪽 어디서 들릴지 정합니다. 처음에는 악기마다 국악관현악 자리처럼(자동) 정해 둡니다.</dd>
         <dt>음량</dt>
-        <dd>0~200%. 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
+        <dd>0~200%, 들리는 크기 기준입니다: 200%는 두 배로 크게(약 +10dB), 50%는 절반으로 작게(약 −10dB). 0이면 끄기와 같습니다. 고른 줄 전체를 섞은 뒤 너무 크지 않게 전체 크기를 맞춥니다.</dd>
         <dt>옥타브</dt>
         <dd>선율 줄만. 악보에 적힌 음보다 한 옥타브(12음) 단위로 올리거나 내려 냅니다. 악보 음 대부분이 녹음한 악기 음역 밖이고 한 옥타브 옮기면 맞을 때(예: 실제보다 한 옥타브 낮게 적은 태평소)는 자동으로 맞추고 줄에 안내가 나옵니다. 직접 고르면 그대로 따릅니다.</dd>
         <dt>마디 기준</dt>
@@ -1772,7 +1772,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>3</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>4</small></h4><ul class="hlist">
+      <li><details><summary>음량 막대를 들리는 크기로</summary><p>악기 음량 %가 이제 귀로 느끼는 크기입니다. 200%면 지금의 두 배로 크게(약 +10dB), 50%면 절반으로 작게 들립니다. 숫자에 마우스를 올리면 dB가 보입니다. 저장해 둔 음량은 같은 크기로 새 눈금에 맞춰 보입니다(예: 예전 150% → 약 128%).</p></details></li>
       <li><details><summary>관악기 소리 키움</summary><p>대금·소금·피리·대피리·태평소를 약 3dB 키우고, 음원에 맞춰 올렸던 장구는 원래대로 두었습니다. 달빛항해 등에서 관악이 장구·북보다 작게 묻히던 것을 고쳤습니다.</p></details></li>
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노는 조금 크게 했습니다(대금·소금·해금·피리·장구는 다른 곡에서 밸런스가 맞지 않아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
@@ -6445,6 +6446,9 @@ const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, re
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
   marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set() };
 window.__st = state;   // 시험 도구(test/stems.mjs)용
+// 음량 막대: 들리는 크기 %(사람 귀는 10dB 커지면 두 배로 크게 느낌) ↔ 소리 배율(c.vol)
+function pctToVol(p) { return p > 0 ? Math.pow(10, 10 * Math.log2(p / 100) / 20) : 0; }
+function volToPct(v) { return v > 0 ? Math.min(200, Math.max(0, 100 * Math.pow(2, 20 * Math.log10(v) / 10))) : 0; }
 let raf = 0, audioUrl = null, lastNow = null;
 // 연습 속도만 바꿨는지: 속도만 바뀌었으면 소리를 다시 만들 때까지 재생 빠르기(음 높이 그대로)로 먼저 들려준다
 let spdSetting = false;
@@ -8878,11 +8882,13 @@ function renderLineList() {
     if (c.role !== 'off') {
       const v = document.createElement('div'); v.className = 'wide k-vol';
       const id = 'vol-' + key;
-      v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="200" step="5"><span class="num"></span></div>`;
+      v.innerHTML = `<label class="small" for="${id}">음량</label><div class="vol"><input type="range" id="${id}" min="0" max="200" step="5" title="들리는 크기: 200% = 두 배로 크게(약 +10dB), 50% = 절반으로 작게(약 −10dB)"><span class="num"></span></div>`;
       const inp = v.querySelector('input'), out = v.querySelector('span');
-      inp.value = Math.round(c.vol * 100); out.textContent = inp.value + '%';
-      inp.addEventListener('input', () => { out.textContent = inp.value + '%'; });
-      inp.addEventListener('change', () => { c.vol = +inp.value / 100; changed(); });
+      // 막대는 '들리는 크기' %(10dB = 두 배로 들림). 저장하는 c.vol은 예전처럼 소리 배율이라 저장한 설정은 그대로 같은 크기(156번)
+      const show = () => { const p = +inp.value, db = p > 0 ? 10 * Math.log2(p / 100) : null; out.textContent = p + '%'; out.title = db == null ? '끔' : (db >= 0 ? '+' : '−') + Math.abs(db).toFixed(1) + 'dB'; };
+      inp.value = Math.round(volToPct(c.vol)); show();
+      inp.addEventListener('input', show);
+      inp.addEventListener('change', () => { c.vol = pctToVol(+inp.value); changed(); });
       cfg.appendChild(v);
     }
     let sm = null;
@@ -10163,7 +10169,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-12 08:06';
+const APP_VERSION = '2026-11-12 08:16';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
