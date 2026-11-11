@@ -631,6 +631,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .extra.disabled .btn { opacity: .5; pointer-events: none; }
 .tempo-alert { outline: 2px solid #d8a400; outline-offset: 2px; }
 [hidden] { display: none !important; }
+/* 터치 기기: 입력칸 글자 16px — iOS Safari는 16px보다 작은 입력칸을 누르면 화면을 저절로 확대하고,
+   확대된 채로 고정된 서랍 안 입력칸은 커서·눌리는 자리가 어긋난다 */
+@media (pointer: coarse) {
+  input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea { font-size: 16px !important; }
+  /* 글자가 커진 만큼 빠르기 표의 '기준' 칸을 넓힘('4분'이 잘리지 않게) */
+  .tempo th:nth-child(1) { width: 17% !important; } .tempo th:nth-child(3) { width: 29% !important; } .tempo th:nth-child(4) { width: 18% !important; }
+  .tempo select { padding-left: 3px; padding-right: 2px; } .tempo input { padding-left: 5px; padding-right: 4px; }
+}
 .support { margin-top: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); font-size: 13.5px; }
 .support summary { cursor: pointer; font-weight: 600; }
 .support p { margin: 8px 0; color: var(--muted); }
@@ -1138,7 +1146,7 @@ body.all-panes { padding-bottom: 0; }
     <p class="hint up-note">총보를 올리면 파트보 목록이, 파트보를 올리면 총보가 비워집니다. 파일은 여러 개를 한꺼번에 고를 수 있고(총보 칸에 여러 개를 고르면 줄이 가장 많은 것을 총보로, 나머지는 추가한 악보로 씁니다), 목록의 ✕로 뺄 수 있습니다. 장구 파트보 하나만 올려도 장단 연습이 됩니다.</p>
     
   </section>
-      <div class="lv-demo"><button class="btn" id="demoBtn" type="button">예시 장단으로 먼저 들어 보기</button></div>
+      <div class="lv-demo"><button class="btn primary" id="resumeBtn" type="button" hidden>지난번 악보 다시 열기</button><button class="btn" id="demoBtn" type="button">예시 장단으로 먼저 들어 보기</button></div>
     </div>
   </div>
 
@@ -1670,7 +1678,9 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>7건</small></summary><ul class="hlist bug">
+      <li><details><summary>휴대폰에서 화면을 확대하거나 다른 앱에 다녀오면 악보가 사라지던 문제</summary><p>휴대폰(특히 아이폰)은 메모리가 모자라면 페이지를 처음부터 다시 엽니다. 그러면 올린 악보가 사라져 다시 올려야 했습니다. 이제 올린 악보 파일을 이 기기에 기억해 두었다가, 페이지가 다시 열리면 저절로 다시 읽습니다(설정·고친 빠르기도 그대로). 새로 연 화면에서는 첫 화면의 [지난번 악보 다시 열기]로 엽니다. 악보를 모두 빼면 잊습니다. 악보 보기 그림이 메모리를 덜 쓰게도 했습니다.</p></details></li>
+      <li><details><summary>아이폰에서 입력칸을 누르면 화면이 확대되고 커서 자리가 어긋나던 문제</summary><p>아이폰 Safari는 글자가 작은 입력칸을 누르면 화면을 저절로 확대하는데, 확대된 채로 설정 서랍 안의 입력칸(빠르기 표의 시작 마디 등)은 커서와 눌리는 자리가 어긋났습니다. 휴대폰·태블릿에서는 입력칸 글자를 키워 확대되지 않게 했습니다.</p></details></li>
       <li><details><summary>휴대폰 설정 서랍을 굴리면 닫기(✕)가 사라지던 문제</summary><p>휴대폰·태블릿 세로 화면에서 악기 칸처럼 긴 칸을 아래로 굴리면 서랍 오른쪽 위의 ✕가 함께 말려 올라가 보이지 않았습니다. 이제 ✕가 탭 줄(악기·빠르기·연주·저장)과 함께 서랍 맨 위에 붙어 있습니다.</p></details></li>
       <li><details><summary>Sibelius 악보의 X 머리 음표(꽹과리·징 등)가 빠지던 문제</summary><p>Sibelius로 만든 악보의 X 머리 음표를 읽지 못해 그 음이 빠지고 뒤 음들이 앞으로 당겨졌습니다. 예: 프론티어 총보 12마디 꽹과리의 ♪♩♪♩…가 8분음표만 이어진 것처럼 들림. 이제 X 머리 음을 읽어 악보대로 연주하고 MusicXML에도 X 머리로 들어갑니다. 바르도 장고·대고, 미락흘 타악, 프론티어 타악·가야금 파트보 등도 함께 고쳐졌습니다.</p></details></li>
       <li><details><summary>마디선 없는 자유 박 마디에서 악기가 어긋나던 문제, 표지의 빈 오선을 마디로 세던 문제</summary><p>월광 첫 부분처럼 마디선 없이 길게 적은 자유 박(rubato) 마디에서, 늦게 들어오는 악기(가야금 등)가 마디 맨 처음에 놓이고 줄마다 마디 길이가 달라 서로 어긋났습니다. 이제 같은 단의 모든 줄에서 음표의 가로 자리를 맞춰 시각을 정하고 마디 길이도 같게 합니다. 또 표지 쪽에 빈 오선만 그려 둔 악보에서 곡 앞에 빈 마디가 여러 개 생기던 것을 없앴습니다(월광은 이제 인쇄 번호대로 8마디부터 시작합니다). 이 구간은 빠르기 표 첫 줄의 값으로 연주됩니다.</p></details></li>
@@ -2599,20 +2609,30 @@ function svLayoutPart(G, vps, pages) {
     if (svIO) svIO.observe(d); else svRender(i);
   });
 }
-// 쪽 그림 저장(띠 여러 개를 같은 쪽에서 자를 때 다시 그리지 않게, 최근 3쪽만)
+// 휴대폰·태블릿(터치)은 메모리가 작아 큰 그림을 여러 장 두면 브라우저가 페이지를 다시 열어 버린다(올린 악보가 사라짐)
+// → 그림 한 장의 화소 수 상한, 그려 둘 쪽 수를 줄이고, 지운 그림은 바로 비운다(iOS Safari는 크기를 0으로 해야 바로 돌려줌)
+const SV_LOWMEM = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+const SV_KEEP = SV_LOWMEM ? 4 : 6, SV_MAXPX = SV_LOWMEM ? 6e6 : 16e6;
+function svScale(vp1, cssW) {
+  let s = Math.min(3000 / vp1.width, Math.max(0.5, cssW * Math.min(3, window.devicePixelRatio || 1) / vp1.width));
+  const px = vp1.width * vp1.height * s * s; if (px > SV_MAXPX) s *= Math.sqrt(SV_MAXPX / px);
+  return s;
+}
+function freeCanvas(c) { if (!c) return; try { c.width = 0; c.height = 0; } catch (e) {} c.remove(); }
+// 쪽 그림 저장(띠 여러 개를 같은 쪽에서 자를 때 다시 그리지 않게, 최근 3쪽만 — 휴대폰은 2쪽)
 const svPageCache = new Map();
 async function svPageCanvas(sc, pi, cssW, myKey) {
   const ck = pi + '|' + Math.round(cssW);
   if (svPageCache.has(ck)) { const c = svPageCache.get(ck); svPageCache.delete(ck); svPageCache.set(ck, c); return c; }
   const pg = await sc.doc.getPage(pi + 1); if (svKey !== myKey) return null;
   const vp1 = pg.getViewport({ scale: 1 });
-  const s = Math.min(3000 / vp1.width, Math.max(0.5, cssW * Math.min(3, window.devicePixelRatio || 1) / vp1.width));
+  const s = svScale(vp1, cssW);
   const vp = pg.getViewport({ scale: s });
   const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
   const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
   await pg.render({ canvasContext: cx, viewport: vp }).promise;
   c._s = s; svPageCache.set(ck, c);
-  while (svPageCache.size > 3) svPageCache.delete(svPageCache.keys().next().value);
+  while (svPageCache.size > (SV_LOWMEM ? 2 : 3)) { const k = svPageCache.keys().next().value; freeCanvas(svPageCache.get(k)); svPageCache.delete(k); }
   return c;
 }
 // 쪽 그림은 보이는 쪽 근처만 그리고, 멀리 떨어진 쪽 그림은 지워 휴대폰 메모리를 아낀다
@@ -2627,7 +2647,7 @@ async function svRender(pi) {
       c.getContext('2d').drawImage(src, P.ox * s, P.oy * s, P.w * s, P.h * s, 0, 0, c.width, c.height);
       P.el.insertBefore(c, P.el.firstChild); P.canvas = c; svOverPanel(P);
       const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
-      if (drawn.length > 40) { drawn.sort((a, b) => Math.abs(b[0] - pi) - Math.abs(a[0] - pi)); for (const [qi, q] of drawn.slice(0, drawn.length - 40)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; } }
+      if (drawn.length > 40) { drawn.sort((a, b) => Math.abs(b[0] - pi) - Math.abs(a[0] - pi)); for (const [qi, q] of drawn.slice(0, drawn.length - (SV_LOWMEM ? 24 : 40))) if (qi !== pi) { freeCanvas(q.canvas); q.canvas = null; } }
     } catch (e) { console.warn('악보 보기', e); }
     finally { P.busy = false; }
     return;
@@ -2635,7 +2655,7 @@ async function svRender(pi) {
   try {
     const pg = await G.sc.doc.getPage(pi + 1); if (svKey !== myKey) return;
     const vp1 = pg.getViewport({ scale: 1 }), cssW = P.el.clientWidth || 600;
-    const sc = Math.min(3000 / vp1.width, Math.max(0.5, cssW * Math.min(3, window.devicePixelRatio || 1) / vp1.width));   // 휴대폰 화면(배율 3)에서도 또렷하게, 그림 폭은 3000점까지
+    const sc = svScale(vp1, cssW);   // 휴대폰 화면(배율 3)에서도 또렷하게, 그림 폭은 3000점까지(휴대폰은 한 장 약 600만 화소까지)
     const vp = pg.getViewport({ scale: sc });
     const c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
     const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
@@ -2643,10 +2663,10 @@ async function svRender(pi) {
     if (svKey !== myKey) return;
     P.el.insertBefore(c, P.el.firstChild); P.canvas = c; svOverPanel(P);
     const drawn = [...svPages.entries()].filter(([, q]) => q.canvas);
-    if (drawn.length > 6) {   // 지금 쪽에서 먼 것부터 지운다
+    if (drawn.length > SV_KEEP) {   // 지금 쪽에서 먼 것부터 지운다
       const G2 = svGeo(), ref = svCurrent >= 0 && G2 && G2.geo[svCurrent] ? G2.geo[svCurrent].page : pi;
       drawn.sort((a, b) => Math.abs(b[0] - ref) - Math.abs(a[0] - ref));
-      for (const [qi, q] of drawn.slice(0, drawn.length - 6)) if (qi !== pi) { q.canvas.remove(); q.canvas = null; }
+      for (const [qi, q] of drawn.slice(0, drawn.length - SV_KEEP)) if (qi !== pi) { freeCanvas(q.canvas); q.canvas = null; }
     }
   } catch (e) { console.warn('악보 보기', e); }
   finally { P.busy = false; }
@@ -4037,6 +4057,7 @@ function resetEmpty(text) {
   $('fileInfo').textContent = '총보 PDF(또는 MusicXML)를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
+  sessClear();
 }
 function fileRow(text, sub, onRemove, what) {
   const li = document.createElement('li');
@@ -4056,6 +4077,7 @@ function renderFileLists() {
   const hasFull = !!(sc && !sc.isComposite);
   $('extraBox').classList.toggle('disabled', !hasFull);
   $('extraInfo').textContent = hasFull ? '총보에 없는 악기를 추가할 수 있습니다. 총보에 있는 악기를 [악기] 탭에서 끄고 그 악기의 파트보를 여기에 올리면 파트보로 대체할 수도 있습니다. 여러 개를 한꺼번에 골라도 됩니다.' : '총보를 먼저 올리면 총보에 없는 악기를 추가할 수 있습니다. 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있습니다.';
+  if (sc) sessSave();   // 열어 둔 악보 파일 기억(휴대폰이 페이지를 다시 열어도 되살림)
   const pl = $('partsFileList'); pl.textContent = '';
   for (const x of (sc && sc.isComposite ? state.parts : [])) pl.appendChild(fileRow(x.file.name, x.label !== stemOf(x.file) ? x.label : '', () => removePart(x.uid), '파트보'));
 }
@@ -4104,7 +4126,7 @@ async function loadFullPdf(files) {
     const nLines = x => x.sc.isFull ? x.sc.lines.length : 1;
     const main = loaded.reduce((b, x) => nLines(x) > nLines(b) ? x : b, loaded[0]);
     const sc = main.sc, file = main.file;
-    state.score = sc; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.fileName = file.name;
+    state.score = sc; state.lineRes = {}; state.lineRaw = {}; state.soundSel = {}; state.fileName = file.name; state.mainFile = file;
     state.title = state.titleRead = sc.title || stemOf(file);
     state.extras = loaded.filter(x => x !== main).map(x => ({ ...x, uid: ++uidSeq, label: (x.sc.partName || '').trim() || stemOf(x.file) }));
     state.lineList = fullLineList();
@@ -5708,5 +5730,77 @@ $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주
   setInterval(check, 10 * 60 * 1000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
 }
+// ── 열어 둔 악보 파일 기억 ──
+// 휴대폰은 메모리가 모자라면(화면 확대·다른 앱으로 갔다 옴) 페이지를 다시 열어 올린 악보가 사라진다.
+// 올린 파일을 이 브라우저(IndexedDB)에 두고, 같은 탭이 다시 열리면 바로 다시 읽는다(설정은 원래처럼 자동 불러오기).
+// 새로 연 화면에서는 첫 화면에 [지난번 악보 다시 열기].
+const SESS_DB = 'hapju-session', SESS_FLAG = 'hapju-live';
+let sessTimer = 0, sessSig = '', sessBusy = false;
+function sessDb() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) { rej(new Error('IndexedDB 없음')); return; }
+    const q = indexedDB.open(SESS_DB, 1);
+    q.onupgradeneeded = () => q.result.createObjectStore('s');
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); q.onblocked = () => rej(new Error('blocked'));
+  });
+}
+async function sessTx(mode, fn) {
+  const db = await sessDb();
+  try {
+    return await new Promise((res, rej) => {
+      const t = db.transaction('s', mode), st = t.objectStore('s'); let out;
+      const r = fn(st); if (r) r.onsuccess = () => { out = r.result; };
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('abort'));
+    });
+  } finally { db.close(); }
+}
+function sessFlag(on) { try { if (on) sessionStorage.setItem(SESS_FLAG, '1'); else sessionStorage.removeItem(SESS_FLAG); } catch (e) {} }
+function sessFiles() {
+  const sc = state.score; if (!sc) return null;
+  if (sc.isComposite) return { mode: 'parts', files: state.parts.map(x => x.file) };
+  if (!state.mainFile) return null;
+  return { mode: 'full', files: [state.mainFile].concat((state.extras || []).map(x => x.file)) };
+}
+function sessSave() { if (sessBusy) return; clearTimeout(sessTimer); sessTimer = setTimeout(sessSaveNow, 400); }
+async function sessSaveNow() {
+  const cur = sessFiles(); if (!cur || !cur.files.length || cur.files.some(f => !f)) return;
+  const sig = cur.mode + '|' + cur.files.map(f => f.name + ':' + f.size).join('|');
+  if (sig === sessSig) { sessFlag(true); return; }
+  try {
+    const items = [];
+    for (const f of cur.files) items.push({ name: f.name, type: f.type || '', data: await f.arrayBuffer() });
+    if (!sessFiles()) return;   // 그사이 모두 뺌
+    await sessTx('readwrite', st => st.put({ mode: cur.mode, items, title: state.title || '', saved: Date.now() }, 'last'));
+    sessSig = sig; sessFlag(true);
+  } catch (e) { console.warn('악보 파일 기억', e); }
+}
+function sessClear() {
+  if (sessBusy) return;
+  clearTimeout(sessTimer); sessSig = ''; sessFlag(false);
+  sessTx('readwrite', st => st.delete('last')).catch(() => {});
+  const b = $('resumeBtn'); if (b) b.hidden = true;
+}
+async function sessOpen(v, auto) {
+  const files = v.items.map(it => new File([it.data], it.name, { type: it.type || '' }));
+  sessBusy = true; sessSig = v.mode + '|' + files.map(f => f.name + ':' + f.size).join('|');
+  try { if (v.mode === 'parts') await loadPartPdfs(files); else await loadFullPdf(files); }
+  catch (e) { console.warn('지난 악보 다시 열기', e); }
+  finally { sessBusy = false; }
+  if (!state.score) { sessClear(); return; }   // 다시 읽지 못한 파일은 다음에 또 시도하지 않게
+  if (state.score) { sessFlag(true); if (auto) showMsg('화면이 다시 열려 보던 악보(' + (v.title || files[0].name) + ')를 다시 불러왔습니다. 설정은 저장한 대로입니다.'); }
+}
+async function sessBoot() {
+  let v; try { v = await sessTx('readonly', st => st.get('last')); } catch (e) { return; }
+  if (!v || !v.items || !v.items.length || state.score) return;
+  let live = false; try { live = sessionStorage.getItem(SESS_FLAG) === '1'; } catch (e) {}
+  if (live) { sessOpen(v, true); return; }
+  const b = $('resumeBtn'); if (!b) return;
+  const name = v.title || v.items[0].name;
+  b.textContent = '지난번 악보 다시 열기: ' + (name.length > 28 ? name.slice(0, 27) + '…' : name);
+  b.title = v.items.map(it => it.name).join(', ');
+  b.hidden = false;
+  b.onclick = () => { b.hidden = true; sessOpen(v, false); };
+}
 window.__appReady = 'ok'; { const bm = $('bootMsg'); if (bm) bm.hidden = true; }
+sessBoot();
 </script>
