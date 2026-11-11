@@ -1789,7 +1789,10 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>14건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>17건</small></summary><ul class="hlist bug">
+      <li><details><summary>마지막 마디 트릴·늘임표 온음표가 짧게 끝나던 문제</summary><p>판놀음 마지막 마디의 온음표(tr + 늘임표)를 작은 꾸밈음으로 잘못 읽어 한 음만 튕기고 끝났습니다. 온음표만 있는 쪽도 바르게 읽고, 물결선 없이 'tr'만 적은 트릴도 읽게 고쳤습니다.</p></details></li>
+      <li><details><summary>음표마다 늘임표가 있는 마디에서 뒤 음이 늘어나지 않던 문제</summary><p>판놀음 105·106마디처럼 음표마다 늘임표가 붙으면 앞 음만 늘였습니다. 이제 마지막 음의 늘임표도 늘입니다.</p></details></li>
+      <li><details><summary>도돌이 끝에서 엉뚱한 마디로 돌아가던 문제</summary><p>판놀음 49마디 도돌이 끝에서 35마디(도돌이 시작)가 아니라 48마디로 돌아갔습니다. 박자가 바뀌는 곳의 겹세로줄을 도돌이 시작으로 잘못 본 것입니다. 점이 있는 도돌이 시작이 있으면 그곳으로 돌아가게 고쳤습니다.</p></details></li>
       <li><details><summary>꽹과리 막음 소리가 하나 걸러 들리지 않던 문제</summary><p>막음 소리 녹음 두 개를 번갈아 썼는데, 그중 하나는 아주 짧은 딸깍 소리뿐이라 두 번째·네 번째… 막음이 거의 들리지 않았습니다(연변목가 꽹과리 73마디). 이제 몸통이 있는 막음 녹음 하나로 모두 칩니다.</p></details></li>
       <li><details><summary>꽹과리 X 음표가 막음 소리로 나지 않던 문제</summary><p>꽹과리 줄의 X 머리 음표는 막음 소리인데, 윗성부의 X만 막음으로 쳤고 거의 모든 음을 X로 적은 악보는 막음으로 치지 않아 열린 소리로 났습니다(연변목가 꽹과리 73마디). 이제 꽹과리 소리로 치는 줄의 X 머리 음표는 늘 막음 소리입니다.</p></details></li>
       <li><details><summary>휴대폰 설정 서랍의 ✕가 너무 작던 문제</summary><p>악기·빠르기·연주·저장 서랍을 닫는 ✕를 키우고(동그란 바탕, 굵은 글자) 잘 보이게 했습니다.</p></details></li>
@@ -3148,7 +3151,9 @@ function pagePrep(pg, layout, pi) {
   const maestro = glyphs.filter(isMaestro);
   // 이 쪽의 보통 음표 머리 크기 (악보를 축소해 찍으면 글자 크기가 작아지므로 절대값 대신 비율로)
   const hs = maestro.filter(g => g.code === HEAD_FILLED || g.code === HEAD_HALF).map(g => g.size).sort((a, b) => a - b);
-  const normSize = hs.length ? hs[Math.floor(hs.length * 0.75)] : 20;
+  // 온음표만 있는 쪽(판놀음II 마지막 쪽 109마디)은 온음표 크기로 — 없으면 20으로 보아 모두 꾸밈음이 되던 것
+  const hw = hs.length ? hs : maestro.filter(g => g.code === HEAD_WHOLE).map(g => g.size).sort((a, b) => a - b);
+  const normSize = hw.length ? hw[Math.floor(hw.length * 0.75)] : 20;
   const smallSize = normSize * 0.75;
   // 잇단음표 숫자: Finale은 굵은 기울임, Sibelius는 OpusText 글꼴의 작은 숫자 하나 (옆에 다른 글자가 붙어 있으면 템포 등 글자)
   const hSegs = drawings.filter(d => d.type === 's' && d.items.length <= 3).flatMap(d => d.items.filter(i => i.op === 'l' && Math.abs(i.p[0] - i.q[0]) > 3 && Math.abs(i.p[1] - i.q[1]) < 0.4 * Math.abs(i.p[0] - i.q[0])).map(i => ({ x0: Math.min(i.p[0], i.q[0]), x1: Math.max(i.p[0], i.q[0]), y0: Math.min(i.p[1], i.q[1]), y1: Math.max(i.p[1], i.q[1]) })));
@@ -3684,6 +3689,7 @@ function parseScore(pages, opts = {}) {
       const ferm = sg.filter(g => g.code === FERMATA);
       const trills = sg.filter(g => g.code === TRILL_EXT).sort((a, b) => a.x0 - b.x0);
       const rollSpan = trills.length ? [trills[0].x0, trills[trills.length - 1].x1] : null;
+      const trSyms = sg.filter(g => g.code === 217 && isMaestro(g) && !trills.some(w => w.x0 - g.x1 < 6 && w.x0 > g.x0));   // 물결선이 이어지는 tr는 위에서
 
       const staffStart = measures.length;
       for (let i = 0; i < regions.length; i++) {
@@ -3902,6 +3908,8 @@ function parseScore(pages, opts = {}) {
         }
         if (pendingTimesig) { m.timesig = pendingTimesig; pendingTimesig = null; }
         if (rollSpan) m.notes.forEach(n => { if (!n.rest && rollSpan[0] - n.x > 0 && rollSpan[0] - n.x < 20) n.roll = true; });
+        // 물결선 없이 'tr' 글자만 음표 위·아래에 적은 트릴(판놀음II 마지막 마디 온음표 tr + 늘임표)
+        if (trSyms.length) m.notes.forEach(n => { if (!n.rest && !n.grace && !n.roll && trSyms.some(g => Math.abs(cx(g) - n.x) < 6 && Math.abs(g.oy - n.y) < staffSp * 6)) n.roll = true; });
         if (inRoll && !m.notes.length) m.rollExt = true;
         measures.push(m);
         prevRightDouble = rightIsDouble;
@@ -4498,13 +4506,16 @@ function resolveBars(measures, systemNumbers = []) {
       // 늘임표가 붙은 음의 시각: 늘임표 바로 아래(가로 12pt 안) 음. 마디 끝까지 울리는 음이거나 음이 없으면(쉼표·마디선 위) 적지 않음 → 마디 끝에서 늘임
       // (미락흘 129마디: 첫 음에 늘임표가 있는데 마지막 음을 늘이던 것)
       if (m.fermata && m.fermataX && e.events.length) {
-        const ts = [];
+        const ts = []; let atEnd = false;
         for (const fx of m.fermataX) {
           const near = e.events.filter(ev => ev.x != null && !ev.tie && Math.abs(ev.x - fx) < 12).sort((a, b) => Math.abs(a.x - fx) - Math.abs(b.x - fx))[0];
-          if (!near) continue;
-          if (near.t.add(near.dur).lt(e.barLen) && !ts.some(t => t.eq(near.t))) ts.push(near.t);   // 마디 끝까지 울리는 음이면 예전처럼 마디 끝에서
+          if (!near) { atEnd = true; continue; }
+          if (!near.t.add(near.dur).lt(e.barLen)) { atEnd = true; continue; }   // 마디 끝까지 울리는 음이면 예전처럼 마디 끝에서
+          if (!ts.some(t => t.eq(near.t))) ts.push(near.t);
         }
         if (ts.length) e.fermataT = ts.sort((a, b) => a.v - b.v);
+        // 음마다 늘임표(판놀음II 105·106마디 ♩𝄐 ♩𝄐): 가운데 음 늘임표와 함께 마디 끝 늘임표도
+        if (ts.length && atEnd) e.fermataEnd = true;
       }
     }
     out.push(e);
@@ -4568,26 +4579,28 @@ function playbackOrder(bars, { from = 1, to = Infinity, repeats = true } = {}) {
   } else {
     const segno = bars.findIndex(b => b.segno);
     const coda = bars.findIndex(b => b.codaStart);
-    let i = 0, back = 0, pass = 1, after = false, landed = true, guard = 0;
+    // explicit: 지난 도돌이 끝 뒤에 점이 있는 도돌이 시작(repeatStart)을 만났는지. 만났으면 그 뒤의 겹세로줄(박자 바뀜 등)을 시작으로 보지 않는다
+    let i = 0, back = 0, pass = 1, after = false, landed = true, guard = 0, explicit = false;
     const used = new Set();
     while (i < N && guard++ < 50000) {
       const b = bars[i];
       const justLanded = landed; landed = false;
-      if ((b.repeatStart || (b.sectionStart && !b.volta)) && !justLanded) { back = i; pass = 1; }
+      if ((b.repeatStart || (b.sectionStart && !b.volta && !explicit)) && !justLanded) { back = i; pass = 1; }
+      if (b.repeatStart) explicit = true;
       const ep = after ? (vmax[i] || pass) : pass;
       if (b.volta && !b.volta.includes(ep)) { i++; continue; }
-      if (!b.volta && !justLanded && pass > 1 && order.length && bars[order[order.length - 1]].volta) { pass = 1; back = i; }
+      if (!b.volta && !justLanded && pass > 1 && order.length && bars[order[order.length - 1]].volta) { pass = 1; back = i; explicit = false; }
       order.push(i);
       if (b.repeatEnd && !after) {
         const total = b.volta ? Math.max(2, vmax[i]) : 2;
         if (pass < total) { pass++; i = back; landed = true; continue; }
       }
-      if (b.repeatEnd) { back = i + 1; pass = 1; }
+      if (b.repeatEnd) { back = i + 1; pass = 1; explicit = false; }
       if (after && b.fine) break;
       if (after && b.toCoda && coda > i) { i = coda; back = coda; landed = true; continue; }
       if ((b.ds || b.dc) && !used.has(i)) {
         used.add(i); after = true;
-        i = b.ds && segno >= 0 ? segno : 0; back = i; pass = 1; landed = true; continue;
+        i = b.ds && segno >= 0 ? segno : 0; back = i; pass = 1; landed = true; explicit = false; continue;
       }
       i++;
     }
@@ -5568,7 +5581,7 @@ function renderPlan(bars, order, opts) {
     cur += clk(L);
     const next = order[k + 1];
     // 늘임표(페르마타): 그 마디 끝에 울리고 있는 선율 음을 opts.fermata박만큼 늘이고 그만큼 쉰다 (기본 2박, 0이면 늘이지 않음)
-    if (b.fermata && !fIn.length && (next === bi + 1 || next == null)) {
+    if (b.fermata && (!fIn.length || b.fermataEnd) && (next === bi + 1 || next == null)) {
       const fb = opts.fermata == null ? 2 : +opts.fermata;
       const extra = fb > 0 ? fb * UNIT_FRAC[rowFor(b.number).unit] * s : 0;
       if (extra) {
@@ -8699,10 +8712,10 @@ function applySelection(first = false) {
   // 늘임표 자리(fermataT: 마디 안 시각, 없으면 마디 끝): 늘임표가 있는 줄들의 다수 (기준 줄에만 빠졌거나 자리가 다를 수 있음)
   if (multi) bars.forEach(b => {
     const cnt = new Map();
-    for (const mp of numMaps) { const o = mp.get(b.number); if (!o || !o.fermata) continue; const key = o.fermataT ? o.fermataT.map(t => t.v).join(',') : 'end'; const v = cnt.get(key) || { n: 0, o }; v.n++; cnt.set(key, v); }
+    for (const mp of numMaps) { const o = mp.get(b.number); if (!o || !o.fermata) continue; const key = (o.fermataT ? o.fermataT.map(t => t.v).join(',') : 'end') + (o.fermataEnd ? '+end' : ''); const v = cnt.get(key) || { n: 0, o }; v.n++; cnt.set(key, v); }
     if (!cnt.size) return;
     const best = [...cnt.values()].sort((a, c) => c.n - a.n)[0].o;
-    b.fermata = true; b.fermataT = best.fermataT || null;
+    b.fermata = true; b.fermataT = best.fermataT || null; b.fermataEnd = !!best.fermataEnd;
   });
   for (const b of bars) if (b.events.length && (b.note === '쉼' || b.note === '롤 연장')) b.note = '';
   const prevBars = state.bars;
@@ -9560,11 +9573,12 @@ function buildMusicXml() {
         const ferm = S.lb ? S.lb[bi] && S.lb[bi].fermata : b.fermata;
         // 늘임표: 해석기가 음 자리(fermataT)를 알면 그 시각의 음에, 아니면 마지막 음에 (미락흘 129마디는 첫 음)
         const fermT = S.lb ? S.lb[bi] && S.lb[bi].fermataT : b.fermataT;
+        const fermEnd = S.lb ? S.lb[bi] && S.lb[bi].fermataEnd : b.fermataEnd;
         if (ferm) {
           const seq = o2.filter(o => !o.backup && !o.chord && !o.grace && o.voice % 4 === 1);
           const at = fermT && fermT.length ? fermT.map(t => seq.find(o => !o.rest && o.st === Math.round(t.v * W))).filter(Boolean) : [];
           if (at.length) at.forEach(o => { o.fermata = true; });
-          else { const t = [...seq].reverse().find(o => !o.rest) || seq[seq.length - 1]; if (t) t.fermata = true; }
+          if (!at.length || fermEnd) { const t = [...seq].reverse().find(o => !o.rest) || seq[seq.length - 1]; if (t) t.fermata = true; }
         }
         const dl = [...(S.dirs[bi] || []), ...(li === 0 && si === 0 ? topDirs[bi] || [] : []).map(d => ({ ...d, xml: !d.xml.startsWith('<direction') ? d.xml : d.xml.includes('<sound') ? d.xml.replace('<sound', '@STAFF@<sound') : d.xml.replace('</direction>', '@STAFF@</direction>') }))];
         o2 = placeDirs(o2, dl, two ? si + 1 : 0);
@@ -10134,7 +10148,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 23:30';
+const APP_VERSION = '2026-11-12 00:12';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

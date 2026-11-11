@@ -304,7 +304,7 @@ export function renderPlan(bars, order, opts) {
     cur += clk(L);
     const next = order[k + 1];
     // 늘임표(페르마타): 그 마디 끝에 울리고 있는 선율 음을 opts.fermata박만큼 늘이고 그만큼 쉰다 (기본 2박, 0이면 늘이지 않음)
-    if (b.fermata && !fIn.length && (next === bi + 1 || next == null)) {
+    if (b.fermata && (!fIn.length || b.fermataEnd) && (next === bi + 1 || next == null)) {
       const fb = opts.fermata == null ? 2 : +opts.fermata;
       const extra = fb > 0 ? fb * UNIT_FRAC[rowFor(b.number).unit] * s : 0;
       if (extra) {

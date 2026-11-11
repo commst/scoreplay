@@ -929,7 +929,9 @@ function pagePrep(pg, layout, pi) {
   const maestro = glyphs.filter(isMaestro);
   // 이 쪽의 보통 음표 머리 크기 (악보를 축소해 찍으면 글자 크기가 작아지므로 절대값 대신 비율로)
   const hs = maestro.filter(g => g.code === HEAD_FILLED || g.code === HEAD_HALF).map(g => g.size).sort((a, b) => a - b);
-  const normSize = hs.length ? hs[Math.floor(hs.length * 0.75)] : 20;
+  // 온음표만 있는 쪽(판놀음II 마지막 쪽 109마디)은 온음표 크기로 — 없으면 20으로 보아 모두 꾸밈음이 되던 것
+  const hw = hs.length ? hs : maestro.filter(g => g.code === HEAD_WHOLE).map(g => g.size).sort((a, b) => a - b);
+  const normSize = hw.length ? hw[Math.floor(hw.length * 0.75)] : 20;
   const smallSize = normSize * 0.75;
   // 잇단음표 숫자: Finale은 굵은 기울임, Sibelius는 OpusText 글꼴의 작은 숫자 하나 (옆에 다른 글자가 붙어 있으면 템포 등 글자)
   const hSegs = drawings.filter(d => d.type === 's' && d.items.length <= 3).flatMap(d => d.items.filter(i => i.op === 'l' && Math.abs(i.p[0] - i.q[0]) > 3 && Math.abs(i.p[1] - i.q[1]) < 0.4 * Math.abs(i.p[0] - i.q[0])).map(i => ({ x0: Math.min(i.p[0], i.q[0]), x1: Math.max(i.p[0], i.q[0]), y0: Math.min(i.p[1], i.q[1]), y1: Math.max(i.p[1], i.q[1]) })));
@@ -1465,6 +1467,7 @@ export function parseScore(pages, opts = {}) {
       const ferm = sg.filter(g => g.code === FERMATA);
       const trills = sg.filter(g => g.code === TRILL_EXT).sort((a, b) => a.x0 - b.x0);
       const rollSpan = trills.length ? [trills[0].x0, trills[trills.length - 1].x1] : null;
+      const trSyms = sg.filter(g => g.code === 217 && isMaestro(g) && !trills.some(w => w.x0 - g.x1 < 6 && w.x0 > g.x0));   // 물결선이 이어지는 tr는 위에서
 
       const staffStart = measures.length;
       for (let i = 0; i < regions.length; i++) {
@@ -1683,6 +1686,8 @@ export function parseScore(pages, opts = {}) {
         }
         if (pendingTimesig) { m.timesig = pendingTimesig; pendingTimesig = null; }
         if (rollSpan) m.notes.forEach(n => { if (!n.rest && rollSpan[0] - n.x > 0 && rollSpan[0] - n.x < 20) n.roll = true; });
+        // 물결선 없이 'tr' 글자만 음표 위·아래에 적은 트릴(판놀음II 마지막 마디 온음표 tr + 늘임표)
+        if (trSyms.length) m.notes.forEach(n => { if (!n.rest && !n.grace && !n.roll && trSyms.some(g => Math.abs(cx(g) - n.x) < 6 && Math.abs(g.oy - n.y) < staffSp * 6)) n.roll = true; });
         if (inRoll && !m.notes.length) m.rollExt = true;
         measures.push(m);
         prevRightDouble = rightIsDouble;
@@ -2279,13 +2284,16 @@ export function resolveBars(measures, systemNumbers = []) {
       // 늘임표가 붙은 음의 시각: 늘임표 바로 아래(가로 12pt 안) 음. 마디 끝까지 울리는 음이거나 음이 없으면(쉼표·마디선 위) 적지 않음 → 마디 끝에서 늘임
       // (미락흘 129마디: 첫 음에 늘임표가 있는데 마지막 음을 늘이던 것)
       if (m.fermata && m.fermataX && e.events.length) {
-        const ts = [];
+        const ts = []; let atEnd = false;
         for (const fx of m.fermataX) {
           const near = e.events.filter(ev => ev.x != null && !ev.tie && Math.abs(ev.x - fx) < 12).sort((a, b) => Math.abs(a.x - fx) - Math.abs(b.x - fx))[0];
-          if (!near) continue;
-          if (near.t.add(near.dur).lt(e.barLen) && !ts.some(t => t.eq(near.t))) ts.push(near.t);   // 마디 끝까지 울리는 음이면 예전처럼 마디 끝에서
+          if (!near) { atEnd = true; continue; }
+          if (!near.t.add(near.dur).lt(e.barLen)) { atEnd = true; continue; }   // 마디 끝까지 울리는 음이면 예전처럼 마디 끝에서
+          if (!ts.some(t => t.eq(near.t))) ts.push(near.t);
         }
         if (ts.length) e.fermataT = ts.sort((a, b) => a.v - b.v);
+        // 음마다 늘임표(판놀음II 105·106마디 ♩𝄐 ♩𝄐): 가운데 음 늘임표와 함께 마디 끝 늘임표도
+        if (ts.length && atEnd) e.fermataEnd = true;
       }
     }
     out.push(e);
@@ -2349,26 +2357,28 @@ export function playbackOrder(bars, { from = 1, to = Infinity, repeats = true } 
   } else {
     const segno = bars.findIndex(b => b.segno);
     const coda = bars.findIndex(b => b.codaStart);
-    let i = 0, back = 0, pass = 1, after = false, landed = true, guard = 0;
+    // explicit: 지난 도돌이 끝 뒤에 점이 있는 도돌이 시작(repeatStart)을 만났는지. 만났으면 그 뒤의 겹세로줄(박자 바뀜 등)을 시작으로 보지 않는다
+    let i = 0, back = 0, pass = 1, after = false, landed = true, guard = 0, explicit = false;
     const used = new Set();
     while (i < N && guard++ < 50000) {
       const b = bars[i];
       const justLanded = landed; landed = false;
-      if ((b.repeatStart || (b.sectionStart && !b.volta)) && !justLanded) { back = i; pass = 1; }
+      if ((b.repeatStart || (b.sectionStart && !b.volta && !explicit)) && !justLanded) { back = i; pass = 1; }
+      if (b.repeatStart) explicit = true;
       const ep = after ? (vmax[i] || pass) : pass;
       if (b.volta && !b.volta.includes(ep)) { i++; continue; }
-      if (!b.volta && !justLanded && pass > 1 && order.length && bars[order[order.length - 1]].volta) { pass = 1; back = i; }
+      if (!b.volta && !justLanded && pass > 1 && order.length && bars[order[order.length - 1]].volta) { pass = 1; back = i; explicit = false; }
       order.push(i);
       if (b.repeatEnd && !after) {
         const total = b.volta ? Math.max(2, vmax[i]) : 2;
         if (pass < total) { pass++; i = back; landed = true; continue; }
       }
-      if (b.repeatEnd) { back = i + 1; pass = 1; }
+      if (b.repeatEnd) { back = i + 1; pass = 1; explicit = false; }
       if (after && b.fine) break;
       if (after && b.toCoda && coda > i) { i = coda; back = coda; landed = true; continue; }
       if ((b.ds || b.dc) && !used.has(i)) {
         used.add(i); after = true;
-        i = b.ds && segno >= 0 ? segno : 0; back = i; pass = 1; landed = true; continue;
+        i = b.ds && segno >= 0 ? segno : 0; back = i; pass = 1; landed = true; explicit = false; continue;
       }
       i++;
     }
