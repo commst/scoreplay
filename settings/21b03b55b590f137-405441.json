@@ -5,7 +5,7 @@
  "titleRead": "달해",
  "songTitle": "달빛항해",
  "file": "달빛항해(Score).pdf",
- "saved": "2026-11-11T06:03:57.190Z",
+ "saved": "2026-11-11T10:32:18.276Z",
  "lastBar": 152,
  "lines": {
   "main:0": {
@@ -222,6 +222,7 @@
   "repeats": true,
   "countIn": true,
   "metronome": false,
+  "metroVol": 1,
   "restCount": "sub",
   "dyn": true,
   "speed": 100,
@@ -249,7 +250,7 @@
   "transpose": 0,
   "tune": 440,
   "fermata": 2,
-  "reverb": 0.12,
+  "reverb": 0.22,
   "artic": true,
   "stereo": true,
   "human": true
