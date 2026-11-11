@@ -4,7 +4,7 @@
  "title": "소나기",
  "titleRead": "소나기",
  "file": "소나기-총보.pdf.pdf",
- "saved": "2026-11-11T08:01:56.012Z",
+ "saved": "2026-11-11T08:42:22.189Z",
  "lastBar": 355,
  "lines": {
   "main:0": {
@@ -305,7 +305,7 @@
   "transpose": 0,
   "tune": 440,
   "fermata": 2,
-  "reverb": 0.12,
+  "reverb": 0.22,
   "artic": true,
   "stereo": true,
   "human": true
