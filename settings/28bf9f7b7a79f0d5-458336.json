@@ -1,0 +1,246 @@
+{
+ "format": "hapju-settings",
+ "v": 1,
+ "title": "멋으로사는세상",
+ "titleRead": "멋으로사는세상",
+ "file": "멋으로 사는 세상 - 총보.pdf",
+ "saved": "2026-11-11T09:10:52.686Z",
+ "lastBar": 240,
+ "lines": {
+  "main:0": {
+   "name": "소금",
+   "role": "melody",
+   "inst": "sogeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:1": {
+   "name": "대금",
+   "role": "melody",
+   "inst": "daegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:2": {
+   "name": "피리",
+   "role": "melody",
+   "inst": "piri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:3": {
+   "name": "태평소",
+   "role": "melody",
+   "inst": "taepyeongso",
+   "oct": 1,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:4": {
+   "name": "해금",
+   "role": "melody",
+   "inst": "haegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:5": {
+   "name": "소아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:6": {
+   "name": "대아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:7": {
+   "name": "가야금 (윗줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:8": {
+   "name": "가야금 (아랫줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:9": {
+   "name": "Synthesizer (윗줄)",
+   "role": "melody",
+   "inst": "piano",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:10": {
+   "name": "Synthesizer (아랫줄)",
+   "role": "melody",
+   "inst": "piano",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:11": {
+   "name": "거문고",
+   "role": "melody",
+   "inst": "geomungo",
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:12": {
+   "name": "모듬북",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1.15,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:13": {
+   "name": "Snare,Hi-hat",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1.1,
+   "R": "하이햇",
+   "L": "하이햇",
+   "nong": false
+  },
+  "main:14": {
+   "name": "Cymbals",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1.35,
+   "R": "심벌",
+   "L": "심벌",
+   "nong": false
+  },
+  "main:15": {
+   "name": "Gong",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "징",
+   "L": "징",
+   "nong": false
+  }
+ },
+ "tempoRows": [
+  {
+   "start": 1,
+   "unit": "q",
+   "bpm": 130,
+   "auto": true,
+   "text": "♩=110",
+   "manual": true
+  },
+  {
+   "start": 89,
+   "unit": "q",
+   "bpm": 60,
+   "auto": true,
+   "text": "♩=60"
+  },
+  {
+   "start": 145,
+   "unit": "q",
+   "bpm": 140,
+   "auto": true,
+   "text": "♩=120",
+   "manual": true
+  }
+ ],
+ "tempoDet": [
+  "1|q|110",
+  "89|q|60",
+  "145|q|120"
+ ],
+ "speed": 100,
+ "ritF": "80",
+ "accF": "120",
+ "play": {
+  "from": 1,
+  "to": 240,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "metroVol": 1,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "loop": false,
+  "rest": "sub",
+  "ramp": false,
+  "rampStart": 70,
+  "rampStep": 5
+ },
+ "save": {
+  "from": 1,
+  "to": 240,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "linked": true,
+  "format": "mp3"
+ },
+ "order": null,
+ "tempoChanges": null,
+ "sound": {
+  "transpose": 0,
+  "tune": 440,
+  "fermata": 2,
+  "reverb": 0.12,
+  "artic": true,
+  "stereo": true,
+  "human": true
+ },
+ "extras": [],
+ "edits": [],
+ "key": "28bf9f7b7a79f0d5-458336"
+}
