@@ -1786,7 +1786,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>13건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>14건</small></summary><ul class="hlist bug">
+      <li><details><summary>꽹과리 막음 소리가 하나 걸러 들리지 않던 문제</summary><p>막음 소리 녹음 두 개를 번갈아 썼는데, 그중 하나는 아주 짧은 딸깍 소리뿐이라 두 번째·네 번째… 막음이 거의 들리지 않았습니다(연변목가 꽹과리 73마디). 이제 몸통이 있는 막음 녹음 하나로 모두 칩니다.</p></details></li>
       <li><details><summary>꽹과리 X 음표가 막음 소리로 나지 않던 문제</summary><p>꽹과리 줄의 X 머리 음표는 막음 소리인데, 윗성부의 X만 막음으로 쳤고 거의 모든 음을 X로 적은 악보는 막음으로 치지 않아 열린 소리로 났습니다(연변목가 꽹과리 73마디). 이제 꽹과리 소리로 치는 줄의 X 머리 음표는 늘 막음 소리입니다.</p></details></li>
       <li><details><summary>휴대폰 설정 서랍의 ✕가 너무 작던 문제</summary><p>악기·빠르기·연주·저장 서랍을 닫는 ✕를 키우고(동그란 바탕, 굵은 글자) 잘 보이게 했습니다.</p></details></li>
       <li><details><summary>양금 트레몰로가 한 번 치고 끝나던 문제</summary><p>양금·거문고·피아노처럼 녹음 트레몰로가 없는 악기는 트레몰로 음을 한 번만 쳐서 소리가 바로 사라졌습니다(연변목가 양금 1마디부터). 이제 트레몰로 동안 빠르게 되풀이해 치고, 꺾쇠(커졌다 작아졌다)를 따라 세기가 바뀝니다. 꺾쇠 &lt; 바로 뒤에 &gt;가 겹친 곳에서 &gt;가 빠지던 것도 고쳤고, 그린 꺾쇠의 크기 변화를 조금 크게(약 4dB) 했습니다.</p></details></li>
@@ -5890,6 +5891,8 @@ function decodeRecorded(obj) {
   }
   // 징: 녹음은 6초 가까이 울려 다음 소리를 덮는다 → 0.4초 뒤부터 빨리 줄여 3초 안에 끝나게
   // 봉고 한 쌍: 높은 봉고는 녹음을 반음 5개 높여 만든다
+  // 꽹과리 막음: 녹음 두 개 중 0번은 30ms 딸깍 소리뿐(50ms 뒤 −39dB)이라 번갈아 쓰면 짝수 번째 막음이 안 들렸다(연변목가 꽹과리 73마디) → 몸통이 있는 1번만
+  if (out['꽹과리막음'] && out['꽹과리막음'].length > 1) { const rms = y => { let s = 0; for (let i = 0; i < y.length; i++) s += y[i] * y[i]; return s / y.length; }; out['꽹과리막음'] = [out['꽹과리막음'].reduce((a, b) => rms(b) > rms(a) ? b : a)]; }
   // 팀파니(타악으로 칠 때): 선율용 팀파니 녹음(약 E3)에서 한 번 친 소리를 잘라 둔 것 → 낮은 음 C3(−4.2반음)·높은 음 G3(+2.8반음)
   { const rs = (y, st) => { const r = Math.pow(2, st / 12), n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; };
     if (out['팀파니']) { const raw = out['팀파니']; out['팀파니높게'] = raw.map(y => rs(y, 55 - 52.2)); out['팀파니'] = raw.map(y => rs(y, 48 - 52.2)); } }
@@ -10098,7 +10101,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 20:14';
+const APP_VERSION = '2026-11-11 20:22';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

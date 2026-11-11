@@ -630,6 +630,8 @@ export function decodeRecorded(obj) {
   }
   // 징: 녹음은 6초 가까이 울려 다음 소리를 덮는다 → 0.4초 뒤부터 빨리 줄여 3초 안에 끝나게
   // 봉고 한 쌍: 높은 봉고는 녹음을 반음 5개 높여 만든다
+  // 꽹과리 막음: 녹음 두 개 중 0번은 30ms 딸깍 소리뿐(50ms 뒤 −39dB)이라 번갈아 쓰면 짝수 번째 막음이 안 들렸다(연변목가 꽹과리 73마디) → 몸통이 있는 1번만
+  if (out['꽹과리막음'] && out['꽹과리막음'].length > 1) { const rms = y => { let s = 0; for (let i = 0; i < y.length; i++) s += y[i] * y[i]; return s / y.length; }; out['꽹과리막음'] = [out['꽹과리막음'].reduce((a, b) => rms(b) > rms(a) ? b : a)]; }
   // 팀파니(타악으로 칠 때): 선율용 팀파니 녹음(약 E3)에서 한 번 친 소리를 잘라 둔 것 → 낮은 음 C3(−4.2반음)·높은 음 G3(+2.8반음)
   { const rs = (y, st) => { const r = Math.pow(2, st / 12), n = Math.floor(y.length / r), z = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * r, j = Math.floor(x), f = x - j; z[i] = y[j] * (1 - f) + (y[j + 1] || 0) * f; } return z; };
     if (out['팀파니']) { const raw = out['팀파니']; out['팀파니높게'] = raw.map(y => rs(y, 55 - 52.2)); out['팀파니'] = raw.map(y => rs(y, 48 - 52.2)); } }

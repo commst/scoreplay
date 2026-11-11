@@ -1778,7 +1778,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>13건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>14건</small></summary><ul class="hlist bug">
+      <li><details><summary>꽹과리 막음 소리가 하나 걸러 들리지 않던 문제</summary><p>막음 소리 녹음 두 개를 번갈아 썼는데, 그중 하나는 아주 짧은 딸깍 소리뿐이라 두 번째·네 번째… 막음이 거의 들리지 않았습니다(연변목가 꽹과리 73마디). 이제 몸통이 있는 막음 녹음 하나로 모두 칩니다.</p></details></li>
       <li><details><summary>꽹과리 X 음표가 막음 소리로 나지 않던 문제</summary><p>꽹과리 줄의 X 머리 음표는 막음 소리인데, 윗성부의 X만 막음으로 쳤고 거의 모든 음을 X로 적은 악보는 막음으로 치지 않아 열린 소리로 났습니다(연변목가 꽹과리 73마디). 이제 꽹과리 소리로 치는 줄의 X 머리 음표는 늘 막음 소리입니다.</p></details></li>
       <li><details><summary>휴대폰 설정 서랍의 ✕가 너무 작던 문제</summary><p>악기·빠르기·연주·저장 서랍을 닫는 ✕를 키우고(동그란 바탕, 굵은 글자) 잘 보이게 했습니다.</p></details></li>
       <li><details><summary>양금 트레몰로가 한 번 치고 끝나던 문제</summary><p>양금·거문고·피아노처럼 녹음 트레몰로가 없는 악기는 트레몰로 음을 한 번만 쳐서 소리가 바로 사라졌습니다(연변목가 양금 1마디부터). 이제 트레몰로 동안 빠르게 되풀이해 치고, 꺾쇠(커졌다 작아졌다)를 따라 세기가 바뀝니다. 꺾쇠 &lt; 바로 뒤에 &gt;가 겹친 곳에서 &gt;가 빠지던 것도 고쳤고, 그린 꺾쇠의 크기 변화를 조금 크게(약 4dB) 했습니다.</p></details></li>
