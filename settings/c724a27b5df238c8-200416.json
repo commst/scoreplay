@@ -1,0 +1,269 @@
+{
+ "format": "hapju-settings",
+ "v": 1,
+ "title": "Fly to the sky",
+ "titleRead": "Fly to the sky",
+ "file": "Fly to the sky-총보.pdf",
+ "saved": "2026-11-11T08:48:49.159Z",
+ "lastBar": 54,
+ "lines": {
+  "main:0": {
+   "name": "Score / 소",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:1": {
+   "name": "대금",
+   "role": "melody",
+   "inst": "daegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:2": {
+   "name": "태평소",
+   "role": "melody",
+   "inst": "taepyeongso",
+   "oct": 1,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:3": {
+   "name": "피리",
+   "role": "melody",
+   "inst": "piri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:4": {
+   "name": "대피.",
+   "role": "melody",
+   "inst": "daepiri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:5": {
+   "name": "저피",
+   "role": "melody",
+   "inst": "daepiri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:6": {
+   "name": "생",
+   "role": "melody",
+   "inst": "saenghwang",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:7": {
+   "name": "해금",
+   "role": "melody",
+   "inst": "haegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:8": {
+   "name": "소아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:9": {
+   "name": "대소.",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:10": {
+   "name": "현소 (윗줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:11": {
+   "name": "현소 (아랫줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:12": {
+   "name": "거문고",
+   "role": "melody",
+   "inst": "geomungo",
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:13": {
+   "name": "BassGuitar",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "베이스드럼",
+   "L": "베이스드럼",
+   "nong": false
+  },
+  "main:14": {
+   "name": "Timpani",
+   "role": "melody",
+   "inst": "timpani",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:15": {
+   "name": "장",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:16": {
+   "name": "북",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:17": {
+   "name": "Cymbals",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "심벌",
+   "L": "심벌",
+   "nong": false
+  },
+  "main:18": {
+   "name": "Gong / 꽹피",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "꽹과리",
+   "L": "꽹과리",
+   "nong": false
+  },
+  "main:19": {
+   "name": "DrumSet",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "하이햇",
+   "L": "베이스드럼",
+   "nong": false
+  }
+ },
+ "tempoRows": [
+  {
+   "start": 1,
+   "unit": "dq",
+   "bpm": 60,
+   "auto": true,
+   "text": "♩.=66",
+   "manual": true
+  }
+ ],
+ "tempoDet": [
+  "1|dq|66"
+ ],
+ "speed": 100,
+ "ritF": "80",
+ "accF": "120",
+ "play": {
+  "from": 1,
+  "to": 54,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "metroVol": 1,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "loop": false,
+  "rest": "sub",
+  "ramp": false,
+  "rampStart": 70,
+  "rampStep": 5
+ },
+ "save": {
+  "from": 1,
+  "to": 54,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "linked": true,
+  "format": "mp3"
+ },
+ "order": null,
+ "tempoChanges": null,
+ "sound": {
+  "transpose": 0,
+  "tune": 440,
+  "fermata": 2,
+  "reverb": 0.22,
+  "artic": true,
+  "stereo": true,
+  "human": true
+ },
+ "extras": [],
+ "edits": [],
+ "key": "c724a27b5df238c8-200416"
+}
