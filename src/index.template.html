@@ -1053,7 +1053,7 @@ body.all-panes { padding-bottom: 0; }
 .song-rename .rn-row { display: flex; gap: 8px; align-items: center; }
 .song-rename input { flex: 1 1 0; min-width: 0; width: 0; padding: 8px 10px; border: 1px solid var(--line-2, var(--line)); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; }
 .song-rename .hint { margin: 0; }
-.song-rename .rn-row .btn { flex: none; white-space: nowrap; }   /* [악보 제목으로]가 보일 때 휴대폰에서 창이 화면보다 넓어지던 것(152번) */
+.song-rename .rn-row .btn { flex: none; white-space: nowrap; }   
 /* ===== ScoreWorks: 이름·아이콘·글꼴 (2026-11-11) ===== */
 /* 글꼴: 본문 Pretendard, 이름(워드마크) Outfit */
 body, button, input, select, textarea { font-family: var(--font-body); }
@@ -1182,8 +1182,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
     <h2 class="step-h" id="stepLoad"><span class="sn">1</span>악보 올리기</h2>
     <div class="song-rename" id="songRename" hidden>
       <label for="songTitleIn">곡 제목</label>
-      <div class="rn-row"><input type="text" id="songTitleIn" maxlength="60" autocomplete="off" spellcheck="false"><button class="btn" id="songTitleReset" type="button" hidden>악보 제목으로</button></div>
-      <p class="hint" id="songTitleHint">고친 제목은 위 막대·음원·MusicXML·MIDI 파일에 쓰이고 이 악보의 설정에 저장됩니다. 입력한 뒤 Enter.</p>
+      <div class="rn-row"><input type="text" id="songTitleIn" maxlength="60" autocomplete="off" spellcheck="false"></div>
+      <p class="hint" id="songTitleHint">고친 제목은 위 막대·음원·MusicXML·MIDI 파일에 쓰이고 이 악보의 설정에 저장됩니다. 입력한 뒤 Enter. 비우면 악보에서 읽은 제목으로 돌아갑니다.</p>
     </div>
     <div class="uploads">
     <section class="up" aria-labelledby="fullUploadTitle">
@@ -1782,7 +1782,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>공유 설정이 있으면 물어보고 [확인]으로 적용</summary><p>이 기기에서 처음 여는 곡에 저장소의 공유 설정이 있으면, 위쪽에 "공유 설정이 저장소에 있습니다… 불러와 적용할까요?" 알림이 뜹니다. [확인]을 누르면 바로 불러와 적용하고, [나중에]를 누르면 그대로 둡니다(나중에 [저장] 칸의 [공유 설정 불러오기]로 받을 수 있음). 같은 곡의 다른 파일로 올린 설정을 찾았을 때도 같이 묻습니다. 전에는 묻지 않고 바로 적용했습니다.</p></details></li>
       <li><details><summary>새 이름 ScoreWorks, 새 글꼴과 첫 화면</summary><p>프로그램 이름을 '합주연습기'에서 <b>ScoreWorks</b>(국악관현악 악보 분석 및 재생 도구)로 바꿨습니다. 새 아이콘을 만들고, 이름을 위 막대 가운데에 두었습니다. 첫 화면은 아이콘·이름·설명을 가운데로 다시 배치했습니다. 글꼴은 Pretendard(본문)와 Outfit(이름)입니다. 위 막대 단추는 화면 폭에 따라 짧은 이름(이력·사용법·설명서·신고)으로 보입니다. 사용설명서도 새 이름과 새 화면으로 바꿨습니다. 저장한 설정과 음 수정은 그대로입니다.</p></details></li>
       <li><details><summary>♩=♪ 표시는 처음부터 '오른쪽이 새 박'으로</summary><p>박을 바꾸는 ♩=♪ 같은 표시를 악보 표기 관례대로 '앞의 왼쪽 음표 길이 = 새 오른쪽 음표'로 읽습니다. 예: 프론티어 117마디 ♩=♪는 앞의 ♩=172 길이가 새 ♪가 되어 ♩=86, 121마디부터 다시 ♩=172. 반대로 쓴 악보는 빠르기 칸의 단추로 '왼쪽이 새 박'으로 바꾸면 되고, 이미 단추로 고른 방향은 그대로입니다.</p></details></li>
-      <li><details><summary>곡 제목 바꾸기</summary><p>악기 이름처럼 곡 제목도 바꿀 수 있습니다. 위 막대의 곡 이름을 누르면 열리는 악보 파일 창 맨 위 <b>곡 제목</b> 칸에 적고 Enter를 누르세요. 바꾼 제목은 위 막대, 음원·MIDI·MusicXML 파일에 쓰이고 이 악보의 설정에 저장됩니다. [악보 제목으로]를 누르면 악보에서 읽은 제목으로 돌아갑니다.</p></details></li>
+      <li><details><summary>곡 제목 바꾸기</summary><p>악기 이름처럼 곡 제목도 바꿀 수 있습니다. 위 막대의 곡 이름을 누르면 열리는 악보 파일 창 맨 위 <b>곡 제목</b> 칸에 적고 Enter를 누르세요. 바꾼 제목은 위 막대, 음원·MIDI·MusicXML 파일에 쓰이고 이 악보의 설정에 저장됩니다. 칸을 비우면 악보에서 읽은 제목으로 돌아갑니다.</p></details></li>
       <li><details><summary>단추 색·크기와 제목 정리</summary><p>단추를 화면 색에 맞는 연한 파랑으로 바꾸고, 위 막대 단추(악보 파일·업데이트 이력·프로그램 사용법·사용설명서 받기·문제점 신고하기)를 같은 크기로 맞췄습니다. 칸마다 제목을 가운데로(빠르기 칸은 왼쪽), 함께 쓰는 단추는 같은 너비로 맞췄습니다. '사용법'은 '프로그램 사용법', '화면 가득 보기'는 '전체화면 보기', '재생할 때'는 '재생 설정'으로 이름을 바꿨고, 첫 화면 소개 아래의 단추 줄은 위 막대와 겹쳐 뺐습니다.</p></details></li>
       <li><details><summary>문제점 신고하기</summary><p>위 막대([사용설명서 받기] 옆), 첫 화면, 사용법 창에 <b>[문제점 신고하기]</b> 단추가 생겼습니다. 분류(문제/기능개선)·곡명·마디 위치·내용을 적어 [전송]하면 관리자에게 메일로 바로 갑니다. 모든 칸은 비워도 되고, 곡명과 마디 위치는 지금 연 악보와 재생 위치로 미리 채워 둡니다. 원인을 찾을 수 있게 앱 판 번호와 기기·브라우저 종류가 함께 가며, 악보 파일은 보내지 않습니다. 바로 보내지 못하면 메일 앱을 열어 같은 내용으로 보낼 수 있습니다. 휴대폰에서는 첫 화면과 사용법 창의 단추를 써 주세요.</p></details></li>
       <li><details><summary>같은 곡의 다른 파일로 공유 설정을 받을 때도 음 수정 적용</summary><p>공유 설정에는 원래부터 음정·길이 수정이 함께 저장됩니다. 이제 같은 곡의 다른 PDF 파일로 공유 설정을 받을 때도 음 수정을 입힙니다. 원래 음이 같은 곳에만 적용하므로 판이 달라 음이 다른 마디는 건너뜁니다.</p></details></li>
@@ -5530,13 +5530,9 @@ function renderSongTitle() {
   const real = hasRealScore(); box.hidden = !real; if (!real) return;
   const inp = $('songTitleIn'); if (document.activeElement !== inp) inp.value = state.title || '';
   inp.placeholder = state.titleRead || '';
-  const edited = !!state.title && state.title !== state.titleRead;
-  $('songTitleReset').hidden = !edited;
-  $('songTitleReset').title = edited ? `악보에서 읽은 제목 '${state.titleRead || ''}'(으)로 되돌립니다` : '';
 }
 $('songTitleIn').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ev.target.blur(); } else if (ev.key === 'Escape') { ev.target.value = state.title || ''; ev.target.blur(); } });
 $('songTitleIn').addEventListener('change', ev => { if ((ev.target.value.trim() || state.titleRead) !== state.title) setSongTitle(ev.target.value); });
-$('songTitleReset').addEventListener('click', () => setSongTitle(''));
 const _renderBarsV1 = renderBars;
 renderBars = function () { const r = _renderBarsV1.apply(this, arguments); try { updateTopbar(); } catch (e) {} return r; };
 // 창을 닫으면 연 단추로 초점을 돌려준다(키보드로 쓸 때 초점이 사라지지 않게)
