@@ -86,8 +86,14 @@ export function makeSounds() {
       return parts.reduce((s, [f, a, d]) => s + a * Math.sin(2 * Math.PI * f * g * t) * env(t, 0.015, d), 0); });
   }
   { // 클릭
-    S['클릭'] = build(0.06, t => Math.sin(2 * Math.PI * 2000 * t) * env(t, 0.0002, 0.01) + 0.4 * Math.sin(2 * Math.PI * 4100 * t) * env(t, 0.0002, 0.006));
-    S['클릭강'] = build(0.06, t => Math.sin(2 * Math.PI * 2600 * t) * env(t, 0.0002, 0.012) + 0.4 * Math.sin(2 * Math.PI * 5200 * t) * env(t, 0.0002, 0.006));
+    // 메트로놈·카운트인: 예전 소리(2kHz 사인 10ms)는 너무 짧고, 국악관현악 소리가 가장 많이 몰린 대역(1~3kHz)과 겹쳐 묻혔다.
+    // 프론티어 모든 줄 소리를 재 보면 4~6kHz는 2kHz 근처보다 Hz당 11~15dB 비어 있다 → 그 대역의 짧고 날카로운 '틱'(마디 첫 박은 더 높게)
+    // + 아주 짧은 5~9kHz 잡음 머리. 크기는 음악과 따로 맞춘다(앱에서 음악 크기 맞추기 뒤에 더함)
+    const nz = band(Math.round(0.06 * SR), 5000, 9000, 31);
+    const clk = (f, d) => build(0.06, (t, i) => Math.sin(2 * Math.PI * f * t) * env(t, 0.0002, d) + 0.5 * Math.sin(2 * Math.PI * f * 1.52 * t) * env(t, 0.0002, d * 0.6)
+      + 0.7 * nz[i] * env(t, 0.0001, 0.003));
+    S['클릭'] = clk(4000, 0.022);
+    S['클릭강'] = clk(5000, 0.028);   // 마디 첫 박은 높고 조금 길게
   }
   { // 쉬는 마디 박 짚기: 나무 막대(우드블록) 소리와 셰이커 소리. 악기·클릭과 구분되도록
     const wood = (f, n) => { const nz = band(Math.round(0.09 * SR), 600, 3000, n);

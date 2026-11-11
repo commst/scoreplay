@@ -1456,6 +1456,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
           <span class="ramp-set" id="rampSet" hidden>처음 <input type="number" id="rampStart" class="num mini" min="30" max="100" step="5" value="70" aria-label="처음 속도 %">% · 한 번에 +<input type="number" id="rampStep" class="num mini" min="1" max="30" step="1" value="5" aria-label="한 번에 올릴 %">% → 연습 속도까지</span>
           <label><input type="checkbox" id="optCount" checked>카운트인</label>
           <label><input type="checkbox" id="optMetro">메트로놈</label>
+          <label class="metro-vol">메트로놈·카운트인 크기 <select id="optMetroVol" class="mini"><option value="0.6">작게</option><option value="1" selected>보통</option><option value="1.6">크게</option><option value="2.4">아주 크게</option></select></label>
           <label>쉬는 마디 박 짚기
             <select id="optRest" class="mini">
               <option value="off">끔</option>
@@ -1519,7 +1520,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
             <dd>연주 시작 전에 한 마디 동안 박에 맞춰 "똑, 딱, 딱, 딱" 클릭을 들려줍니다. 첫 박은 높은 소리입니다. 같이 칠 때 들어갈 타이밍을 잡는 용도입니다.
               <span class="eg">12/8, ♩.=84 → 점4분 4번 클릭 후 연주 시작</span></dd>
             <dt>메트로놈</dt>
-            <dd>연주하는 동안 내내 박마다 클릭을 깔아 줍니다. 마디 첫 박은 높은 소리입니다. 박은 템포 구간의 기준 음표 단위로 칩니다. 빠르기가 흔들리지 않게 연습할 때 켜세요.</dd>
+            <dd>연주하는 동안 내내 박마다 클릭을 깔아 줍니다. 마디 첫 박은 더 높은 소리입니다. 박은 템포 구간의 기준 음표 단위로 칩니다. 빠르기가 흔들리지 않게 연습할 때 켜세요. 클릭은 악기 소리가 적은 높은 대역의 짧은 '틱' 소리이고 음악과 따로 크기를 맞춰 묻히지 않습니다. 그래도 작으면 <b>메트로놈·카운트인 크기</b>를 '크게'·'아주 크게'로.</dd>
             <dt>쉬는 마디 박 짚기</dt>
             <dd>칠 음이 하나도 없는 마디(여러 마디 쉼표, 빈 마디, 총보에서 고른 줄이 쉬는 마디)에서만 나무 막대 소리로 박을 짚어 줍니다. 악기 소리, 메트로놈 클릭과 다른 소리라 쉬는 구간이 바로 구분됩니다. 마디 첫 박은 높은 소리, 나머지 박은 낮은 소리입니다.
               <b>박만</b>은 기준 음표마다 한 번, <b>분박까지</b>는 박 사이를 8분음표 단위로 쪼개 작은 "착" 소리를 더합니다(점4분 박은 셋, 4분 박은 둘로 쪼갬). 쉬는 동안 아래 연주 막대에 "쉼 3/8마디"처럼 몇 번째 쉬는 마디인지도 보여 줍니다. 저장하는 파일에도 들어갑니다.
@@ -1781,7 +1782,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>7건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>8건</small></summary><ul class="hlist bug">
+      <li><details><summary>메트로놈 소리가 음악에 묻혀 들리지 않던 문제</summary><p>메트로놈 클릭이 악기 소리가 가장 많이 몰린 높이(약 2kHz)에 있고, 음악과 함께 크기를 맞추면서 작아져 여러 악기를 켜면 거의 들리지 않았습니다. 클릭을 악기 소리가 적은 높은 대역(4~5kHz)의 짧고 또렷한 '틱' 소리로 바꾸고, 음악 크기를 맞춘 뒤에 따로 더해 늘 같은 크기로 들리게 했습니다(마디 첫 박은 더 높은 소리). [연주] 칸에 <b>메트로놈·카운트인 크기</b>(작게·보통·크게·아주 크게)를 넣었습니다.</p></details></li>
       <li><details><summary>휴대폰에서 화면을 확대하거나 다른 앱에 다녀오면 악보가 사라지던 문제</summary><p>휴대폰(특히 아이폰)은 메모리가 모자라면 페이지를 처음부터 다시 엽니다. 그러면 올린 악보가 사라져 다시 올려야 했습니다. 이제 올린 악보 파일을 이 기기에 기억해 두었다가, 페이지가 다시 열리면 저절로 다시 읽습니다(설정·고친 빠르기도 그대로). 새로 연 화면에서는 첫 화면의 [지난번 악보 다시 열기]로 엽니다. 악보를 모두 빼면 잊습니다. 악보 보기 그림이 메모리를 덜 쓰게도 했습니다.</p></details></li>
       <li><details><summary>아이폰에서 입력칸을 누르면 화면이 확대되고 커서 자리가 어긋나던 문제</summary><p>아이폰 Safari는 글자가 작은 입력칸을 누르면 화면을 저절로 확대하는데, 확대된 채로 설정 서랍 안의 입력칸(빠르기 표의 시작 마디 등)은 커서와 눌리는 자리가 어긋났습니다. 휴대폰·태블릿에서는 입력칸 글자를 키워 확대되지 않게 했습니다.</p></details></li>
       <li><details><summary>휴대폰 설정 서랍을 굴리면 닫기(✕)가 사라지던 문제</summary><p>휴대폰·태블릿 세로 화면에서 악기 칸처럼 긴 칸을 아래로 굴리면 서랍 오른쪽 위의 ✕가 함께 말려 올라가 보이지 않았습니다. 이제 ✕가 탭 줄(악기·빠르기·연주·저장)과 함께 서랍 맨 위에 붙어 있습니다.</p></details></li>
@@ -5318,8 +5320,14 @@ function makeSounds() {
       return parts.reduce((s, [f, a, d]) => s + a * Math.sin(2 * Math.PI * f * g * t) * env(t, 0.015, d), 0); });
   }
   { // 클릭
-    S['클릭'] = build(0.06, t => Math.sin(2 * Math.PI * 2000 * t) * env(t, 0.0002, 0.01) + 0.4 * Math.sin(2 * Math.PI * 4100 * t) * env(t, 0.0002, 0.006));
-    S['클릭강'] = build(0.06, t => Math.sin(2 * Math.PI * 2600 * t) * env(t, 0.0002, 0.012) + 0.4 * Math.sin(2 * Math.PI * 5200 * t) * env(t, 0.0002, 0.006));
+    // 메트로놈·카운트인: 예전 소리(2kHz 사인 10ms)는 너무 짧고, 국악관현악 소리가 가장 많이 몰린 대역(1~3kHz)과 겹쳐 묻혔다.
+    // 프론티어 모든 줄 소리를 재 보면 4~6kHz는 2kHz 근처보다 Hz당 11~15dB 비어 있다 → 그 대역의 짧고 날카로운 '틱'(마디 첫 박은 더 높게)
+    // + 아주 짧은 5~9kHz 잡음 머리. 크기는 음악과 따로 맞춘다(앱에서 음악 크기 맞추기 뒤에 더함)
+    const nz = band(Math.round(0.06 * SR), 5000, 9000, 31);
+    const clk = (f, d) => build(0.06, (t, i) => Math.sin(2 * Math.PI * f * t) * env(t, 0.0002, d) + 0.5 * Math.sin(2 * Math.PI * f * 1.52 * t) * env(t, 0.0002, d * 0.6)
+      + 0.7 * nz[i] * env(t, 0.0001, 0.003));
+    S['클릭'] = clk(4000, 0.022);
+    S['클릭강'] = clk(5000, 0.028);   // 마디 첫 박은 높고 조금 길게
   }
   { // 쉬는 마디 박 짚기: 나무 막대(우드블록) 소리와 셰이커 소리. 악기·클릭과 구분되도록
     const wood = (f, n) => { const nz = band(Math.round(0.09 * SR), 600, 3000, n);
@@ -7449,7 +7457,7 @@ function explainTempo() {
   if (sp !== 1) { const h = document.createElement('div'); h.style.color = 'var(--muted)'; h.textContent = `연습 속도 ${Math.round(sp * 100)}%를 적용한 실제 빠르기`; el.appendChild(h); }
   for (const l of lines) { const d = document.createElement('div'); d.textContent = l; el.appendChild(d); }
 }
-['optCount', 'optMetro', 'optDyn', 'ritF', 'accF', 'optRest'].forEach(id => $(id).addEventListener('change', changed));
+['optCount', 'optMetro', 'optMetroVol', 'optDyn', 'ritF', 'accF', 'optRest'].forEach(id => $(id).addEventListener('change', changed));
 $('optRepeat').addEventListener('change', () => { refreshOrder(); changed(); });
 function refreshOrder() {
   const manual = !!state.manualOrder;
@@ -7498,7 +7506,7 @@ function clampRange(edited) {
 // 재생 칸의 설정 (연주 범위·반복·카운트인 등)
 function playOpts() {
   clampRange();
-  return { from: +$('from').value, to: +$('to').value, repeats: $('optRepeat').checked, countIn: $('optCount').checked, metronome: $('optMetro').checked,
+  return { from: +$('from').value, to: +$('to').value, repeats: $('optRepeat').checked, countIn: $('optCount').checked, metronome: $('optMetro').checked, metroVol: +$('optMetroVol').value || 1,
     restCount: $('optRest').value, dyn: $('optDyn').checked, speed: +$('speed').value };
 }
 // 소리 다듬기 칸 (재생·저장 공통)
@@ -7546,7 +7554,10 @@ async function buildAudio(onProgress, o = null, bg = false) {
   });
   // 선율 음은 조금씩 나눠 합성해 휴대폰에서도 화면이 멈추지 않게
   const notes = plan.notes;
-  const raw = mix(plan, state.sounds, state.custom, null, false);   // 타악 (크기 맞추기는 선율까지 더한 뒤)
+  // 메트로놈·카운트인 소리는 따로 만들어 음악 크기를 맞춘 뒤에 더한다(음악과 함께 크기를 맞추면 큰 곡에서 묻혀 들리지 않았음)
+  const isClick = h => h[1] === '클릭' || h[1] === '클릭강';
+  const clickHits = plan.hits.filter(isClick);
+  const raw = mix(clickHits.length ? { ...plan, hits: plan.hits.filter(h => !isClick(h)) } : plan, state.sounds, state.custom, null, false);   // 타악 (크기 맞추기는 선율까지 더한 뒤)
   // 좌우 배치: 타악은 가운데(양쪽 같게), 선율은 줄마다 좌우 위치. 10분 넘는 소리는 메모리 때문에 한 줄로
   const coarse = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
   const stereo = snd.stereo && raw.length <= (coarse ? 300 : 600) * SR;   // 휴대폰·태블릿은 5분, 컴퓨터는 10분까지 입체 (메모리)
@@ -7569,6 +7580,13 @@ async function buildAudio(onProgress, o = null, bg = false) {
     for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (performance.now() - lastY > 40) { if (onProgress) onProgress(0.75 + 0.2 * Math.min(1, (i + STEP) / N)); await yieldNow(); lastY = performance.now(); } }
   }
   fitLevel(raw, rawR);   // 크기 맞추기 (드문 큰 점은 부드럽게 눌러 곡 전체가 작아지지 않게)
+  if (clickHits.length) {   // 메트로놈·카운트인: 크기 맞춘 음악 위에 정한 크기로(잔향 없이, 가운데). 넘치는 점만 부드럽게 누름
+    const ck = mix({ ...plan, hits: clickHits }, state.sounds, state.custom, null, false), g = 0.9 * (+$('optMetroVol').value || 1), T = 0.85, H = 0.97 - T;
+    for (const x of rawR ? [raw, rawR] : [raw]) for (let i = 0, n = Math.min(x.length, ck.length); i < n; i++) {
+      if (!ck[i]) continue; const v = x[i] + ck[i] * g, a = Math.abs(v);
+      x[i] = a <= T ? v : Math.sign(v) * (T + H * Math.tanh((a - T) / H));
+    }
+  }
   // 휴대폰 메모리를 아끼려고 소리 데이터는 wav 파일 하나로만 들고 있는다
   const wavBlob = new Blob([encodeWav(raw, rawR)], { type: 'audio/wav' });
   if (forSave) return { plan, blob: wavBlob };
@@ -8072,7 +8090,7 @@ function applyRestSettings(S) {
   if (badRange) { $('from').value = 1; $('to').value = LB; }
   else { if (P.from) $('from').value = P.from; if (P.to) $('to').value = Math.min(P.to, LB); }
   const ck = (id, v) => { if (typeof v === 'boolean') $(id).checked = v; };
-  ck('optRepeat', P.repeats); ck('optCount', P.countIn); ck('optMetro', P.metronome); ck('optDyn', P.dyn); ck('optLoop', P.loop); ck('optRamp', P.ramp && P.loop);
+  ck('optRepeat', P.repeats); ck('optCount', P.countIn); ck('optMetro', P.metronome); if (P.metroVol && [...$('optMetroVol').options].some(x => +x.value === +P.metroVol)) $('optMetroVol').value = String(P.metroVol); ck('optDyn', P.dyn); ck('optLoop', P.loop); ck('optRamp', P.ramp && P.loop);
   if (P.rampStart) $('rampStart').value = P.rampStart; if (P.rampStep) $('rampStep').value = P.rampStep; $('rampSet').hidden = !$('optRamp').checked;
   if (P.restCount) $('optRest').value = P.restCount;
   clampRange(); audio.loop = $('optLoop').checked;
@@ -10016,7 +10034,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 15:41';
+const APP_VERSION = '2026-11-11 16:33';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
