@@ -162,6 +162,12 @@
 - [문제점 신고하기]: FormSubmit(`REPORT_TO`, 사용자 계정 메일 — 공개 소스에 두는 것에 사용자 동의)로 전송, 실패하면 mailto. **사용자가 첫 제보 뒤 확인 메일의 [Activate Form]을 눌러야 도착함 — 눌렀는지 아직 확인 전.** 확인되면 FormSubmit이 주는 무작위 별칭 주소로 `REPORT_TO`를 바꿔 메일 주소를 소스에서 숨길 수 있음(사용자가 원하면)
 - 음 수정 공유: 같은 파일은 122번부터 이미 됨. 다른 파일(판)로 받을 때도 원래 음이 같은 곳에 적용하도록 고침. 시험 test/pwreport.cjs, test/pwshare.cjs(음 수정 항목 추가)
 
+### ▶ 다음 대화에서 바로 할 일 — 130번 마무리 (사용자가 중간에 멈춤)
+
+- 요청(11-11 10:33): 연주 칸 제목 '재생할 때' → '재생 설정', 빠르기 탭의 '빠르기'·'rit. · accel.' 제목은 왼쪽 정렬
+- **고친 내용은 브랜치 `wip-130`에 올려 둠(main에는 아직 없음)**: #tPlay 글자, 두 제목 줄에 `.ttl-row.ttl-left`(제목 왼쪽, [마디 골라 넣기] 오른쪽), [rit. 추가](.tchg-add) 왼쪽 정렬, 업데이트 이력·README·CHANGELOG(130번) 반영. 화면 그림으로는 확인함
+- 남은 일: `git fetch origin wip-130` → main에 합치기 → 빌드 → pwboot·pwshare·pwtitle·pwreport 돌리기 → 통과하면 main에 푸시하고 wip-130 브랜치 지우기 → 사용자에게 실행 링크
+
 **129번(11-11) 단추·제목 정리**: 단추 색(--b-bg 등)·같은 너비(.btn-grid)·제목 가운데(.ttl-row)·곡 제목 바꾸기(state.titleRead/state.title, 설정 songTitle). 시험 test/pwtitle.cjs. **사용설명서(manual.pdf)는 예전 단추 이름('사용법'·'화면 가득 보기')과 첫 화면 단추 줄 그림이 남아 있음 — 다음에 그림·글 갱신**
 
 **문서 동기화 밀린 것**: 프로젝트 문서 `claude/CHANGELOG.md`에 128·129번, `claude/README.md`에 129번이 아직 없음(토큰을 아끼려고 이번 대화에서는 올리지 않음 — 다음 대화 시작 때 저장소 파일로 project_read 후 local_path로 올릴 것). HANDOFF는 129번까지 동기화함.
