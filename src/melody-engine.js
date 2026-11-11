@@ -5,7 +5,9 @@ import { SR } from './audio-engine.js';
 
 // 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
 // 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
-const LV = { gayageum: 1.4, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7 };
+// 악기별 기본 크기. 150번(11-12): 프론티어 음원(양방언)과 악기마다 드러난 대목의 크기를 맞대어 다듬음
+//  대금 −3.5dB, 피리 −4, 해금 −2.5, 소금 −1.5, 태평소 +2.5, 가야금 +2.5, 피아노 +2 (test/frontier/ 도구)
+const LV = { gayageum: 1.86, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 0.72, daepiri: 1.15, haegeum: 0.64, saenghwang: 0.7, daegeum: 0.67, sogeum: 0.85, taepyeongso: 1.33, piano: 1.26 };
 export const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },

@@ -107,9 +107,9 @@ export function makeSounds() {
 }
 
 // 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB, 10월 31일 북을 장구 덩만큼 더 키움)
-const JG = 2.0, BK = 1.4;
+const JG = 2.4, BK = 1.4;   // 장구 2.0 → 2.4(150번: 프론티어 음원에 맞춰 +1.5dB)
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
-const KG = 2.8;
+const KG = 2.1;   // 꽹과리 크기(150번에서 프론티어 음원에 맞춰 2.8 → 2.1, −2.5dB)
 const BUK_MID = 4, BUK_CLICK = 0.6;
 const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.8 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG,
   // 11월 1일 넣은 녹음: 녹음 크기가 제각각이라 들리는 크기로 맞춤 (봉고 ≈ 장구 따, 탬버린·트라이앵글 ≈ 심벌·바라, 카바사는 조금 작게)
@@ -594,9 +594,9 @@ export function encodeWav(buf, bufR = null) {
 }
 
 // 잔향(울림): 여러 겹의 되울림 지연선(Freeverb 방식). wet = 울림 크기(0~0.4). 소리가 길어 조금씩 나눠 처리할 수 있게 상태를 들고 있다
-export function makeReverb(wet, stereo) {
+export function makeReverb(wet, stereo, room = 0.8, damp = 0.3) {
   const sc = SR / 44100, mk = (d, fb, damp) => ({ b: new Float32Array(Math.round(d * sc)), i: 0, fb, damp, lp: 0 });
-  const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, 0.8, 0.3));
+  const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, room, damp));
   const alls = sp => [556, 441, 341].map(d => mk(d + sp, 0.5, 0));
   const chans = [{ c: combs(0), a: alls(0) }, { c: combs(23), a: alls(23) }];
   // 지연선 하나씩 덩어리 전체를 돌린다 (한 점마다 아홉 개를 번갈아 부르던 때보다 몇 배 빠르고 결과는 같다)

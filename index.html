@@ -1770,6 +1770,11 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 
 <template id="histTpl">
+  <section class="hday"><h3>11월 12일</h3>
+    <h4>기능 업데이트 <small>1</small></h4><ul class="hlist">
+      <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 대금·피리·해금·소금·꽹과리는 조금 작게, 태평소·가야금·피아노·장구는 조금 크게 했습니다. 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
+    </ul>
+  </section>
   <section class="hday"><h3>11월 11일</h3>
     <h4>기능 업데이트 <small>16</small></h4><ul class="hlist">
       <li><details><summary>심벌 롤도 꺾쇠를 따라 커지고 작아지게</summary><p>심벌 굴림(롤)도 녹음한 롤 소리 그대로, 그 줄의 꺾쇠·셈여림을 따라 커지고 작아집니다. 작아지는 롤은 큰 소리에서 바로 시작해 끝으로 갈수록 확 사그라듭니다.</p></details></li>
@@ -5384,9 +5389,9 @@ function makeSounds() {
 }
 
 // 장구(따·궁·덩)와 북은 짧게 치는 소리라 같은 100%에서도 길게 울리는 선율 악기보다 작게 들린다 → 크게 (장구 약 +6dB, 북 약 +3dB, 10월 31일 북을 장구 덩만큼 더 키움)
-const JG = 2.0, BK = 1.4;
+const JG = 2.4, BK = 1.4;   // 장구 2.0 → 2.4(150번: 프론티어 음원에 맞춰 +1.5dB)
 // 꽹과리도 같은 100%에서 장구보다 10dB쯤 작게 들려 약 +9dB
-const KG = 2.8;
+const KG = 2.1;   // 꽹과리 크기(150번에서 프론티어 음원에 맞춰 2.8 → 2.1, −2.5dB)
 const BUK_MID = 4, BUK_CLICK = 0.6;
 const GAIN = { '따': JG, '궁': 1.15 * JG, '북': 2.4 * BK, '북녹음': 2.8 * BK, '북짧게': 1.6 * BK, '바라': 0.72, '베이스드럼': 1.0, '하이햇': 0.75, '심벌': 0.8, '스네어': 0.85, '덩': 1.1 * JG, '꽹과리': 0.8 * KG, '꽹과리길게': 0.8 * KG, '꽹과리막음': 0.85 * KG,
   // 11월 1일 넣은 녹음: 녹음 크기가 제각각이라 들리는 크기로 맞춤 (봉고 ≈ 장구 따, 탬버린·트라이앵글 ≈ 심벌·바라, 카바사는 조금 작게)
@@ -5871,9 +5876,9 @@ function encodeWav(buf, bufR = null) {
 }
 
 // 잔향(울림): 여러 겹의 되울림 지연선(Freeverb 방식). wet = 울림 크기(0~0.4). 소리가 길어 조금씩 나눠 처리할 수 있게 상태를 들고 있다
-function makeReverb(wet, stereo) {
+function makeReverb(wet, stereo, room = 0.8, damp = 0.3) {
   const sc = SR / 44100, mk = (d, fb, damp) => ({ b: new Float32Array(Math.round(d * sc)), i: 0, fb, damp, lp: 0 });
-  const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, 0.8, 0.3));
+  const combs = sp => [1116, 1188, 1277, 1356, 1422, 1491].map(d => mk(d + sp, room, damp));
   const alls = sp => [556, 441, 341].map(d => mk(d + sp, 0.5, 0));
   const chans = [{ c: combs(0), a: alls(0) }, { c: combs(23), a: alls(23) }];
   // 지연선 하나씩 덩어리 전체를 돌린다 (한 점마다 아홉 개를 번갈아 부르던 때보다 몇 배 빠르고 결과는 같다)
@@ -5966,7 +5971,9 @@ function decodeRecorded(obj) {
 
 // 악기별 기본 크기(lv): 같은 100%에서 들리는 크기가 비슷하도록. 총보 3곡(월광·달빛항해·미락흘)에서 줄마다 따로 재 보니
 // 거문고·아쟁이 관악보다 5~10dB 작고(낮은 음 + 금방 줄어드는 뜯는 소리), 가야금·양금은 치는 순간만 크고 곧 작아졌다 → 올림. 해금·생황은 조금 내림
-const LV = { gayageum: 1.4, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 1.15, daepiri: 1.15, haegeum: 0.85, saenghwang: 0.7 };
+// 악기별 기본 크기. 150번(11-12): 프론티어 음원(양방언)과 악기마다 드러난 대목의 크기를 맞대어 다듬음
+//  대금 −3.5dB, 피리 −4, 해금 −2.5, 소금 −1.5, 태평소 +2.5, 가야금 +2.5, 피아노 +2 (test/frontier/ 도구)
+const LV = { gayageum: 1.86, geomungo: 2.2, yanggeum: 0.85, ajaeng: 1.6, piri: 0.72, daepiri: 1.15, haegeum: 0.64, saenghwang: 0.7, daegeum: 0.67, sogeum: 0.85, taepyeongso: 1.33, piano: 1.26 };
 const INSTRUMENTS = {
   gayageum: { name: '가야금 (녹음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22, bank: 'gayageum' },
   gayageum_syn: { name: '가야금 (합성음)', kind: 'pluck', bright: 0.55, decay: 2.6, ring: 0.9, nong: 22 },
@@ -6431,6 +6438,7 @@ const INST_OPTIONS = Object.entries(INSTRUMENTS).map(([k, v]) => [k, v.name]);
 const state = { bars: [], tempoRows: [], title: '', custom: {}, sounds: null, rendered: null, dirty: true, playing: false,
   score: null, lineIds: [], lineRes: {}, lineRaw: {}, parts: [], extras: [], sourceScores: [], soundSel: {}, lineCfg: {}, lineList: [],
   marks: { dyn: [], tempo: [] }, manualOrder: null, tempoChanges: [], tempoChEdited: false, scoreGeo: null, solo: new Set(), mute: new Set() };
+window.__st = state;   // 시험 도구(test/stems.mjs)용
 let raf = 0, audioUrl = null, lastNow = null;
 // 연습 속도만 바꿨는지: 속도만 바뀌었으면 소리를 다시 만들 때까지 재생 빠르기(음 높이 그대로)로 먼저 들려준다
 let spdSetting = false;
@@ -7692,7 +7700,8 @@ async function buildAudio(onProgress, o = null, bg = false) {
     const rv = makeReverb(snd.reverb, stereo), N = raw.length, STEP = 32000 * 2;
     for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (performance.now() - lastY > 40) { if (onProgress) onProgress(0.75 + 0.2 * Math.min(1, (i + STEP) / N)); await yieldNow(); lastY = performance.now(); } }
   }
-  fitLevel(raw, rawR);   // 크기 맞추기 (드문 큰 점은 부드럽게 눌러 곡 전체가 작아지지 않게)
+  if (window.__rawLevel) { const g = +window.__rawLevel; for (const x of rawR ? [raw, rawR] : [raw]) for (let i = 0; i < x.length; i++) x[i] *= g; }   // 시험용(test/stems.mjs): 줄마다 크기를 그대로 비교하려고 크기 맞추기를 건너뜀
+  else fitLevel(raw, rawR);   // 크기 맞추기 (드문 큰 점은 부드럽게 눌러 곡 전체가 작아지지 않게)
   if (clickHits.length) {   // 메트로놈·카운트인: 크기 맞춘 음악 위에 정한 크기로(잔향 없이, 가운데). 넘치는 점만 부드럽게 누름
     const ck = mix({ ...plan, hits: clickHits }, state.sounds, state.custom, null, false), g = 0.9 * (+$('optMetroVol').value || 1), T = 0.85, H = 0.97 - T;
     for (const x of rawR ? [raw, rawR] : [raw]) for (let i = 0, n = Math.min(x.length, ck.length); i < n; i++) {
@@ -10148,7 +10157,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-12 00:12';
+const APP_VERSION = '2026-11-12 07:03';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
