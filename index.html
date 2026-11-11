@@ -1782,7 +1782,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>8건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>9건</small></summary><ul class="hlist bug">
+      <li><details><summary>조가 바뀌는 곳의 조표만 있는 칸을 마디로 읽던 문제</summary><p>마디선 뒤에 새 조표만 적고 도돌이 시작이 이어지는 곳(멋으로 사는 세상 173마디)을 빈 마디 하나로 읽어, 그 뒤 마디 번호가 하나씩 밀리고 쉬는 마디가 끼어 있었습니다. 조표만 있는 좁은 칸은 마디로 세지 않습니다(조표가 없는 타악 줄도 같은 단의 다른 줄을 보고 함께). 이제 173마디가 도돌이 시작 마디입니다.</p></details></li>
       <li><details><summary>메트로놈 소리가 음악에 묻혀 들리지 않던 문제</summary><p>메트로놈 클릭이 악기 소리가 가장 많이 몰린 높이(약 2kHz)에 있고, 음악과 함께 크기를 맞추면서 작아져 여러 악기를 켜면 거의 들리지 않았습니다. 클릭을 악기 소리가 적은 높은 대역(4~5kHz)의 짧고 또렷한 '틱' 소리로 바꾸고, 음악 크기를 맞춘 뒤에 따로 더해 늘 같은 크기로 들리게 했습니다(마디 첫 박은 더 높은 소리). [연주] 칸에 <b>메트로놈·카운트인 크기</b>(작게·보통·크게·아주 크게)를 넣었습니다.</p></details></li>
       <li><details><summary>휴대폰에서 화면을 확대하거나 다른 앱에 다녀오면 악보가 사라지던 문제</summary><p>휴대폰(특히 아이폰)은 메모리가 모자라면 페이지를 처음부터 다시 엽니다. 그러면 올린 악보가 사라져 다시 올려야 했습니다. 이제 올린 악보 파일을 이 기기에 기억해 두었다가, 페이지가 다시 열리면 저절로 다시 읽습니다(설정·고친 빠르기도 그대로). 새로 연 화면에서는 첫 화면의 [지난번 악보 다시 열기]로 엽니다. 악보를 모두 빼면 잊습니다. 악보 보기 그림이 메모리를 덜 쓰게도 했습니다.</p></details></li>
       <li><details><summary>아이폰에서 입력칸을 누르면 화면이 확대되고 커서 자리가 어긋나던 문제</summary><p>아이폰 Safari는 글자가 작은 입력칸을 누르면 화면을 저절로 확대하는데, 확대된 채로 설정 서랍 안의 입력칸(빠르기 표의 시작 마디 등)은 커서와 눌리는 자리가 어긋났습니다. 휴대폰·태블릿에서는 입력칸 글자를 키워 확대되지 않게 했습니다.</p></details></li>
@@ -3859,9 +3860,19 @@ function parseScore(pages, opts = {}) {
         }
         if (!content && !isFirst && !isTrailing) {
           // 겹세로줄과 도돌이 시작 사이에 박자표만 들어 있는 좁은 칸은 마디가 아니다
+          // 조표만(조가 바뀌는 곳의 제자리표·내림표·올림표, 음자리표) 들어 있는 좁은 칸도 마디가 아니다(멋으로 사는 세상 173마디: 마디선 뒤 새 조표 → 도돌이 시작)
           const head = sg.filter(g => inr(cx(g)) && g.oy > st.top - 12 && g.oy < st.bottom + 12);
           const used = head.length ? Math.max(...head.map(g => g.x1)) : rx0;
-          content = !(tsig && rx1 - rx0 < 45 && rx1 - used < 12 && !rests.some(r => inr(cx(r))));
+          const KEYC = new Set([98, 35, 110, 38, 63, 66, 214, 47, 139]);   // 내림·올림·제자리표, 음자리표(Maestro 번호)
+          const mus = head.filter(g => isMusicFont(g.font));
+          const isKey = gs => gs.length > 0 && gs.every(g => KEYC.has(g.code)) && gs.some(g => g.code === 98 || g.code === 35 || g.code === 110);
+          let keyOnly = isKey(mus);
+          // 조표가 없는 줄(타악 등)의 빈 칸: 같은 단의 다른 오선에서 이 자리가 조표만 있는 칸이면 이 줄도 마디가 아니다
+          if (!keyOnly && !mus.length && rx1 - rx0 < 75) {
+            const sys = layout.systems[layout.sysOf[si]] || [];
+            keyOnly = sys.some(oi => oi !== si && isKey(glyphs.filter(g => isMusicFont(g.font) && g.ox > rx0 + 1 && g.ox < rx1 - 1 && g.oy > staves[oi].top - 12 && g.oy < staves[oi].bottom + 12)));
+          }
+          content = !((tsig || keyOnly) && rx1 - rx0 < (keyOnly && !tsig ? 75 : 45) && (rx1 - used < 12 || (keyOnly && !mus.length)) && !rests.some(r => inr(cx(r))));
         }
           if (!content) { if (m.repeatEnd && measures.length) measures[measures.length - 1].repeatEnd = true; return; }
         if (pendingTwoBar && m.kind === 'normal' && !m.notes.length) m.kind = 'repeat2b';
@@ -10034,7 +10045,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 16:33';
+const APP_VERSION = '2026-11-11 18:19';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();

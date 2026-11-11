@@ -1653,9 +1653,19 @@ export function parseScore(pages, opts = {}) {
         }
         if (!content && !isFirst && !isTrailing) {
           // 겹세로줄과 도돌이 시작 사이에 박자표만 들어 있는 좁은 칸은 마디가 아니다
+          // 조표만(조가 바뀌는 곳의 제자리표·내림표·올림표, 음자리표) 들어 있는 좁은 칸도 마디가 아니다(멋으로 사는 세상 173마디: 마디선 뒤 새 조표 → 도돌이 시작)
           const head = sg.filter(g => inr(cx(g)) && g.oy > st.top - 12 && g.oy < st.bottom + 12);
           const used = head.length ? Math.max(...head.map(g => g.x1)) : rx0;
-          content = !(tsig && rx1 - rx0 < 45 && rx1 - used < 12 && !rests.some(r => inr(cx(r))));
+          const KEYC = new Set([98, 35, 110, 38, 63, 66, 214, 47, 139]);   // 내림·올림·제자리표, 음자리표(Maestro 번호)
+          const mus = head.filter(g => isMusicFont(g.font));
+          const isKey = gs => gs.length > 0 && gs.every(g => KEYC.has(g.code)) && gs.some(g => g.code === 98 || g.code === 35 || g.code === 110);
+          let keyOnly = isKey(mus);
+          // 조표가 없는 줄(타악 등)의 빈 칸: 같은 단의 다른 오선에서 이 자리가 조표만 있는 칸이면 이 줄도 마디가 아니다
+          if (!keyOnly && !mus.length && rx1 - rx0 < 75) {
+            const sys = layout.systems[layout.sysOf[si]] || [];
+            keyOnly = sys.some(oi => oi !== si && isKey(glyphs.filter(g => isMusicFont(g.font) && g.ox > rx0 + 1 && g.ox < rx1 - 1 && g.oy > staves[oi].top - 12 && g.oy < staves[oi].bottom + 12)));
+          }
+          content = !((tsig || keyOnly) && rx1 - rx0 < (keyOnly && !tsig ? 75 : 45) && (rx1 - used < 12 || (keyOnly && !mus.length)) && !rests.some(r => inr(cx(r))));
         }
           if (!content) { if (m.repeatEnd && measures.length) measures[measures.length - 1].repeatEnd = true; return; }
         if (pendingTwoBar && m.kind === 'normal' && !m.notes.length) m.kind = 'repeat2b';
