@@ -116,7 +116,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   ok(/불러왔습니다/.test(await p.textContent('#ghState')) && !(await p.$eval('#ghLoad', e => e.disabled)), name + ' 새 기기 상태: ' + await p.textContent('#ghState'));
   ok(calls.some(c => c.startsWith('RAW ')), name + ' 토큰 없이 raw 주소로 받음');
   // 이 기기에서 설정을 바꾼 뒤(로컬 있음) 저장소가 새로 바뀌면: 알리기만
-  const S2 = { ...S, saved: new Date(Date.now() + 60000).toISOString(), tempoRows: S.tempoRows.filter(r => r.start !== 37) }; store[path] = Buffer.from(JSON.stringify(S2)).toString('base64');
+  await p.waitForTimeout(1200); const S2 = { ...S, saved: new Date().toISOString(), tempoRows: S.tempoRows.filter(r => r.start !== 37) }; store[path] = Buffer.from(JSON.stringify(S2)).toString('base64');
   await open(); await p.waitForTimeout(1500);
   ok((await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).includes('37') && /더 최신 공유 설정/.test(await p.textContent('#ghState')), name + ' 저장소가 더 최신: 덮지 않고 알림 · ' + await p.textContent('#ghState'));
   // 저장 시각 비교: 저장소 것이 이 기기 설정보다 예전이면(받지 않은 것이어도) 알리지 않고 칸에만 '이 기기 설정이 더 최신'

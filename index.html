@@ -8250,7 +8250,7 @@ function afterScoreLoaded() {
   if (!(S && prefs.autoLoad && S.sound) && $('sTranspose').value !== '0') { $('sTranspose').value = '0'; soundSummary(); changed(); }   // 다른 곡의 조옮김이 남지 않게
   if (S && prefs.autoLoad) restoreSettings(S, '불러옴');
   else setState(S ? `${fmtTime(S.saved)}에 저장한 설정이 있습니다. [저장한 설정 불러오기]로 쓸 수 있습니다.` : '아직 저장한 설정이 없습니다.' + (prefs.autoSave ? ' 설정을 바꾸면 자동으로 저장됩니다.' : ''));
-  ghCheck(!!S);
+  ghCheck(!!S, S && S.saved);   // 불러오면서 자동 저장이 시각을 바꾸기 전 값으로 비교
 }
 // 사용자가 무엇이든 바꾸면 자동 저장 예약 (파일 고르기·설정 칸 자체는 빼고)
 for (const t of ['change', 'input', 'click']) document.addEventListener(t, ev => {
@@ -8421,7 +8421,7 @@ function ghOfferShow(key, text) {
 $('ghOfferOk').addEventListener('click', () => { const k = ghOfferKey; ghOfferHide(); if (k && k === settingsKey()) ghLoad().then(() => { if (/불러왔습니다/.test($('ghState').textContent)) showMsg('공유 설정을 불러와 적용했습니다. ' + $('ghState').textContent); }); });
 $('ghOfferNo').addEventListener('click', () => { ghOfferHide(); showMsg('공유 설정은 나중에 [저장] 칸의 [공유 설정 불러오기]로 받을 수 있습니다.'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('ghOffer').hidden) ghOfferHide(); });
-async function ghCheck(hadLocal) {
+async function ghCheck(hadLocal, localSaved) {
   ghOfferHide(); ghAlt = null;
   const key = settingsKey(); if (!key) { ghHas(false); return; }
   ghSetState(ghToken() ? '저장 토큰이 이 기기에 들어 있습니다.' : '');
@@ -8444,7 +8444,7 @@ async function ghCheck(hadLocal) {
       ghSetState(`공유 설정이 있습니다 · ${fmtTime(when)}에 올린 것. [공유 설정 불러오기]로 받을 수 있습니다.`);
       ghOfferShow(key, `이 곡('${ghWho()}')의 공유 설정이 저장소에 있습니다 — ${fmtTime(when)}에 올린 것(악기·빠르기${n ? '·음 수정' : ''} 등). 불러와 적용할까요?`);
     } else {   // 이 기기 설정과 저장 시각을 비교: 저장소 것이 나중이면 알리고, 이 기기 것이 나중이면 조용히 칸에만
-      const loc = ((readSettings(key) || {}).saved) || '';
+      const loc = localSaved || ((readSettings(key) || {}).saved) || '';   // 연 때의 저장 시각(불러오며 자동 저장되면 지금 시각으로 바뀌므로)
       if (when && when > loc) {
         ghSetState(`저장소에 더 최신 공유 설정이 있습니다 · 올린 때 ${fmtTime(when)} (이 기기 설정 ${loc ? fmtTime(loc) : '—'}). [공유 설정 불러오기]로 받을 수 있습니다.`);
         showMsg(`저장소에 이 악보의 더 최신 공유 설정이 있습니다 — 올린 때 ${fmtTime(when)}, 이 기기 설정 ${loc ? fmtTime(loc) : '—'}. [저장] 칸의 [공유 설정 불러오기]를 누르면 받습니다. (지금 설정은 그대로 둡니다)`);
@@ -10162,7 +10162,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-12 07:35';
+const APP_VERSION = '2026-11-12 07:38';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
