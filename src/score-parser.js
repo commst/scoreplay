@@ -344,8 +344,8 @@ export async function extractPages(doc, OPS, onPage) {
       for (const [f, set] of Object.entries(hi)) if (!bad.has(f) && [0xCF, 0xCE, 0xFA, 0xB7, 0xEE].filter(c => set.has(c)).length >= 2)
         for (const g of glyphs) if (g.font === f && g.raw >= 0xA0 && g.raw <= 0xFF) g.code = g.raw;
     }
-    // Maestro·Petrucci의 X 음표 머리(192, 징·심벌 등): 보통 머리로 읽고 X 표시
-    for (const g of glyphs) if (/Maestro|Petrucci/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && g.code === 192) { g.code = 207; g.xh = true; }
+    // Maestro·Petrucci·Opus(Sibelius)의 X 음표 머리(192, 징·심벌·꽹과리 막음 등): 보통 머리로 읽고 X 표시
+    for (const g of glyphs) if (/Maestro|Petrucci|Opus/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && g.code === 192) { g.code = 207; g.xh = true; }
     // Maestro·Petrucci의 옥타브 음자리표: 'V' = 높은음자리표 아래 8, 't' = 낮은음자리표 아래 8 (한 옥타브 낮게 소리 남)
     for (const g of glyphs) if (/Maestro|Petrucci/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && (g.code === 86 || g.code === 116)) { g.clefOct = -1; g.code = g.code === 86 ? 38 : 63; }
     // SMuFL 글자 글꼴(BravuraText·LelandText 등)의 메트로놈 음표: 빠르기 표시 '♩.=110'

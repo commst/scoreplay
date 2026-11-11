@@ -1675,7 +1675,8 @@ body.all-panes { padding-bottom: 0; }
       <li><details><summary>빠르기·rit. 표 줄마다 [+]·[−]</summary><p>표의 줄 오른쪽 [+]를 누르면 그 줄 바로 뒤에 새 줄이 들어가고(빠르기는 앞뒤 구간의 가운데 마디, rit.는 그 줄이 끝나는 마디) 시작 마디 칸으로 옮겨 갑니다. [−]는 그 줄을 지웁니다. 그래서 [구간 추가] 단추는 없앴고, [rit. 추가]는 표가 비어 있을 때만 보입니다.</p></details></li>
       <li><details><summary>시작 마디를 바꾸면 뒤 구간도 함께 옮기기</summary><p>빠르기 표에서 중간 구간의 시작 마디를 바꾸면(예: 37 → 41) 그 뒤 구간들과 rit.·accel.도 같은 만큼(+4) 자동으로 옮겨집니다. 표 아래 체크 칸을 끄면 그 구간만 바뀝니다.</p></details></li>
     </ul>
-    <details class="hbug"><summary>버그 수정 <small>3건</small></summary><ul class="hlist bug">
+    <details class="hbug"><summary>버그 수정 <small>4건</small></summary><ul class="hlist bug">
+      <li><details><summary>Sibelius 악보의 X 머리 음표(꽹과리·징 등)가 빠지던 문제</summary><p>Sibelius로 만든 악보의 X 머리 음표를 읽지 못해 그 음이 빠지고 뒤 음들이 앞으로 당겨졌습니다. 예: 프론티어 총보 12마디 꽹과리의 ♪♩♪♩…가 8분음표만 이어진 것처럼 들림. 이제 X 머리 음을 읽어 악보대로 연주하고 MusicXML에도 X 머리로 들어갑니다. 바르도 장고·대고, 미락흘 타악, 프론티어 타악·가야금 파트보 등도 함께 고쳐졌습니다.</p></details></li>
       <li><details><summary>마디선 없는 자유 박 마디에서 악기가 어긋나던 문제, 표지의 빈 오선을 마디로 세던 문제</summary><p>월광 첫 부분처럼 마디선 없이 길게 적은 자유 박(rubato) 마디에서, 늦게 들어오는 악기(가야금 등)가 마디 맨 처음에 놓이고 줄마다 마디 길이가 달라 서로 어긋났습니다. 이제 같은 단의 모든 줄에서 음표의 가로 자리를 맞춰 시각을 정하고 마디 길이도 같게 합니다. 또 표지 쪽에 빈 오선만 그려 둔 악보에서 곡 앞에 빈 마디가 여러 개 생기던 것을 없앴습니다(월광은 이제 인쇄 번호대로 8마디부터 시작합니다). 이 구간은 빠르기 표 첫 줄의 값으로 연주됩니다.</p></details></li>
       <li><details><summary>빠르기 표·안내 글이 잘려 보이던 문제</summary><p>빠르기 구간이 많은 악보에서 빠르기 표가 왼쪽 설정 칸보다 넓어져 오른쪽 단추가 잘렸고, 넓은 화면에서는 위쪽 안내 글의 앞부분이 왼쪽 칸 밑에 가려졌습니다. 표는 칸 폭에 맞추고, 안내 글은 가운데 칸에서 시작하게 고쳤습니다.</p></details></li>
       <li><details><summary>옮기거나 지운 빠르기 구간이 다시 열면 되살아나던 문제</summary><p>악보에서 읽은 빠르기 구간의 시작 마디를 옮기거나 지운 뒤 악보를 다시 열면, 원래 자리의 구간이 '새로 읽은 빠르기'로 잘못 판단되어 다시 나타났습니다. 저장할 때 악보에서 읽혔던 목록을 함께 적어 두고 견주도록 고쳤습니다(이전에 저장한 설정은 한 번 다시 저장하면 적용).</p></details></li>
@@ -2438,8 +2439,8 @@ async function extractPages(doc, OPS, onPage) {
       for (const [f, set] of Object.entries(hi)) if (!bad.has(f) && [0xCF, 0xCE, 0xFA, 0xB7, 0xEE].filter(c => set.has(c)).length >= 2)
         for (const g of glyphs) if (g.font === f && g.raw >= 0xA0 && g.raw <= 0xFF) g.code = g.raw;
     }
-    // Maestro·Petrucci의 X 음표 머리(192, 징·심벌 등): 보통 머리로 읽고 X 표시
-    for (const g of glyphs) if (/Maestro|Petrucci/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && g.code === 192) { g.code = 207; g.xh = true; }
+    // Maestro·Petrucci·Opus(Sibelius)의 X 음표 머리(192, 징·심벌·꽹과리 막음 등): 보통 머리로 읽고 X 표시
+    for (const g of glyphs) if (/Maestro|Petrucci|Opus/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && g.code === 192) { g.code = 207; g.xh = true; }
     // Maestro·Petrucci의 옥타브 음자리표: 'V' = 높은음자리표 아래 8, 't' = 낮은음자리표 아래 8 (한 옥타브 낮게 소리 남)
     for (const g of glyphs) if (/Maestro|Petrucci/i.test(g.font) && !/Percussion|Text|Wide/i.test(g.font) && (g.code === 86 || g.code === 116)) { g.clefOct = -1; g.code = g.code === 86 ? 38 : 63; }
     // SMuFL 글자 글꼴(BravuraText·LelandText 등)의 메트로놈 음표: 빠르기 표시 '♩.=110'
@@ -9880,7 +9881,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 10:36';
+const APP_VERSION = '2026-11-11 11:09';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `합주연습기 ${APP_VERSION} 판` : '합주연습기';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
