@@ -4,7 +4,7 @@
  "title": "美!樂!扢!_miracle",
  "titleRead": "美!樂!扢!_miracle",
  "file": "00_미락흘 - Full Score.pdf",
- "saved": "2026-11-11T06:05:12.908Z",
+ "saved": "2026-11-11T06:06:11.439Z",
  "lastBar": 264,
  "lines": {
   "main:0": {
@@ -251,7 +251,7 @@
  "accF": "120",
  "play": {
   "from": 1,
-  "to": 10,
+  "to": 264,
   "repeats": true,
   "countIn": true,
   "metronome": false,
@@ -266,7 +266,7 @@
  },
  "save": {
   "from": 1,
-  "to": 10,
+  "to": 264,
   "repeats": true,
   "countIn": true,
   "metronome": false,
