@@ -100,10 +100,18 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   const S = JSON.parse(Buffer.from(store[path], 'base64').toString('utf8'));
   ok(Array.isArray(S.edits) && S.edits.length === 1 && Object.keys(S.edits[0].lines).length > 0 && /음정·길이 수정 포함/.test(await p.textContent('#ghState')), name + ' 음 수정도 함께 올림 ' + JSON.stringify(S.edits).slice(0, 120));
   ok(S.format === 'hapju-settings' && S.tempoRows.some(r => r.start === 37) && (S.tempoChanges || []).some(c => c.bar === 54) && !!S.key, name + ' 올린 내용(빠르기 37·rit 50·제목 ' + S.title + ')');
-  // 다른 기기(저장된 것 없음, 토큰 없음): 열면 자동으로 받음
+  // 다른 기기(저장된 것 없음, 토큰 없음): 열면 공유 설정이 있다고 묻고, [확인]을 누르면 받아 적용 (먼저 [나중에]는 적용하지 않음)
   await p.evaluate(() => localStorage.clear()); await open(); await p.waitForTimeout(1500);
+  { const o = await p.evaluate(() => ({ shown: !document.getElementById('ghOffer').hidden, t: document.getElementById('ghOfferText').textContent, rows: [...document.querySelectorAll('#tempoBody tr')].map(tr => tr.querySelector('input').value) }));
+    ok(o.shown && /공유 설정이 저장소에 있습니다/.test(o.t) && /적용할까요/.test(o.t) && !o.rows.includes('37'), name + ' 새 기기: 바로 덮지 않고 알림·물음 ' + o.t.slice(0, 70)); }
+  await p.screenshot({ path: '/tmp/ghoffer-' + name + '.png' });
+  await p.click('#ghOfferNo'); await p.waitForTimeout(300);
+  ok(await p.evaluate(() => document.getElementById('ghOffer').hidden && ![...document.querySelectorAll('#tempoBody tr')].some(tr => tr.querySelector('input').value === '37')), name + ' [나중에]: 적용하지 않고 닫힘');
+  await p.evaluate(() => localStorage.clear()); await open(); await p.waitForTimeout(1500);
+  ok(await p.evaluate(() => !document.getElementById('ghOffer').hidden), name + ' 다시 열면 다시 물음');
+  await p.click('#ghOfferOk'); await p.waitForTimeout(1500);
   const rows2 = await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value));
-  ok(rows2.includes('37'), name + ' 새 기기: 공유 설정 자동 적용 ' + rows2.join(','));
+  ok(rows2.includes('37') && await p.evaluate(() => document.getElementById('ghOffer').hidden), name + ' [확인]: 공유 설정 적용 ' + rows2.join(','));
   ok((await edKeys()) > 0 && (await p.$$eval('#bars .b.edited', x => x.length)) > 0, name + ' 새 기기: 음 수정도 받아 적용(✎ 마디)');
   ok(/불러왔습니다/.test(await p.textContent('#ghState')) && !(await p.$eval('#ghLoad', e => e.disabled)), name + ' 새 기기 상태: ' + await p.textContent('#ghState'));
   ok(calls.some(c => c.startsWith('RAW ')), name + ' 토큰 없이 raw 주소로 받음');
@@ -120,6 +128,8 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
     store['settings/other-file-1.json'] = store[path]; const idx2 = { 'other-file-1': idx[k0] }; store[idxPath] = Buffer.from(JSON.stringify(idx2)).toString('base64'); delete store[path];
     await p.evaluate(() => localStorage.clear()); await open(); await p.waitForTimeout(1500);
     ok(!(await p.$eval('#ghLoad', e => e.disabled)) && /같은 곡의 다른 파일/.test(await p.textContent('#ghState')), name + ' 지문이 달라도 같은 파일 이름의 설정을 찾음: ' + (await p.textContent('#ghState')).slice(0, 70));
+    ok(await p.evaluate(() => !document.getElementById('ghOffer').hidden && /같은 곡의 다른 파일/.test(document.getElementById('ghOfferText').textContent)), name + ' 다른 파일의 설정도 물음');
+    await p.click('#ghOfferNo'); await p.waitForTimeout(300);
     await tab('save'); await p.click('#ghLoad'); await p.waitForTimeout(1500);
     ok(/불러왔습니다/.test(await p.textContent('#ghState')), name + ' 다른 파일의 설정 불러오기: ' + (await p.textContent('#ghState')).slice(0, 60));
     ok(/원래 음이 같은 곳만/.test(await p.textContent('#ghState')) && (await edKeys()) > 0 && (await p.$$eval('#bars .b.edited', x => x.length)) > 0, name + ' 다른 파일의 음 수정도 원래 음이 같은 곳에 적용'); }

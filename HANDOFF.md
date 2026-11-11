@@ -1,6 +1,6 @@
 # ScoreWorks(옛 이름 합주연습기) 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-11, CHANGELOG 135번까지)
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-11, CHANGELOG 136번까지)
 
 ## 1. 작업 규칙 (사용자 요청)
 
@@ -163,6 +163,8 @@
 
 - [문제점 신고하기]: FormSubmit(`REPORT_TO`, 사용자 계정 메일 — 공개 소스에 두는 것에 사용자 동의)로 전송, 실패하면 mailto. **사용자가 첫 제보 뒤 확인 메일의 [Activate Form]을 눌러야 도착함 — 눌렀는지 아직 확인 전.** 확인되면 FormSubmit이 주는 무작위 별칭 주소로 `REPORT_TO`를 바꿔 메일 주소를 소스에서 숨길 수 있음(사용자가 원하면)
 - 음 수정 공유: 같은 파일은 122번부터 이미 됨. 다른 파일(판)로 받을 때도 원래 음이 같은 곳에 적용하도록 고침. 시험 test/pwreport.cjs, test/pwshare.cjs(음 수정 항목 추가)
+
+**136번(11-11)**: 이 기기에 설정이 없는 곡에 공유 설정이 있으면 #ghOffer 알림으로 물어 [확인]으로 적용(전에는 바로 적용)
 
 **135번(11-11)**: 이름 ScoreWorks, 글꼴·아이콘·위 막대(가운데 이름, 3칸 grid: .tb-left/.tb-logo/.tb-right, 단추 .ll/.ls 긴·짧은 이름)·첫 화면 가운데 배치. 사용설명서 그림 전부 다시 찍음(tools/manual/mancap*.cjs — 글꼴은 /home/claude/work/fonts에 `npm i pretendard@1.3.9 @fontsource-variable/outfit`, PDF 만들 때 /home/claude/work/manual/fonts/에 PretendardVariable.woff2·outfit-latin-wght-normal.woff2 복사, mancap6은 `shot 79 가야금`, 새 mancap8 = 04b·15). 화면 그림 비교는 test/pwshot.cjs
 

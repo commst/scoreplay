@@ -688,6 +688,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .rep-dlg .rep-state.bad { color: var(--warn); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rep-dlg .rep-state.ok { color: #7ddc95; } }
 #updateBar { position: sticky; top: 8px; z-index: 50; box-shadow: 0 6px 20px #0002; }
+/* 공유 설정 알림: 위 막대 바로 아래 가운데에 떠 있음 */
+#ghOffer { position: fixed; z-index: 60; top: calc(var(--tbh, 57px) + 10px); left: 50%; transform: translateX(-50%); width: min(680px, calc(100% - 24px)); margin: 0; box-shadow: 0 10px 30px rgba(20, 30, 60, .22); }
 .msg.openext { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px; }
 .msg.openext > span:first-child { flex: 1 1 260px; }
 .openext-btns { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1140,6 +1142,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
     <a class="btn primary" id="bootOpen" href="https://commst.github.io/scoreplay/" target="_blank" rel="noopener">브라우저에서 실행</a></div>
   <div class="msg openext" id="updateBar" role="status" hidden><span id="updateText">새 판이 나왔습니다. 새로 고치면 최신 판으로 바뀝니다(저장한 설정은 그대로 남습니다).</span>
     <span class="openext-btns"><button class="btn primary" id="updateGo" type="button">새로 고침</button><button class="btn" id="updateLater" type="button">나중에</button></span></div>
+  <div class="msg openext" id="ghOffer" role="alertdialog" aria-labelledby="ghOfferText" hidden><span id="ghOfferText"></span>
+    <span class="openext-btns"><button class="btn primary" id="ghOfferOk" type="button">확인 (불러와 적용)</button><button class="btn" id="ghOfferNo" type="button">나중에</button></span></div>
   <div class="msg openext" id="inappBar" hidden><span id="inappText">카카오톡 안의 브라우저에서는 악보 올리기·저장 같은 기능이 제대로 동작하지 않을 수 있습니다.</span>
     <span class="openext-btns"><button class="btn primary" id="inappOpen" type="button">브라우저에서 실행</button><button class="btn" id="inappCopy" type="button">주소 복사</button></span></div>
   <header class="topbar" id="topbar">
@@ -1764,7 +1768,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 11일</h3>
-    <h4>기능 업데이트 <small>10</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>11</small></h4><ul class="hlist">
+      <li><details><summary>공유 설정이 있으면 물어보고 [확인]으로 적용</summary><p>이 기기에서 처음 여는 곡에 저장소의 공유 설정이 있으면, 위쪽에 "공유 설정이 저장소에 있습니다… 불러와 적용할까요?" 알림이 뜹니다. [확인]을 누르면 바로 불러와 적용하고, [나중에]를 누르면 그대로 둡니다(나중에 [저장] 칸의 [공유 설정 불러오기]로 받을 수 있음). 같은 곡의 다른 파일로 올린 설정을 찾았을 때도 같이 묻습니다. 전에는 묻지 않고 바로 적용했습니다.</p></details></li>
       <li><details><summary>새 이름 ScoreWorks, 새 글꼴과 첫 화면</summary><p>프로그램 이름을 '합주연습기'에서 <b>ScoreWorks</b>(국악관현악 악보 분석 및 재생 도구)로 바꿨습니다. 새 아이콘을 만들고, 이름을 위 막대 가운데에 두었습니다. 첫 화면은 아이콘·이름·설명을 가운데로 다시 배치했습니다. 글꼴은 Pretendard(본문)와 Outfit(이름)입니다. 위 막대 단추는 화면 폭에 따라 짧은 이름(이력·사용법·설명서·신고)으로 보입니다. 사용설명서도 새 이름과 새 화면으로 바꿨습니다. 저장한 설정과 음 수정은 그대로입니다.</p></details></li>
       <li><details><summary>♩=♪ 표시는 처음부터 '오른쪽이 새 박'으로</summary><p>박을 바꾸는 ♩=♪ 같은 표시를 악보 표기 관례대로 '앞의 왼쪽 음표 길이 = 새 오른쪽 음표'로 읽습니다. 예: 프론티어 117마디 ♩=♪는 앞의 ♩=172 길이가 새 ♪가 되어 ♩=86, 121마디부터 다시 ♩=172. 반대로 쓴 악보는 빠르기 칸의 단추로 '왼쪽이 새 박'으로 바꾸면 되고, 이미 단추로 고른 방향은 그대로입니다.</p></details></li>
       <li><details><summary>곡 제목 바꾸기</summary><p>악기 이름처럼 곡 제목도 바꿀 수 있습니다. 위 막대의 곡 이름을 누르면 열리는 악보 파일 창 맨 위 <b>곡 제목</b> 칸에 적고 Enter를 누르세요. 바꾼 제목은 위 막대, 음원·MIDI·MusicXML 파일에 쓰이고 이 악보의 설정에 저장됩니다. [악보 제목으로]를 누르면 악보에서 읽은 제목으로 돌아갑니다.</p></details></li>
@@ -8263,8 +8268,19 @@ async function ghSave() {
   } catch (e) { ghSetState(e && e.message ? e.message : '저장소에 올리지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
   finally { ghBusy = false; }
 }
-// 악보를 연 뒤: 공유 설정이 있는지 조용히 확인. 이 기기에 저장한 설정이 없으면 바로 입히고, 있으면 알려만 준다(덮어쓰지 않음)
+// 악보를 연 뒤: 공유 설정이 있는지 확인. 이 기기에 저장한 설정이 없으면 위에 알림을 띄워 [확인]으로 불러와 적용(136번), 있으면 알려만 준다(덮어쓰지 않음)
+// 이 기기에 저장한 설정이 없는 악보를 열었을 때 공유 설정이 있으면 물어보고, [확인]을 누르면 불러와 적용한다
+var ghOfferKey = '';   // var: 다른 곳(resetEmpty)에서 먼저 불려도 멈추지 않게
+function ghOfferHide() { ghOfferKey = ''; const b = $('ghOffer'); if (b) b.hidden = true; }
+function ghOfferShow(key, text) {
+  ghOfferKey = key; $('ghOfferText').textContent = text; $('ghOffer').hidden = false;
+  try { $('ghOfferOk').focus({ preventScroll: true }); } catch (e) {}
+}
+$('ghOfferOk').addEventListener('click', () => { const k = ghOfferKey; ghOfferHide(); if (k && k === settingsKey()) ghLoad().then(() => { if (/불러왔습니다/.test($('ghState').textContent)) showMsg('공유 설정을 불러와 적용했습니다. ' + $('ghState').textContent); }); });
+$('ghOfferNo').addEventListener('click', () => { ghOfferHide(); showMsg('공유 설정은 나중에 [저장] 칸의 [공유 설정 불러오기]로 받을 수 있습니다.'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('ghOffer').hidden) ghOfferHide(); });
 async function ghCheck(hadLocal) {
+  ghOfferHide(); ghAlt = null;
   const key = settingsKey(); if (!key) { ghHas(false); return; }
   ghSetState(ghToken() ? '저장 토큰이 이 기기에 들어 있습니다.' : '');
   if (!/^https?:$/.test(location.protocol)) { ghHas(true); return; }   // 파일로 연 화면에서는 자동으로 찾지 않음(있는지 몰라 단추는 켜 둠)
@@ -8274,17 +8290,17 @@ async function ghCheck(hadLocal) {
     if (key !== settingsKey()) return;
     if (!got || !got.S || got.S.format !== 'hapju-settings') {
       const alt = await ghFindAlt(key); if (key !== settingsKey()) return;
-      if (alt) { ghHas('alt'); ghAlt = alt; ghSetState(`이 파일('${ghWho()}')로 올린 공유 설정은 없지만, 같은 곡의 다른 파일 '${alt.file || alt.title}'(으)로 ${fmtTime(alt.saved)}에 올린 설정이 있습니다. [공유 설정 불러오기]로 받을 수 있습니다.`); }
+      if (alt) { ghHas('alt'); ghAlt = alt; if (!hadLocal) ghOfferShow(key, `이 곡의 공유 설정이 저장소에 있습니다 — 같은 곡의 다른 파일 '${alt.file || alt.title}'(으)로 ${fmtTime(alt.saved)}에 올린 것(악기·빠르기 등, 맞는 줄만 적용). 불러와 적용할까요?`); ghSetState(`이 파일('${ghWho()}')로 올린 공유 설정은 없지만, 같은 곡의 다른 파일 '${alt.file || alt.title}'(으)로 ${fmtTime(alt.saved)}에 올린 설정이 있습니다. [공유 설정 불러오기]로 받을 수 있습니다.`); }
       else ghSetState(`'${ghWho()}'(으)로 올려 둔 공유 설정이 아직 없습니다.` + (ghToken() ? ' (저장 토큰 있음)' : ''));
       return;
     }
     ghHas(true);
     const when = got.S.saved || '';
     if (when && when === ghSeen(key)) { ghSetState(`공유 설정(${fmtTime(when)})을 이미 받았습니다.`, true); return; }
-    if (!hadLocal && prefs.autoLoad && !state.playing) {
-      const editN = applyBundle(got.S, '공유 설정을 불러옴'); writeSettings(false); ghSeen(key, when);
-      ghSetState(`공유 설정을 불러왔습니다 · ${fmtTime(when)}에 올린 것` + (editN ? ' (음정·길이 수정 포함)' : ''), true);
-      showMsg('이 악보의 공유 설정(악기·빠르기·음 수정)을 저장소에서 불러왔습니다.');
+    if (!hadLocal) {   // 이 기기에 저장한 설정이 없음: 바로 덮지 않고 물어본다
+      const n = (got.S.edits || []).reduce((a, e) => a + Object.keys(e.lines || {}).length, 0);
+      ghSetState(`공유 설정이 있습니다 · ${fmtTime(when)}에 올린 것. [공유 설정 불러오기]로 받을 수 있습니다.`);
+      ghOfferShow(key, `이 곡('${ghWho()}')의 공유 설정이 저장소에 있습니다 — ${fmtTime(when)}에 올린 것(악기·빠르기${n ? '·음 수정' : ''} 등). 불러와 적용할까요?`);
     } else {
       ghSetState(`새 공유 설정이 있습니다 · ${fmtTime(when)}에 올린 것. [공유 설정 불러오기]로 받을 수 있습니다.`);
       showMsg(`이 악보의 새 공유 설정(${fmtTime(when)})이 저장소에 있습니다. [저장] 칸의 [공유 설정 불러오기]를 누르면 받습니다. (지금 설정은 그대로 둡니다)`);
@@ -8350,7 +8366,7 @@ function resetEmpty(text) {
   $('fileInfo').textContent = '총보 PDF(또는 MusicXML)를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
-  sessClear();
+  sessClear(); if (typeof ghOfferHide === 'function') ghOfferHide();
 }
 function fileRow(text, sub, onRemove, what) {
   const li = document.createElement('li');
@@ -10000,7 +10016,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-11 15:19';
+const APP_VERSION = '2026-11-11 15:31';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
