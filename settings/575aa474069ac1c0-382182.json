@@ -1,0 +1,285 @@
+{
+ "format": "hapju-settings",
+ "v": 1,
+ "title": "판놀음",
+ "titleRead": "판놀음",
+ "file": "판놀음II 스코아.pdf",
+ "saved": "2026-11-11T14:39:54.465Z",
+ "lastBar": 109,
+ "lines": {
+  "main:0": {
+   "name": "소금",
+   "role": "melody",
+   "inst": "sogeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:1": {
+   "name": "대금",
+   "role": "melody",
+   "inst": "daegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:2": {
+   "name": "피리",
+   "role": "melody",
+   "inst": "piri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:3": {
+   "name": "대피리",
+   "role": "melody",
+   "inst": "daepiri",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:4": {
+   "name": "태평소",
+   "role": "melody",
+   "inst": "taepyeongso",
+   "oct": 1,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:5": {
+   "name": "해금",
+   "role": "melody",
+   "inst": "haegeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:6": {
+   "name": "소아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:7": {
+   "name": "대아쟁",
+   "role": "melody",
+   "inst": "ajaeng",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:8": {
+   "name": "양금",
+   "role": "melody",
+   "inst": "yanggeum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:9": {
+   "name": "마라카스",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "카바사",
+   "L": "카바사",
+   "nong": false
+  },
+  "main:10": {
+   "name": "S.Dr / 봉고 / (젬베이)",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "스네어",
+   "L": "스네어",
+   "nong": false
+  },
+  "main:11": {
+   "name": "장구",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:12": {
+   "name": "꽹과리 / 징",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "꽹과리",
+   "L": "꽹과리",
+   "nong": false
+  },
+  "main:13": {
+   "name": "심벌 / 공",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "심벌",
+   "L": "심벌",
+   "nong": false
+  },
+  "main:14": {
+   "name": "모듬북",
+   "role": "perc",
+   "inst": null,
+   "oct": 0,
+   "vol": 1,
+   "R": "북",
+   "L": "북",
+   "nong": false
+  },
+  "main:15": {
+   "name": "가야금 (윗줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:16": {
+   "name": "가야금 (아랫줄)",
+   "role": "melody",
+   "inst": "gayageum",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:17": {
+   "name": "거문고",
+   "role": "melody",
+   "inst": "geomungo",
+   "oct": 0,
+   "vol": 1,
+   "R": "북짧게",
+   "L": "북녹음",
+   "nong": false
+  },
+  "main:18": {
+   "name": "건반 (윗줄)",
+   "role": "melody",
+   "inst": "piano",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  },
+  "main:19": {
+   "name": "건반 (아랫줄)",
+   "role": "melody",
+   "inst": "piano",
+   "oct": 0,
+   "vol": 1,
+   "R": "따",
+   "L": "궁",
+   "nong": false
+  }
+ },
+ "tempoRows": [
+  {
+   "start": 1,
+   "unit": "dq",
+   "bpm": 60,
+   "auto": false,
+   "text": "",
+   "manual": true
+  },
+  {
+   "start": 24,
+   "unit": "dq",
+   "bpm": 75,
+   "text": "",
+   "edited": true,
+   "manual": true
+  },
+  {
+   "start": 50,
+   "unit": "dq",
+   "bpm": 110,
+   "text": "",
+   "edited": true,
+   "manual": true
+  }
+ ],
+ "tempoDet": [
+  "1|dq|"
+ ],
+ "speed": 100,
+ "ritF": "80",
+ "accF": "120",
+ "play": {
+  "from": 1,
+  "to": 109,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "metroVol": 1,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "loop": false,
+  "rest": "sub",
+  "ramp": false,
+  "rampStart": 70,
+  "rampStep": 5
+ },
+ "save": {
+  "from": 1,
+  "to": 109,
+  "repeats": true,
+  "countIn": true,
+  "metronome": false,
+  "restCount": "sub",
+  "dyn": true,
+  "speed": 100,
+  "linked": true,
+  "format": "mp3"
+ },
+ "order": null,
+ "tempoChanges": null,
+ "sound": {
+  "transpose": 0,
+  "tune": 440,
+  "fermata": 2,
+  "reverb": 0.12,
+  "artic": true,
+  "stereo": true,
+  "human": true
+ },
+ "extras": [],
+ "edits": [],
+ "key": "575aa474069ac1c0-382182"
+}
