@@ -4,7 +4,7 @@
  "title": "美!樂!扢!_miracle",
  "titleRead": "美!樂!扢!_miracle",
  "file": "00_미락흘 - Full Score.pdf",
- "saved": "2026-11-11T06:21:12.462Z",
+ "saved": "2026-11-11T10:31:20.310Z",
  "lastBar": 264,
  "lines": {
   "main:0": {
@@ -255,6 +255,7 @@
   "repeats": true,
   "countIn": true,
   "metronome": false,
+  "metroVol": 1,
   "restCount": "sub",
   "dyn": true,
   "speed": 100,
@@ -299,7 +300,7 @@
   "transpose": 0,
   "tune": 440,
   "fermata": 2,
-  "reverb": 0.12,
+  "reverb": 0.22,
   "artic": true,
   "stereo": true,
   "human": true
