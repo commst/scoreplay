@@ -5,7 +5,7 @@
  "titleRead": "양방언",
  "songTitle": "프론티어",
  "file": "FRONTIER - Full Score.pdf",
- "saved": "2026-11-11T02:51:51.970Z",
+ "saved": "2026-11-11T10:33:48.913Z",
  "lastBar": 170,
  "lines": {
   "main:0": {
@@ -41,7 +41,7 @@
   "main:3": {
    "name": "피리",
    "role": "melody",
-   "inst": "piri",
+   "inst": "piri_syn",
    "oct": 0,
    "vol": 1,
    "R": "따",
@@ -252,6 +252,7 @@
   "repeats": true,
   "countIn": true,
   "metronome": false,
+  "metroVol": 1,
   "restCount": "sub",
   "dyn": true,
   "speed": 100,
@@ -279,7 +280,7 @@
   "transpose": 0,
   "tune": 440,
   "fermata": 2,
-  "reverb": 0.12,
+  "reverb": 0.22,
   "artic": true,
   "stereo": true,
   "human": true
