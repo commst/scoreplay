@@ -1763,7 +1763,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>1</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>2</small></h4><ul class="hlist">
+      <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 대금·피리·해금·소금·꽹과리는 조금 작게, 태평소·가야금·피아노·장구는 조금 크게 했습니다. 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
   </section>
@@ -4074,6 +4075,7 @@ async function ghSave() {
   if (!tok) { $('ghTokenBox').open = true; ghSetState('저장하려면 먼저 아래에 저장 토큰을 넣어 주세요.'); try { $('ghToken').focus(); } catch (e) {} return; }
   ghBusy = true; ghSetState('저장소에 올리는 중…');
   try {
+    const locSaved = ((readSettings(key) || {}).saved) || '';   // 이 기기에 저장한 설정의 저장 시각(올리기 전)
     const S = bundleSettings(), api = `https://api.github.com/repos/${GH_REPO}/contents/${ghPath(key)}`, H = { Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' };
     const cur = await fetch(api + '?ref=' + GH_BRANCH, { headers: H, cache: 'no-store' });
     if (cur.status === 401) throw new Error('저장 토큰이 맞지 않거나 기간이 끝났습니다. 토큰을 새로 만들어 넣어 주세요.');
@@ -4081,9 +4083,9 @@ async function ghSave() {
     if (cur.ok) {
       const j = await cur.json(); sha = j.sha;
       let old = null; try { old = JSON.parse(utf8b64(j.content)); } catch (e) {}
-      // 이미 올린 설정이 있으면 업데이트할지 묻는다. 다른 기기에서 올린 것을 아직 받지 않았으면 그것도 알린다
-      const when = old && old.saved ? fmtTime(old.saved) + '에 올린 ' : '', unseen = old && old.saved && old.saved !== ghSeen(key);
-      if (!confirm(`저장소에 이 악보의 ${when}공유 설정이 이미 있습니다.` + (unseen ? ' 이 기기는 아직 그것을 받지 않았습니다.' : '') + `\n지금 화면의 설정으로 업데이트할까요?` + (unseen ? '\n(취소하고 [공유 설정 불러오기]를 먼저 할 수 있습니다)' : ''))) { ghSetState('저장하지 않았습니다.'); return; }
+      // 이미 올린 설정이 있으면 업데이트할지 묻는다. 저장소 것이 이 기기 설정보다 나중에 저장된 것이면 덮어쓰기 전에 알린다(저장 시각 비교)
+      const when = old && old.saved ? fmtTime(old.saved) + '에 올린 ' : '', newer = !!(old && old.saved && old.saved > locSaved && old.saved !== ghSeen(key));
+      if (!confirm(`저장소에 이 악보의 ${when}공유 설정이 이미 있습니다.` + (newer ? `\n⚠ 저장소 설정이 이 기기 설정(${locSaved ? fmtTime(locSaved) + ' 저장' : '저장 안 함'})보다 최신입니다.` : '') + `\n지금 화면의 설정으로 업데이트할까요?` + (newer ? '\n(취소하고 [공유 설정 불러오기]를 먼저 할 수 있습니다)' : ''))) { ghSetState('저장하지 않았습니다.'); return; }
     } else if (cur.status !== 404) throw new Error(cur.status === 403 ? '이 토큰으로는 저장소에 쓸 수 없습니다. 토큰의 저장소 선택과 Contents 권한(Read and write)을 확인해 주세요.' : '저장소를 읽지 못했습니다 (' + cur.status + ')');
     const body = { message: `설정: ${S.title || S.file || key}`, content: b64utf8(JSON.stringify(S, null, 1)), branch: GH_BRANCH };
     if (sha) body.sha = sha;
@@ -4134,9 +4136,12 @@ async function ghCheck(hadLocal) {
       const n = (got.S.edits || []).reduce((a, e) => a + Object.keys(e.lines || {}).length, 0);
       ghSetState(`공유 설정이 있습니다 · ${fmtTime(when)}에 올린 것. [공유 설정 불러오기]로 받을 수 있습니다.`);
       ghOfferShow(key, `이 곡('${ghWho()}')의 공유 설정이 저장소에 있습니다 — ${fmtTime(when)}에 올린 것(악기·빠르기${n ? '·음 수정' : ''} 등). 불러와 적용할까요?`);
-    } else {
-      ghSetState(`새 공유 설정이 있습니다 · ${fmtTime(when)}에 올린 것. [공유 설정 불러오기]로 받을 수 있습니다.`);
-      showMsg(`이 악보의 새 공유 설정(${fmtTime(when)})이 저장소에 있습니다. [저장] 칸의 [공유 설정 불러오기]를 누르면 받습니다. (지금 설정은 그대로 둡니다)`);
+    } else {   // 이 기기 설정과 저장 시각을 비교: 저장소 것이 나중이면 알리고, 이 기기 것이 나중이면 조용히 칸에만
+      const loc = ((readSettings(key) || {}).saved) || '';
+      if (when && when > loc) {
+        ghSetState(`저장소에 더 최신 공유 설정이 있습니다 · 올린 때 ${fmtTime(when)} (이 기기 설정 ${loc ? fmtTime(loc) : '—'}). [공유 설정 불러오기]로 받을 수 있습니다.`);
+        showMsg(`저장소에 이 악보의 더 최신 공유 설정이 있습니다 — 올린 때 ${fmtTime(when)}, 이 기기 설정 ${loc ? fmtTime(loc) : '—'}. [저장] 칸의 [공유 설정 불러오기]를 누르면 받습니다. (지금 설정은 그대로 둡니다)`);
+      } else ghSetState(`이 기기 설정(${fmtTime(loc)} 저장)이 저장소 공유 설정(${fmtTime(when)}에 올림)보다 최신입니다.`, true);
     }
   } catch (e) { ghSetState('저장소에 연결하지 못해 공유 설정이 있는지 확인하지 못했습니다.'); }
 }

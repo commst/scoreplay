@@ -118,7 +118,13 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   // 이 기기에서 설정을 바꾼 뒤(로컬 있음) 저장소가 새로 바뀌면: 알리기만
   const S2 = { ...S, saved: new Date(Date.now() + 60000).toISOString(), tempoRows: S.tempoRows.filter(r => r.start !== 37) }; store[path] = Buffer.from(JSON.stringify(S2)).toString('base64');
   await open(); await p.waitForTimeout(1500);
-  ok((await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).includes('37') && /새 공유 설정/.test(await p.textContent('#ghState')), name + ' 로컬 설정이 있으면 덮지 않고 알림');
+  ok((await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value))).includes('37') && /더 최신 공유 설정/.test(await p.textContent('#ghState')), name + ' 저장소가 더 최신: 덮지 않고 알림 · ' + await p.textContent('#ghState'));
+  // 저장 시각 비교: 저장소 것이 이 기기 설정보다 예전이면(받지 않은 것이어도) 알리지 않고 칸에만 '이 기기 설정이 더 최신'
+  { const S3 = { ...S2, saved: new Date(Date.now() - 3600000).toISOString() }; const keep = store[path]; store[path] = Buffer.from(JSON.stringify(S3)).toString('base64');
+    await open(); await p.waitForTimeout(1500);
+    const st = await p.textContent('#ghState'), msg = await p.evaluate(() => { const m = document.getElementById('msg'); return m.hidden ? '' : m.textContent; });
+    ok(/이 기기 설정.*보다 최신/.test(st) && !/저장소에/.test(msg), name + ' 이 기기가 더 최신: 알림 없음 · ' + st + ' / msg: ' + msg);
+    store[path] = keep; await open(); await p.waitForTimeout(1500); }
   await tab('save'); await p.click('#ghLoad'); await p.waitForTimeout(1500);
   { const rws = await p.$$eval('#tempoBody tr', trs => trs.map(tr => tr.querySelector('input').value)); ok(!rws.includes('37'), name + ' [공유 설정 불러오기]로 받음: ' + rws.join(',') + ' / ' + await p.textContent('#ghState')); }
   // --- 같은 곡의 다른 파일(지문이 다름): 목록(index.json)에서 제목·파일 이름으로 찾아 불러오기
