@@ -1861,7 +1861,8 @@ export function parseScore(pages, opts = {}) {
       if (!dir) continue;
       a.used = b.used = true;
       const x0 = Math.min(a.x0, b.x0), x1 = Math.max(a.x1, b.x1);
-      marks.push({ type: 'dramp', dir, a: at(x0), b: posAt(x1), dashed: true, hp: true });   // hp: 그린 꺾쇠(헤어핀) — 글자 cresc.와 구분 (MusicXML 내보내기)
+      marks.push({ type: 'dramp', dir, a: at(x0), b: posAt(x1), dashed: true, hp: true });
+      if (globalThis.__hpLog) globalThis.__hpLog.push({ w: x1 - x0, open: Math.max(Math.abs(a.y1 - b.y1), Math.abs(a.y0 - b.y0)), pi: typeof pi !== "undefined" ? pi : -1, y: (a.y0 + a.y1) / 2 });   // hp: 그린 꺾쇠(헤어핀) — 글자 cresc.와 구분 (MusicXML 내보내기)
       addLabel(mAt(x0), dir > 0 ? '<' : '>');
     }
   }
