@@ -5,7 +5,7 @@
  "titleRead": "경기도립국악단위촉작품",
  "songTitle": "월광",
  "file": "월광-스코어.pdf",
- "saved": "2026-11-12T13:40:50.053Z",
+ "saved": "2026-11-12T23:09:58.527Z",
  "lastBar": 205,
  "lines": {
   "main:0": {
@@ -273,7 +273,7 @@
   "from": 16,
   "to": 205,
   "repeats": true,
-  "countIn": false,
+  "countIn": true,
   "metronome": false,
   "metroVol": 1,
   "restCount": "sub",
