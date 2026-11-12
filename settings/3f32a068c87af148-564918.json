@@ -5,7 +5,7 @@
  "titleRead": "경기도립국악단위촉작품",
  "songTitle": "월광",
  "file": "월광-스코어.pdf",
- "saved": "2026-11-11T10:35:12.746Z",
+ "saved": "2026-11-12T13:40:50.053Z",
  "lastBar": 205,
  "lines": {
   "main:0": {
@@ -103,7 +103,7 @@
    "role": "melody",
    "inst": "gayageum",
    "oct": 0,
-   "vol": 1.7,
+   "vol": 1,
    "R": "따",
    "L": "궁",
    "nong": false,
@@ -114,7 +114,7 @@
    "role": "melody",
    "inst": "gayageum",
    "oct": 0,
-   "vol": 1.7,
+   "vol": 1,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -124,7 +124,7 @@
    "role": "melody",
    "inst": "geomungo",
    "oct": 0,
-   "vol": 1.7,
+   "vol": 1,
    "R": "북짧게",
    "L": "북녹음",
    "nong": false
@@ -204,7 +204,7 @@
    "role": "perc",
    "inst": null,
    "oct": 0,
-   "vol": 0.9,
+   "vol": 1,
    "R": "북짧게",
    "L": "북녹음",
    "nong": false
@@ -270,7 +270,7 @@
  "ritF": "80",
  "accF": "120",
  "play": {
-  "from": 1,
+  "from": 16,
   "to": 205,
   "repeats": true,
   "countIn": false,
