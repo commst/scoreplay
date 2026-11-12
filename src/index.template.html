@@ -5119,7 +5119,7 @@ function buildMusicXml() {
       const evs = [];
       const G = Q / 8, S16 = Q / 4;
       for (const e of b.events.filter(mine)) {
-        let st = Math.round(e.t.v * W), nat = Math.round((perc ? e.dur : (e.sus || e.dur)).v * W);
+        let st = Math.round(e.t.v * W), nat = Math.round((e.sus || e.dur).v * W);
         // snap: 잇단음표가 반쯤만 읽힌 마디(셋잇단과 보통 음이 한 박에 섞임) — 그런 음만 16분음표 칸에 맞춘다 (뮤즈스코어가 '깨진 파일'로 여기지 않게)
         if (snap && (st % G || (st + nat) % G)) { const s2 = Math.min(L - S16, Math.round(st / S16) * S16), e2 = Math.max(s2 + S16, Math.min(L, Math.round((st + nat) / S16) * S16)); st = s2; nat = e2 - s2; }
         const pc = !snap && !perc && e.midis && e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
@@ -5177,7 +5177,7 @@ function buildMusicXml() {
           const nx = vv.slice(k + 1).find(o => o.st > st);
           const d = Math.max(1, Math.min(x.nat, (nx ? nx.st : L) - st, L - st));
           // 악보에 붙임줄로 적힌 음은 적힌 조각 그대로 (길이가 맞고 조각마다 한 음표로 적을 수 있을 때)
-          const pcs = !perc && e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
+          const pcs = e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
           const ps = pcs && pcs.reduce((a, c) => a + c, 0) === d && pcs.every(v => typeOf(v).type) ? pcs : pieces(d);
           if (perc || !e.midis) {
             // 타악: 악보의 줄·칸 자리(가운데 줄 = B4, 반 칸씩)와 X 머리. 자리를 모르면 위 성부 C5·아래 성부 F4
@@ -5186,7 +5186,7 @@ function buildMusicXml() {
             ps.forEach((pd, pi) => {
               heads.forEach((h, j) => {
                 const idx = h.pos != null ? mid - h.pos : e.voice === 'L' ? mid - 3 : mid + 1;
-                objs.push({ d: pd, voice, st: p, perc: true, inst: g.instOf ? g.instOf(S.ln, e.voice) : null, chord: j > 0, low: e.voice === 'L', dstep: LET[((idx % 7) + 7) % 7], doct: Math.floor(idx / 7), accent: pi === 0 && e.accent, xh: h.xh, stacc: pi === ps.length - 1 && e.stacc, roll: pi === 0 && e.roll && !!e.rollDur, trill: pi === 0 && e.roll && !e.rollDur, twoV });   // 굴림: 빗금(트레몰로)으로 적힌 것은 빗금, tr로 적힌 것은 tr
+                objs.push({ d: pd, voice, st: p, perc: true, inst: g.instOf ? g.instOf(S.ln, e.voice) : null, chord: j > 0, low: e.voice === 'L', dstep: LET[((idx % 7) + 7) % 7], doct: Math.floor(idx / 7), accent: pi === 0 && e.accent, xh: h.xh, stacc: pi === ps.length - 1 && e.stacc, roll: pi === 0 && e.roll && !!e.rollDur, trill: pi === 0 && e.roll && !e.rollDur, twoV, tieStart: pi < ps.length - 1, tieStop: pi > 0, inner: pi > 0 });   // 굴림: 빗금(트레몰로)으로 적힌 것은 빗금, tr로 적힌 것은 tr
               });
               p += pd;
             });

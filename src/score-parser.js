@@ -1430,18 +1430,29 @@ export function parseScore(pages, opts = {}) {
         const end = vn.filter(n => c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 10 && n.x > c.x0 + 2);
         // 곡선 높이 쪽 성부에 끝 음이 없으면(한 기둥 화음: 위·아래 음이 같은 성부) 성부와 상관없이 곡선 높이에 가장 가까운 머리
         // (화음 붙임줄 둘 중 하나만 읽혀 나머지 음이 다시 울리던 문제: 바르도 대아쟁·거문고)
-        if (!end.length && pitchedStaff) {
-          const all = headNotes.filter(n => !n.grace && c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 6 && n.x > c.x0 + 2
+        // 곡선이 붙은 머리 고르기: 붙임줄은 머리 바로 바깥(위 또는 아래 1~5pt)에서 시작하므로 곡선 테두리 밖에 가까운 머리가 임자.
+        // 테두리 안에 있는 머리(곡선이 가로지르는 머리)는 임자가 아니다 — 화음에서 아랫음 붙임줄을 가운데 음에 붙이던 것(방황 피리 64→65마디, 신디 60→61마디)
+        const hd = (st.bottom - st.top) / 4 || 7;
+        const edge = n => n.y < c.y0 ? c.y0 - n.y : n.y > c.y1 ? n.y - c.y1 : -1;
+        const fit = n => { const d = edge(n); return d < 0 ? 100 + Math.abs(n.y - ccy) : Math.abs(d - hd * 0.8); };
+        const pickAt = (arr, x) => arr.filter(n => Math.abs(n.x - x) < 2).reduce((b, n) => fit(n) < fit(b) ? n : b);
+        // 곡선 높이 쪽 성부에 끝 음이 없으면(한 기둥 화음: 위·아래 음이 같은 성부, 기둥 방향이 바뀐 한 성부, 타악 줄) 성부와 상관없이 곡선에 가장 가까운 머리
+        // (화음 붙임줄 둘 중 하나만 읽혀 나머지 음이 다시 울리던 문제: 바르도 대아쟁·거문고. 타악 줄의 붙임줄(심벌 울림 잇기)도 — 방황 심벌 28마디)
+        if (!end.length) {
+          const all = headNotes.filter(n => !n.grace && c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && fit(n) < 6 && n.x > c.x0 + 2
             && headNotes.some(o => !o.grace && o !== n && Math.abs(o.y - n.y) < 1 && c.x0 - 10 <= o.x && o.x <= c.x0 + 4));   // 시작 쪽에도 같은 높이 머리
-          if (all.length) { const mx = Math.min(...all.map(n => n.x)); const en0 = all.filter(n => n.x < mx + 2).reduce((b, n) => Math.abs(n.y - ccy) < Math.abs(b.y - ccy) ? n : b);
+          if (all.length) { const mx = Math.min(...all.map(n => n.x)); const en0 = pickAt(all, mx);
             const st0 = headNotes.filter(o => !o.grace && Math.abs(o.y - en0.y) < 1 && c.x0 - 10 <= o.x && o.x <= c.x0 + 4);
             // 사이에 다른 음표 머리가 있으면 같은 높이로 끝나는 이음줄(슬러)일 수 있으니 붙임줄로 보지 않는다
+            // (화음에서 2도 때문에 비켜 적은 머리는 '사이'로 보지 않는다 — 머리 너비 안: 방황 피리·신디 185마디)
             const sx = st0.length ? Math.max(...st0.map(o => o.x)) : c.x0;
-            if (!headNotes.some(o => !o.grace && o.x > sx + 1.5 && o.x < en0.x - 1.5)) { end.push(en0); start.push(...st0); } }
+            if (!headNotes.some(o => !o.grace && o.x > sx + hd * 1.4 && o.x < en0.x - hd * 1.4)) { end.push(en0); start.push(...st0); } }
         }
+        if (globalThis.__curveLog) globalThis.__curveLog.push({ pi, st: st.top, c: { x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1 }, voice, start: start.map(n => [n.x, n.y, n.voice]), end: end.map(n => [n.x, n.y, n.voice]),
+          hs: headNotes.filter(n => !n.grace && c.x0 - 12 <= n.x && n.x <= c.x1 + 14 && Math.abs(n.y - ccy) < 14).map(n => [+n.x.toFixed(1), +n.y.toFixed(1), n.voice]) });
         if (end.length) {
-          const en = end.reduce((b, n) => n.x < b.x ? n : b); en.tied = true;
-          const sn = start.length ? start.reduce((b, n) => Math.abs(n.x - c.x0) < Math.abs(b.x - c.x0) ? n : b) : null;
+          const en = pickAt(end, Math.min(...end.map(n => n.x))); en.tied = true;
+          const sn = start.length ? pickAt(start, start.reduce((b, n) => Math.abs(n.x - c.x0) < Math.abs(b.x - c.x0) ? n : b).x) : null;
           if (sn && sn !== en && sn.x < en.x) curvePairs.push([sn, en, voice]);
         }
         else if (start.length && c.x1 > st.x1 - 15) pendingTie[voice] = true;
@@ -1957,6 +1968,11 @@ function timing(m, barLen) {
         }
         else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) prev._cs.add(n.midi);   // 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐
         else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], ...(n.dia != null ? { dia: { [n.midi]: n.dia } } : {}), x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
+      }
+      else {
+        // 타악 줄의 붙임줄(심벌 울림 잇기 등): 같은 자리의 앞 음을 길게 (MusicXML에 적힌 조각대로 이어 내보내기용). 앞 음이 없으면 예전처럼 치지 않는 음으로 둠
+        const prev = evs.filter(e => e.voice === n.voice && !e.midis && e.pos === n.pos && e.t.lt(onset.get(n))).pop();
+        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; }
       }
       continue;
     }
