@@ -1231,10 +1231,10 @@ body, button, input, select, textarea { font-family: var(--font-body); }
     <section class="drop" id="drop">
       <div class="file">
         <strong id="fileName">총보를 아직 추가하지 않았습니다.</strong>
-        <span id="fileInfo">총보 PDF(또는 MusicXML)를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.</span>
+        <span id="fileInfo">총보 PDF(또는 MusicXML) 하나를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 새 총보를 올리면 지금 연 악보를 닫고 새 총보를 엽니다.</span>
       </div>
-      <label class="btn primary" for="pdfInput">총보 추가</label>
-      <input type="file" id="pdfInput" accept="application/pdf,.pdf,.musicxml,.mxl,.xml,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" multiple hidden>
+      <label class="btn primary" for="pdfInput" id="pdfInputLabel">총보 추가</label>
+      <input type="file" id="pdfInput" accept="application/pdf,.pdf,.musicxml,.mxl,.xml,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" hidden>
     </section>
     <ul id="fullFileList" class="flist" aria-label="올린 총보"></ul>
     <div class="extra" id="extraBox">
@@ -1840,7 +1840,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>9</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>10</small></h4><ul class="hlist">
+      <li><details><summary>총보는 하나만: 새 총보를 올리면 바꿔 열기</summary><p>총보는 하나만 올릴 수 있습니다. 총보를 연 뒤에는 단추가 <b>[총보 바꾸기]</b>가 되고, 새 총보를 고르면 지금 연 악보(총보·추가한 악보·파트보)를 닫고 새 총보를 엽니다. 여러 파일을 한꺼번에 끌어다 놓으면 첫 파일만 열고, 나머지는 [악보 추가]나 [파트보 업로드]로 올리라고 알려 줍니다.</p></details></li>
       <li><details><summary>음색 탭 [들어보기]를 멈출 때까지 계속, 음색을 공유 저장소에</summary><p>[▶ 들어보기]가 [■ 멈춤]을 누를 때까지 되풀이해 들려주고, 듣는 동안 음량·음색 막대를 움직이면 멈추지 않고 곧바로 바뀐 소리로 이어집니다. 음색 칸 아래 <b>[공유 저장소에 저장]</b>·<b>[공유 음색 불러오기]</b>로 맞춘 음색·기본 음량을 다른 기기에서도 쓸 수 있습니다(저장 토큰은 [저장] 칸 '공유 설정'과 같은 것).</p></details></li>
       <li><details><summary>음색 탭: 악기별 기본 음량과 음색 (모든 곡에 함께)</summary><p>설정에 다섯째 탭 <b>[음색]</b>이 생겼습니다. 곡과 상관없이 이 기기에서 여는 모든 곡에 적용되는 악기별 <b>기본 음량</b>(0~200%)과 <b>음색</b>(낮은음·가운데·높은음, −6~+6dB)을 정합니다. 선율 악기 13개와 타악기 15묶음, 그리고 모든 소리를 섞은 뒤의 '전체' 음색이 있습니다. <b>[▶ 들어보기]</b>로 바꾼 소리를 바로 듣고, <b>[기본값으로]</b>(그 악기만)·<b>[모두 기본값으로]</b>로 되돌립니다. 곡마다 다른 크기는 전처럼 [악기] 탭의 음량 막대로 맞춥니다.</p></details></li>
       <li><details><summary>문제점 신고하기에 악보 파일 첨부</summary><p>신고 창에 <b>악보 파일 첨부</b>가 생겼습니다. [열린 악보 파일 첨부]를 체크하면 지금 연 악보 PDF가 함께 가고, 화면 그림 같은 다른 파일도 고를 수 있습니다(모두 합쳐 10MB까지, 여러 개면 zip 하나로). 악보 파일은 첨부를 고를 때만 전송됩니다.</p></details></li>
@@ -8672,7 +8673,7 @@ function resetEmpty(text) {
   $('from').value = 1; $('to').value = lastBar(); if (saveLinked) syncSaveFromPlay();
   showExampleLine();
   $('fileName').textContent = text ? text + ' 예시 장단으로 돌아왔습니다.' : '총보를 아직 추가하지 않았습니다.';
-  $('fileInfo').textContent = '총보 PDF(또는 MusicXML)를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 여러 개를 한꺼번에 골라도 됩니다.';
+  $('fileInfo').textContent = '총보 PDF(또는 MusicXML) 하나를 이 상자에 끌어다 놓거나 버튼으로 고르세요. 새 총보를 올리면 지금 연 악보를 닫고 새 총보를 엽니다.';
   $('partsFileName').textContent = '파트보를 아직 추가하지 않았습니다.'; $('partsFileInfo').textContent = 'PDF를 여러 개 한꺼번에 선택하거나, 파일을 이 상자에 끌어다 놓으세요.';
   showMsg(''); renderFileLists(); renderTempo(); renderBars(); refreshOrder(); $('setBox').hidden = true;
   sessClear(); if (typeof ghOfferHide === 'function') ghOfferHide();
@@ -8693,6 +8694,8 @@ function renderFileLists() {
   const ex = $('extraFileList'); ex.textContent = '';
   for (const x of state.extras || []) ex.appendChild(fileRow(x.file.name, x.label !== stemOf(x.file) ? x.label : '', () => removeExtra(x.uid), '추가한 악보'));
   const hasFull = !!(sc && !sc.isComposite);
+  $('pdfInputLabel').textContent = hasFull ? '총보 바꾸기' : '총보 추가';
+  $('pdfInputLabel').title = hasFull ? '새 총보를 고르면 지금 연 악보(총보·추가한 악보·파트보)를 닫고 새 총보를 엽니다' : '';
   $('extraBox').classList.toggle('disabled', !hasFull);
   $('extraInfo').textContent = hasFull ? '총보에 없는 악기를 추가할 수 있습니다. 총보에 있는 악기를 [악기] 탭에서 끄고 그 악기의 파트보를 여기에 올리면 파트보로 대체할 수도 있습니다. 여러 개를 한꺼번에 골라도 됩니다.' : '총보를 먼저 올리면 총보에 없는 악기를 추가할 수 있습니다. 총보의 악기를 끄고 그 악기의 파트보를 올려 대체할 수도 있습니다.';
   if (sc) sessSave();   // 열어 둔 악보 파일 기억(휴대폰이 페이지를 다시 열어도 되살림)
@@ -9831,7 +9834,13 @@ $('exportXmlBtn').addEventListener('click', () => {
   // 저장한 뒤: 내보낸 파일을 다시 읽어 인식 결과와 맞춰 보고, PDF와 다르게 읽었을 수 있는 마디를 보여 준다
   try { svOverData = null; openXmlCheck(xmlCheck(xml)); } catch (e) { console.warn('MusicXML 확인', e); }
 });
-$('pdfInput').addEventListener('change', e => { if (e.target.files.length) loadFullPdf([...e.target.files]); e.target.value = ''; });
+// 총보는 하나만(사용자 요청 163번): 새 총보를 올리면 지금 연 악보(총보·추가한 악보·파트보)를 닫고 새 총보를 연다. 여러 개를 고르거나 끌어 놓으면 첫 파일만
+async function loadOneScore(files) {
+  files = (files || []).filter(isPdf); if (!files.length) return;
+  await loadFullPdf(files.slice(0, 1));
+  if (files.length > 1) showMsg(`총보는 하나만 올릴 수 있어 '${files[0].name}'만 열었습니다. 다른 파일은 [악보 추가]나 [파트보 업로드]로 올려 주세요.`);
+}
+$('pdfInput').addEventListener('change', e => { if (e.target.files.length) loadOneScore([...e.target.files]); e.target.value = ''; });
 $('extraInput').addEventListener('change', e => { if (e.target.files.length) loadExtraPdfs([...e.target.files]); e.target.value = ''; });
 const drop = $('drop');
 const partsDrop = $('partsDrop');
@@ -9846,7 +9855,7 @@ function wirePdfDrop(zone, handler) {
   e.preventDefault();
   if (t === 'drop') showMsg('파일은 [악보 파일] 창의 총보·악보 추가·파트보 상자 위에 놓아 주세요.');
 }));
-wirePdfDrop(drop, files => loadFullPdf(files));
+wirePdfDrop(drop, files => loadOneScore(files));
 wirePdfDrop($('extraBox'), files => loadExtraPdfs(files));
 wirePdfDrop(partsDrop, files => loadPartPdfs(files));
 $('partsInput').addEventListener('change', e => { if (e.target.files.length) loadPartPdfs([...e.target.files]); e.target.value = ''; });
@@ -10612,7 +10621,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-12 17:24';
+const APP_VERSION = '2026-11-12 17:29';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
