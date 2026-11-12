@@ -1844,7 +1844,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노는 조금 크게 했습니다(대금·소금·해금·피리·장구는 다른 곡에서 밸런스가 맞지 않아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>4건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
+      <li><details><summary>악보로 보기: 어떤 쪽에서 노란 칸이 위쪽 악기들에만 그려지던 문제</summary><p>방황 31쪽(253마디부터)·판놀음 3쪽처럼 관악과 나머지 악기의 마디선이 끊겨 그려진 쪽에서, 노란 칸과 빨간 재생 선이 위쪽 관악 묶음에만 그려져 아래 악기를 보면 따라가기가 멈춘 것처럼 보였습니다. 이제 단 전체에 그립니다.</p></details></li>
       <li><details><summary>붙임줄로 이어진 음을 다시 치던 문제</summary><p>붙임줄로 이어진 뒤 음은 앞 음의 울림을 이어야 하는데 다시 소리를 내던 곳들을 고쳤습니다. 화음의 음마다 붙임줄이 있을 때 곡선을 엉뚱한 음에 붙이던 것, 여러 줄이 함께 빠르게 연주하는 마디 뒤라 이어 줄 앞 음을 놓치던 것, 타악(심벌·윈드벨 트레몰로 등)의 붙임줄을 모두 바로잡았습니다(방황·바르도·뱃노래 등 샘플 곳곳).</p></details></li>
       <li><details><summary>신고에 첨부한 파일이 메일에 실제로 붙지 않던 문제</summary><p>[문제점 신고하기]에 악보 파일을 첨부해도 메일에는 파일 이름과 크기만 글자로 오고 내려받을 수 없었습니다. 첨부가 있으면 파일을 실어 보내는 방식으로 바꿨습니다.</p></details></li>
       <li><details><summary>작아지는 꺾쇠(&gt;) 뒤로 악기 소리가 계속 작게 남던 문제 (긴급)</summary><p>꺾쇠 &gt;·&lt; 끝에 셈여림 글자(p·mf 등)가 없으면 줄어든 크기가 곡 끝까지 이어져, 달빛항해 대금은 17마디부터·해금은 15마디부터 소리가 갑자기 작아졌습니다(11월 11일 '작아지는 꺾쇠를 더 뚜렷하게' 뒤로 두드러짐). 이제 꺾쇠는 그 구간에서만 크기를 바꾸고, 끝나면 마지막 셈여림 글자의 크기로 돌아옵니다. 꺾쇠 끝에 셈여림 글자가 있으면 그 크기를 따릅니다. 꺾쇠가 없는 다른 악기는 영향이 없습니다.</p></details></li>
@@ -2742,9 +2743,28 @@ function svRect(k) {
   const G = svGeo(), g = G && G.geo[k]; if (!g) return null;
   const L = G.sc.layouts[g.page]; if (!L || !L.staves[g.staff]) return null;
   if (svPartRes()) { const st = L.staves[g.staff]; return { page: g.page, staff: g.staff, x0: g.x0, x1: g.x1, y0: st.top - 12, y1: st.bottom + 12 }; }
-  const sys = (L.systems && L.sysOf && L.systems[L.sysOf[g.staff]]) || [g.staff];
+  const sys = svSystem(G.sc, g.page, g.staff);
   const top = Math.min(...sys.map(i => L.staves[i].top)), bottom = Math.max(...sys.map(i => L.staves[i].bottom));
   return { page: g.page, staff: g.staff, x0: g.x0, x1: g.x1, y0: top - 10, y1: bottom + 10 };
+}
+// 그 오선이 속한 단의 오선들. 해석기가 어떤 쪽에서만 한 단을 관악 묶음·나머지 묶음 둘로 나눠 두면(방황 31쪽·판놀음 3쪽 — 마디선이 묶음마다 끊긴 쪽)
+// 노란 칸·재생 선이 한 묶음에만 그려져 아래 묶음 악기를 보는 사람은 따라가기가 멈춘 것처럼 보였다 →
+// 같은 오선 수의 다른 쪽들에서 그 두 오선이 대부분 한 단이면 이 쪽에서도 한 단으로 본다
+const svSysCache = new WeakMap();
+function svSystem(sc, page, staff) {
+  const L = sc.layouts[page]; if (!L || !L.systems || !L.sysOf) return [staff];
+  let m = svSysCache.get(sc); if (!m) { m = new Map(); svSysCache.set(sc, m); }
+  if (!m.has(page)) {
+    const n = L.staves.length, same = sc.layouts.filter((o, i) => i !== page && o && o.sysOf && o.staves.length === n);
+    const groups = L.systems.map(x => x.slice());
+    for (let j = groups.length - 1; j > 0; j--) {   // 이웃한 두 묶음의 경계 오선이 다른 쪽들에서 한 단이면 합침
+      const a = groups[j - 1][groups[j - 1].length - 1], b = groups[j][0];
+      const together = same.filter(o => o.sysOf[a] === o.sysOf[b]).length;
+      if (same.length >= 2 && together * 2 > same.length) { groups[j - 1].push(...groups[j]); groups.splice(j, 1); }
+    }
+    m.set(page, groups);
+  }
+  return m.get(page).find(x => x.includes(staff)) || [staff];
 }
 // 쪽(또는 잘라 낸 띠) 칸: { el, page, ox, oy, w, h } — 칸 안 자리 = (쪽 좌표 - ox·oy) / w·h
 function svPanelOf(r) {
