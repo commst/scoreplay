@@ -70,6 +70,15 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   ok(await p.evaluate(n => (window.__demoSwaps || 0) > n && window.__demoState().playing && JSON.parse(localStorage.getItem('hapju-tone')).inst.gayageum.vol === 150, sw0), name + ' 듣는 중 막대를 움직이면 멈추지 않고 새 값으로 바뀜·저장');
   await p.evaluate(() => document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').click()); await p.waitForTimeout(200);
   ok(await p.evaluate(() => !window.__demoState().playing), name + ' 멈춤');
+  // 되풀이 중에 곡 재생을 누르거나 다른 칸으로 가면 들어보기가 멈춤
+  for (const [what, act] of [['곡 재생', () => p.evaluate(() => document.getElementById('playBtn').click())], ['다른 칸으로', () => p.evaluate(() => { const b = document.querySelector(document.body.classList.contains('sheet-open') ? '.dtab[data-tab=inst]' : '#tab-inst'); b.click(); })]]) {
+    await p.evaluate(() => document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').click());
+    await p.waitForFunction(() => window.__demoState().playing, null, { timeout: 20000 }).catch(() => {});
+    await act(); await p.waitForTimeout(400);
+    ok(await p.evaluate(() => !window.__demoState().playing && /들어보기/.test(document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').textContent)), name + ' 되풀이 중 ' + what + ' → 들어보기 멈춤');
+    await p.evaluate(() => { if (window.__st.playing) document.getElementById('barsStopBtn').click(); }); await p.waitForTimeout(300);
+    if (name === 'phone') { if (!(await p.evaluate(() => document.body.classList.contains('sheet-open') && document.getElementById('pane-tone').classList.contains('on')))) await p.click('.dtab[data-tab=tone]'); } else await p.click('#tab-tone'); await p.waitForTimeout(300);
+  }
   // 공유 저장소(가짜 GitHub): 토큰 없으면 안내, 저장 → 다른 값으로 바꾼 뒤 불러오기 → 저장한 값
   let remote = null; const puts = [];
   await p.route(/api\.github\.com\/repos\/commst\/scoreworks\/contents\/settings\/_tone\.json/, async r => {

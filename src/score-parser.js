@@ -1430,33 +1430,18 @@ export function parseScore(pages, opts = {}) {
         const end = vn.filter(n => c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 10 && n.x > c.x0 + 2);
         // 곡선 높이 쪽 성부에 끝 음이 없으면(한 기둥 화음: 위·아래 음이 같은 성부) 성부와 상관없이 곡선 높이에 가장 가까운 머리
         // (화음 붙임줄 둘 중 하나만 읽혀 나머지 음이 다시 울리던 문제: 바르도 대아쟁·거문고)
-        // 곡선이 붙은 머리 고르기: 붙임줄은 머리 바로 바깥(위 또는 아래 1~5pt)에서 시작하므로 곡선 테두리 밖에 가까운 머리가 임자.
-        // 테두리 안에 있는 머리(곡선이 가로지르는 머리)는 임자가 아니다 — 화음에서 아랫음 붙임줄을 가운데 음에 붙이던 것(방황 피리 64→65마디, 신디 60→61마디)
-        const hd = (st.bottom - st.top) / 4 || 7;
-        // 붙임줄은 머리 바로 바깥(곡선 위·아래 테두리 밖)에서 시작한다 → 테두리 밖 머리 중 테두리에 가장 가까운 것.
-        // 곡선 높이 가운데(ccy)로 고르면 곡선이 가로지르는 가운데 음에 붙고(방황 피리 64→65), '테두리에서 0.8칸 떨어진 머리'를 고르면 머리 높이에 그린 윗음 붙임줄을 아랫음에 붙였다(바르도 소아쟁 1마디)
-        // 머리 높이에 그린 곡선(바르도: 테두리 = 머리 가운데)도 있으니 0.5pt 안은 바깥으로 본다. 곡선이 가로지르는 머리는 마지막 수단
-        const fit = n => { const d = n.y < c.y0 ? c.y0 - n.y : n.y > c.y1 ? n.y - c.y1 : -Math.min(n.y - c.y0, c.y1 - n.y); return d >= -0.5 ? Math.max(d, 0) : 100 + Math.abs(n.y - ccy); };
-        // 화음에 붙임줄이 여럿이면 이미 다른 곡선이 잡은 머리는 뒤로(두 곡선이 같은 아랫음을 잡아 가운데 음이 다시 울리던 것 — 뱃노래 피리 166마디)
-        const pickAt = (arr, x, k) => arr.filter(n => Math.abs(n.x - x) < 2).reduce((b, n) => (fit(n) + (n[k] ? 50 : 0)) < (fit(b) + (b[k] ? 50 : 0)) ? n : b);
-        // 곡선 높이 쪽 성부에 끝 음이 없으면(한 기둥 화음: 위·아래 음이 같은 성부, 기둥 방향이 바뀐 한 성부, 타악 줄) 성부와 상관없이 곡선에 가장 가까운 머리
-        // (화음 붙임줄 둘 중 하나만 읽혀 나머지 음이 다시 울리던 문제: 바르도 대아쟁·거문고. 타악 줄의 붙임줄(심벌 울림 잇기)도 — 방황 심벌 28마디)
-        if (!end.length) {
-          const all = headNotes.filter(n => !n.grace && c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && fit(n) < 6 && n.x > c.x0 + 2
+        if (!end.length && pitchedStaff) {
+          const all = headNotes.filter(n => !n.grace && c.x1 - 6 <= n.x && n.x <= c.x1 + 12 && Math.abs(n.y - ccy) < 6 && n.x > c.x0 + 2
             && headNotes.some(o => !o.grace && o !== n && Math.abs(o.y - n.y) < 1 && c.x0 - 10 <= o.x && o.x <= c.x0 + 4));   // 시작 쪽에도 같은 높이 머리
-          if (all.length) { const mx = Math.min(...all.map(n => n.x)); const en0 = pickAt(all, mx, 'tied');
+          if (all.length) { const mx = Math.min(...all.map(n => n.x)); const en0 = all.filter(n => n.x < mx + 2).reduce((b, n) => Math.abs(n.y - ccy) < Math.abs(b.y - ccy) ? n : b);
             const st0 = headNotes.filter(o => !o.grace && Math.abs(o.y - en0.y) < 1 && c.x0 - 10 <= o.x && o.x <= c.x0 + 4);
             // 사이에 다른 음표 머리가 있으면 같은 높이로 끝나는 이음줄(슬러)일 수 있으니 붙임줄로 보지 않는다
-            // (화음에서 2도 때문에 비켜 적은 머리는 '사이'로 보지 않는다 — 머리 너비 안: 방황 피리·신디 185마디)
             const sx = st0.length ? Math.max(...st0.map(o => o.x)) : c.x0;
-            if (!headNotes.some(o => !o.grace && o.x > sx + hd * 1.4 && o.x < en0.x - hd * 1.4)) { end.push(en0); start.push(...st0); } }
+            if (!headNotes.some(o => !o.grace && o.x > sx + 1.5 && o.x < en0.x - 1.5)) { end.push(en0); start.push(...st0); } }
         }
-        if (globalThis.__curveLog) globalThis.__curveLog.push({ pi, st: st.top, c: { x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1 }, voice, start: start.map(n => [n.x, n.y, n.voice]), end: end.map(n => [n.x, n.y, n.voice]),
-          hs: headNotes.filter(n => !n.grace && c.x0 - 12 <= n.x && n.x <= c.x1 + 14 && Math.abs(n.y - ccy) < 14).map(n => [+n.x.toFixed(1), +n.y.toFixed(1), n.voice]) });
         if (end.length) {
-          const en = pickAt(end, Math.min(...end.map(n => n.x)), 'tied'); en.tied = true;
-          const sn = start.length ? pickAt(start, start.reduce((b, n) => Math.abs(n.x - c.x0) < Math.abs(b.x - c.x0) ? n : b).x, '_tieOut') : null;
-          if (sn) sn._tieOut = true;
+          const en = end.reduce((b, n) => n.x < b.x ? n : b); en.tied = true;
+          const sn = start.length ? start.reduce((b, n) => Math.abs(n.x - c.x0) < Math.abs(b.x - c.x0) ? n : b) : null;
           if (sn && sn !== en && sn.x < en.x) curvePairs.push([sn, en, voice]);
         }
         else if (start.length && c.x1 > st.x1 - 15) pendingTie[voice] = true;
@@ -1876,8 +1861,7 @@ export function parseScore(pages, opts = {}) {
       if (!dir) continue;
       a.used = b.used = true;
       const x0 = Math.min(a.x0, b.x0), x1 = Math.max(a.x1, b.x1);
-      marks.push({ type: 'dramp', dir, a: at(x0), b: posAt(x1), dashed: true, hp: true });
-      if (globalThis.__hpLog) globalThis.__hpLog.push({ w: x1 - x0, open: Math.max(Math.abs(a.y1 - b.y1), Math.abs(a.y0 - b.y0)), pi: typeof pi !== "undefined" ? pi : -1, y: (a.y0 + a.y1) / 2 });   // hp: 그린 꺾쇠(헤어핀) — 글자 cresc.와 구분 (MusicXML 내보내기)
+      marks.push({ type: 'dramp', dir, a: at(x0), b: posAt(x1), dashed: true, hp: true });   // hp: 그린 꺾쇠(헤어핀) — 글자 cresc.와 구분 (MusicXML 내보내기)
       addLabel(mAt(x0), dir > 0 ? '<' : '>');
     }
   }
@@ -1973,11 +1957,6 @@ function timing(m, barLen) {
         }
         else if (prev && prev._lp && prev._lp[0].eq(onset.get(n)) && prev._lp[1].eq(n.dur)) prev._cs.add(n.midi);   // 화음의 다른 음이 같은 조각을 잇는 붙임줄: 이미 이어짐
         else evs.push({ voice: n.voice, t: onset.get(n), dur: n.dur, tie: true, midis: [n.midi], ...(n.dia != null ? { dia: { [n.midi]: n.dia } } : {}), x: n.x, ...(n.kf != null ? { kf: n.kf } : {}), ...(n.cl != null ? { cl: n.cl } : {}), ...(n.slurS ? { slurS: n.slurS } : {}), ...(n.slurE ? { slurE: n.slurE } : {}) });
-      }
-      else {
-        // 타악 줄의 붙임줄(심벌 울림 잇기 등): 같은 자리의 앞 음을 길게 (MusicXML에 적힌 조각대로 이어 내보내기용). 앞 음이 없으면 예전처럼 치지 않는 음으로 둠
-        const prev = evs.filter(e => e.voice === n.voice && !e.midis && e.pos === n.pos && e.t.lt(onset.get(n))).pop();
-        if (prev && prev.t.add(prev.sus || prev.dur).eq(onset.get(n))) { prev.sus = (prev.sus || prev.dur).add(n.dur); prev.pcs = [...(prev.pcs || [prev.dur]), n.dur]; }
       }
       continue;
     }

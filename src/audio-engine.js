@@ -256,7 +256,8 @@ export function renderPlan(bars, order, opts) {
           const prev = midis.map(m => lastOf.get(e.line + '|' + m)).find(n => n && Math.abs(n.t + n.dur - ts) < 0.06);
           if (prev) {
             const keep = prev.midis.filter(m => midis.includes(m)), rest = prev.midis.filter(m => !midis.includes(m));
-            if (rest.length) { const other = { ...prev, midis: rest, graces: null }; notes.splice(notes.indexOf(prev) + 1, 0, other); prev.midis = keep; }   // 앞 음 바로 뒤에 (notes는 마디 순)
+            if (rest.length) { const other = { ...prev, midis: rest, graces: null }; notes.splice(notes.indexOf(prev) + 1, 0, other); prev.midis = keep;
+              for (const m of rest) if (lastOf.get(e.line + '|' + m) === prev) lastOf.set(e.line + '|' + m, other); }   // 떼어 낸 음은 새 조각을 가리키게(같은 화음의 다른 음 붙임줄이 따로 적혀 있으면 그 조각을 늘림)   // 앞 음 바로 뒤에 (notes는 마디 순)
             prev.dur += dsec; for (const m of keep) lastOf.set(e.line + '|' + m, prev);
             continue;
           }

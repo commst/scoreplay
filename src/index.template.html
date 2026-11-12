@@ -1846,7 +1846,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
     </ul>
       <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
       <li><details><summary>악보로 보기: 어떤 쪽에서 노란 칸이 위쪽 악기들에만 그려지던 문제</summary><p>방황 31쪽(253마디부터)·판놀음 3쪽처럼 관악과 나머지 악기의 마디선이 끊겨 그려진 쪽에서, 노란 칸과 빨간 재생 선이 위쪽 관악 묶음에만 그려져 아래 악기를 보면 따라가기가 멈춘 것처럼 보였습니다. 이제 단 전체에 그립니다.</p></details></li>
-      <li><details><summary>붙임줄로 이어진 음을 다시 치던 문제</summary><p>붙임줄로 이어진 뒤 음은 앞 음의 울림을 이어야 하는데 다시 소리를 내던 곳들을 고쳤습니다. 화음의 음마다 붙임줄이 있을 때 곡선을 엉뚱한 음에 붙이던 것, 여러 줄이 함께 빠르게 연주하는 마디 뒤라 이어 줄 앞 음을 놓치던 것, 타악(심벌·윈드벨 트레몰로 등)의 붙임줄을 모두 바로잡았습니다(방황·바르도·뱃노래 등 샘플 곳곳).</p></details></li>
+      <li><details><summary>붙임줄로 이어진 음을 다시 치던 문제</summary><p>붙임줄로 이어진 뒤 음은 앞 음의 울림을 이어야 하는데 다시 소리를 내던 곳들을 고쳤습니다. 여러 줄이 함께 빠르게 연주하는 마디 뒤라 이어 줄 앞 음을 놓치던 것, 화음의 붙임줄이 음마다 따로 적혀 있으면 한 음만 잇던 것을 고쳤습니다. (악보에서 붙임줄을 읽는 방법을 바꾼 부분은 월광에서 음을 잘못 읽는 부작용이 있어 같은 날 되돌렸고, 다시 검증해 넣을 예정입니다.)</p></details></li>
       <li><details><summary>신고에 첨부한 파일이 메일에 실제로 붙지 않던 문제</summary><p>[문제점 신고하기]에 악보 파일을 첨부해도 메일에는 파일 이름과 크기만 글자로 오고 내려받을 수 없었습니다. 첨부가 있으면 파일을 실어 보내는 방식으로 바꿨습니다.</p></details></li>
       <li><details><summary>작아지는 꺾쇠(&gt;) 뒤로 악기 소리가 계속 작게 남던 문제 (긴급)</summary><p>꺾쇠 &gt;·&lt; 끝에 셈여림 글자(p·mf 등)가 없으면 줄어든 크기가 곡 끝까지 이어져, 달빛항해 대금은 17마디부터·해금은 15마디부터 소리가 갑자기 작아졌습니다(11월 11일 '작아지는 꺾쇠를 더 뚜렷하게' 뒤로 두드러짐). 이제 꺾쇠는 그 구간에서만 크기를 바꾸고, 끝나면 마지막 셈여림 글자의 크기로 돌아옵니다. 꺾쇠 끝에 셈여림 글자가 있으면 그 크기를 따릅니다. 꺾쇠가 없는 다른 악기는 영향이 없습니다.</p></details></li>
       <li><details><summary>휴대폰에서 악보 파일 창이 화면보다 넓어지던 문제</summary><p>곡 제목을 바꾼 뒤 [악보]를 누르면 창이 화면보다 넓어져 왼쪽이 잘렸습니다. 제목 칸이 화면 폭에 맞춰 줄어들게 고쳤습니다.</p></details></li>
@@ -3597,6 +3597,7 @@ let building = false, playTok = 0, pendingBar = null, cancelPlay = false;   // c
 let rampCur = 100, rampLap = 1, rampLastT = 0, rampReset = true;   // 반복할 때마다 빠르게 (아래 rampBegin)
 async function play(offset = 0) {
   if (building) return;
+  if (demoAudio) demoStop();   // 음색 들어보기(되풀이)가 울리고 있으면 멈추고 곡을 재생
   resumeAt = null;   // 소리를 만드는 중에 마디·스페이스바를 또 누르면 같은 소리를 두 번 만들지 않게
   if (noBars()) { stop(true); $('nowText').innerHTML = '<b>재생할 마디가 없습니다</b>'; return; }
   if (tempoBlocked()) { stop(true); return; }
@@ -5571,6 +5572,7 @@ let curTab = (() => { try { return localStorage.getItem(TAB_KEY) || 'inst'; } ca
 if (!['inst', 'tempo', 'play', 'save', 'tone'].includes(curTab)) curTab = 'inst';
 if (/[#&]allpanes\b/.test(location.hash)) document.body.classList.add('all-panes');   // 시험용: 모든 칸을 펼쳐 보이기
 function showTab(t, open) {
+  if (t !== 'tone' && demoAudio) demoStop();   // 음색 칸을 떠나면 들어보기(되풀이)를 멈춤
   curTab = t;
   try { localStorage.setItem(TAB_KEY, t); } catch (e) {}
   document.querySelectorAll('.tab2').forEach(b => { const on = b.dataset.tab === t; b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
@@ -5580,6 +5582,7 @@ function showTab(t, open) {
   const sb = $('sidebar'); if (sb && !NARROW.matches) sb.scrollTop = 0;
 }
 function setSheet(on) {
+  if (!on && demoAudio) demoStop();   // 서랍을 닫으면 들어보기를 멈춤
   document.body.classList.toggle('sheet-open', !!on);
   document.querySelectorAll('.dtab').forEach(b => b.classList.toggle('on', !!on && b.dataset.tab === curTab));
 }
