@@ -1855,7 +1855,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노는 조금 크게 했습니다(대금·소금·해금·피리·장구는 다른 곡에서 밸런스가 맞지 않아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>6건</small></summary><ul class="hlist bug">
+      <li><details><summary>월광: 가야금 등이 숨은 쉼표만큼 앞당겨 연주되던 문제</summary><p>월광의 12/8 대목(18·20·26·28·54·56마디 등)에서 가야금 윗줄 ♪ ♪. ♬ ♪ 앞의 숨은 4분쉼표를 몰라 음이 앞당겨지고, 아랫줄 4분음표가 제자리(0·3/4박)가 아니라 0·1/4박에 놓이던 것을, 같은 단 다른 악기들과 세로 자리를 맞춰 바로잡았습니다. 다른 곡에는 적용하지 않았습니다(다른 곡은 그대로).</p></details></li>
       <li><details><summary>악보로 보기: 어떤 쪽에서 노란 칸이 위쪽 악기들에만 그려지던 문제</summary><p>방황 31쪽(253마디부터)·판놀음 3쪽처럼 관악과 나머지 악기의 마디선이 끊겨 그려진 쪽에서, 노란 칸과 빨간 재생 선이 위쪽 관악 묶음에만 그려져 아래 악기를 보면 따라가기가 멈춘 것처럼 보였습니다. 이제 단 전체에 그립니다.</p></details></li>
       <li><details><summary>붙임줄로 이어진 음을 다시 치던 문제</summary><p>여러 줄이 함께 빠르게 연주하는 마디 뒤라 이어 줄 앞 음을 놓치던 것, 화음의 붙임줄이 음마다 따로 적혀 있으면 한 음만 잇던 것, 붙임줄로 이어진 타악 트레몰로를 고쳤습니다. (악보에서 붙임줄을 읽는 방법을 바꾼 부분은 월광에서 음을 잘못 읽어 되돌렸고, 다시 검증해 넣을 예정입니다.)</p></details></li>
       <li><details><summary>신고에 첨부한 파일이 메일에 실제로 붙지 않던 문제</summary><p>[문제점 신고하기]에 악보 파일을 첨부해도 메일에는 파일 이름과 크기만 글자로 오고 내려받을 수 없었습니다. 첨부가 있으면 파일을 실어 보내는 방식으로 바꿨습니다.</p></details></li>
@@ -4970,29 +4971,37 @@ function alignFreeBars(res, others) {
   });
   return changed ? { ...res, bars } : res;
 }
-function alignToSystem(res, others) {
+function alignToSystem(res, others, opts) {
+  const allowShort = !!(opts && opts.short);   // 숨은 쉼표 마디 다시 읽기는 앱이 고른 악보만(169번)
   if (!res || !res.bars || !res.geo) return res;
   res = alignFreeBars(res, others);
   const n = res.bars.length, peers = (others || []).filter(o => o && o !== res && o.bars && o.bars.length === n && o.geo);
   if (!peers.length) return res;
   let changed = 0;
   const bars = res.bars.map((b, i) => {
-    if (!b.warnings || !b.warnings.some(w => ALIGN_BAD.test(w))) return b;
+    const bad = !!(b.warnings && b.warnings.some(w => ALIGN_BAD.test(w)));
     const g = res.geo[i]; if (!g || g.page == null || !b.events.length) return b;
     // 같은 단(같은 쪽)의, 경고 없이 읽힌 다른 줄의 음 자리
     // 마디 길이는 경고 없는 줄들의 다수결(둘 이상, 다른 값보다 많아야) — 한 줄이 길이를 잘못 읽었을 때 따라가지 않도록
-    const ok = peers.map(o => [o.bars[i], o.geo[i]]).filter(([ob, og]) => ob && og && og.page === g.page && !ob.warnings.length && ob.number === b.number && ob.kind === 'normal');
-    const cnt = new Map(); for (const [ob] of ok) { const k = String(ob.barLen); cnt.set(k, (cnt.get(k) || 0) + 1); }
-    const top = [...cnt.entries()].sort((p, q) => q[1] - p[1]);
-    if (!top.length || top[0][1] < 2 || (top[1] && top[1][1] >= top[0][1])) return b;
-    let L = null; const raw = [];
-    for (const [ob, og] of ok) {
-      if (String(ob.barLen) !== top[0][0]) continue;
-      L = ob.barLen;
-      // 다른 줄의 음(붙임줄 이음 제외)의 가로 자리와 정확한 시각(분수) — 다섯잇단·셋잇단도 그대로
-      for (const e of ob.events) if (e.x != null && !e.tie) raw.push({ x: e.x, t: e.t });
-    }
-    if (!L || raw.length < 2) return b;
+    // 마디 길이(L)와 기준 자리: withEmpty면 쉬는 줄도 표를 넣음(예전 방식 — '박자보다 김' 마디는 그대로), 아니면 음이 있는 줄만
+    const pick = withEmpty => {
+      const ok = peers.map(o => [o.bars[i], o.geo[i]]).filter(([ob, og]) => ob && og && og.page === g.page && !ob.warnings.length && ob.number === b.number && ob.kind === 'normal' && (withEmpty || ob.events.length));
+      const cnt = new Map(); for (const [ob] of ok) { const k = String(ob.barLen); cnt.set(k, (cnt.get(k) || 0) + 1); }
+      const top = [...cnt.entries()].sort((p, q) => q[1] - p[1]);
+      if (!top.length || top[0][1] < 2 || (top[1] && top[1][1] >= top[0][1])) return null;
+      let L = null, lines = 0; const raw = [];
+      for (const [ob] of ok) { if (String(ob.barLen) !== top[0][0]) continue; L = ob.barLen; let k = 0;
+        for (const e of ob.events) if (e.x != null && !e.tie) { raw.push({ x: e.x, t: e.t }); k++; } if (k) lines++; }   // 다른 줄의 음(붙임줄 이음 제외)의 가로 자리와 정확한 시각(분수)
+      return L && raw.length >= 2 ? { L, raw, lines } : null;
+    };
+    // 짧은 마디(166번): 성부마다 음 길이 합(같은 때 화음은 하나로)이 모두 같은 단 다른 줄(음이 있는 줄)들의 마디 길이보다 짧음 = 숨은 쉼표가 있음
+    // (박자표 없이 마디 길이를 음으로 짐작한 악보). 음을 앞에서부터 붙여 읽어 시각이 당겨진다 — 월광 가야금 18·20·26마디: 12/8 마디의 ♪♪.♬♪ 앞 숨은 4분쉼표, 아랫줄 4분음표가 0·3/4이 아니라 0·1/4
+    const vsum = v => { const seen = new Set(); let t = 0; for (const e of b.events) if (e.voice === v && !seen.has(String(e.t))) { seen.add(String(e.t)); t += e.dur.v; } return t; };
+    const pn = allowShort && b.kind === 'normal' ? pick(false) : null;
+    const short = !!(pn && pn.lines >= 2 && Math.max(vsum('R'), vsum('L')) < pn.L.v - 1e-9);
+    if (!bad && !short) return b;
+    const pk = short ? pn : pick(true); if (!pk) return b;
+    const { L, raw } = pk;
     // 가로로 가까운 점(2pt 안)은 하나로 — 시각이 다르면 믿지 않는다
     raw.sort((p, q) => p.x - q.x);
     const anch = [];
@@ -5012,7 +5021,8 @@ function alignToSystem(res, others) {
       let best = null; for (const a of A) { const d = Math.abs(a.x - e.x); if (d <= tol && (!best || d < best.d)) best = { d, a }; }
       if (!best) { pend.push(e); continue; }
       const tt = best.a.t; if (!(tt >= 0 && tt < L.v)) return b;
-      if (!e.t.n && tt > 1e-9) return b;   // 마디 첫 음(처음 읽기에서 시각 0)이 뒤로 밀리면 기준 자리가 어긋난 것 — 손대지 않음
+      if (!e.t.n && tt > 1e-9 && !short) return b;   // 마디 첫 음(처음 읽기에서 시각 0)이 뒤로 밀리면 기준 자리가 어긋난 것 — 손대지 않음(짧은 마디는 앞에 숨은 쉼표가 있을 수 있음)
+      if (short && best.d > 3) return b;   // 짧은 마디는 자리가 확실할 때만
       evs.push({ ...e, t: best.a.tf });
     }
     // 다른 줄에 같은 자리 음이 없는 음(이 줄에만 있는 리듬): 같은 성부 바로 앞 음의 시각 + 그 음의 적힌 길이.
@@ -5058,8 +5068,16 @@ function alignToSystem(res, others) {
       if (!e.tie) prevOf.set(e.voice, { d0, d: e.dur });
     }
     changed++;
-    return { ...b, barLen: L, events: out, warnings: [...b.warnings.filter(w => !ALIGN_BAD.test(w)), '다른 줄과 세로 자리를 맞춰 음 길이를 다시 읽음'] };
+    return { ...b, barLen: L, events: out, warnings: [...b.warnings.filter(w => !ALIGN_BAD.test(w) && !(short && /쉼표 일부 숨김/.test(w))), bad ? '다른 줄과 세로 자리를 맞춰 음 길이를 다시 읽음' : '숨은 쉼표: 다른 줄과 세로 자리를 맞춰 시각을 다시 읽음'] };
   });
+  // 한 마디 되풀이(%) 마디는 앞 마디 음을 그대로 옮긴 것 — 앞 마디를 다시 읽었으면 같은 음을 쓴다(월광 가야금 57마디)
+  for (let i = 1; allowShort && i < bars.length; i++) {
+    const b = res.bars[i];
+    if (b.kind !== 'repeat1' || bars[i] !== b || bars[i - 1] === res.bars[i - 1] || !b.events.length) continue;
+    const sig = x => x.events.map(e => `${e.voice}${e.t}+${e.dur}[${(e.midis || []).join('.')}]`).join(' ');
+    if (sig(b) !== sig(res.bars[i - 1])) continue;
+    bars[i] = { ...b, barLen: bars[i - 1].barLen, events: bars[i - 1].events.map(e => ({ ...e, midis: e.midis ? e.midis.slice() : e.midis })), warnings: bars[i - 1].warnings.slice() }; changed++;
+  }
   if (!changed) return res;
   return { ...res, bars, aligned: changed };
 }
@@ -8863,13 +8881,17 @@ function lineLabel(id) { const item = state.lineList.find(l => cfgKey(l.id) === 
 // 총보에서 음 길이를 잘못 읽어 마디가 넘친 줄: 같은 단의 다른 줄들과 세로 자리를 맞춰 다시 읽는다(alignToSystem).
 // 다른 줄 해석은 악보마다 한 번만 해 두고(_rawCache) 같이 쓴다. 그런 마디가 없으면 다른 줄은 해석하지 않는다
 const ALIGN_NEED = /박자보다 김|마디 길이를 넘음|마디선이 보이지 않아/;   // 마지막 것: 마디선 없는 자유 박 마디(alignFreeBars)
+// 숨은 쉼표 마디(169번)를 세로 자리로 다시 읽는 악보 — 다른 곡에 영향을 주지 않도록 확인한 악보만(사용자 선택 '나'). 키 = 악보 지문(scoreFingerprint)
+// 월광(경기도립국악단 위촉작품, 월광-스코어.pdf): 가야금 18·20·26·28·54·56마디 등 12/8 마디의 숨은 4분쉼표
+const ALIGN_SHORT = new Set(['3f32a068c87af148-564918']);
 function alignRaw(sc, lineId, raw) {
   try {
-    if (!sc || !sc.lines || sc.lines.length < 2 || lineId == null || !raw || !raw.bars.some(b => b.warnings.some(w => ALIGN_NEED.test(w)))) return raw;
+    const short = !!(sc && ALIGN_SHORT.has(sc.fp));
+    if (!sc || !sc.lines || sc.lines.length < 2 || lineId == null || !raw || !raw.bars.some(b => b.warnings.some(w => ALIGN_NEED.test(w) || (short && /쉼표 일부 숨김/.test(w))))) return raw;
     const cache = sc._rawCache || (sc._rawCache = {});
     cache[lineId] = raw;
     const others = sc.lines.map((l, i) => i === lineId ? null : (cache[i] || (cache[i] = analyzeLine(sc, i)))).filter(Boolean);
-    return alignToSystem(raw, others);
+    return alignToSystem(raw, others, { short });
   } catch (e) { console.warn('alignRaw', e); return raw; }
 }
 // 고른 줄들을 해석해 하나의 마디 목록으로 합친다 (기준 = 고른 줄 중 맨 위)
@@ -10663,7 +10685,7 @@ $('histBtn').addEventListener('click', openHistory); $('histBtn2').addEventListe
 // ---------- 판 번호와 새 판 알림 ----------
 // 빌드할 때 판 번호(만든 날짜·시각)를 넣는다. 웹 주소(GitHub Pages)에서 열었을 때는 version.json을 가끔 확인해
 // 열어 둔 화면보다 새 판이 올라와 있으면 '새로 고침' 안내를 띄운다
-const APP_VERSION = '2026-11-12 23:20';
+const APP_VERSION = '2026-11-12 23:50';
 $('appVer').textContent = APP_VERSION && !APP_VERSION.startsWith('/*') ? `ScoreWorks ${APP_VERSION} 판` : 'ScoreWorks';
 {
   const hosted = (() => { try { return window.top === window && /^https?:/.test(location.href) && !/claude\.ai|claudeusercontent/.test(location.host); } catch (e) { return false; } })();
