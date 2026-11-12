@@ -173,6 +173,7 @@ export function renderPlan(bars, order, opts) {
   const spw = n => { const r = rowFor(n); const bpm = r && r.bpm > 0 ? r.bpm : DEFAULT_BPM; return 60 / bpm / UNIT_FRAC[r ? r.unit : 'q'] / opts.speed; };
   const hits = []; // [time, soundKey, gain]
   const notes = []; // 선율 악기 음 (melody-engine.mixNotes로 합성)
+  const lastOf = new Map();   // 줄|음높이 → 그 음을 마지막으로 낸 음 (붙임줄로 이을 앞 음 찾기)
   const barTimes = [];
   let cur = 0.3;
   if (opts.countIn && order.length) {
@@ -250,8 +251,15 @@ export function renderPlan(bars, order, opts) {
         if (e.tie) {
           // 마디를 넘는 붙임줄: 앞 음을 늘린다. 붙임줄 곡선 높이로 성부를 정해 앞 음과 성부가 다르게 읽히기도 하므로 성부는 따지지 않는다.
           // 이을 앞 음이 없으면(이음줄을 붙임줄로 읽은 경우 등) 버리지 않고 새 음으로 친다 (예전에는 그 음이 통째로 빠졌다)
-          const prev = notes.slice(-60).reverse().find(n => n.line === e.line && n.midis.some(m => midis.includes(m)) && Math.abs(n.t + n.dur - ts) < 0.06);
-          if (prev) { prev.dur += dsec; continue; }
+          // 앞 음은 줄·음높이마다 기억해 둔 것에서 찾는다: 전에는 바로 앞 60개 음만 보아, 총보에서 여러 줄이 16분음표를 치는 마디 뒤의
+          // 붙임줄은 앞 음을 못 찾아 다시 치던 것(방황 피리 64→65마디 등). 화음의 일부만 이어지면 그 음만 떼어 늘린다
+          const prev = midis.map(m => lastOf.get(e.line + '|' + m)).find(n => n && Math.abs(n.t + n.dur - ts) < 0.06);
+          if (prev) {
+            const keep = prev.midis.filter(m => midis.includes(m)), rest = prev.midis.filter(m => !midis.includes(m));
+            if (rest.length) { const other = { ...prev, midis: rest, graces: null }; notes.splice(notes.indexOf(prev) + 1, 0, other); prev.midis = keep; }   // 앞 음 바로 뒤에 (notes는 마디 순)
+            prev.dur += dsec; for (const m of keep) lastOf.set(e.line + '|' + m, prev);
+            continue;
+          }
         }
         let dl = opts.useLvl && e.lvl != null ? e.lvl / 0.75 : dynAt(bi + e.t.v / L);
         let tsH = ts;
@@ -263,10 +271,11 @@ export function renderPlan(bars, order, opts) {
         }
         // 스타카토: 적힌 길이의 절반쯤만 소리 내고 끊는다 (선율 악기)
         const sdur = e.stacc && !e.ten && opts.stacc !== false ? Math.max(0.06, Math.min(dsec * 0.5, 0.35)) : dsec;
-        notes.push({ t: tsH, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
+        const nt = { t: tsH, inst: mel.inst, midis, dur: sdur, gain: (e.accent ? ACC_MEL : 0.75) * dl * lg, line: e.line, voice: e.voice, bi,
           dynL: e.dynL || null, dynOff: e.dynOff || 0,
           trem: !!e.roll && !e.trill, trill: e.trill && opts.trill !== false ? (e.trillInt || 2) : 0, nong: mel.nong !== false,
-          graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null });
+          graces: e.graceMidis ? e.graceMidis.map(m => m + 12 * (mel.oct || 0) + (opts.shift || 0)) : null };
+        notes.push(nt); for (const m of midis) lastOf.set(e.line + '|' + m, nt);
         continue;
       }
       if (e.tie) continue;
