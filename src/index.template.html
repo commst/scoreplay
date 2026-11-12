@@ -1846,7 +1846,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
     </ul>
       <details class="hbug"><summary>버그 수정 <small>5건</small></summary><ul class="hlist bug">
       <li><details><summary>악보로 보기: 어떤 쪽에서 노란 칸이 위쪽 악기들에만 그려지던 문제</summary><p>방황 31쪽(253마디부터)·판놀음 3쪽처럼 관악과 나머지 악기의 마디선이 끊겨 그려진 쪽에서, 노란 칸과 빨간 재생 선이 위쪽 관악 묶음에만 그려져 아래 악기를 보면 따라가기가 멈춘 것처럼 보였습니다. 이제 단 전체에 그립니다.</p></details></li>
-      <li><details><summary>붙임줄로 이어진 음을 다시 치던 문제</summary><p>붙임줄로 이어진 뒤 음은 앞 음의 울림을 이어야 하는데 다시 소리를 내던 곳들을 고쳤습니다. 여러 줄이 함께 빠르게 연주하는 마디 뒤라 이어 줄 앞 음을 놓치던 것, 화음의 붙임줄이 음마다 따로 적혀 있으면 한 음만 잇던 것을 고쳤습니다. (악보에서 붙임줄을 읽는 방법을 바꾼 부분은 월광에서 음을 잘못 읽는 부작용이 있어 같은 날 되돌렸고, 다시 검증해 넣을 예정입니다.)</p></details></li>
+      <li><details><summary>붙임줄 처리 변경을 되돌림</summary><p>오늘 바꾼 붙임줄 처리(악보 읽기·재생·MusicXML)가 월광 등에서 음을 이상하게 읽고 재생하는 문제를 일으켜, 모두 어제 상태로 되돌렸습니다. 붙임줄 문제는 충분히 검증한 뒤 다시 고치겠습니다.</p></details></li>
       <li><details><summary>신고에 첨부한 파일이 메일에 실제로 붙지 않던 문제</summary><p>[문제점 신고하기]에 악보 파일을 첨부해도 메일에는 파일 이름과 크기만 글자로 오고 내려받을 수 없었습니다. 첨부가 있으면 파일을 실어 보내는 방식으로 바꿨습니다.</p></details></li>
       <li><details><summary>작아지는 꺾쇠(&gt;) 뒤로 악기 소리가 계속 작게 남던 문제 (긴급)</summary><p>꺾쇠 &gt;·&lt; 끝에 셈여림 글자(p·mf 등)가 없으면 줄어든 크기가 곡 끝까지 이어져, 달빛항해 대금은 17마디부터·해금은 15마디부터 소리가 갑자기 작아졌습니다(11월 11일 '작아지는 꺾쇠를 더 뚜렷하게' 뒤로 두드러짐). 이제 꺾쇠는 그 구간에서만 크기를 바꾸고, 끝나면 마지막 셈여림 글자의 크기로 돌아옵니다. 꺾쇠 끝에 셈여림 글자가 있으면 그 크기를 따릅니다. 꺾쇠가 없는 다른 악기는 영향이 없습니다.</p></details></li>
       <li><details><summary>휴대폰에서 악보 파일 창이 화면보다 넓어지던 문제</summary><p>곡 제목을 바꾼 뒤 [악보]를 누르면 창이 화면보다 넓어져 왼쪽이 잘렸습니다. 제목 칸이 화면 폭에 맞춰 줄어들게 고쳤습니다.</p></details></li>
@@ -5158,7 +5158,7 @@ function buildMusicXml() {
       const evs = [];
       const G = Q / 8, S16 = Q / 4;
       for (const e of b.events.filter(mine)) {
-        let st = Math.round(e.t.v * W), nat = Math.round((e.sus || e.dur).v * W);
+        let st = Math.round(e.t.v * W), nat = Math.round((perc ? e.dur : (e.sus || e.dur)).v * W);
         // snap: 잇단음표가 반쯤만 읽힌 마디(셋잇단과 보통 음이 한 박에 섞임) — 그런 음만 16분음표 칸에 맞춘다 (뮤즈스코어가 '깨진 파일'로 여기지 않게)
         if (snap && (st % G || (st + nat) % G)) { const s2 = Math.min(L - S16, Math.round(st / S16) * S16), e2 = Math.max(s2 + S16, Math.min(L, Math.round((st + nat) / S16) * S16)); st = s2; nat = e2 - s2; }
         const pc = !snap && !perc && e.midis && e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
@@ -5216,7 +5216,7 @@ function buildMusicXml() {
           const nx = vv.slice(k + 1).find(o => o.st > st);
           const d = Math.max(1, Math.min(x.nat, (nx ? nx.st : L) - st, L - st));
           // 악보에 붙임줄로 적힌 음은 적힌 조각 그대로 (길이가 맞고 조각마다 한 음표로 적을 수 있을 때)
-          const pcs = e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
+          const pcs = !perc && e.pcs && e.pcs.length > 1 ? e.pcs.map(f => Math.round(f.v * W)) : null;
           const ps = pcs && pcs.reduce((a, c) => a + c, 0) === d && pcs.every(v => typeOf(v).type) ? pcs : pieces(d);
           if (perc || !e.midis) {
             // 타악: 악보의 줄·칸 자리(가운데 줄 = B4, 반 칸씩)와 X 머리. 자리를 모르면 위 성부 C5·아래 성부 F4
@@ -5225,7 +5225,7 @@ function buildMusicXml() {
             ps.forEach((pd, pi) => {
               heads.forEach((h, j) => {
                 const idx = h.pos != null ? mid - h.pos : e.voice === 'L' ? mid - 3 : mid + 1;
-                objs.push({ d: pd, voice, st: p, perc: true, inst: g.instOf ? g.instOf(S.ln, e.voice) : null, chord: j > 0, low: e.voice === 'L', dstep: LET[((idx % 7) + 7) % 7], doct: Math.floor(idx / 7), accent: pi === 0 && e.accent, xh: h.xh, stacc: pi === ps.length - 1 && e.stacc, roll: pi === 0 && e.roll && !!e.rollDur, trill: pi === 0 && e.roll && !e.rollDur, twoV, tieStart: pi < ps.length - 1, tieStop: pi > 0, inner: pi > 0 });   // 굴림: 빗금(트레몰로)으로 적힌 것은 빗금, tr로 적힌 것은 tr
+                objs.push({ d: pd, voice, st: p, perc: true, inst: g.instOf ? g.instOf(S.ln, e.voice) : null, chord: j > 0, low: e.voice === 'L', dstep: LET[((idx % 7) + 7) % 7], doct: Math.floor(idx / 7), accent: pi === 0 && e.accent, xh: h.xh, stacc: pi === ps.length - 1 && e.stacc, roll: pi === 0 && e.roll && !!e.rollDur, trill: pi === 0 && e.roll && !e.rollDur, twoV });   // 굴림: 빗금(트레몰로)으로 적힌 것은 빗금, tr로 적힌 것은 tr
               });
               p += pd;
             });

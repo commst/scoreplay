@@ -1,11 +1,11 @@
 # ScoreWorks(옛 이름 합주연습기) 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-12 18:20, CHANGELOG 165번까지)
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-12 22:25, CHANGELOG 166번까지)
 
 ## 할 일 순서 (11-12 16:44 사용자 지정 — 이 순서대로)
 
 **가. 160번 — 특정 악기 소리가 갑자기 작아짐 — 고쳐 긴급 배포함(11-12). 원인: 끝 셈여림 없는 꺾쇠 뒤로 줄어든 크기가 곡 끝까지 남음(145번에서 두드러짐). 남은 것: dynstuck 전체 결과 보고**: 달빛항해 대금만 켜고 재생하면 처음엔 크다가 17마디부터 갑자기 작아짐, 해금은 15마디부터. 다른 곡·타악기에도 있을 수 있음. **원인과 발생 시점(처음부터인지, 어느 업데이트부터인지)을 밝히고 재발 막는 시험까지**
-**나. 159번 붙임줄 — 해석기 쪽은 165번에서 되돌림(월광 가야금 26·173, 거문고 167마디가 틀려짐). 재생 쪽(lastOf)만 살아 있음. 다시 넣으려면 /tmp/sp-159.js(= 커밋 a736e92의 src/score-parser.js)에서 출발해 `PREV=<옛 해석기> node test/_bdall.mjs <총보>`의 NOTES 마디를 모든 총보에서 그림 대조. 아래는 기록**: 작업 중 변경은 **wip-159 브랜치**(a50235b)에 있음 — 해석기 붙임줄 짝짓기(곡선 테두리 밖 머리 fit/pickAt, 성부 무관 짝짓기를 타악 줄에도, 사이 머리 검사 hd×1.4), 재생 renderPlan lastOf(줄|음높이로 앞 음 찾기, 화음 일부만 이어지면 떼어 늘림), 타악 붙임줄 sus/pcs와 MusicXML 타악 조각 붙임줄. 전체 회귀가 도중에 끊김. 끊긴 결과에서 의심 마디: 바르도 소아쟁(01391308) 1마디(화음 붙임줄이 아랫음에만 붙고 윗음 65가 다시 침), 4마디(61 붙임줄 사라짐), 미락흘 Cymbals(004d79b5) 97마디가 빔(EMPTIED) → 그림(test/crop.mjs)과 대조해 고친 뒤 `bash test/cmp/reg2.sh /home/claude/prev test/regrn.mjs`. 마디 사건 비교 test/_bd2.mjs <접두어> <줄> <마디…>
+**나. 159번 붙임줄 — 166번에서 해석기·재생·MusicXML 모두 되돌림(사용자: 이음줄 처리 전이 정상). 다시 할 때는 사용자와 먼저 상의. 숨은 쉼표 마디(월광 가야금 18마디 등) 고침은 /tmp/wip166-parser.patch(회귀 그림 대조 필요). 예전 기록: 해석기 쪽은 165번에서 되돌림(월광 가야금 26·173, 거문고 167마디가 틀려짐). 재생 쪽(lastOf)만 살아 있음. 다시 넣으려면 /tmp/sp-159.js(= 커밋 a736e92의 src/score-parser.js)에서 출발해 `PREV=<옛 해석기> node test/_bdall.mjs <총보>`의 NOTES 마디를 모든 총보에서 그림 대조. 아래는 기록**: 작업 중 변경은 **wip-159 브랜치**(a50235b)에 있음 — 해석기 붙임줄 짝짓기(곡선 테두리 밖 머리 fit/pickAt, 성부 무관 짝짓기를 타악 줄에도, 사이 머리 검사 hd×1.4), 재생 renderPlan lastOf(줄|음높이로 앞 음 찾기, 화음 일부만 이어지면 떼어 늘림), 타악 붙임줄 sus/pcs와 MusicXML 타악 조각 붙임줄. 전체 회귀가 도중에 끊김. 끊긴 결과에서 의심 마디: 바르도 소아쟁(01391308) 1마디(화음 붙임줄이 아랫음에만 붙고 윗음 65가 다시 침), 4마디(61 붙임줄 사라짐), 미락흘 Cymbals(004d79b5) 97마디가 빔(EMPTIED) → 그림(test/crop.mjs)과 대조해 고친 뒤 `bash test/cmp/reg2.sh /home/claude/prev test/regrn.mjs`. 마디 사건 비교 test/_bd2.mjs <접두어> <줄> <마디…>
 **다. 음색 탭 [들어보기] — 161번에서 끝남**: 멈춤을 누를 때까지 계속 재생, 재생 중 설정을 바꾸면 바로 들리게. 음색 설정도 원격 저장소(공유 설정)에 저장·불러오기
 **라. 문제점 신고 첨부 — 162번에서 고침(숨은 폼 전송). 사용자가 실제 gmail로 받아지는지 확인 대기**: 전송·오류는 없으나 gmail에서 첨부가 이름·용량 글자로만 보이고 내려받을 수 없음(FormSubmit ajax 주소는 파일을 붙이지 않음) → 숨은 form + iframe 등 실제 첨부 방식으로
 **마. 아래 159번의 2·3번 — 164번에서 3번(묶음으로 나뉜 쪽의 노란 칸) 고침. 2번 245마디는 재현 안 됨 → 사용자에게 기기·보기·켠 악기 물어봄** (방황 245·253마디 따라가기, 아랫단 따라가기)
@@ -163,7 +163,7 @@
 4. 세로 맞춤을 건드렸으면 `test/alignregr.mjs` (alt=0, lost 없음, broken=0)
 
 앱·MusicXML:
-5. 빌드 후 **`node test/dynlevel.mjs`(셈여림 규칙 — 160번)**, **`node test/tieplan.mjs`(재생 붙임줄 잇기)**, **`node test/tdzcheck.cjs index.html`(선언 전 접근 후보)**, **`node test/pwboot.cjs index.html`(저장된 설정으로 시작되는지 — 113번)**, `node test/pwv2.cjs <html> desktop|tablet|phone`, `node test/fuzz2.cjs <씨앗> 50 [mobile]`, `node test/pwedit.cjs <html>`, 화면 관련이면 pwtabland·pwseek·pwspeed·pwpause·pwaxe·pwcontrast
+5. 빌드 후 **`node test/dynlevel.mjs`(셈여림 규칙 — 160번)**, **`node test/tdzcheck.cjs index.html`(선언 전 접근 후보)**, **`node test/pwboot.cjs index.html`(저장된 설정으로 시작되는지 — 113번)**, `node test/pwv2.cjs <html> desktop|tablet|phone`, `node test/fuzz2.cjs <씨앗> 50 [mobile]`, `node test/pwedit.cjs <html>`, 화면 관련이면 pwtabland·pwseek·pwspeed·pwpause·pwaxe·pwcontrast
 6. MusicXML: `node test/pwxml.cjs <접두어…>`(앱에서 모든 줄 켜고 내보내기 → test/xmlout/), `python3 test/xsdcheck.py xmlout/*.musicxml`(전부 VALID), `python3 test/xmlcheck.py <접두어…>`(원래 음 대비 빠짐·더함), `python3 test/integrity.py …`(붙임줄·이음줄·잇단 짝 0 오류), `bash test/msall.sh <절대경로…>`(뮤즈스코어로 열기 rc=0, 쪽 수)
 7. 이전 판과 견줄 때: `HTML=<이전 index.html> node test/pwxml.cjs …`
 
