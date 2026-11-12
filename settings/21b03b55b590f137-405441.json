@@ -5,7 +5,7 @@
  "titleRead": "달해",
  "songTitle": "달빛항해",
  "file": "달빛항해(Score).pdf",
- "saved": "2026-11-11T10:32:18.276Z",
+ "saved": "2026-11-12T03:56:13.320Z",
  "lastBar": 152,
  "lines": {
   "main:0": {
@@ -23,7 +23,7 @@
    "role": "melody",
    "inst": "daegeum",
    "oct": 0,
-   "vol": 1,
+   "vol": 1.3536837106186015,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -103,7 +103,7 @@
    "role": "melody",
    "inst": "yanggeum",
    "oct": 0,
-   "vol": 1,
+   "vol": 0.31622776601683794,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -153,7 +153,7 @@
    "role": "perc",
    "inst": null,
    "oct": 0,
-   "vol": 1,
+   "vol": 1.1715255425452746,
    "R": "징",
    "L": "징",
    "nong": false
