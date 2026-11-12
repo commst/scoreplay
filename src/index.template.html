@@ -1831,7 +1831,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노는 조금 크게 했습니다(대금·소금·해금·피리·장구는 다른 곡에서 밸런스가 맞지 않아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>1건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>2건</small></summary><ul class="hlist bug">
+      <li><details><summary>작아지는 꺾쇠(&gt;) 뒤로 악기 소리가 계속 작게 남던 문제 (긴급)</summary><p>꺾쇠 &gt;·&lt; 끝에 셈여림 글자(p·mf 등)가 없으면 줄어든 크기가 곡 끝까지 이어져, 달빛항해 대금은 17마디부터·해금은 15마디부터 소리가 갑자기 작아졌습니다(11월 11일 '작아지는 꺾쇠를 더 뚜렷하게' 뒤로 두드러짐). 이제 꺾쇠는 그 구간에서만 크기를 바꾸고, 끝나면 마지막 셈여림 글자의 크기로 돌아옵니다. 꺾쇠 끝에 셈여림 글자가 있으면 그 크기를 따릅니다. 꺾쇠가 없는 다른 악기는 영향이 없습니다.</p></details></li>
       <li><details><summary>휴대폰에서 악보 파일 창이 화면보다 넓어지던 문제</summary><p>곡 제목을 바꾼 뒤 [악보]를 누르면 창이 화면보다 넓어져 왼쪽이 잘렸습니다. 제목 칸이 화면 폭에 맞춰 줄어들게 고쳤습니다.</p></details></li>
     </ul></details>
   </section>

@@ -111,12 +111,16 @@ const BUK_MID = 4, BUK_CLICK = 0.6;
 //  꽹과리·심벌·바라·하이햇 −4, 스네어·징 −3, 봉고 −1, 트라이앵글·탬버린·카바사·윈드차임 −5). '덩'은 따의 1.1배
 const GAIN = { '따': 2.06, '궁': 1.37, '꽹과리': 1.65, '꽹과리막음': 1.48, '징': 1.13, '북': 3.04, '북녹음': 3.31, '북짧게': 2.87, '바라': 1.14, '심벌': 1.28, '하이햇': 1.49, '베이스드럼': 2.0, '스네어': 1.9, '봉고': 2.87, '봉고높게': 3.22, '탬버린': 1.55, '트라이앵글': 1.14, '카바사': 3.44, '윈드차임': 0.6, '팀파니': 2.29, '팀파니높게': 2.48, '덩': 2.27, '꽹과리길게': 1.65 };
 // 셈여림 크기 (mf = 0.75 기준). p는 마디 번호 축 위치(0부터)
+// 꺾쇠·글자 cresc./dim.는 끝에 셈여림 글자(target)가 없으면 그 구간 안에서만 크기를 바꾸고, 끝나면 마지막 셈여림 글자의 크기(base)로 돌아온다.
+// 바로 이어지는 꺾쇠(< 뒤 > 등)가 있으면 그 꺾쇠가 이어받는다. (160번: 전에는 줄어든 크기가 다음 셈여림 글자까지 곡 끝까지 남아,
+//  달빛항해 대금 16마디·해금 14마디의 > 뒤로 소리가 −12dB 작은 채로 이어졌다 — 145번에서 > 를 25%까지 줄이며 두드러짐)
+export const DYN_CHAIN = 0.15;   // 꺾쇠 끝과 다음 셈여림 사이가 이만큼(마디) 안이면 이어진 것으로 본다
 export function dynLevelAt(items, p) {
-  let level = 0.75;
+  let level = 0.75, base = 0.75;
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
     if (it.p0 > p) break;
-    if (it.kind === 'mark') { level = it.level; continue; }
+    if (it.kind === 'mark') { level = base = it.level; continue; }
     // 그린 꺾쇠(hp)는 셈여림 글자가 없어도 귀에 들리게 0.25(약 4dB), 글자 cresc.·dim.은 0.15
     // 작아질 때(>·dim.)는 더 뚜렷하게: 그 순간 크기의 25%까지(약 −12dB, 글자 dim.은 45%) — 같은 양만 빼면 거의 들리지 않았음(연변목가 양금 트레몰로)
     const amt = it.hp ? 0.25 : 0.15;
@@ -125,7 +129,9 @@ export function dynLevelAt(items, p) {
     let p1 = it.p1;
     for (let j = i + 1; j < items.length; j++) if (items[j].p0 > it.p0 + 1e-6) { p1 = Math.min(p1, items[j].p0); break; }
     if (p < p1) return level + (target - level) * (p - it.p0) / Math.max(1e-6, p1 - it.p0);
-    level = target;
+    if (it.target != null) { level = base = target; continue; }   // 끝 셈여림이 정해진 꺾쇠: 그 크기가 새 기준
+    const nx = items[i + 1];
+    level = nx && nx.p0 <= p1 + DYN_CHAIN ? target : base;
   }
   return level;
 }
