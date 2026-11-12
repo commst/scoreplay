@@ -302,7 +302,8 @@ export function renderPlan(bars, order, opts) {
         if (!e.grace && ts > t0 + 0.02) ts += 0.004 * hb;
       }
       if (e.roll) {
-        const rd = e.rollDur ? e.rollDur.v : e.dur.v;
+        // 붙임줄로 이어진 굴림(sus — 미락흘 윈드벨 96→97마디)은 이어진 길이까지 굴린다
+        const rd = (e.rollDur ? e.rollDur.v : e.dur.v) + (e.sus ? e.sus.v - e.dur.v : 0);
         const dur = rd <= L - e.t.v + 1e-9 ? clk(e.t.v + rd) - clk(e.t.v) : rd * s / (tempoItems ? tempoFactorAt(tempoItems, bi + e.t.v / L, resets, ritF, accF) : 1);
         // 롤(굴림)은 한 덩어리로 넘기고 mix에서 사람이 굴리는 것처럼 만든다
         hits.push([ts, key, (e.accent ? 1.05 : 0.75) * dl, e.voice, { roll: Math.max(0.08, dur), dynL: e.dynL || null, dynOff: e.dynOff || 0 }]);

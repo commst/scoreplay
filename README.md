@@ -259,9 +259,9 @@ MusicXML을 저장하면 내보낸 파일을 다시 읽어 악보 PDF의 음표 
 
 - 위 막대(맨 오른쪽, 900px 이하에서는 숨김)·사용법 창의 **[문제점 신고하기]**(빨간 글씨). 분류(문제/기능개선)·곡명·마디 위치·내용(모두 비워도 됨)을 적어 [전송]
 - 곡명은 열린 악보 제목, 마디 위치는 지금 재생 위치로 미리 채움. 본문 끝에 앱 판·악보 파일 이름·화면 크기·기기·브라우저 종류를 붙임(악보 파일은 첨부를 고를 때만 보냄)
-- 보내는 길: 폼 전달 서비스 FormSubmit(`https://formsubmit.co/ajax/<받는 주소>`, 소스의 `REPORT_TO`). **처음 한 번** 받는 주소로 온 확인 메일의 [Activate Form]을 눌러야 제보가 도착. 보내지 못하면 메일 앱(mailto)으로 같은 내용을 채워 열지 물음
+- 보내는 길: 폼 전달 서비스 FormSubmit(첨부 없으면 `https://formsubmit.co/ajax/<받는 주소>`에 JSON, 소스의 `REPORT_TO`). **처음 한 번** 받는 주소로 온 확인 메일의 [Activate Form]을 눌러야 제보가 도착. 보내지 못하면 메일 앱(mailto)으로 같은 내용을 채워 열지 물음
 - 받는 주소를 바꾸려면 `REPORT_TO`만 고치고 다시 확인(Activate)
-- **악보 파일 첨부**(158번): [열린 악보 파일 첨부] 체크(처음에는 꺼짐) + 파일 고르기(여러 개). 모두 합쳐 10MB까지. 첨부가 있으면 multipart(FormData)로 보내고, 여러 개면 압축 없는 zip 하나(`scoreworks-report.zip`, audio-engine `zipFiles`)로 묶어 `attachment` 칸에. 메일 앱으로 넘길 때는 첨부되지 않으니 직접 붙이라고 안내
+- **악보 파일 첨부**(158번): [열린 악보 파일 첨부] 체크(처음에는 꺼짐) + 파일 고르기(여러 개). 모두 합쳐 10MB까지. 첨부가 있으면 **ajax가 아닌 보통 폼 전송**(숨은 `<form enctype=multipart/form-data action=https://formsubmit.co/<주소>>`를 숨은 iframe으로, `reportPostForm`)으로 보낸다 — FormSubmit ajax는 파일을 붙이지 않고 이름·크기 글자만 보냄(사용자 확인, 162번). `_next`는 우리 사이트의 `version.json?sent=…`(전체 주소)라 iframe이 그리로 넘어오면 같은 사이트라 읽어 전송 확인, FormSubmit 쪽 페이지에 8초 머물면 실패로 보고 메일 앱 안내(파일로 연 화면에서는 확인 못 함 → '보냄'). 파일은 DataTransfer로 파일 칸에 넣음. 여러 개면 압축 없는 zip 하나(`scoreworks-report.zip`, audio-engine `zipFiles`)로 묶어 `attachment` 칸에. 메일 앱으로 넘길 때는 첨부되지 않으니 직접 붙이라고 안내
 - 시험: `node test/pwreport.cjs`(FormSubmit는 가짜 응답, 첨부 한 개·여러 개)
 
 ### 음색 · 기본 음량 (음색 탭, 158번)
@@ -270,7 +270,8 @@ MusicXML을 저장하면 내보낸 파일을 다시 읽어 악보 PDF의 음표 
 - 저장: localStorage `hapju-tone` = `{ master: {lo,mid,hi}, inst: { gayageum: {vol,lo,mid,hi} … }, perc: { 장구: {…} … } }`(vol은 %, 기본값이 아닌 것만). 곡 설정 파일·공유 설정에는 들어가지 않음
 - 적용: `toneApply()` → melody-engine `setInstTones`(녹음 음원은 원본을 두고 거른 사본, 합성음은 캐시 전에), audio-engine `setPercVolumes` · `applyTone`. 타악 음색은 앱 `percSounds()`가 바뀐 묶음만 거른 소리 표를 만들고, 전체 음색은 `buildAudio`에서 크기 맞추기 전에. 줄 음량(악기 탭)과 곱해짐
 - 타악 묶음 → 소리 이름은 앱의 `TONE_PERC`(장구 = 따·따약·궁·덩·굴림타·따꾸밈 등). 새 타악 소리를 더하면 여기에도 넣을 것
-- 들어보기는 `demoRender(kind, id)`(시험용 `window.__toneDemo`): 크기 맞추기 없이 상수 배율 `TONE_DEMO_K`
+- 들어보기는 `demoRender(kind, id)`(시험용 `window.__toneDemo`): 크기 맞추기 없이 상수 배율 `TONE_DEMO_K`. [■ 멈춤]까지 되풀이(audio.loop). 듣는 동안 막대를 움직이면(input, 0.18초 쉼) 적용·저장하고 `demoRefresh`가 새 소리를 만들어 같은 재생 위치에서 바꿔 끼움(161번)
+- 공유 저장소(161번): [공유 저장소에 저장]·[공유 음색 불러오기] → `settings/_tone.json` = `{ format: 'hapju-tone', v: 1, saved, tone }`(곡 공유 설정과 같은 저장소·토큰 `hapju-gh-token`). 받은 값은 `toneClean`으로 다듬음(모르는 악기·범위 밖 숫자)
 - 시험: `NODE_PATH=/opt/npm-tools/node_modules node test/pwtone.cjs index.html`
 
 

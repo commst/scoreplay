@@ -687,6 +687,10 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .tone-card .trow .num { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
 .tone-card .tbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 .tone-card .tbtns .btn.playing { background: var(--accent); color: #fff; }
+.tone-gh { margin-top: 12px; display: grid; gap: 8px; }
+.tone-gh h3 { margin: 0; font: 700 13.5px/1.3 var(--font-body); color: var(--muted); }
+.tone-gh .hint { margin: 0; }
+.tone-gh .hint.ok { color: var(--accent); }
 .rep-dlg { width: min(520px, 100%); }
 .rep-dlg label.rep-f { display: block; margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--ink); }
 .rep-dlg label.rep-f small { font-weight: 400; color: var(--muted); }
@@ -1700,9 +1704,14 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <div class="pane2" id="pane-tone" role="tabpanel" data-pane="tone" aria-labelledby="tab-tone">
       <section class="panel" aria-labelledby="tToneH">
         <div class="ttl-row"><h2 class="step-h" id="tToneH">음색 · 기본 음량</h2><span class="pill" id="toneState">모두 기본값</span></div>
-        <p class="hint">모든 곡에 함께 적용되는 악기별 <b>기본 음량</b>과 <b>음색</b>(낮은음·가운데·높은음)입니다. 이 기기에 저장되고 곡 설정 파일에는 들어가지 않습니다. 곡마다 다른 크기는 [악기] 칸의 음량 막대로 맞추세요. 바꾼 값은 다음 재생부터 적용됩니다.</p>
+        <p class="hint">모든 곡에 함께 적용되는 악기별 <b>기본 음량</b>과 <b>음색</b>(낮은음·가운데·높은음)입니다. 이 기기에 저장되고 곡 설정 파일에는 들어가지 않습니다. 곡마다 다른 크기는 [악기] 칸의 음량 막대로 맞추세요. 바꾼 값은 다음 재생부터 적용됩니다. [▶ 들어보기]는 [■ 멈춤]을 누를 때까지 되풀이해 들려주고, 듣는 동안 막대를 움직이면 바로 바뀐 소리로 들립니다.</p>
         <div class="btn-grid"><button class="btn" type="button" id="toneResetAll">모두 기본값으로</button><button class="btn" type="button" id="toneExpand" aria-pressed="false">▾ 모두 펼치기</button></div>
         <div class="tone-list" id="toneList"></div>
+        <div class="tone-gh" id="toneGh">
+          <h3>공유 저장소</h3>
+          <div class="btn-grid"><button class="btn" type="button" id="toneGhLoad">공유 음색 불러오기</button><button class="btn" type="button" id="toneGhSave">공유 저장소에 저장</button></div>
+          <p class="hint" id="toneGhState" aria-live="polite"></p>
+        </div>
         <details class="help">
           <summary>설명 보기</summary>
           <dl>
@@ -1713,7 +1722,9 @@ body, button, input, select, textarea { font-family: var(--font-body); }
             <dt>낮은음 · 가운데 · 높은음</dt>
             <dd>−6~+6dB. 낮은음은 250Hz 아래, 가운데는 1kHz 둘레, 높은음은 3.5kHz 위를 올리고 내립니다. 선율 악기는 녹음·합성음 모두에, 타악기는 그 묶음의 소리 모두(예: 장구는 따·궁·덩·굴림)에 적용됩니다.</dd>
             <dt>▶ 들어보기</dt>
-            <dd>지금 값으로 그 악기의 짧은 음계(타악은 몇 타)를 들려줍니다. 전체는 가야금·대금·해금·장구를 함께 들려줍니다. 재생 중이면 잠깐 멈춥니다.</dd>
+            <dd>지금 값으로 그 악기의 짧은 음계(타악은 몇 타)를 [■ 멈춤]을 누를 때까지 되풀이해 들려줍니다. 듣는 동안 막대를 움직이면 곧바로 바뀐 소리로 이어집니다. 전체는 가야금·대금·해금·장구를 함께 들려줍니다. 곡을 재생 중이면 잠깐 멈춥니다.</dd>
+            <dt>공유 저장소</dt>
+            <dd>[공유 저장소에 저장]은 지금 음색·기본 음량을 공유 저장소(곡 공유 설정과 같은 곳)에 올립니다. 저장 토큰은 [저장] 칸 '공유 설정'에서 넣습니다. [공유 음색 불러오기]는 올려 둔 값을 이 기기에 적용합니다(다른 기기에서 맞춘 소리를 그대로 쓸 때).</dd>
             <dt>기본값으로</dt>
             <dd>그 악기만 처음 값(100%, 0dB)으로. [모두 기본값으로]는 전체·모든 악기를 되돌립니다.</dd>
           </dl>
@@ -1821,7 +1832,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>8</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>9</small></h4><ul class="hlist">
+      <li><details><summary>음색 탭 [들어보기]를 멈출 때까지 계속, 음색을 공유 저장소에</summary><p>[▶ 들어보기]가 [■ 멈춤]을 누를 때까지 되풀이해 들려주고, 듣는 동안 음량·음색 막대를 움직이면 멈추지 않고 곧바로 바뀐 소리로 이어집니다. 음색 칸 아래 <b>[공유 저장소에 저장]</b>·<b>[공유 음색 불러오기]</b>로 맞춘 음색·기본 음량을 다른 기기에서도 쓸 수 있습니다(저장 토큰은 [저장] 칸 '공유 설정'과 같은 것).</p></details></li>
       <li><details><summary>음색 탭: 악기별 기본 음량과 음색 (모든 곡에 함께)</summary><p>설정에 다섯째 탭 <b>[음색]</b>이 생겼습니다. 곡과 상관없이 이 기기에서 여는 모든 곡에 적용되는 악기별 <b>기본 음량</b>(0~200%)과 <b>음색</b>(낮은음·가운데·높은음, −6~+6dB)을 정합니다. 선율 악기 13개와 타악기 15묶음, 그리고 모든 소리를 섞은 뒤의 '전체' 음색이 있습니다. <b>[▶ 들어보기]</b>로 바꾼 소리를 바로 듣고, <b>[기본값으로]</b>(그 악기만)·<b>[모두 기본값으로]</b>로 되돌립니다. 곡마다 다른 크기는 전처럼 [악기] 탭의 음량 막대로 맞춥니다.</p></details></li>
       <li><details><summary>문제점 신고하기에 악보 파일 첨부</summary><p>신고 창에 <b>악보 파일 첨부</b>가 생겼습니다. [열린 악보 파일 첨부]를 체크하면 지금 연 악보 PDF가 함께 가고, 화면 그림 같은 다른 파일도 고를 수 있습니다(모두 합쳐 10MB까지, 여러 개면 zip 하나로). 악보 파일은 첨부를 고를 때만 전송됩니다.</p></details></li>
       <li><details><summary>사용법·사용설명서 갱신</summary><p>[프로그램 사용법] 창과 사용설명서(PDF)에 음색 탭, 곡 제목 바꾸기, 음량 %의 뜻, 공유 설정, 문제점 신고하기(파일 첨부)를 더하고 그림을 지금 화면으로 바꿨습니다.</p></details></li>
@@ -1831,7 +1843,9 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       <li><details><summary>공유 설정: 저장 시각을 비교해 알림</summary><p>악보를 열 때 저장소의 공유 설정이 이 기기 설정보다 나중에 저장된 것일 때만 '더 최신 공유 설정이 있습니다'라고 알립니다(올린 때와 이 기기 저장 시각을 함께 보여 줌). 이 기기 설정이 더 최신이면 알리지 않습니다. 저장할 때도 저장소 쪽이 더 최신이면 덮기 전에 알려 줍니다.</p></details></li>
       <li><details><summary>실제 연주 음원에 맞춘 악기 밸런스</summary><p>프론티어 연주 음원과 같은 마디끼리 맞대어 악기마다 크기를 비교해 다듬었습니다. 꽹과리는 조금 작게, 태평소·가야금·피아노는 조금 크게 했습니다(대금·소금·해금·피리·장구는 다른 곡에서 밸런스가 맞지 않아 원래대로 두었습니다). 음높이와 울림(잔향)은 음원과 비슷해 그대로 두었습니다.</p></details></li>
     </ul>
-      <details class="hbug"><summary>버그 수정 <small>2건</small></summary><ul class="hlist bug">
+      <details class="hbug"><summary>버그 수정 <small>4건</small></summary><ul class="hlist bug">
+      <li><details><summary>붙임줄로 이어진 음을 다시 치던 문제</summary><p>붙임줄로 이어진 뒤 음은 앞 음의 울림을 이어야 하는데 다시 소리를 내던 곳들을 고쳤습니다. 화음의 음마다 붙임줄이 있을 때 곡선을 엉뚱한 음에 붙이던 것, 여러 줄이 함께 빠르게 연주하는 마디 뒤라 이어 줄 앞 음을 놓치던 것, 타악(심벌·윈드벨 트레몰로 등)의 붙임줄을 모두 바로잡았습니다(방황·바르도·뱃노래 등 샘플 곳곳).</p></details></li>
+      <li><details><summary>신고에 첨부한 파일이 메일에 실제로 붙지 않던 문제</summary><p>[문제점 신고하기]에 악보 파일을 첨부해도 메일에는 파일 이름과 크기만 글자로 오고 내려받을 수 없었습니다. 첨부가 있으면 파일을 실어 보내는 방식으로 바꿨습니다.</p></details></li>
       <li><details><summary>작아지는 꺾쇠(&gt;) 뒤로 악기 소리가 계속 작게 남던 문제 (긴급)</summary><p>꺾쇠 &gt;·&lt; 끝에 셈여림 글자(p·mf 등)가 없으면 줄어든 크기가 곡 끝까지 이어져, 달빛항해 대금은 17마디부터·해금은 15마디부터 소리가 갑자기 작아졌습니다(11월 11일 '작아지는 꺾쇠를 더 뚜렷하게' 뒤로 두드러짐). 이제 꺾쇠는 그 구간에서만 크기를 바꾸고, 끝나면 마지막 셈여림 글자의 크기로 돌아옵니다. 꺾쇠 끝에 셈여림 글자가 있으면 그 크기를 따릅니다. 꺾쇠가 없는 다른 악기는 영향이 없습니다.</p></details></li>
       <li><details><summary>휴대폰에서 악보 파일 창이 화면보다 넓어지던 문제</summary><p>곡 제목을 바꾼 뒤 [악보]를 누르면 창이 화면보다 넓어져 왼쪽이 잘렸습니다. 제목 칸이 화면 폭에 맞춰 줄어들게 고쳤습니다.</p></details></li>
     </ul></details>
@@ -5897,7 +5911,7 @@ function toneApply(init) {
   setInstTones(im);
   const pm = {}; for (const [g, keys] of TONE_PERC) { const t = toneGet('perc', g); if (t.vol !== 100) for (const k of keys) pm[k] = pctToVol(t.vol); }
   setPercVolumes(pm);
-  if (!init) { state.dirty = true; if (state.playing) pause(); }
+  if (!init) { state.dirty = true; if (state.playing) pause(); demoRefresh(); }
   toneRefresh();
 }
 // 타악 소리: 원본(state.sounds0)을 두고 음색이 바뀐 묶음만 거른 사본으로 바꾼 표를 돌려준다(바뀌지 않았으면 전과 같은 표)
@@ -5939,8 +5953,11 @@ function toneCard(kind, id, name) {
     const row = tipNode('div', 'trow'), lab = document.createElement('label'), inp = document.createElement('input'), num = tipNode('span', 'num');
     const iid = `tone-${kind}-${id}-${f}`.replace(/[^\w-]/g, m => m.charCodeAt(0).toString(16)); inp.type = 'range'; inp.id = iid; inp.min = lo; inp.max = hi; inp.step = step; lab.htmlFor = iid; lab.textContent = label;
     if (f === 'vol') inp.title = '들리는 크기: 200% = 두 배로 크게(약 +10dB), 50% = 절반으로 작게(약 −10dB)';
-    inp.addEventListener('input', () => { num.textContent = (f !== 'vol' && +inp.value > 0 ? '+' : '') + inp.value + unit; });
-    inp.addEventListener('change', () => toneSet(kind, id, f, +inp.value));
+    // 들어보는 중이면 막대를 움직이는 동안에도(0.18초 쉬면) 바로 적용해 바뀐 소리로 이어 들려준다
+    let liveT = 0;
+    inp.addEventListener('input', () => { num.textContent = (f !== 'vol' && +inp.value > 0 ? '+' : '') + inp.value + unit;
+      if (demoAudio) { clearTimeout(liveT); liveT = setTimeout(() => { if (toneGet(kind, id)[f] !== +inp.value) toneSet(kind, id, f, +inp.value); }, 180); } });
+    inp.addEventListener('change', () => { clearTimeout(liveT); if (toneGet(kind, id)[f] !== +inp.value) toneSet(kind, id, f, +inp.value); });
     row.append(lab, inp, num); body.append(row); rows.push([f, inp, num, unit]);
   }
   const bt = tipNode('div', 'tbtns'), play = tipNode('button', 'btn', '▶ 들어보기'), reset = tipNode('button', 'btn', '기본값으로');
@@ -5966,8 +5983,9 @@ function toneResetAll() { TONE_CFG = { master: {}, inst: {}, perc: {} }; toneSav
 }
 // ---- 들어보기: 지금 값으로 짧은 시연을 따로 만들어 재생. 크기 맞추기를 하지 않아(상수 배율) 음량 변화가 그대로 들린다 ----
 const TONE_DEMO_K = { inst: 0.22, perc: 0.36, master: 0.2 };   // 기본값에서 가장 큰 악기(가야금·북)의 꼭대기가 약 0.7이 되게 잰 값(/tmp/tonek.cjs 방식)
-let demoAudio = null, demoUrl = null, demoBtn = null, demoTok = 0;
+var demoAudio = null, demoUrl = null, demoBtn = null, demoTok = 0, demoWhat = null;   // var: 시작 때 toneApply(init)보다 먼저 쓰일 수 있음
 function demoStop() {
+  demoWhat = null; demoTok++;
   if (demoAudio) { try { demoAudio.pause(); } catch (e) {} demoAudio = null; }
   if (demoUrl) { URL.revokeObjectURL(demoUrl); demoUrl = null; }
   if (demoBtn) { demoBtn.classList.remove('playing'); demoBtn.textContent = '▶ 들어보기'; demoBtn.disabled = false; demoBtn = null; }
@@ -6002,22 +6020,116 @@ async function demoRender(kind, id) {
 async function tonePreview(kind, id, btn) {
   if (demoBtn === btn && demoAudio) { demoStop(); return; }
   demoStop(); if (state.playing) pause();
-  const tok = ++demoTok; demoBtn = btn; btn.disabled = true; btn.textContent = '만드는 중…';
+  const tok = ++demoTok; demoBtn = btn; demoWhat = [kind, id]; btn.disabled = true; btn.textContent = '만드는 중…';
   let buf = null;
   try { buf = await demoRender(kind, id); } catch (e) { console.error('들어보기', e); }
   if (tok !== demoTok || demoBtn !== btn) return;
   if (!buf) { demoStop(); showMsg('시연 소리를 만들지 못했습니다.'); return; }
-  const a = new Audio(); a.setAttribute('playsinline', ''); demoUrl = URL.createObjectURL(new Blob([encodeWav(buf)], { type: 'audio/wav' })); a.src = demoUrl; demoAudio = a;
+  // 멈춤을 누를 때까지 되풀이(loop)
+  const a = new Audio(); a.setAttribute('playsinline', ''); a.loop = true; demoUrl = URL.createObjectURL(new Blob([encodeWav(buf)], { type: 'audio/wav' })); a.src = demoUrl; demoAudio = a;
   btn.disabled = false; btn.classList.add('playing'); btn.textContent = '■ 멈춤';
-  a.addEventListener('ended', () => { if (demoAudio === a) demoStop(); });
   try { await a.play(); } catch (e) { if (demoAudio === a) demoStop(); }
 }
+// 들어보는 중에 값이 바뀌면 새 값으로 다시 만들어 같은 자리에서 바꿔 끼운다(멈추지 않음)
+async function demoRefresh() {
+  if (!demoAudio || !demoWhat) return;
+  const tok = ++demoTok, [kind, id] = demoWhat;
+  let buf = null; try { buf = await demoRender(kind, id); } catch (e) { console.error('들어보기', e); }
+  if (tok !== demoTok || !demoAudio || !buf) return;
+  const old = demoAudio, oldUrl = demoUrl, a = new Audio(); a.setAttribute('playsinline', ''); a.loop = true;
+  const url = URL.createObjectURL(new Blob([encodeWav(buf)], { type: 'audio/wav' })); a.src = url;
+  const at = old.currentTime || 0;
+  try { a.currentTime = at; } catch (e) {}
+  demoAudio = a; demoUrl = url;
+  try { await a.play(); if (Math.abs((a.currentTime || 0) - at) > 0.3) { try { a.currentTime = at + 0.05; } catch (e) {} } } catch (e) {}
+  try { old.pause(); } catch (e) {} if (oldUrl) URL.revokeObjectURL(oldUrl);
+  if (tok !== demoTok && demoAudio === a) {}   // 그 사이 또 바뀌면 다음 demoRefresh가 이어받음
+  window.__demoSwaps = (window.__demoSwaps || 0) + 1;   // 시험 도구용
+}
 window.__toneDemo = demoRender;   // 시험 도구용(test/pwtone.cjs): 시연 소리 버퍼
+window.__demoState = () => ({ playing: !!demoAudio, loop: !!(demoAudio && demoAudio.loop), what: demoWhat, t: demoAudio ? demoAudio.currentTime : 0 });
+// ---- 음색을 공유 저장소에 (settings/_tone.json — 곡 공유 설정과 같은 저장소·토큰) ----
+const TONE_GH = '_tone';
+function toneGhState(t, ok) { const el = $('toneGhState'); el.textContent = t || ''; el.classList.toggle('ok', !!ok); }
+function toneClean(o) {   // 받은 값 다듬기: 모르는 악기·범위 밖 숫자는 버리거나 범위로
+  const d = { master: {}, inst: {}, perc: {} }, groups = new Set(TONE_PERC.map(x => x[0]));
+  const one = (t, vol) => { const r = {}; if (!t || typeof t !== 'object') return r; if (vol && t.vol != null) r.vol = toneNum(t.vol, 0, 200, 100); for (const k of ['lo', 'mid', 'hi']) if (t[k] != null) r[k] = toneNum(t[k], -6, 6, 0); for (const k in r) if (r[k] === TONE_DEF[k]) delete r[k]; return r; };
+  if (o && typeof o === 'object') { d.master = one(o.master, false);
+    for (const k of TONE_MEL) { const r = one((o.inst || {})[k], true); if (Object.keys(r).length) d.inst[k] = r; }
+    for (const g of groups) { const r = one((o.perc || {})[g], true); if (Object.keys(r).length) d.perc[g] = r; } }
+  return d;
+}
+let toneGhBusy = false;
+async function toneGhLoad() {
+  if (toneGhBusy) return; toneGhBusy = true; toneGhState('저장소에서 찾는 중…');
+  try {
+    const got = await ghFetch(null, TONE_GH);
+    if (!got || !got.S || got.S.format !== 'hapju-tone') { toneGhState('공유 저장소에 올려 둔 음색이 없습니다.'); return; }
+    if (!confirm(`공유 저장소의 음색·기본 음량(${fmtTime(got.S.saved)}에 올림)을 불러올까요?\n이 기기의 지금 값은 바뀝니다.`)) { toneGhState('불러오지 않았습니다.'); return; }
+    TONE_CFG = toneClean(got.S.tone); toneSave(); toneApply();
+    toneGhState(`공유 음색을 불러왔습니다 · ${fmtTime(got.S.saved)}에 올린 것`, true);
+  } catch (e) { toneGhState(e && e.message ? e.message : '저장소에서 받지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
+  finally { toneGhBusy = false; }
+}
+async function toneGhSave() {
+  if (toneGhBusy) return;
+  const tok = ghToken();
+  if (!tok) { toneGhState('저장하려면 먼저 [저장] 칸 \'공유 설정\'에 저장 토큰을 넣어 주세요.'); return; }
+  toneGhBusy = true; toneGhState('저장소에 올리는 중…');
+  try {
+    const S = { format: 'hapju-tone', v: 1, saved: new Date().toISOString(), tone: toneClean(TONE_CFG) };
+    const api = `https://api.github.com/repos/${GH_REPO}/contents/${GH_DIR}/${TONE_GH}.json`, H = { Authorization: 'Bearer ' + tok, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    const cur = await fetch(api + '?ref=' + GH_BRANCH, { headers: H, cache: 'no-store' });
+    if (cur.status === 401) throw new Error('저장 토큰이 맞지 않거나 기간이 끝났습니다. 토큰을 새로 만들어 넣어 주세요.');
+    let sha = null;
+    if (cur.ok) { const j = await cur.json(); sha = j.sha; let old = null; try { old = JSON.parse(utf8b64(j.content)); } catch (e) {}
+      if (!confirm(`공유 저장소에 ${old && old.saved ? fmtTime(old.saved) + '에 올린 ' : ''}음색이 이미 있습니다.\n지금 값으로 업데이트할까요?`)) { toneGhState('저장하지 않았습니다.'); return; } }
+    else if (cur.status !== 404) throw new Error(cur.status === 403 ? '이 토큰으로는 저장소에 쓸 수 없습니다. 토큰의 저장소 선택과 Contents 권한(Read and write)을 확인해 주세요.' : '저장소를 읽지 못했습니다 (' + cur.status + ')');
+    const body = { message: '음색 · 기본 음량', content: b64utf8(JSON.stringify(S, null, 1)), branch: GH_BRANCH }; if (sha) body.sha = sha;
+    const r = await fetch(api, { method: 'PUT', headers: H, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(r.status === 403 || r.status === 404 ? '이 토큰으로는 저장소에 쓸 수 없습니다. 토큰의 저장소 선택과 Contents 권한(Read and write)을 확인해 주세요.' : r.status === 409 || r.status === 422 ? '그 사이 저장소의 음색이 바뀌었습니다. 다시 눌러 주세요.' : '저장소에 올리지 못했습니다 (' + r.status + ')');
+    toneGhState(`음색·기본 음량을 공유 저장소에 저장했습니다 · ${fmtTime(S.saved)}`, true);
+  } catch (e) { toneGhState(e && e.message ? e.message : '저장소에 올리지 못했습니다. 인터넷 연결을 확인해 주세요.'); }
+  finally { toneGhBusy = false; }
+}
+$('toneGhLoad').addEventListener('click', toneGhLoad);
+$('toneGhSave').addEventListener('click', toneGhSave);
 // ---------- 문제점 신고하기 ----------
 // 서버 없는 페이지라 폼 전달 서비스(FormSubmit)로 메일을 보낸다. 보내지 못하면 기기의 메일 앱으로 넘긴다(mailto).
 // 처음 한 번은 FormSubmit이 받는 주소로 확인 메일을 보내며, 그 메일의 [Activate]를 누른 뒤부터 제보가 도착한다
 const REPORT_TO = 'comstapp@gmail.com';
 const REPORT_URL = 'https://formsubmit.co/ajax/' + REPORT_TO;
+// 첨부가 있는 제보: FormSubmit은 ajax(JSON) 주소로는 파일을 붙이지 않고 이름·크기 글자만 보낸다(사용자 확인 — gmail에 파일 없음).
+// 파일은 보통 폼 전송(multipart, https://formsubmit.co/<주소>)으로만 붙으므로, 숨은 폼을 숨은 iframe으로 보낸다.
+// 보낸 뒤 FormSubmit이 _next(우리 사이트의 version.json)로 넘겨주면 같은 사이트라 읽을 수 있어 전송을 확인한다.
+// 파일로 연 화면 등 다른 사이트에서는 읽을 수 없어 '보냄(확인 못 함)'으로 본다
+function reportPostForm(fields, file, fname) {
+  return new Promise(resolve => {
+    const nm = 'repFrame' + Date.now(), ifr = document.createElement('iframe'); ifr.name = nm; ifr.title = '제보 전송'; ifr.style.display = 'none'; ifr.setAttribute('aria-hidden', 'true');
+    const fm = document.createElement('form'); fm.method = 'POST'; fm.action = 'https://formsubmit.co/' + REPORT_TO; fm.enctype = 'multipart/form-data'; fm.target = nm; fm.style.display = 'none';
+    const web = /^https?:$/.test(location.protocol), tag = 'sent=' + Date.now();
+    const next = new URL('version.json?' + tag, web ? location.href : APP_URL).href;
+    for (const [k, v] of Object.entries(Object.assign({}, fields, { _next: next }))) { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; fm.append(i); }
+    const fi = document.createElement('input'); fi.type = 'file'; fi.name = 'attachment';
+    try { const dt = new DataTransfer(); dt.items.add(new File([file], fname, { type: file.type || 'application/octet-stream' })); fi.files = dt.files; } catch (e) { resolve('nofile'); return; }
+    if (!fi.files || !fi.files.length) { resolve('nofile'); return; }
+    fm.append(fi);
+    let done = false, posted = false, tm = 0, late = 0;
+    const fin = r => { if (done) return; done = true; clearTimeout(tm); clearTimeout(late); setTimeout(() => { ifr.remove(); fm.remove(); }, 1500); resolve(r); };
+    ifr.addEventListener('load', () => {
+      if (!posted) return;
+      let href = null; try { href = ifr.contentWindow.location.href; } catch (e) {}
+      if (href && href.indexOf(tag) >= 0) { fin('ok'); return; }   // 우리 사이트로 넘어옴 = 전송됨
+      if (href === 'about:blank') return;
+      if (!web) { fin('unknown'); return; }   // 다른 사이트에서 연 화면: 확인할 수 없음
+      clearTimeout(late); late = setTimeout(() => fin('fail'), 8000);   // FormSubmit 쪽 페이지(오류·확인 필요)에 머묾 — 넘겨주는 중간 페이지일 수 있어 조금 더 기다려 봄
+    });
+    tm = setTimeout(() => fin('timeout'), 90000);
+    document.body.append(ifr, fm);
+    setTimeout(() => { posted = true; try { fm.submit(); } catch (e) { fin('fail'); } }, 50);
+  });
+}
+window.__reportPostForm = reportPostForm;   // 시험 도구용
 // 지금 재생 위치의 마디 번호(재생한 적이 없으면 빈 칸)
 function reportBarNow() {
   try { const r = state.rendered, t = audio ? audio.currentTime || 0 : 0; if (r && r.plan && t > 0) { const b = barAtT(r.plan, t); if (b) return String(b.number); } } catch (e) {}
@@ -6074,29 +6186,29 @@ function openReport() {
     if (fsz > REP_MAX) { attShow(); st.className = 'rep-state bad'; st.textContent = '첨부 파일이 10MB를 넘어 보낼 수 없습니다. 첨부를 줄이거나 빼 주세요.'; return; }
     const plain = `분류: ${kind}\n곡명: ${R.song || '-'}\n마디 위치: ${R.bar || '-'}\n\n내용:\n${R.text || '-'}\n\n----\n${env}`;
     sending = true; send.disabled = true; st.className = 'rep-state'; st.textContent = '보내는 중…';
-    let ok = false, why = '';
+    let ok = false, why = '', sentUnsure = false;
     try {
       const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = ctl ? setTimeout(() => ctl.abort(), files.length ? 90000 : 20000) : 0;
       const fields = { _subject: subject, _template: 'box', _captcha: 'false', 분류: kind, 곡명: R.song || '-', '마디 위치': R.bar || '-', 내용: R.text || '-', 환경: env };
-      let req;
-      if (files.length) {   // 첨부가 있으면 multipart(FormData)로. 파일이 여럿이면 zip 하나로 묶는다(FormSubmit 첨부 칸은 하나)
-        const fd = new FormData(); fields['첨부'] = files.map(f => `${f.name} (${mb(f.size)})`).join(', ');
-        for (const [k, v] of Object.entries(fields)) fd.append(k, v);
-        if (files.length === 1) fd.append('attachment', files[0], files[0].name);
-        else { const ents = [], seen = {}; for (const f of files) { let nm = f.name; if (seen[nm]) nm = nm.replace(/(\.[^.]*)?$/, `(${seen[nm] + 1})$1`); seen[f.name] = (seen[f.name] || 0) + 1; ents.push({ name: nm, data: new Uint8Array(await f.arrayBuffer()) }); }
-          fd.append('attachment', zipFiles(ents), 'scoreworks-report.zip'); }
-        req = { method: 'POST', headers: { Accept: 'application/json' }, body: fd };
-      } else req = { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(fields) };
-      req.signal = ctl ? ctl.signal : undefined;
-      const r = await fetch(REPORT_URL, req);
-      clearTimeout(tm);
-      let j = null; try { j = await r.json(); } catch (e) {}
-      ok = r.ok && !!j && String(j.success) === 'true';
-      if (!ok) why = (j && j.message) || ('응답 ' + r.status);
+      if (files.length) {   // 첨부: 파일이 여럿이면 zip 하나로 묶어(FormSubmit 첨부 칸은 하나) 숨은 폼으로 보낸다(reportPostForm)
+        clearTimeout(tm); fields['첨부'] = files.map(f => `${f.name} (${mb(f.size)})`).join(', ');
+        let att = files[0], an = files[0].name;
+        if (files.length > 1) { const ents = [], seen = {}; for (const f of files) { let nm = f.name; if (seen[nm]) nm = nm.replace(/(\.[^.]*)?$/, `(${seen[nm] + 1})$1`); seen[f.name] = (seen[f.name] || 0) + 1; ents.push({ name: nm, data: new Uint8Array(await f.arrayBuffer()) }); }
+          att = zipFiles(ents); an = 'scoreworks-report.zip'; }
+        const res = await reportPostForm(fields, att, an);
+        ok = res === 'ok' || res === 'unknown'; sentUnsure = res === 'unknown';
+        if (!ok) why = res === 'timeout' ? '응답이 없음' : res === 'nofile' ? '이 브라우저는 파일을 붙여 보낼 수 없음' : 'FormSubmit이 받지 않음';
+      } else {
+        const r = await fetch(REPORT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(fields), signal: ctl ? ctl.signal : undefined });
+        clearTimeout(tm);
+        let j = null; try { j = await r.json(); } catch (e) {}
+        ok = r.ok && !!j && String(j.success) === 'true';
+        if (!ok) why = (j && j.message) || ('응답 ' + r.status);
+      }
     } catch (e) { why = e && e.name === 'AbortError' ? '응답이 없음' : '인터넷 연결 문제'; }
     sending = false; send.disabled = false;
     if (ok) {
-      st.className = 'rep-state ok'; st.textContent = '보냈습니다. 알려 주셔서 고맙습니다.';
+      st.className = 'rep-state ok'; st.textContent = sentUnsure ? '보냈습니다(첨부 포함 — 이 화면에서는 도착 확인을 할 수 없습니다). 알려 주셔서 고맙습니다.' : '보냈습니다' + (files.length ? '(첨부 포함)' : '') + '. 알려 주셔서 고맙습니다.';
       body.value = ''; send.hidden = true; cancel.classList.add('primary'); cancel.focus();
       return;
     }

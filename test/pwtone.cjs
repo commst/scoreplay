@@ -58,6 +58,39 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   ok(await p.evaluate(() => document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').classList.contains('playing')), name + ' [▶ 들어보기] → ■ 멈춤');
   await p.evaluate(() => document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').click()); await p.waitForTimeout(200);
   ok(await p.evaluate(() => /들어보기/.test(document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').textContent)), name + ' 다시 누르면 멈춤');
+  // 160번 뒤: 멈춤까지 되풀이, 듣는 동안 막대를 움직이면(input만) 바로 바뀐 소리로 바꿔 끼움
+  await p.evaluate(() => document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').click());
+  await p.waitForFunction(() => window.__demoState().playing, null, { timeout: 20000 }).catch(() => {});
+  ok(await p.evaluate(() => window.__demoState().loop), name + ' 들어보기는 되풀이(loop)');
+  await p.waitForTimeout(4200);
+  ok(await p.evaluate(() => window.__demoState().playing && /멈춤/.test(document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').textContent)), name + ' 시연 길이(3.6초)가 지나도 계속 재생');
+  const sw0 = await p.evaluate(() => window.__demoSwaps || 0);
+  await p.evaluate(() => { const i = document.querySelector('.tone-card[data-id=gayageum] input[id$="-vol"]'); i.value = 150; i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.waitForFunction(n => (window.__demoSwaps || 0) > n, sw0, { timeout: 15000 }).catch(() => {});
+  ok(await p.evaluate(n => (window.__demoSwaps || 0) > n && window.__demoState().playing && JSON.parse(localStorage.getItem('hapju-tone')).inst.gayageum.vol === 150, sw0), name + ' 듣는 중 막대를 움직이면 멈추지 않고 새 값으로 바뀜·저장');
+  await p.evaluate(() => document.querySelector('.tone-card[data-id=gayageum] [data-act=play]').click()); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => !window.__demoState().playing), name + ' 멈춤');
+  // 공유 저장소(가짜 GitHub): 토큰 없으면 안내, 저장 → 다른 값으로 바꾼 뒤 불러오기 → 저장한 값
+  let remote = null; const puts = [];
+  await p.route(/api\.github\.com\/repos\/commst\/scoreworks\/contents\/settings\/_tone\.json/, async r => {
+    if (r.request().method() === 'PUT') { const b = JSON.parse(r.request().postData()); puts.push(b); remote = { content: b.content, sha: 'x' + puts.length }; return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }); }
+    if (!remote) return r.fulfill({ status: 404, body: '{}' });
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(remote) });
+  });
+  await p.evaluate(() => localStorage.removeItem('hapju-gh-token'));
+  await p.click('#toneGhSave'); await p.waitForTimeout(300);
+  ok(/토큰/.test(await p.textContent('#toneGhState')), name + ' 공유 저장: 토큰이 없으면 안내');
+  await p.evaluate(() => localStorage.setItem('hapju-gh-token', 'fake'));
+  await p.click('#toneGhSave'); await p.waitForFunction(() => /저장했습니다/.test(document.getElementById('toneGhState').textContent), null, { timeout: 10000 }).catch(() => {});
+  const sent = puts.length ? JSON.parse(Buffer.from(puts[0].content, 'base64').toString('utf8')) : null;
+  ok(sent && sent.format === 'hapju-tone' && sent.tone.inst.gayageum.vol === 150 && puts[0].message, name + ' 공유 저장: settings/_tone.json에 지금 값');
+  await set('inst', 'gayageum', 'vol', 60);
+  await p.click('#toneGhLoad'); await p.waitForFunction(() => /불러왔습니다/.test(document.getElementById('toneGhState').textContent), null, { timeout: 10000 }).catch(() => {});
+  ok(await p.evaluate(() => JSON.parse(localStorage.getItem('hapju-tone')).inst.gayageum.vol === 150 && document.querySelector('.tone-card[data-id=gayageum] input[id$="-vol"]').value === '150'), name + ' 공유 음색 불러오기 → 올린 값이 적용됨');
+  await p.click('#toneGhSave'); await p.waitForFunction(() => /저장했습니다/.test(document.getElementById('toneGhState').textContent), null, { timeout: 10000 }).catch(() => {});
+  ok(puts.length === 2 && puts[1].sha === 'x1', name + ' 이미 있으면 물어보고 업데이트(sha)');
+  await p.evaluate(() => localStorage.removeItem('hapju-gh-token'));
+  await set('inst', 'gayageum', 'vol', 100);
   // 모두 기본값으로
   await p.click('#toneResetAll'); await p.waitForTimeout(200); L = await ls();
   ok(JSON.stringify(L) === '{"master":{},"inst":{},"perc":{}}' && (await p.textContent('#toneState')) === '모두 기본값' && (await p.$$eval('.tone-card.changed', e => e.length)) === 0, name + ' [모두 기본값으로]');

@@ -9,6 +9,11 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   let mode = 'ok'; const sent = [];
   await p.route('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/**', r => { const f = r.request().url().split('pdfjs-dist@4.10.38/')[1].replace('.min.mjs', '.mjs'); r.fulfill({ path: '/home/claude/web/node_modules/pdfjs-dist/' + f, contentType: 'text/javascript' }); });
   await p.route(/^https:\/\/formsubmit\.co\/.*/, r => { { const rq = r.request(), ct = rq.headers()['content-type'] || '', raw = rq.postDataBuffer() || Buffer.alloc(0); let body = {}; if (/json/.test(ct)) body = JSON.parse(raw.toString() || '{}'); sent.push({ url: rq.url(), ct, body, raw }); }
+    if (!/\/ajax\//.test(r.request().url())) {   // 첨부: 숨은 폼 전송(multipart) → 성공하면 _next로 넘김
+      const m = /name="_next"\r\n\r\n([^\r]+)/.exec((r.request().postDataBuffer() || Buffer.alloc(0)).toString('latin1'));
+      if (mode === 'ok' && m) return r.fulfill({ status: 200, contentType: 'text/html', body: `<script>location.replace(${JSON.stringify(m[1])})</script>` });   // 넘겨주기(Playwright는 가짜 303을 iframe에서 따라가지 않음)
+      if (mode === 'activate') return r.fulfill({ status: 200, contentType: 'text/html', body: '<p>This form needs Activation.</p>' });
+      return r.abort(); }
     if (mode === 'ok') return r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":"true","message":"The form was submitted successfully."}' });
     if (mode === 'activate') return r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":"false","message":"This form needs Activation."}' });
     return r.abort(); });
@@ -64,25 +69,31 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   await p.evaluate(() => document.getElementById('reportBtn3').click()); await p.waitForTimeout(300);
   ok(await p.evaluate(() => !!document.getElementById('repAttach') && !document.getElementById('repAttach').checked && !!document.getElementById('repFile')), name + ' 첨부 칸 있음(처음에는 꺼짐)');
   ok(await p.evaluate(() => { const d = document.querySelector('.rep-dlg'), a = d.querySelector('.rep-att').getBoundingClientRect(), r = d.getBoundingClientRect(); return a.left >= r.left && a.right <= r.right + 1 && d.scrollWidth <= d.clientWidth + 1; }), name + ' 첨부 칸이 창 안');
-  // 파일에서 온 첨부는 Playwright의 postData에 내용이 실리지 않아, 페이지의 fetch를 감싸 FormData 안 파일을 직접 읽는다
-  await p.evaluate(() => { const f0 = window.fetch; window.__att = null; window.fetch = async (u, o) => { try { if (o && o.body instanceof FormData) { const f = o.body.get('attachment'); const u8 = new Uint8Array(await f.arrayBuffer()); let h = 0; for (let i = 0; i < u8.length; i++) h = (h * 31 + u8[i]) >>> 0; window.__att = { name: f.name, size: f.size, h }; } } catch (e) {} return f0(u, o); }; });
+  // 첨부는 숨은 폼으로 보낸다(FormSubmit ajax는 파일을 붙이지 않음). 폼의 파일 칸에 실린 파일을 직접 읽어 확인
+  await p.evaluate(() => { const s0 = HTMLFormElement.prototype.submit; window.__att = null; window.__form = null; HTMLFormElement.prototype.submit = function () { const fi = this.querySelector('input[type=file]'), f = fi && fi.files[0];
+    window.__form = { action: this.action, enctype: this.enctype, method: this.method, target: this.target, names: [...this.elements].map(e => e.name) };
+    if (f) f.arrayBuffer().then(ab => { const u8 = new Uint8Array(ab); let h = 0; for (let i = 0; i < u8.length; i++) h = (h * 31 + u8[i]) >>> 0; window.__att = { name: f.name, size: f.size, h, u8: [...u8.slice(0, 4)], tail: new TextDecoder('latin1').decode(u8) .includes('scoreworks-attach-test') }; });
+    return s0.call(this); }; });
   await p.evaluate(() => document.getElementById('repAttach').click()); await p.fill('#repBody', '첨부 시험');
   ok(/첨부 1개/.test(await p.textContent('#repAttState')), name + ' 첨부 안내: ' + await p.textContent('#repAttState'));
-  mode = 'ok'; sent.length = 0; await p.click('.rep-dlg button[type=submit]'); await p.waitForTimeout(1500);
-  { const S = sent[0] || {}, raw = S.raw || Buffer.alloc(0), txt = raw.toString('latin1'), pdf = fs.readFileSync(t);
-    ok(sent.length === 1 && /multipart\/form-data/.test(S.ct || ''), name + ' 첨부는 multipart로 보냄');
+  mode = 'ok'; sent.length = 0; await p.click('.rep-dlg button[type=submit]');
+  const repDone = () => p.waitForFunction(() => /보냈습니다|보내지 못/.test(document.querySelector('.rep-dlg .rep-state').textContent), null, { timeout: 20000 }).catch(() => {});
+  await repDone();
+  { const S = sent[0] || {}, raw = S.raw || Buffer.alloc(0), txt = raw.toString('latin1'), pdf = fs.readFileSync(t), F = await p.evaluate(() => window.__form) || {};
+    ok(sent.length === 1 && !/\/ajax\//.test(S.url) && /multipart\/form-data/.test(S.ct || '') && F.enctype === 'multipart/form-data' && /formsubmit\.co\/[^/]+@/.test(F.action) && F.method === 'post', name + ' 첨부는 ajax가 아닌 폼 전송(multipart, formsubmit.co/주소)으로');
     let h = 0; for (let i = 0; i < pdf.length; i++) h = (h * 31 + pdf[i]) >>> 0; const A = await p.evaluate(() => window.__att) || {};
     ok(/name="attachment"; filename="/.test(txt) && A.size === pdf.length && A.h === h && /\.pdf$/.test(A.name || ''), name + ' PDF 내용이 그대로 들어감 ' + A.name + ' ' + A.size);
-    ok(raw.includes(Buffer.from('첨부 시험')) && /name="_subject"/.test(txt) && /name="_captcha"/.test(txt), name + ' 글 칸도 함께'); }
-  ok(/보냈습니다/.test(await p.textContent('.rep-dlg .rep-state')), name + ' 첨부 보냄 안내');
+    ok(raw.includes(Buffer.from('첨부 시험')) && /name="_subject"/.test(txt) && /name="_captcha"\r\n\r\nfalse/.test(txt) && /name="_next"\r\n\r\nhttps:\/\/commst\.github\.io\/scoreworks\/version\.json\?sent=/.test(txt), name + ' 글 칸·_captcha=false·_next(우리 사이트 전체 주소)도 함께'); }
+  ok(/보냈습니다\(첨부 포함\)/.test(await p.textContent('.rep-dlg .rep-state')), name + ' 첨부 보냄 안내(우리 사이트로 넘어와 전송 확인): ' + await p.textContent('.rep-dlg .rep-state'));
+  ok(await p.evaluate(() => new Promise(r => setTimeout(() => r(!document.querySelector('iframe[name^=repFrame]') && !document.querySelector('form[target^=repFrame]')), 1800))), name + ' 숨은 iframe·폼 정리');
   await p.click('.rep-dlg .ed-foot .btn'); await p.waitForTimeout(200);
   // 파일 둘(열린 악보 + 고른 파일) → zip 하나로
   await p.evaluate(() => document.getElementById('reportBtn3').click()); await p.waitForTimeout(300);
   fs.writeFileSync('/tmp/rep-extra.json', JSON.stringify({ hello: 'scoreworks-attach-test' }));
   await p.evaluate(() => document.getElementById('repAttach').click()); await p.setInputFiles('#repFile', '/tmp/rep-extra.json'); await p.fill('#repBody', '두 파일');
   ok(/첨부 2개/.test(await p.textContent('#repAttState')), name + ' 두 파일 안내');
-  sent.length = 0; await p.click('.rep-dlg button[type=submit]'); await p.waitForTimeout(1500);
-  { const raw = (sent[0] || {}).raw || Buffer.alloc(0); ok(/filename="scoreworks-report\.zip"/.test(raw.toString('latin1')) && raw.includes(Buffer.from('scoreworks-attach-test')) && raw.includes(Buffer.from('PK\x05\x06', 'latin1')), name + ' 여러 파일은 zip 하나로'); }
+  sent.length = 0; await p.evaluate(() => { window.__att = null; }); await p.click('.rep-dlg button[type=submit]'); await repDone();
+  { const raw = (sent[0] || {}).raw || Buffer.alloc(0), A = await p.evaluate(() => window.__att) || {}; ok(/filename="scoreworks-report\.zip"/.test(raw.toString('latin1')) && A.name === 'scoreworks-report.zip' && A.tail && A.u8[0] === 0x50 && A.u8[1] === 0x4b, name + ' 여러 파일은 zip 하나로'); }
   await p.click('.rep-dlg .ed-foot .btn'); await p.waitForTimeout(200);
   // 10MB 넘으면 보내지 않음
   await p.evaluate(() => document.getElementById('reportBtn3').click()); await p.waitForTimeout(300);
@@ -91,8 +102,11 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); 
   sent.length = 0; await p.click('.rep-dlg button[type=submit]'); await p.waitForTimeout(500);
   ok(sent.length === 0 && /10MB/.test(await p.textContent('.rep-dlg .rep-state')) && /넘습니다/.test(await p.textContent('#repAttState')), name + ' 10MB 넘으면 안 보냄');
   // 첨부한 채 실패 → 메일 앱 안내에 첨부 직접 붙이라는 말
-  await p.setInputFiles('#repFile', '/tmp/rep-extra.json'); mode = 'fail'; accept = false; dlg.length = 0; await p.click('.rep-dlg button[type=submit]'); await p.waitForTimeout(800); accept = true; mode = 'ok';
+  await p.setInputFiles('#repFile', '/tmp/rep-extra.json'); mode = 'fail'; accept = false; dlg.length = 0; await p.click('.rep-dlg button[type=submit]'); await repDone(); await p.waitForTimeout(300); accept = true; mode = 'ok';
   ok(dlg.some(x => /메일 앱/.test(x) && /직접 붙여/.test(x)), name + ' 실패 때 첨부는 직접 붙이라고 안내');
+  // FormSubmit 쪽 페이지에 머묾(확인 전 등) → 보내지 못함으로
+  mode = 'activate'; accept = false; dlg.length = 0; await p.click('.rep-dlg button[type=submit]'); await repDone(); await p.waitForTimeout(300); accept = true; mode = 'ok';
+  ok(/보내지 못했습니다/.test(await p.textContent('.rep-dlg .rep-state')) && dlg.some(x => /메일 앱/.test(x)), name + ' 첨부 전송이 FormSubmit 페이지에 머물면 보내지 못함 안내');
   await p.keyboard.press('Escape');
   ok(errs.length === 0, name + ' 페이지 오류 0 ' + errs.slice(0, 2).join(' | '));
   await ctx.close(); }

@@ -1,0 +1,10 @@
+const { chromium } = require('playwright'); const fs = require('fs');
+(async () => { const b = await chromium.launch(); const p = await (await b.newContext()).newPage();
+  await p.route('https://commst.github.io/scoreworks/**', r => { const f = r.request().url().split('/scoreworks/')[1].split('?')[0] || 'index.html'; console.log('ROUTE', r.request().url().slice(0,90)); const fp = '/home/claude/scoreplay/' + f; return fs.existsSync(fp) ? r.fulfill({ path: fp }) : r.fulfill({ status: 404, body: '' }); });
+  await p.route(/^https:\/\/formsubmit\.co\/.*/, r => { const m = /name="_next"\r\n\r\n([^\r]+)/.exec((r.request().postDataBuffer() || Buffer.alloc(0)).toString('latin1')); console.log('FS', r.request().url(), m && m[1]); return r.fulfill({ status: 303, headers: { Location: m[1] }, body: '' }); });
+  await p.route(/^https:\/\/(?!formsubmit|commst\.github\.io).*/, r => r.abort());
+  await p.goto('https://commst.github.io/scoreworks/'); await p.waitForTimeout(1500);
+  p.on('console', m => console.log('C', m.text()));
+  const r = await p.evaluate(async () => { const ifrLog = []; const o = HTMLIFrameElement.prototype.addEventListener; HTMLIFrameElement.prototype.addEventListener = function (t, f) { return o.call(this, t, ev => { let h; try { h = this.contentWindow.location.href; } catch (e) { h = 'X ' + e.message; } console.log('load', h); f(ev); }); };
+    return await window.__reportPostForm({ a: 1 }, new Blob(['hi']), 'x.txt'); });
+  console.log('RESULT', r); await b.close(); })();
