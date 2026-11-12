@@ -668,6 +668,25 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .hist-dlg .hist-foot { position: sticky; bottom: -16px; display: flex; justify-content: flex-end; padding: 10px 0 0; background: var(--card); }
 /* 문제점 신고하기 */
 .tb-btn#reportBtn { margin-left: 10px; }
+/* 음색 탭 (158번) */
+#toneState.on { color: var(--accent); border-color: var(--accent); }
+.tone-list { display: grid; gap: 8px; }
+.tone-list h3 { margin: 6px 0 0; font: 700 13.5px/1.3 var(--font-body); color: var(--muted); }
+.tone-card { border: 1px solid var(--line); border-radius: 8px; background: var(--paper); min-width: 0; }
+.tone-card.changed { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.tone-card > summary { display: flex; align-items: center; gap: 8px; padding: 9px 12px; min-height: 42px; cursor: pointer; list-style: none; font-weight: 600; }
+.tone-card > summary::-webkit-details-marker { display: none; }
+.tone-card > summary::before { content: '▸'; color: var(--muted); font-size: 12px; flex: none; }
+.tone-card[open] > summary::before { content: '▾'; }
+.tone-card .tsum { margin-left: auto; font-weight: 400; font-size: 12px; color: var(--muted); text-align: right; }
+.tone-card.changed .tsum { color: var(--accent); }
+.tone-card .tbody { display: grid; gap: 6px; padding: 2px 12px 12px; border-top: 1px solid var(--line); }
+.tone-card .trow { display: grid; grid-template-columns: 52px minmax(0, 1fr) 54px; align-items: center; gap: 8px; font-size: 13px; }
+.tone-card .trow label { color: var(--muted); font-size: 12.5px; }
+.tone-card .trow input { min-width: 0; width: 100%; accent-color: var(--accent); height: 28px; margin: 0; }
+.tone-card .trow .num { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tone-card .tbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.tone-card .tbtns .btn.playing { background: var(--accent); color: #fff; }
 .rep-dlg { width: min(520px, 100%); }
 .rep-dlg label.rep-f { display: block; margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--ink); }
 .rep-dlg label.rep-f small { font-weight: 400; color: var(--muted); }
@@ -677,6 +696,14 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .rep-dlg .rep-kind legend { font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 4px; }
 .rep-dlg .rep-kind label { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 13.5px; cursor: pointer; }
 .rep-dlg .rep-note { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+.rep-dlg .rep-note.bad { color: var(--warn); font-weight: 600; }
+.rep-dlg .rep-note:empty { display: none; }
+.rep-dlg .rep-att { margin: 12px 0 0; padding: 8px 10px 10px; border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.rep-dlg .rep-att legend { font-size: 13px; font-weight: 600; padding: 0 4px; }
+.rep-dlg .rep-att .rep-chk { display: flex; align-items: center; gap: 6px; font-size: 13.5px; min-height: 32px; cursor: pointer; }
+.rep-dlg .rep-att .rep-chk input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.rep-dlg .rep-att label.rep-f { margin-top: 4px; }
+.rep-dlg .rep-att input[type=file] { display: block; width: 100%; margin-top: 4px; font-size: 13px; }
 .rep-dlg .rep-state { font-size: 13px; margin: 8px 0 0; min-height: 1.2em; }
 .rep-dlg .rep-state.ok { color: #1e7d3a; font-weight: 600; }
 .rep-dlg .rep-state.bad { color: var(--warn); }
@@ -1261,15 +1288,22 @@ body, button, input, select, textarea { font-family: var(--font-body); }
         <span class="eg">가야금 연습 → 가야금 줄: 선율 / 장구 줄: 타악 / 나머지: 끄기</span>
         <span class="eg">내 파트 빼고 반주 → 내 줄: 끄기 / 다른 선율 줄과 장구·북 줄: 켜기</span></dd>
       <dt>3. 소리 · 음량 · 옥타브</dt>
-      <dd>줄마다 악기 소리를 고르고 음량 막대로 크기를 맞춥니다. 장구는 작게 깔고 내 악기는 크게 하는 식입니다. 선율 줄의 <b>옥타브</b>는 악보보다 한두 옥타브 높이거나 낮춰 낼 때 씁니다(대금·소금처럼 악보와 실제 소리 높이가 다른 악기).</dd>
+      <dd>줄마다 악기 소리를 고르고 음량 막대로 크기를 맞춥니다. 장구는 작게 깔고 내 악기는 크게 하는 식입니다. 음량은 0~200%, 들리는 크기 기준입니다(200%는 두 배로 크게, 50%는 절반). 타악 줄은 윗성부·아랫성부 소리를 따로 고르고, <b>S</b>(솔로)·<b>M</b>(음소거)으로 한 줄만 듣거나 잠깐 뺄 수 있습니다. 선율 줄의 <b>옥타브</b>는 악보보다 한두 옥타브 높이거나 낮춰 낼 때 씁니다(대금·소금처럼 악보와 실제 소리 높이가 다른 악기).</dd>
       <dt>4. 템포 · 재생</dt>
-      <dd>악보의 빠르기 표시를 찾아 템포 구간을 미리 채웁니다. 템포를 못 읽은 구간은 노란 칸으로 표시되고, BPM 숫자를 넣기 전에는 재생·저장되지 않습니다. 연습 속도, 연주 범위, 카운트인, 메트로놈, 쉬는 마디 박 짚기를 정하고 재생하거나 MP3·WAV로 저장합니다. 템포 표시, 도돌이표, D.S.·코다는 단 맨 위에만 적혀 있어도 고른 모든 줄에 함께 적용됩니다.</dd>
+      <dd>악보의 빠르기 표시를 찾아 템포 구간을 미리 채웁니다. 템포를 못 읽은 구간은 노란 칸으로 표시되고, BPM 숫자를 넣기 전에는 재생·저장되지 않습니다. 연습 속도, 연주 범위, 카운트인, 메트로놈, 쉬는 마디 박 짚기를 정하고 재생하거나 MP3·WAV로 저장합니다. 템포 표시, 도돌이표, D.S.·코다는 단 맨 위에만 적혀 있어도 고른 모든 줄에 함께 적용됩니다. 곡 중간에 빠르기가 바뀌면 [빠르기] 칸 표의 줄 오른쪽 <b>[+]</b>로 구간을 넣거나, <b>[마디 골라 넣기]</b>를 누른 뒤 악보·마디맵에서 그 마디를 누릅니다(rit.·accel.도 같은 방법). 아래 연주 막대의 <b>⟲</b>로 구간을 계속 반복하고, [연주] 칸의 <b>반복할 때마다 빠르게</b>로 느리게 시작해 조금씩 빨라지게 연습할 수 있습니다.</dd>
+      <dt>5. 음색 · 기본 음량 (모든 곡에 함께)</dt>
+      <dd><b>[음색]</b> 탭에서 악기마다 기본 음량과 음색(낮은음·가운데·높은음, −6~+6dB)을 정합니다. 곡과 상관없이 이 기기에서 여는 모든 곡에 적용되므로, 어느 곡에서나 늘 크거나 작게 들리는 악기, 내 스피커·이어폰에서 날카롭거나 먹먹한 악기를 한 번만 맞춰 두면 됩니다. 맨 위 <b>전체</b>는 모든 소리를 섞은 뒤의 음색입니다. <b>[▶ 들어보기]</b>로 바꾼 소리를 바로 들어 보고, <b>[기본값으로]</b>(그 악기만)·<b>[모두 기본값으로]</b>로 되돌립니다. 곡마다 다른 크기는 [악기] 탭의 음량 막대로 맞추세요(둘은 곱해집니다).
+        <span class="eg">휴대폰 스피커에서 북이 안 들림 → 북: 가운데 +4dB / 태평소가 늘 따가움 → 태평소: 높은음 −3dB, 음량 80%</span></dd>
+      <dt>곡 제목 · 악보 파일</dt>
+      <dd>위 막대의 곡 이름(또는 [악보])을 누르면 악보 파일 창이 열립니다. 올린 파일을 보고 ✕로 빼거나 더 올리고, 맨 위 <b>곡 제목</b> 칸에서 제목을 고칩니다(위 막대·음원·MusicXML·MIDI 파일 이름에 쓰임, 비우면 악보에서 읽은 제목). 휴대폰이 메모리 때문에 페이지를 다시 열어 악보가 사라지면 저절로 다시 불러오고, 새로 연 화면에서는 첫 화면의 <b>지난번 악보 다시 열기</b>를 누르세요.</dd>
       <dt>설정 저장 · 불러오기</dt>
-      <dd>템포 표, 연습 속도, 줄마다 켜기·끄기·악기 소리·음량·옥타브, 재생·음원 저장 옵션은 바꿀 때마다 그 악보에 묶여 이 브라우저에 자동 저장되고, 같은 악보를 다시 열면 자동으로 불러옵니다(파일 이름이 달라도 내용이 같으면 같은 악보). <b>이 악보의 설정</b> 칸에서 자동 저장·자동 불러오기를 끄거나, 직접 저장·불러오기, 파일로 내보내 다른 기기로 옮길 수 있습니다.</dd>
+      <dd>템포 표, 연습 속도, 줄마다 켜기·끄기·악기 소리·음량·옥타브, 재생·음원 저장 옵션은 바꿀 때마다 그 악보에 묶여 이 브라우저에 자동 저장되고, 같은 악보를 다시 열면 자동으로 불러옵니다(파일 이름이 달라도 내용이 같으면 같은 악보). <b>이 악보의 설정</b> 칸에서 자동 저장·자동 불러오기를 끄거나, 직접 저장·불러오기, 파일로 내보내 다른 기기로 옮길 수 있습니다. 그 아래 <b>공유 설정</b>은 관리자가 저장소에 올려 둔 그 악보의 설정(악기 이름·소리·음량, 빠르기 표, 음 수정)을 받는 기능입니다. 같은 악보를 열면 자동으로 찾아 물어보고, [확인]을 누르면 적용합니다. [음색] 탭의 값은 곡 설정이 아니라 이 기기 설정이라 파일·공유 설정에 들어가지 않습니다.</dd>
       <dt>MusicXML로 내보내 악보 프로그램에서 고치기</dt>
       <dd>[저장] 칸의 [MusicXML 저장]으로 켠 줄을 피날레·뮤즈스코어에서 여는 악보 파일로 내보냅니다. 저장하면 내보낸 음을 원래 PDF의 음표 머리와 자동으로 대조해, 맞지 않는 마디를 굵은 빨간 번호로 보여 줍니다. 번호를 누르면 악보 위에 동그라미(파랑 = 맞음, 빨강 = 다름, 빨간 네모 = 빠짐)로 겹쳐 보여 주니, 음 높이·길이 문제는 ✎로 고친 뒤 다시 저장하고, 빠진 음·남는 음은 악보 프로그램에서 고치세요. 자세한 것은 [저장] 칸의 'MusicXML 대조 결과 보는 법과 고치는 법'.</dd>
       <dt>알아 둘 점</dt>
-      <dd>가야금·거문고·양금·대금·소금·피리·대피리·태평소·생황·해금·아쟁·피아노와 장구·꽹과리·징·바라와 심벌·하이햇·베이스드럼·스네어드럼은 녹음한 소리를 씁니다(북·북 테는 합성음, 북은 녹음도 고를 수 있음). 긴 음에는 녹음한 농현·요성을 넣을 수 있고(줄마다 켜고 끄기), 추성·퇴성 같은 시김새는 악보 기호를 읽지 못해 나오지 않습니다. 음높이는 음자리표·조표·임시표로 읽습니다. 소리가 악보와 다르게 들리는 마디가 있으면 마디 번호를 알려 주세요.</dd>
+      <dd>가야금·거문고·양금·대금·소금·피리·대피리·태평소·생황·해금·아쟁·피아노와 장구·꽹과리·징·바라와 심벌·하이햇·베이스드럼·스네어드럼은 녹음한 소리를 씁니다(북·북 테는 합성음, 북은 녹음도 고를 수 있음). 긴 음에는 녹음한 농현·요성을 넣을 수 있고(줄마다 켜고 끄기), 추성·퇴성 같은 시김새는 악보 기호를 읽지 못해 나오지 않습니다. 음높이는 음자리표·조표·임시표로 읽습니다. 트레몰로·굴림은 되풀이해 치는 소리로, 셈여림 꺾쇠를 따라 커지고 작아집니다.</dd>
+      <dt>문제점 신고하기</dt>
+      <dd>잘못 읽힌 음, 이상한 동작, 있었으면 하는 기능은 위 막대(또는 이 창 위)의 <b>[문제점 신고하기]</b>로 알려 주세요. 분류·곡명·마디 위치·내용을 적고 [전송]을 누르면 됩니다(마디 위치는 지금 재생 위치를 미리 넣어 둡니다). <b>악보 파일 첨부</b>에서 [열린 악보 파일 첨부]를 체크하면 지금 연 악보 PDF를 함께 보내고, [파일 고르기]로 화면 그림 같은 다른 파일도 붙일 수 있습니다(모두 합쳐 10MB까지, 여러 개면 zip 하나로 묶임). 악보 파일은 첨부를 고를 때만 전송됩니다. 바로 보내지 못하면 메일 앱으로 넘기는데, 이때는 파일을 메일에 직접 붙여 주세요.</dd>
     </dl>
   </details>
       <footer class="app-foot"><span id="appVer"></span> · <button class="hist-link" id="histBtn2" type="button">업데이트 이력</button></footer>
@@ -1279,7 +1313,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
   <div class="shell" id="shell">
     <aside class="sidebar" id="sidebar" aria-label="설정">
       <div class="sheet-grab" id="sheetGrab" aria-hidden="true"></div>
-      <div class="side-head"><nav class="tabs2" role="tablist" aria-label="설정 칸"><button class="tab2" type="button" role="tab" data-tab="inst" id="tab-inst" aria-controls="pane-inst">악기</button><button class="tab2" type="button" role="tab" data-tab="tempo" id="tab-tempo" aria-controls="pane-tempo">빠르기</button><button class="tab2" type="button" role="tab" data-tab="play" id="tab-play" aria-controls="pane-play">연주</button><button class="tab2" type="button" role="tab" data-tab="save" id="tab-save" aria-controls="pane-save">저장</button></nav><button class="sheet-close" id="sheetClose" type="button" aria-label="서랍 닫기">✕</button></div>
+      <div class="side-head"><nav class="tabs2" role="tablist" aria-label="설정 칸"><button class="tab2" type="button" role="tab" data-tab="inst" id="tab-inst" aria-controls="pane-inst">악기</button><button class="tab2" type="button" role="tab" data-tab="tempo" id="tab-tempo" aria-controls="pane-tempo">빠르기</button><button class="tab2" type="button" role="tab" data-tab="play" id="tab-play" aria-controls="pane-play">연주</button><button class="tab2" type="button" role="tab" data-tab="save" id="tab-save" aria-controls="pane-save">저장</button><button class="tab2" type="button" role="tab" data-tab="tone" id="tab-tone" aria-controls="pane-tone">음색</button></nav><button class="sheet-close" id="sheetClose" type="button" aria-label="서랍 닫기">✕</button></div>
       <div class="pane2" id="pane-inst" role="tabpanel" data-pane="inst" aria-labelledby="tab-inst">
       <section class="panel" id="linesPanel" aria-labelledby="tLines">
     <div class="ttl-row">
@@ -1663,6 +1697,29 @@ body, button, input, select, textarea { font-family: var(--font-body); }
       </div>
       </section>
       </div>
+      <div class="pane2" id="pane-tone" role="tabpanel" data-pane="tone" aria-labelledby="tab-tone">
+      <section class="panel" aria-labelledby="tToneH">
+        <div class="ttl-row"><h2 class="step-h" id="tToneH">음색 · 기본 음량</h2><span class="pill" id="toneState">모두 기본값</span></div>
+        <p class="hint">모든 곡에 함께 적용되는 악기별 <b>기본 음량</b>과 <b>음색</b>(낮은음·가운데·높은음)입니다. 이 기기에 저장되고 곡 설정 파일에는 들어가지 않습니다. 곡마다 다른 크기는 [악기] 칸의 음량 막대로 맞추세요. 바꾼 값은 다음 재생부터 적용됩니다.</p>
+        <div class="btn-grid"><button class="btn" type="button" id="toneResetAll">모두 기본값으로</button><button class="btn" type="button" id="toneExpand" aria-pressed="false">▾ 모두 펼치기</button></div>
+        <div class="tone-list" id="toneList"></div>
+        <details class="help">
+          <summary>설명 보기</summary>
+          <dl>
+            <dt>전체</dt>
+            <dd>모든 소리를 섞은 뒤 마지막에 거는 음색입니다. 스피커가 작아 낮은음이 안 들리면 낮은음을 올리고, 날카로우면 높은음을 내리세요.</dd>
+            <dt>음량</dt>
+            <dd>그 악기의 기본 크기입니다(0~200%, 들리는 크기 기준: 200%는 두 배로 크게 약 +10dB, 50%는 절반). 어느 곡에서나 그 악기가 늘 크거나 작게 들릴 때 씁니다. 곡의 음량 막대와 곱해집니다.</dd>
+            <dt>낮은음 · 가운데 · 높은음</dt>
+            <dd>−6~+6dB. 낮은음은 250Hz 아래, 가운데는 1kHz 둘레, 높은음은 3.5kHz 위를 올리고 내립니다. 선율 악기는 녹음·합성음 모두에, 타악기는 그 묶음의 소리 모두(예: 장구는 따·궁·덩·굴림)에 적용됩니다.</dd>
+            <dt>▶ 들어보기</dt>
+            <dd>지금 값으로 그 악기의 짧은 음계(타악은 몇 타)를 들려줍니다. 전체는 가야금·대금·해금·장구를 함께 들려줍니다. 재생 중이면 잠깐 멈춥니다.</dd>
+            <dt>기본값으로</dt>
+            <dd>그 악기만 처음 값(100%, 0dB)으로. [모두 기본값으로]는 전체·모든 악기를 되돌립니다.</dd>
+          </dl>
+        </details>
+      </section>
+      </div>
     </aside>
     <div class="sheet-back" id="sheetBack"></div>
     <main class="stage" id="stage">
@@ -1731,7 +1788,7 @@ body, button, input, select, textarea { font-family: var(--font-body); }
   </div>
 
   <div class="dock" id="dock" role="region" aria-label="연주 막대">
-    <nav class="dock-tabs" aria-label="설정 서랍"><button class="dtab" type="button" data-tab="inst">악기</button><button class="dtab" type="button" data-tab="tempo">빠르기</button><button class="dtab" type="button" data-tab="play">연주</button><button class="dtab" type="button" data-tab="save">저장</button></nav>
+    <nav class="dock-tabs" aria-label="설정 서랍"><button class="dtab" type="button" data-tab="inst">악기</button><button class="dtab" type="button" data-tab="tempo">빠르기</button><button class="dtab" type="button" data-tab="play">연주</button><button class="dtab" type="button" data-tab="save">저장</button><button class="dtab" type="button" data-tab="tone">음색</button></nav>
     <div class="reh-row" id="rehRow" hidden>
           <span class="reh-lab">연습 번호</span>
           <span class="reh-btns" id="rehBtns"></span>
@@ -1764,7 +1821,10 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>5</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>8</small></h4><ul class="hlist">
+      <li><details><summary>음색 탭: 악기별 기본 음량과 음색 (모든 곡에 함께)</summary><p>설정에 다섯째 탭 <b>[음색]</b>이 생겼습니다. 곡과 상관없이 이 기기에서 여는 모든 곡에 적용되는 악기별 <b>기본 음량</b>(0~200%)과 <b>음색</b>(낮은음·가운데·높은음, −6~+6dB)을 정합니다. 선율 악기 13개와 타악기 15묶음, 그리고 모든 소리를 섞은 뒤의 '전체' 음색이 있습니다. <b>[▶ 들어보기]</b>로 바꾼 소리를 바로 듣고, <b>[기본값으로]</b>(그 악기만)·<b>[모두 기본값으로]</b>로 되돌립니다. 곡마다 다른 크기는 전처럼 [악기] 탭의 음량 막대로 맞춥니다.</p></details></li>
+      <li><details><summary>문제점 신고하기에 악보 파일 첨부</summary><p>신고 창에 <b>악보 파일 첨부</b>가 생겼습니다. [열린 악보 파일 첨부]를 체크하면 지금 연 악보 PDF가 함께 가고, 화면 그림 같은 다른 파일도 고를 수 있습니다(모두 합쳐 10MB까지, 여러 개면 zip 하나로). 악보 파일은 첨부를 고를 때만 전송됩니다.</p></details></li>
+      <li><details><summary>사용법·사용설명서 갱신</summary><p>[프로그램 사용법] 창과 사용설명서(PDF)에 음색 탭, 곡 제목 바꾸기, 음량 %의 뜻, 공유 설정, 문제점 신고하기(파일 첨부)를 더하고 그림을 지금 화면으로 바꿨습니다.</p></details></li>
       <li><details><summary>악기 기본 음량 새로 맞춤 (곡과 상관없이)</summary><p>시험 악보로 모든 악기 녹음의 크기를 재서 같은 크기로 맞춘 뒤 악기 특성을 반영했습니다: 대금·소금·가야금은 조금 크게, 태평소·아쟁·양금은 조금 작게, 타악은 받쳐 주도록 조금 작게 하되 북 종류는 낮은 소리가 묻히지 않게 조금 크게, 꽹과리·심벌 같은 날카로운 소리는 더 작게. 곡마다 다른 것은 악기 칸의 음량 막대로 맞추세요.</p></details></li>
       <li><details><summary>음량 막대를 들리는 크기로</summary><p>악기 음량 %가 이제 귀로 느끼는 크기입니다. 200%면 지금의 두 배로 크게(약 +10dB), 50%면 절반으로 작게 들립니다. 숫자에 마우스를 올리면 dB가 보입니다. 저장해 둔 음량은 같은 크기로 새 눈금에 맞춰 보입니다(예: 예전 150% → 약 128%).</p></details></li>
       <li><details><summary>관악기 소리 키움</summary><p>대금·소금·피리·대피리·태평소를 약 3dB 키우고, 음원에 맞춰 올렸던 장구는 원래대로 두었습니다. 달빛항해 등에서 관악이 장구·북보다 작게 묻히던 것을 고쳤습니다.</p></details></li>
@@ -3360,7 +3420,7 @@ function pctIn(id, def, lo, hi) { const v = +$(id).value; const x = v > 0 ? Math
 async function buildAudio(onProgress, o = null, bg = false) {
   const forSave = !!o; o = o || playOpts();
   if (!forSave) state.dirty = false;   // 만드는 사이에 설정을 바꾸면 다시 true가 되어 다음 재생 때 다시 만든다
-  if (!state.sounds) state.sounds = { ...makeSounds(), ...decodeRecorded(RECORDED_DATA) };
+  percSounds();   // 타악 소리(음색 탭의 음색이 바뀌었으면 거른 사본으로)
   bankFailed.clear();
   for (const v of Object.values(currentMelodic())) { const b = bankOf(v.inst); if (b) await loadBank(b); }
   const failed = Object.values(currentMelodic()).map(v => bankOf(v.inst)).filter(b => b && bankFailed.has(b));
@@ -3404,6 +3464,7 @@ async function buildAudio(onProgress, o = null, bg = false) {
     const rv = makeReverb(snd.reverb, stereo), N = raw.length, STEP = 32000 * 2;
     for (let i = 0; i < N; i += STEP) { rv.process(raw, rawR, i, Math.min(N, i + STEP)); if (performance.now() - lastY > 40) { if (onProgress) onProgress(0.75 + 0.2 * Math.min(1, (i + STEP) / N)); await yieldNow(); lastY = performance.now(); } }
   }
+  { const m = toneMaster(); if (m) for (const x of rawR ? [raw, rawR] : [raw]) { applyTone(x, m); if (performance.now() - lastY > 40) { await yieldNow(); lastY = performance.now(); } } }   // 전체 음색(음색 탭): 크기 맞추기 전에
   if (window.__rawLevel) { const g = +window.__rawLevel; for (const x of rawR ? [raw, rawR] : [raw]) for (let i = 0; i < x.length; i++) x[i] *= g; }   // 시험용(test/stems.mjs): 줄마다 크기를 그대로 비교하려고 크기 맞추기를 건너뜀
   else fitLevel(raw, rawR);   // 크기 맞추기 (드문 큰 점은 부드럽게 눌러 곡 전체가 작아지지 않게)
   if (clickHits.length) {   // 메트로놈·카운트인: 크기 맞춘 음악 위에 정한 크기로(잔향 없이, 가운데). 넘치는 점만 부드럽게 누름
@@ -5463,7 +5524,7 @@ soundSummary();
 const NARROW = window.matchMedia('(max-width: 900px)');
 const TAB_KEY = 'hapju.tab';
 let curTab = (() => { try { return localStorage.getItem(TAB_KEY) || 'inst'; } catch (e) { return 'inst'; } })();
-if (!['inst', 'tempo', 'play', 'save'].includes(curTab)) curTab = 'inst';
+if (!['inst', 'tempo', 'play', 'save', 'tone'].includes(curTab)) curTab = 'inst';
 if (/[#&]allpanes\b/.test(location.hash)) document.body.classList.add('all-panes');   // 시험용: 모든 칸을 펼쳐 보이기
 function showTab(t, open) {
   curTab = t;
@@ -5787,6 +5848,170 @@ function openHistory() {
   document.addEventListener('keydown', esc, true);
   back.append(dlg); document.body.append(back); cl.focus();
 }
+// ---------- 음색 · 기본 음량 탭 (158번) ----------
+// 곡과 상관없이 이 기기 전체에 적용되는 악기별 기본 음량(들리는 크기 %)과 3대역 음색(dB). localStorage 'hapju-tone'에
+// { master: {lo,mid,hi}, inst: { gayageum: {vol,lo,mid,hi}, … }, perc: { 장구: {vol,lo,mid,hi}, … } } — 기본값(100, 0)인 항목은 적지 않는다
+const TONE_KEY = 'hapju-tone';
+const TONE_MEL = ['gayageum', 'geomungo', 'yanggeum', 'daegeum', 'sogeum', 'piri', 'daepiri', 'saenghwang', 'taepyeongso', 'haegeum', 'ajaeng', 'piano', 'timpani'];
+// 타악 묶음 → 소리 이름(녹음·합성 모두). 클릭·쉼박 소리는 빼고, 들어보기는 demo 순서로 친다
+const TONE_PERC = [
+  ['장구', ['따', '따약', '궁', '덩', '굴림타', '따꾸밈'], ['덩', '따', '궁', '따', '덩', '따', '궁', '궁']],
+  ['꽹과리', ['꽹과리', '꽹과리길게', '꽹과리막음', '꽹과리굴림', '꽹과리꾸밈'], ['꽹과리', '꽹과리', '꽹과리막음', '꽹과리', '꽹과리막음', '꽹과리', '꽹과리', '꽹과리막음']],
+  ['징', ['징'], ['징', null, null, null, '징', null, null, null]],
+  ['북', ['북', '북테', '북녹음', '북짧게'], ['북녹음', '북짧게', '북짧게', '북녹음', '북짧게', '북녹음', '북', '북테']],
+  ['바라', ['바라'], ['바라', null, '바라', null, '바라', null, null, null]],
+  ['심벌', ['심벌', '심벌롤'], ['심벌', null, null, null, '심벌', null, null, null]],
+  ['하이햇', ['하이햇'], ['하이햇', '하이햇', '하이햇', '하이햇', '하이햇', '하이햇', '하이햇', '하이햇']],
+  ['베이스드럼', ['베이스드럼'], ['베이스드럼', null, '베이스드럼', null, '베이스드럼', '베이스드럼', null, null]],
+  ['스네어', ['스네어'], ['스네어', null, '스네어', null, '스네어', '스네어', '스네어', null]],
+  ['봉고', ['봉고', '봉고높게'], ['봉고높게', '봉고', '봉고높게', '봉고', '봉고높게', '봉고높게', '봉고', '봉고']],
+  ['탬버린', ['탬버린'], ['탬버린', '탬버린', '탬버린', '탬버린', '탬버린', '탬버린', '탬버린', '탬버린']],
+  ['트라이앵글', ['트라이앵글'], ['트라이앵글', null, '트라이앵글', null, '트라이앵글', null, null, null]],
+  ['카바사', ['카바사'], ['카바사', '카바사', '카바사', '카바사', '카바사', '카바사', '카바사', '카바사']],
+  ['윈드차임', ['윈드차임'], ['윈드차임', null, null, null, null, null, null, null]],
+  ['팀파니', ['팀파니', '팀파니높게'], ['팀파니', '팀파니높게', '팀파니', '팀파니높게', '팀파니', '팀파니', '팀파니높게', '팀파니']],
+];
+const TONE_PERC_NAME = { '스네어': '스네어드럼', '카바사': '카바사 (마라카스·셰이커)', '심벌': '심벌 (크래시)', '봉고': '봉고 (높은 쪽·낮은 쪽)', '북': '북 (녹음·합성·북 테)', '팀파니': '팀파니 (타악)' };
+const TONE_DEF = { vol: 100, lo: 0, mid: 0, hi: 0 };
+const TONE_FIELDS = [['vol', '음량', 0, 200, 5, '%'], ['lo', '낮은음', -6, 6, 1, ' dB'], ['mid', '가운데', -6, 6, 1, ' dB'], ['hi', '높은음', -6, 6, 1, ' dB']];
+let TONE_CFG = (() => { const d = { master: {}, inst: {}, perc: {} }; try { const o = JSON.parse(localStorage.getItem(TONE_KEY) || '{}'); for (const k of ['master', 'inst', 'perc']) if (o && o[k] && typeof o[k] === 'object') d[k] = o[k]; } catch (e) {} return d; })();
+const toneNum = (v, lo, hi, def) => { v = +v; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; };
+// kind: 'master' | 'inst' | 'perc'. 항상 네 값이 모두 있는 객체를 돌려준다
+function toneGet(kind, id) {
+  const t = (kind === 'master' ? TONE_CFG.master : (TONE_CFG[kind] || {})[id]) || {};
+  return { vol: kind === 'master' ? 100 : toneNum(t.vol, 0, 200, 100), lo: toneNum(t.lo, -6, 6, 0), mid: toneNum(t.mid, -6, 6, 0), hi: toneNum(t.hi, -6, 6, 0) };
+}
+const toneIsDef = t => t.vol === 100 && !t.lo && !t.mid && !t.hi;
+function toneSet(kind, id, field, val) {
+  const t = toneGet(kind, id); t[field] = val;
+  const slim = {}; for (const k of ['vol', 'lo', 'mid', 'hi']) if (t[k] !== TONE_DEF[k] && !(kind === 'master' && k === 'vol')) slim[k] = t[k];
+  if (kind === 'master') TONE_CFG.master = slim; else if (Object.keys(slim).length) TONE_CFG[kind][id] = slim; else delete TONE_CFG[kind][id];
+  toneSave(); toneApply();
+}
+function toneSave() { try { localStorage.setItem(TONE_KEY, JSON.stringify(TONE_CFG)); } catch (e) {} }
+function toneAnyChanged() { return !toneIsDef(toneGet('master')) || Object.keys(TONE_CFG.inst).some(k => !toneIsDef(toneGet('inst', k))) || Object.keys(TONE_CFG.perc).some(k => !toneIsDef(toneGet('perc', k))); }
+// 엔진에 넘기기: 선율은 setInstTones(배율·dB), 타악 음량은 setPercVolumes(소리 이름 → 배율), 타악 음색은 percSounds()가 거른 사본을 만든다, 전체는 buildAudio에서
+function toneApply(init) {
+  const im = {}; for (const k of TONE_MEL) { const t = toneGet('inst', k); if (!toneIsDef(t)) im[k] = { vol: pctToVol(t.vol), lo: t.lo, mid: t.mid, hi: t.hi }; }
+  setInstTones(im);
+  const pm = {}; for (const [g, keys] of TONE_PERC) { const t = toneGet('perc', g); if (t.vol !== 100) for (const k of keys) pm[k] = pctToVol(t.vol); }
+  setPercVolumes(pm);
+  if (!init) { state.dirty = true; if (state.playing) pause(); }
+  toneRefresh();
+}
+// 타악 소리: 원본(state.sounds0)을 두고 음색이 바뀐 묶음만 거른 사본으로 바꾼 표를 돌려준다(바뀌지 않았으면 전과 같은 표)
+let percToneSig = null;
+function percSounds() {
+  if (!state.sounds0) state.sounds0 = { ...makeSounds(), ...decodeRecorded(RECORDED_DATA) };
+  const eq = {}; for (const [g] of TONE_PERC) { const t = toneGet('perc', g); if (!toneFlat(t)) eq[g] = [t.lo, t.mid, t.hi]; }
+  const sig = JSON.stringify(eq);
+  if (state.sounds && percToneSig === sig) return state.sounds;
+  const out = { ...state.sounds0 };
+  for (const [g, keys] of TONE_PERC) { if (!eq[g]) continue; const t = toneGet('perc', g);
+    for (const k of keys) { const y = out[k]; if (!y) continue; out[k] = Array.isArray(y) ? y.map(v => applyTone(v.slice(), t)) : applyTone(y.slice(), t); } }
+  state.sounds = out; percToneSig = sig; return out;
+}
+function toneMaster() { const t = toneGet('master'); return toneFlat(t) ? null : t; }
+// ---- 화면 ----
+const toneCards = {};
+function toneLabel(t, master) {
+  const p = []; if (!master && t.vol !== 100) p.push(`음량 ${t.vol}%`);
+  for (const [k, nm] of [['lo', '낮은음'], ['mid', '가운데'], ['hi', '높은음']]) if (t[k]) p.push(`${nm} ${t[k] > 0 ? '+' : ''}${t[k]}dB`);
+  return p.length ? p.join(' · ') : '기본값';
+}
+function toneRefresh() {
+  for (const [key, c] of Object.entries(toneCards)) {
+    const t = toneGet(c.kind, c.id), def = toneIsDef(t);
+    c.el.classList.toggle('changed', !def); c.sum.textContent = toneLabel(t, c.kind === 'master');
+    for (const [f, inp, num, unit] of c.rows) { if (document.activeElement !== inp) inp.value = t[f]; num.textContent = (f !== 'vol' && t[f] > 0 ? '+' : '') + t[f] + unit; }
+    c.reset.disabled = def;
+  }
+  const any = toneAnyChanged(); $('toneState').textContent = any ? '바꾼 값 있음' : '모두 기본값'; $('toneState').classList.toggle('on', any); $('toneResetAll').disabled = !any;
+}
+function toneCard(kind, id, name) {
+  const el = document.createElement('details'); el.className = 'tone-card'; el.dataset.kind = kind; el.dataset.id = id;
+  const sum = document.createElement('summary'); const nm = tipNode('span', 'tname', name), ts = tipNode('span', 'tsum'); sum.append(nm, ts); el.append(sum);
+  const body = tipNode('div', 'tbody'); el.append(body);
+  const rows = [];
+  for (const [f, label, lo, hi, step, unit] of TONE_FIELDS) {
+    if (kind === 'master' && f === 'vol') continue;
+    const row = tipNode('div', 'trow'), lab = document.createElement('label'), inp = document.createElement('input'), num = tipNode('span', 'num');
+    const iid = `tone-${kind}-${id}-${f}`.replace(/[^\w-]/g, m => m.charCodeAt(0).toString(16)); inp.type = 'range'; inp.id = iid; inp.min = lo; inp.max = hi; inp.step = step; lab.htmlFor = iid; lab.textContent = label;
+    if (f === 'vol') inp.title = '들리는 크기: 200% = 두 배로 크게(약 +10dB), 50% = 절반으로 작게(약 −10dB)';
+    inp.addEventListener('input', () => { num.textContent = (f !== 'vol' && +inp.value > 0 ? '+' : '') + inp.value + unit; });
+    inp.addEventListener('change', () => toneSet(kind, id, f, +inp.value));
+    row.append(lab, inp, num); body.append(row); rows.push([f, inp, num, unit]);
+  }
+  const bt = tipNode('div', 'tbtns'), play = tipNode('button', 'btn', '▶ 들어보기'), reset = tipNode('button', 'btn', '기본값으로');
+  play.type = 'button'; reset.type = 'button'; play.dataset.act = 'play'; reset.dataset.act = 'reset';
+  play.addEventListener('click', () => tonePreview(kind, id, play));
+  reset.addEventListener('click', () => { toneResetOne(kind, id); });
+  bt.append(play, reset); body.append(bt);
+  toneCards[kind + ':' + id] = { kind, id, el, sum: ts, rows, reset, play };
+  return el;
+}
+function toneResetOne(kind, id) { if (kind === 'master') TONE_CFG.master = {}; else delete TONE_CFG[kind][id]; toneSave(); toneApply(); }
+function toneResetAll() { TONE_CFG = { master: {}, inst: {}, perc: {} }; toneSave(); toneApply(); }
+{
+  const list = $('toneList'), h = t => { const e = document.createElement('h3'); e.textContent = t; return e; };
+  list.append(h('전체'), toneCard('master', 'all', '전체 (모든 소리)'));
+  list.append(h('선율 악기'));
+  for (const k of TONE_MEL) list.append(toneCard('inst', k, INSTRUMENTS[k].name.replace(' (녹음)', '')));
+  list.append(h('타악기'));
+  for (const [g] of TONE_PERC) list.append(toneCard('perc', g, TONE_PERC_NAME[g] || g));
+  $('toneResetAll').addEventListener('click', () => { if (confirm('전체와 모든 악기의 음량·음색을 기본값으로 되돌릴까요?')) toneResetAll(); });
+  $('toneExpand').addEventListener('click', () => { const on = $('toneExpand').getAttribute('aria-pressed') !== 'true'; $('toneExpand').setAttribute('aria-pressed', on ? 'true' : 'false'); $('toneExpand').textContent = on ? '▴ 모두 접기' : '▾ 모두 펼치기'; list.querySelectorAll('.tone-card').forEach(d => { d.open = on; }); });
+  toneApply(true);
+}
+// ---- 들어보기: 지금 값으로 짧은 시연을 따로 만들어 재생. 크기 맞추기를 하지 않아(상수 배율) 음량 변화가 그대로 들린다 ----
+const TONE_DEMO_K = { inst: 0.22, perc: 0.36, master: 0.2 };   // 기본값에서 가장 큰 악기(가야금·북)의 꼭대기가 약 0.7이 되게 잰 값(/tmp/tonek.cjs 방식)
+let demoAudio = null, demoUrl = null, demoBtn = null, demoTok = 0;
+function demoStop() {
+  if (demoAudio) { try { demoAudio.pause(); } catch (e) {} demoAudio = null; }
+  if (demoUrl) { URL.revokeObjectURL(demoUrl); demoUrl = null; }
+  if (demoBtn) { demoBtn.classList.remove('playing'); demoBtn.textContent = '▶ 들어보기'; demoBtn.disabled = false; demoBtn = null; }
+}
+function demoNotes(inst, t0, gain = 0.75) {
+  const rg = BANK_RANGE[bankOf(inst)] || [55, 84], span = rg[1] - rg[0];
+  const base = span >= 14 ? Math.max(rg[0], Math.min(rg[1] - 12, Math.round((rg[0] + rg[1]) / 2) - 6)) : rg[0];
+  const steps = span >= 14 ? [0, 2, 4, 5, 7, 9, 11, 12] : [0, 1, 2, 3, 4, 5, 4, 2].map(x => Math.min(span, x));
+  const notes = steps.map((st, i) => ({ t: t0 + i * 0.32, inst, midis: [base + st], dur: 0.3, gain, line: 'demo', nong: false }));
+  notes.push({ t: t0 + 8 * 0.32 + 0.1, inst, midis: [base + (span >= 14 ? 7 : Math.min(span, 2))], dur: 1.6, gain, line: 'demo' });
+  return notes;
+}
+function demoHits(group, t0, g = 1) {
+  const row = TONE_PERC.find(x => x[0] === group); if (!row) return [];
+  return row[2].map((k, i) => k ? [t0 + i * 0.3, k, g, 0, undefined] : null).filter(Boolean);
+}
+async function demoRender(kind, id) {
+  const total = 3.6, buf = new Float32Array(Math.round(total * SR));
+  if (kind === 'inst') { await loadBank(bankOf(id)); mixNotes(buf, demoNotes(id, 0.05)); }
+  else if (kind === 'perc') { const out = mix({ hits: demoHits(id, 0.05), total }, percSounds(), {}, null, false); buf.set(out.subarray(0, buf.length)); }
+  else {   // 전체: 가야금·대금·해금 음계 + 장구
+    for (const k of ['gayageum', 'daegeum', 'haegeum']) await loadBank(bankOf(k));
+    mixNotes(buf, [].concat(demoNotes('gayageum', 0.05, 0.6), demoNotes('daegeum', 0.05, 0.55), demoNotes('haegeum', 0.05, 0.55)));
+    const out = mix({ hits: demoHits('장구', 0.05, 0.9), total }, percSounds(), {}, null, false); for (let i = 0; i < buf.length; i++) buf[i] += out[i] || 0;
+    const m = toneMaster(); if (m) applyTone(buf, m);
+  }
+  clearNoteCache();
+  const k = TONE_DEMO_K[kind] || 0.3, T = 0.8, H = 0.97 - T;
+  for (let i = 0; i < buf.length; i++) { const v = buf[i] * k, a = Math.abs(v); buf[i] = a <= T ? v : Math.sign(v) * (T + H * Math.tanh((a - T) / H)); }
+  return buf;
+}
+async function tonePreview(kind, id, btn) {
+  if (demoBtn === btn && demoAudio) { demoStop(); return; }
+  demoStop(); if (state.playing) pause();
+  const tok = ++demoTok; demoBtn = btn; btn.disabled = true; btn.textContent = '만드는 중…';
+  let buf = null;
+  try { buf = await demoRender(kind, id); } catch (e) { console.error('들어보기', e); }
+  if (tok !== demoTok || demoBtn !== btn) return;
+  if (!buf) { demoStop(); showMsg('시연 소리를 만들지 못했습니다.'); return; }
+  const a = new Audio(); a.setAttribute('playsinline', ''); demoUrl = URL.createObjectURL(new Blob([encodeWav(buf)], { type: 'audio/wav' })); a.src = demoUrl; demoAudio = a;
+  btn.disabled = false; btn.classList.add('playing'); btn.textContent = '■ 멈춤';
+  a.addEventListener('ended', () => { if (demoAudio === a) demoStop(); });
+  try { await a.play(); } catch (e) { if (demoAudio === a) demoStop(); }
+}
+window.__toneDemo = demoRender;   // 시험 도구용(test/pwtone.cjs): 시연 소리 버퍼
 // ---------- 문제점 신고하기 ----------
 // 서버 없는 페이지라 폼 전달 서비스(FormSubmit)로 메일을 보낸다. 보내지 못하면 기기의 메일 앱으로 넘긴다(mailto).
 // 처음 한 번은 FormSubmit이 받는 주소로 확인 메일을 보내며, 그 메일의 [Activate]를 누른 뒤부터 제보가 도착한다
@@ -5814,7 +6039,21 @@ function openReport() {
   const bar = document.createElement('input'); bar.type = 'text'; bar.id = 'repBar'; bar.autocomplete = 'off'; bar.placeholder = '예: 35, 40~42'; bar.value = state.score ? reportBarNow() : '';
   const body = document.createElement('textarea'); body.id = 'repBody'; body.placeholder = '무엇이 어떻게 다른지, 어느 줄(악기)인지 적어 주시면 찾기 쉽습니다.';
   dlg.append(fs, field('곡명', song), field('마디 위치', bar, bar.value ? '(지금 재생 위치를 넣어 두었습니다)' : ''), field('내용', body));
-  dlg.append(tipNode('p', 'rep-note', '앱 판 번호와 기기·브라우저 종류가 함께 전송됩니다(원인 찾기용). 악보 파일은 보내지 않습니다.'));
+  // 악보 파일 첨부(158번): 열어 둔 악보 파일을 함께 보내거나 다른 파일을 고른다. 모두 합쳐 10MB까지
+  const REP_MAX = 10 * 1024 * 1024, mb = n => (n / 1048576).toFixed(n < 1048576 ? 2 : 1) + 'MB';
+  const openFiles = (() => { try { const c = sessFiles(); return c && c.files.every(f => f) ? c.files : []; } catch (e) { return []; } })();
+  const att = tipNode('fieldset', 'rep-att'); att.append(tipNode('legend', '', '악보 파일 첨부'));
+  const attChk = document.createElement('input'); attChk.type = 'checkbox'; attChk.id = 'repAttach';
+  if (openFiles.length) { const l = tipNode('label', 'rep-chk'); l.append(attChk, document.createTextNode(` 열린 악보 파일 첨부 (${openFiles.length > 1 ? openFiles.length + '개, ' : ''}${mb(openFiles.reduce((a, f) => a + f.size, 0))})`)); att.append(l); }
+  const attFile = document.createElement('input'); attFile.type = 'file'; attFile.id = 'repFile'; attFile.multiple = true; attFile.accept = '.pdf,.musicxml,.xml,.mxl,.json,.zip,image/*,application/pdf';
+  { const l = tipNode('label', 'rep-f', openFiles.length ? '다른 파일 고르기' : '파일 고르기'); l.append(' ', tipNode('small', '', '(악보 PDF·화면 그림 등, 모두 합쳐 10MB까지)'), attFile); att.append(l); }
+  const attState = tipNode('p', 'rep-note'); attState.id = 'repAttState'; att.append(attState);
+  const attList = () => (attChk.checked ? openFiles : []).concat([...attFile.files]);
+  const attShow = () => { const fl = attList(), sz = fl.reduce((a, f) => a + f.size, 0); attState.className = 'rep-note' + (sz > REP_MAX ? ' bad' : '');
+    attState.textContent = !fl.length ? '' : sz > REP_MAX ? `첨부가 ${mb(sz)}로 10MB를 넘습니다. 파일을 줄여 주세요.` : `첨부 ${fl.length}개 · ${mb(sz)}`; };
+  attChk.addEventListener('change', attShow); attFile.addEventListener('change', attShow);
+  dlg.append(att);
+  dlg.append(tipNode('p', 'rep-note', '앱 판 번호와 기기·브라우저 종류가 함께 전송됩니다(원인 찾기용). 악보 파일은 위에서 첨부를 고를 때만 보냅니다.'));
   const st = tipNode('p', 'rep-state'); st.setAttribute('aria-live', 'polite');
   const foot = tipNode('div', 'ed-foot'), cancel = tipNode('button', 'btn', '닫기'), send = tipNode('button', 'btn primary', '전송');
   cancel.type = 'button'; send.type = 'submit'; foot.append(cancel, send); dlg.append(st, foot);
@@ -5830,13 +6069,25 @@ function openReport() {
     if (!R.text && !confirm('내용 칸이 비어 있습니다. 이대로 보낼까요?')) { body.focus(); return; }
     const subject = `[ScoreWorks ${kind}] ${R.song || '곡명 없음'}${R.bar ? ' · ' + R.bar + '마디' : ''}`;
     const env = reportEnv();
+    const files = attList(), fsz = files.reduce((a, f) => a + f.size, 0);
+    if (fsz > REP_MAX) { attShow(); st.className = 'rep-state bad'; st.textContent = '첨부 파일이 10MB를 넘어 보낼 수 없습니다. 첨부를 줄이거나 빼 주세요.'; return; }
     const plain = `분류: ${kind}\n곡명: ${R.song || '-'}\n마디 위치: ${R.bar || '-'}\n\n내용:\n${R.text || '-'}\n\n----\n${env}`;
     sending = true; send.disabled = true; st.className = 'rep-state'; st.textContent = '보내는 중…';
     let ok = false, why = '';
     try {
-      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = ctl ? setTimeout(() => ctl.abort(), 20000) : 0;
-      const r = await fetch(REPORT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({ _subject: subject, _template: 'box', _captcha: 'false', 분류: kind, 곡명: R.song || '-', '마디 위치': R.bar || '-', 내용: R.text || '-', 환경: env }) });
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = ctl ? setTimeout(() => ctl.abort(), files.length ? 90000 : 20000) : 0;
+      const fields = { _subject: subject, _template: 'box', _captcha: 'false', 분류: kind, 곡명: R.song || '-', '마디 위치': R.bar || '-', 내용: R.text || '-', 환경: env };
+      let req;
+      if (files.length) {   // 첨부가 있으면 multipart(FormData)로. 파일이 여럿이면 zip 하나로 묶는다(FormSubmit 첨부 칸은 하나)
+        const fd = new FormData(); fields['첨부'] = files.map(f => `${f.name} (${mb(f.size)})`).join(', ');
+        for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+        if (files.length === 1) fd.append('attachment', files[0], files[0].name);
+        else { const ents = [], seen = {}; for (const f of files) { let nm = f.name; if (seen[nm]) nm = nm.replace(/(\.[^.]*)?$/, `(${seen[nm] + 1})$1`); seen[f.name] = (seen[f.name] || 0) + 1; ents.push({ name: nm, data: new Uint8Array(await f.arrayBuffer()) }); }
+          fd.append('attachment', zipFiles(ents), 'scoreworks-report.zip'); }
+        req = { method: 'POST', headers: { Accept: 'application/json' }, body: fd };
+      } else req = { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(fields) };
+      req.signal = ctl ? ctl.signal : undefined;
+      const r = await fetch(REPORT_URL, req);
       clearTimeout(tm);
       let j = null; try { j = await r.json(); } catch (e) {}
       ok = r.ok && !!j && String(j.success) === 'true';
@@ -5849,7 +6100,7 @@ function openReport() {
       return;
     }
     st.className = 'rep-state bad'; st.textContent = `바로 보내지 못했습니다(${why}).`;
-    if (confirm('제보를 바로 보내지 못했습니다. 메일 앱을 열어 같은 내용으로 보낼까요?\n(메일 앱에서 [보내기]를 눌러 주세요)')) {
+    if (confirm('제보를 바로 보내지 못했습니다. 메일 앱을 열어 같은 내용으로 보낼까요?\n(메일 앱에서 [보내기]를 눌러 주세요)' + (files.length ? '\n※ 메일 앱으로는 첨부가 넘어가지 않습니다. 메일에 파일을 직접 붙여 주세요.' : ''))) {
       location.href = `mailto:${REPORT_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plain)}`;
       st.textContent += ' 메일 앱으로 넘겼습니다.';
     }

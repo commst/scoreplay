@@ -1,29 +1,6 @@
 # ScoreWorks(옛 이름 합주연습기) 인수인계 메모
 
-새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-11, CHANGELOG 157번까지)
-
-## 다음 대화에서 바로 할 일 — 158번 음색·음량 탭 + 신고 파일 첨부 (11-12 사용자 요청, 작업 중 멈춤)
-
-진행 중인 작업은 브랜치 **wip-158**에 있음(main에는 아직 없음): `git fetch origin wip-158 && git checkout wip-158` 후 이어서, 끝나면 main에 합쳐 올리고 브랜치는 사용자에게 지워 달라고 하기
-
-요청 내용(사용자 말 그대로 정리):
-1. 설정 탭을 하나 더 만들어 **전체 악기의 음색과 기본 음량을 전역적으로**(곡과 상관없이) 조절. 악기별로 음색·음량을 조절
-2. **바뀐 소리를 들어 볼 수 있는 단추**
-3. **기본값으로 되돌리기**(악기 하나, 전체)
-4. 문제점 신고하기 폼에 **악보 파일 첨부**
-
-wip-158에 이미 한 것(엔진, 시험 안 함):
-- audio-engine: `applyTone(x, {lo,mid,hi})`(낮은음 250Hz 선반·가운데 1kHz 봉우리·높은음 3.5kHz 선반, dB), `toneFlat`, `setPercVolumes(map)`(타악 소리 이름 → 배율, GAIN 쓰는 세 곳에 `* pv(key)`)
-- melody-engine: `setInstTones({ 악기: {vol, lo, mid, hi} })` — 녹음 음원 클립 원본 y0를 두고 거른 것을 y로(setBank 뒤에도 적용), mixNotes의 lv에 `tvol(inst)`, 합성음은 음 캐시에 넣기 전에 거름. 바뀌면 clearNoteCache
-
-남은 일(계획):
-- 앱: 전역 설정 localStorage `hapju-tone` = { master:{lo,mid,hi}, inst:{gayageum:{vol,lo,mid,hi}…}, perc:{장구:{vol,lo,mid,hi}…} }. vol은 음량 막대와 같은 '들리는 크기 %'(pctToVol)
-- 타악 묶음 → 소리 이름: 장구(따 따약 궁 덩 굴림타 따꾸밈), 꽹과리(꽹과리 꽹과리길게 꽹과리막음 꽹과리굴림 꽹과리꾸밈), 징, 북(북 북테 북녹음 북짧게), 바라, 심벌(심벌 심벌롤), 하이햇, 베이스드럼, 스네어, 봉고(봉고 봉고높게), 탬버린, 트라이앵글, 카바사, 윈드차임, 팀파니(팀파니 팀파니높게). 클릭·쉼박은 제외
-- 타악 음색: state.sounds 원본을 두고(3363줄 근처 makeSounds+decodeRecorded) 음색이 바뀌면 거른 사본으로(배열 또는 배열 목록 둘 다 있음)
-- 전체(master) 음색: buildAudio에서 fitLevel 전에 raw·rawR에 applyTone
-- 화면: 5번째 탭 '음색'(src/index.template.html 1282줄 .tabs2, 1734줄 .dock-tabs 서랍 단추, pane-*), 악기마다 음량·낮은음·가운데·높은음 막대(±6dB), [▶ 들어보기](짧은 음계 8음 + 긴 음 / 타악 8타를 mixNotes·mix로 만들어 따로 재생, 녹음 뱅크는 loadBank로 먼저), [기본값으로](악기·전체). 바뀌면 state.dirty → 다음 재생에 반영
-- 신고 첨부: openReport(5805줄 근처)에 '열린 악보 파일 첨부' 체크 + 파일 고르기, FormSubmit에 FormData(multipart)로(총 10MB까지), 실패하면 메일 앱(mailto는 첨부 불가 → 직접 붙이라고 안내)
-- 시험: pwboot, pwreport(첨부 항목 추가), 새 pwtone(탭·막대·저장·되돌리기·들어보기), levelstems로 음량·음색 바뀌는지. 그다음 CHANGELOG 158·이력·README·HANDOFF
+새 대화에서 이어 작업할 때 먼저 읽는 문서입니다. 무엇을 왜 고쳤는지는 CHANGELOG.md, 사용법·구성·빌드는 README.md에 있습니다. 이 문서는 **작업 규칙, 작업 환경, 샘플 목록, 검사 순서, 남은 과제**만 모았습니다. (마지막 갱신: 2026-11-12, CHANGELOG 158번까지)
 
 ## 1. 작업 규칙 (사용자 요청)
 
@@ -187,6 +164,8 @@ wip-158에 이미 한 것(엔진, 시험 안 함):
 - [문제점 신고하기]: FormSubmit(`REPORT_TO`, 사용자 계정 메일 — 공개 소스에 두는 것에 사용자 동의)로 전송, 실패하면 mailto. **사용자가 첫 제보 뒤 확인 메일의 [Activate Form]을 눌러야 도착함 — 눌렀는지 아직 확인 전.** 확인되면 FormSubmit이 주는 무작위 별칭 주소로 `REPORT_TO`를 바꿔 메일 주소를 소스에서 숨길 수 있음(사용자가 원하면)
 - 음 수정 공유: 같은 파일은 122번부터 이미 됨. 다른 파일(판)로 받을 때도 원래 음이 같은 곳에 적용하도록 고침. 시험 test/pwreport.cjs, test/pwshare.cjs(음 수정 항목 추가)
 
+**158번(11-12) 끝남**: 음색 탭(전역 `hapju-tone`, 앱 TONE_MEL·TONE_PERC·toneApply·percSounds·demoRender, 엔진 applyTone·setInstTones·setPercVolumes), 신고 첨부(FormData, 여러 개는 zipFiles), 사용법·사용설명서 갱신(그림 전부 다시 찍음: tools/manual/mancap → 4 → 5 → `mancap6 shot 107 장고` → 7 → 8 → 새 mancap9 = 27_tone_tab·28_report). 시험 test/pwtone.cjs(새), pwboot·pwreport에 항목 추가. **확인 대기: FormSubmit ajax 주소가 첨부를 실제 메일에 붙여 주는지(작업 공간에서는 외부 접속이 막혀 못 봄) — 사용자가 한 번 보내 보고 알려 주기로. 안 붙으면 숨은 form + iframe(`https://formsubmit.co/<주소>`, `_next`)로 바꿀 것.** wip-158 브랜치는 지워도 됨. 새 타악 소리를 더하면 TONE_PERC에도 넣을 것. 이 작업 공간에서 pwv2의 'topbar song'·'no errors(ERR_TUNNEL)' 2건과 pwtabland iPad 세로 2건은 main도 같음(환경·옛 시험)
+
 **157번(11-12)**: 기본 음량 원칙(사용자): 곡·음원 하나에 맞추지 않는다 — 시험 악보로 모두 같은 크기 + 악기 특성 보정(LV·GAIN 표는 CHANGELOG 157), 곡마다는 음량 막대. 측정 test/levelref.py → levelstems.mjs → levelmeas.py
 
 **156번(11-12)**: 음량 막대 = 들리는 크기 %(pctToVol/volToPct, 10dB = 두 배), 저장은 vol(배율) 그대로
@@ -268,7 +247,7 @@ wip-158에 이미 한 것(엔진, 시험 안 함):
 - **111·112번(11-10)**: 소나기 새 판(윈도 인쇄 Encore) 읽기, 아래 기둥 화음의 아랫음 성부 갈림 고침. 남은 것: 바르도 대금 23마디 첫 화음으로 들어오는 붙임줄, 판놀음II 태평소 41마디 붙임줄 온음표, 소나기 타악기 MusicXML이 뮤즈스코어에서 8 → 15쪽
 - **이어 할 일(11-10 사용자 요청 '아랫성부 표기 누락·쉬는 마디·악상기호')**: ① 아랫성부 — **112번에서 고침(아래 내용은 기록)** — 한 기둥(아래로 향한) 화음의 아랫머리를 따로 성부 R로 갈라 읽는 문제. 예: Frontier 총보 9203ad49 대금(줄 1)·해금(줄 16) 15·19·47·51마디, Piano 윗줄 19마디: 아랫음 A♭을 쉼표 자리(0.625)에 놓고 셋잇단도 못 붙임 → MusicXML 성부1(위 기둥)=아랫음, 성부2=윗음으로 뒤바뀜. 해석기 makeNote 기둥 고르기·성부 나누기 쪽을 볼 것, 고친 뒤 regrn 전체 회귀. 확인 창(저장 뒤 확인)의 'PDF 머리에 맞는 음 없음/음 높이 다름' 마디가 이런 곳의 목록이 됨 ② 쉬는 마디 — MusicXML·뮤즈스코어에서는 정상, 사용자에게 곡·마디를 물어 볼 것 ③ 악상기호 — 셈여림은 110번에서 고침, 나머지(아티큘레이션·글자 지시)는 MusicXML에 들어감(Frontier: staccato 801·accent 768·slur 704·tenuto 97·words 64)
 - **113번(11-10)**: '악보로 보기'를 저장해 두면 시작이 멈추던 것(`svOverData` 선언 전 접근) 고침. 시작할 때 실행되는 코드가 쓰는 전역 `let`/`const`는 반드시 그 앞에 선언할 것(선언 전 접근 = 앱 전체 멈춤). 화면을 고친 뒤에는 `node test/pwboot.cjs index.html`(저장된 설정 여러 가지로 시작)을 꼭 돌릴 것. 114번: 바르도 대금 23마디 붙임줄 임시표·판놀음II 태평소 41마디(반쪽씩 그린 붙임줄 채움을 여러 마디 쉼표로 읽음) 고침. 남은 것: 판놀음II 태평소 37마디(두 성부 같은 음 온음표를 비켜 적음 → 붙임줄 이음으로 읽어 2/1)
-- 117번에서 찾은 해석기 문제: 연변목가 총보(52271c34) 가야금 윗줄 79~82·86~89마디 — 141번에서 고침(**사용설명서 9장 그림 26_xml_overlay와 설명이 이 마디를 '잘못 읽은 예'로 들고 있으니 다른 예로 바꿀 것**)
+- 117번에서 찾은 해석기 문제: 연변목가 총보(52271c34) 가야금 윗줄 79~82·86~89마디 — 141번에서 고침(사용설명서 9장 예시는 158번에서 장고 107마디로 바꿈)
 - 사용설명서를 바꾸면: tools/manual/manual.html 고치고 `cp -r tools/manual/{manual.html,img} /home/claude/work/manual/` 뒤 `node tools/manual/mkpdf.cjs` → manual.pdf 복사. 장 번호를 바꾸면 차례·'n장' 참조도
 - 116번 점검에서 남긴 것(이전부터): 바르도 총보 대금 300마디 1/32 길게 읽음 → 301마디 붙임줄 음이 MusicXML에서 빠짐, 바르도 해금 42마디 셋잇단 16분, pwrange2는 84번 전 화면용 옛 시험
 - 앱의 기준 줄(master)은 경고가 가장 적은 줄 → 경고 수가 바뀌면 기준 줄이 바뀔 수 있음(103번에서 월광 8·16마디 MusicXML 박자가 바뀐 원인)

@@ -9,10 +9,13 @@ const states = {
   tabSave: { 'hapju.tab': 'save' },
   tabPlayScore: { 'hapju.tab': 'play', 'hapju-view': JSON.stringify({ mode: 'score' }) },
   prefsOff: { 'hapju-prefs': JSON.stringify({ autoSave: false, autoLoad: false }) },
+  tone: { 'hapju.tab': 'tone', 'hapju-tone': JSON.stringify({ master: { lo: 3, hi: -2 }, inst: { gayageum: { vol: 150, mid: 4 }, daegeum: { lo: -6 } }, perc: { '장구': { vol: 60, hi: 6 }, '북': { lo: 5 } } }) },
+  toneBroken: { 'hapju-tone': '{"inst":7,"perc":"x","master":[1]', 'hapju.tab': 'tone' },
+  toneOdd: { 'hapju-tone': JSON.stringify({ master: 'a', inst: { nope: { vol: 'x', lo: 99 }, gayageum: null }, perc: { '없음': { vol: -5 } } }) },
   broken: { 'hapju-view': '{bad json', 'hapju.tab': 'nope', 'hapju-prefs': '[' },
 };
 // 탭 × 보기 조합 전부
-for (const tab of ['inst', 'tempo', 'play', 'save']) for (const mode of ['map', 'score']) states[`${tab}-${mode}`] = { 'hapju.tab': tab, 'hapju-view': JSON.stringify({ mode, zoom: 2, follow: mode === 'map' }) };
+for (const tab of ['inst', 'tempo', 'play', 'save', 'tone']) for (const mode of ['map', 'score']) states[`${tab}-${mode}`] = { 'hapju.tab': tab, 'hapju-view': JSON.stringify({ mode, zoom: 2, follow: mode === 'map' }) };
 const VPS = { desktop: { width: 1280, height: 800 }, phone: { width: 390, height: 844, isMobile: true, hasTouch: true }, tabletLand: { width: 1180, height: 820, isMobile: true, hasTouch: true } };
 (async () => {
   const b = await chromium.launch(); let bad = 0;
