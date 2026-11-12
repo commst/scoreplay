@@ -10,6 +10,8 @@ for (const f of process.argv.slice(3)) {
   if (!a.lines || a.lines.length < 2) continue;
   const ra = run(A, a, NEED), rb = run(B, b, NEEDB), ch = [];
   ra.forEach((r, i) => r.bars.forEach((x, k) => { const y = rb[i].bars[k]; if (!y || s(x) !== s(y)) ch.push(i + ':' + x.number); }));
+  if (process.env.DETAIL) { const fm = e => `${e.voice}${e.t}+${e.dur}${e.tie ? 'T' : ''}[${(e.midis || []).join('.')}]`;
+    ra.forEach((r, i) => r.bars.forEach((x, k) => { const y = rb[i].bars[k]; if (y && s(x) !== s(y)) fs.appendFileSync(process.env.DETAIL, JSON.stringify({ f: f.split('/').pop().slice(0, 8), li: i, n: x.number, old: x.barLen + ' ' + x.events.map(fm).join(' '), neu: y.barLen + ' ' + y.events.map(fm).join(' '), w: y.warnings.join(';') }) + '\n'); })); }
   T += ch.length; console.log(f.split('/').pop().slice(0, 8), 'changed', ch.length, ch.slice(0, 30).join(' '));
 }
 console.log('TOTAL', T);

@@ -688,6 +688,8 @@ input:focus-visible, select:focus-visible, button:focus-visible, .b:focus-visibl
 .tone-card .tbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 .tone-card .tbtns .btn.playing { background: var(--accent); color: #fff; }
 .tone-gh { margin-top: 12px; display: grid; gap: 8px; }
+.ed-row .ed-tie { font-size: 12.5px; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--b-line, #c9d3ea); background: var(--b-bg, #eef2fb); color: var(--b-ink, #2c4a8a); cursor: pointer; }
+.ed-row .ed-tie.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 .tone-gh h3 { margin: 0; font: 700 13.5px/1.3 var(--font-body); color: var(--muted); }
 .tone-gh .hint { margin: 0; }
 .tone-gh .hint.ok { color: var(--accent); }
@@ -1832,7 +1834,8 @@ body, button, input, select, textarea { font-family: var(--font-body); }
 
 <template id="histTpl">
   <section class="hday"><h3>11월 12일</h3>
-    <h4>기능 업데이트 <small>10</small></h4><ul class="hlist">
+    <h4>기능 업데이트 <small>11</small></h4><ul class="hlist">
+      <li><details><summary>음 고치기(✎)에서 붙임줄 잇기·끊기</summary><p>악보에서 붙임줄을 놓쳐 같은 음을 다시 치면 그 음의 <b>[⌒ 앞 음과 잇기]</b>로 앞 음과 이어 길게 울리게 할 수 있습니다. 반대로 붙임줄을 잘못 읽어 이어지는 음은 창 아래 '붙임줄로 앞 음에 이어 읽은 음'에서 <b>[⌒ 이어 감]</b>을 눌러 다시 치게 합니다. 다른 수정처럼 자동 저장되고 되돌리기·내보내기·공유 설정에도 함께 갑니다.</p></details></li>
       <li><details><summary>총보는 하나만: 새 총보를 올리면 바꿔 열기</summary><p>총보는 하나만 올릴 수 있습니다. 총보를 연 뒤에는 단추가 <b>[총보 바꾸기]</b>가 되고, 새 총보를 고르면 지금 연 악보(총보·추가한 악보·파트보)를 닫고 새 총보를 엽니다. 여러 파일을 한꺼번에 끌어다 놓으면 첫 파일만 열고, 나머지는 [악보 추가]나 [파트보 업로드]로 올리라고 알려 줍니다.</p></details></li>
       <li><details><summary>음색 탭 [들어보기]를 멈출 때까지 계속, 음색을 공유 저장소에</summary><p>[▶ 들어보기]가 [■ 멈춤]을 누를 때까지 되풀이해 들려주고, 듣는 동안 음량·음색 막대를 움직이면 멈추지 않고 곧바로 바뀐 소리로 이어집니다. 음색 칸 아래 <b>[공유 저장소에 저장]</b>·<b>[공유 음색 불러오기]</b>로 맞춘 음색·기본 음량을 다른 기기에서도 쓸 수 있습니다(저장 토큰은 [저장] 칸 '공유 설정'과 같은 것).</p></details></li>
       <li><details><summary>음색 탭: 악기별 기본 음량과 음색 (모든 곡에 함께)</summary><p>설정에 다섯째 탭 <b>[음색]</b>이 생겼습니다. 곡과 상관없이 이 기기에서 여는 모든 곡에 적용되는 악기별 <b>기본 음량</b>(0~200%)과 <b>음색</b>(낮은음·가운데·높은음, −6~+6dB)을 정합니다. 선율 악기 13개와 타악기 15묶음, 그리고 모든 소리를 섞은 뒤의 '전체' 음색이 있습니다. <b>[▶ 들어보기]</b>로 바꾼 소리를 바로 듣고, <b>[기본값으로]</b>(그 악기만)·<b>[모두 기본값으로]</b>로 되돌립니다. 곡마다 다른 크기는 전처럼 [악기] 탭의 음량 막대로 맞춥니다.</p></details></li>
@@ -3013,7 +3016,10 @@ function saveEdits(sc) {
 }
 const parseFr = s => { const [n, d] = String(s).split('/').map(Number); return F(n, d || 1); };
 // 한 성부의 음 목록 (붙임줄로 이어진 앞 마디의 꼬리는 빼고, 시작 박 순서)
-function noteList(b, v) { return b.events.map((e, i) => ({ e, i })).filter(x => x.e.voice === v && !x.e.tie).sort((a, c) => a.e.t.v - c.e.t.v || a.i - c.i).map(x => x.e); }
+function noteList(b, v) { return b.events.map((e, i) => ({ e, i })).filter(x => x.e.voice === v && (!x.e.tie || x.e.tieEd) && !x.e.untied).sort((a, c) => a.e.t.v - c.e.t.v || a.i - c.i).map(x => x.e); }
+// 붙임줄로 앞 음에 이어진 음(악보에서 읽은 것) — 음 수정 창에서 '붙임줄 끊기'(다시 치기)로 고칠 수 있다. 키는 '성부|T|순번'(168번)
+// tieEd: 수정으로 붙임줄을 단 음(목록 자리는 그대로 noteList), untied: 수정으로 붙임줄을 끊은 음(목록 자리는 그대로 tieList)
+function tieList(b, v) { return b.events.map((e, i) => ({ e, i })).filter(x => x.e.voice === v && ((x.e.tie && !x.e.tieEd) || x.e.untied)).sort((a, c) => a.e.t.v - c.e.t.v || a.i - c.i).map(x => x.e); }
 function origOf(e) { return { t: String(e.t), d: String(e.dur), m: e.midis ? e.midis.slice() : null }; }
 const sameOrig = (a, b) => a.t === b.t && a.d === b.d && JSON.stringify(a.m) === JSON.stringify(b.m);
 // 줄 하나의 해석 결과에 저장된 수정을 입힌다 (원본은 그대로 두고 바뀐 마디만 복사)
@@ -3033,12 +3039,19 @@ function applyEdits(raw, sc, srcKey) {
         if (!sameOrig(rec.o, o)) { miss++; return; }
         applied++; e.edited = true;
         if (rec.m && e.midis) e.midis = rec.m.slice();
+        if (rec.tie === true && e.midis && e.midis.length) { e.tie = true; e.tieEd = true; }   // 앞 음과 붙임줄로 잇기(168번)
         if (rec.d) {
           const nd = parseFr(rec.d), delta = nd.sub(e.dur);
           if (e.sus) e.sus = e.sus.add(delta);
           if (e.rollDur) e.rollDur = nd;
           e.dur = nd; shift = shift.add(delta);
         }
+      });
+      tieList(nb, v).forEach((e, ord) => {   // 악보에서 읽은 붙임줄 끊기(그 음을 다시 침)
+        const rec = B[v + '|T|' + ord]; if (!rec) return;
+        if (!sameOrig(rec.o, origOf(e))) { miss++; return; }
+        applied++; e.edited = true;
+        if (rec.tie === false) { e.tie = false; e.untied = true; delete e.pcs; }
       });
       const vn = nb.events.filter(e => e.voice === v && !e.tie);
       if (vn.some(e => e.t.add(e.dur).gt(nb.barLen))) nb.warnings.push(`수정한 음 길이가 마디를 넘음 (${v === 'R' ? '윗' : '아랫'}성부)`);
@@ -3064,17 +3077,18 @@ function reapplyEdits() {
   overStale();
 }
 function pushUndo(sc) { undoStack.push({ fp: sc.fp, snap: JSON.stringify(editsFor(sc.fp)) }); if (undoStack.length > 100) undoStack.shift(); }
-// 수정 하나 바꾸기: patch = { m: [...] } 또는 { d: '1/4' }, null이면 그 음 되돌리기
+// 수정 하나 바꾸기: patch = { m: [...] } 또는 { d: '1/4' } 또는 { tie: true/false }, null이면 그 음 되돌리기. ord가 'T3'꼴이면 붙임줄로 이어진 음
 function setEdit(key, bi, v, ord, rawEv, patch) {
   const { sc, srcKey } = srcInfo(key); if (!sc || !sc.fp) return;
   pushUndo(sc);
-  const E = editsFor(sc.fp), L = E.lines[srcKey] || (E.lines[srcKey] = {}), B = L[bi] || (L[bi] = {}), id = v + '|' + ord;
+  const E = editsFor(sc.fp), L = E.lines[srcKey] || (E.lines[srcKey] = {}), B = L[bi] || (L[bi] = {}), id = v + '|' + (typeof ord === 'string' ? 'T|' + ord.slice(1) : ord);
   if (patch == null) delete B[id];
   else {
     const o = origOf(rawEv), rec = { ...(B[id] && sameOrig(B[id].o, o) ? B[id] : {}), o, ...patch };
     if (rec.m && JSON.stringify(rec.m) === JSON.stringify(o.m)) delete rec.m;
     if (rec.d && rec.d === o.d) delete rec.d;
-    if (rec.m || rec.d) B[id] = rec; else delete B[id];
+    if (rec.tie != null && !(rec.tie === true && !rawEv.tie) && !(rec.tie === false && rawEv.tie)) delete rec.tie;   // 원래와 같으면 지움
+    if (rec.m || rec.d || rec.tie != null) B[id] = rec; else delete B[id];
   }
   if (!Object.keys(B).length) delete L[bi];
   if (!Object.keys(L).length) delete E.lines[srcKey];
@@ -3107,6 +3121,7 @@ const pitchName = m => PITCH_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) -
 const DUR_OPTS = [['1/32', '32분음표'], ['1/24', '셋잇단 16분'], ['1/16', '16분음표'], ['3/32', '점16분음표'], ['1/12', '셋잇단 8분'], ['1/8', '8분음표'], ['3/16', '점8분음표'], ['1/6', '셋잇단 4분'], ['1/4', '4분음표'], ['3/8', '점4분음표'], ['1/2', '2분음표'], ['3/4', '점2분음표'], ['1', '온음표']];
 const durName = s => (DUR_OPTS.find(o => o[0] === s) || [s, `${s} (온음표=1)`])[1];
 function openEditor(n) { editorBar = n; hideBarTip(0); renderEditor(); }
+window.__openEditor = openEditor;   // 시험 도구용(test/pwtieedit.cjs)
 function closeEditor() { editorBar = null; if (editorEl) { editorEl.remove(); editorEl = null; } }
 function renderEditor() {
   const n = editorBar; if (n == null) return;
@@ -3157,7 +3172,31 @@ function renderEditor() {
         sel.addEventListener('change', () => setEdit(key, bi, v, ord, re, { d: sel.value }));
         row.append(sel);
         if (rec && rec.d) row.append(tipNode('span', 'ed-orig', `원래 ${durName(String(re.dur))}`));
+        if (re.midis && re.midis.length) {   // 앞 음과 붙임줄로 잇기(168번) — 악보에서 붙임줄을 놓쳐 다시 치는 음
+          const on = !!(rec && rec.tie === true), tb = tipNode('button', 'ed-tie' + (on ? ' on' : ''), on ? '⌒ 이어 감' : '⌒ 앞 음과 잇기'); tb.type = 'button';
+          tb.title = on ? '붙임줄을 풀어 다시 칩니다' : '앞 음(같은 높이)과 붙임줄로 이어, 다시 치지 않고 앞 음을 길게 울립니다'; tb.setAttribute('aria-pressed', on ? 'true' : 'false');
+          tb.addEventListener('click', () => setEdit(key, bi, v, ord, re, { tie: !on }));
+          row.append(tb);
+        }
         if (changed) { const rv = tipNode('button', 'ed-rev', '↺ 되돌리기'); rv.type = 'button'; rv.addEventListener('click', () => setEdit(key, bi, v, ord, re, null)); row.append(rv); }
+        sec.append(row);
+      });
+    }
+    for (const v of ['R', 'L']) {   // 악보에서 붙임줄로 이어 읽은 음 — 잘못 읽었으면 '다시 치기'
+      const rt = tieList(rb, v).filter(e => e.midis && e.midis.length); if (!rt.length) continue;
+      has = true;
+      sec.append(tipNode('div', 'ed-voice', (v === 'R' ? '윗성부' : '아랫성부') + ' · 붙임줄로 앞 음에 이어 읽은 음'));
+      tieList(rb, v).forEach((re, ord) => {
+        if (!re.midis || !re.midis.length) return;
+        const rec = ((editsFor(srcInfo(key).sc?.fp)?.lines[srcInfo(key).srcKey] || {})[bi] || {})[v + '|T|' + ord];
+        const off = !!(rec && rec.tie === false); if (rec) barEdited = true;
+        const row = tipNode('div', 'ed-row' + (rec ? ' changed' : ''));
+        row.append(tipNode('span', 'ed-pos', `⌒ ${+(re.t.v / rb.barLen.v * meterBeats(rb).main + 1).toFixed(2)}박`), tipNode('b', '', re.midis.map(pitchName).join('·')));
+        const tb = tipNode('button', 'ed-tie' + (off ? '' : ' on'), off ? '다시 침' : '⌒ 이어 감'); tb.type = 'button';
+        tb.title = off ? '붙임줄로 다시 이어 앞 음을 길게 울립니다' : '붙임줄을 끊고 이 음을 다시 칩니다(붙임줄을 잘못 읽었을 때)'; tb.setAttribute('aria-pressed', off ? 'false' : 'true');
+        tb.addEventListener('click', () => setEdit(key, bi, v, 'T' + ord, re, { tie: off }));
+        row.append(tb);
+        if (rec) { const rv = tipNode('button', 'ed-rev', '↺ 되돌리기'); rv.type = 'button'; rv.addEventListener('click', () => setEdit(key, bi, v, 'T' + ord, re, null)); row.append(rv); }
         sec.append(row);
       });
     }
