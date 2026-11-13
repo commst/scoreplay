@@ -3,8 +3,8 @@
  "v": 1,
  "title": "소나기",
  "titleRead": "소나기",
- "file": "소나기-총보.pdf.pdf",
- "saved": "2026-11-11T08:42:22.189Z",
+ "file": "소나기-총보.pdf",
+ "saved": "2026-11-13T05:25:06.473Z",
  "lastBar": 355,
  "lines": {
   "main:0": {
@@ -232,14 +232,15 @@
   {
    "start": 1,
    "unit": "q",
-   "bpm": 140,
+   "bpm": 150,
    "auto": true,
-   "text": "♩=140"
+   "text": "♩=140",
+   "manual": true
   },
   {
    "start": 43,
    "unit": "q",
-   "bpm": 200,
+   "bpm": 190,
    "auto": true,
    "text": "♩.=120",
    "manual": true,
@@ -248,13 +249,29 @@
   {
    "start": 131,
    "unit": "q",
-   "bpm": 100,
+   "bpm": 85,
    "text": "",
    "edited": true,
    "manual": true
   },
   {
    "start": 178,
+   "unit": "q",
+   "bpm": 160,
+   "text": "",
+   "edited": true,
+   "manual": true
+  },
+  {
+   "start": 184,
+   "unit": "q",
+   "bpm": 180,
+   "text": "",
+   "edited": true,
+   "manual": true
+  },
+  {
+   "start": 279,
    "unit": "q",
    "bpm": 160,
    "text": "",
