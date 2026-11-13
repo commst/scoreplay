@@ -4,7 +4,7 @@
  "title": "소나기",
  "titleRead": "소나기",
  "file": "소나기_score.pdf",
- "saved": "2026-11-13T10:59:28.501Z",
+ "saved": "2026-11-13T11:04:39.009Z",
  "lastBar": 355,
  "lines": {
   "main:0": {
@@ -249,7 +249,7 @@
   {
    "start": 131,
    "unit": "q",
-   "bpm": 85,
+   "bpm": 90,
    "text": "",
    "edited": true,
    "manual": true
