@@ -3,8 +3,8 @@
  "v": 1,
  "title": "소나기",
  "titleRead": "소나기",
- "file": "소나기-총보.pdf",
- "saved": "2026-11-13T05:25:06.473Z",
+ "file": "소나기_score.pdf",
+ "saved": "2026-11-13T10:59:28.501Z",
  "lastBar": 355,
  "lines": {
   "main:0": {
@@ -12,7 +12,7 @@
    "role": "perc",
    "inst": null,
    "oct": 0,
-   "vol": 1,
+   "vol": 3.1622776601683795,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -52,7 +52,7 @@
    "role": "melody",
    "inst": "taepyeongso",
    "oct": 1,
-   "vol": 1,
+   "vol": 3.1622776601683795,
    "R": "따",
    "L": "궁",
    "nong": false
