@@ -5,7 +5,7 @@
  "titleRead": "양방언",
  "songTitle": "프론티어",
  "file": "FRONTIER - Full Score.pdf",
- "saved": "2026-11-11T11:49:21.105Z",
+ "saved": "2026-11-14T13:47:34.941Z",
  "lastBar": 170,
  "lines": {
   "main:0": {
@@ -33,7 +33,7 @@
    "role": "melody",
    "inst": "taepyeongso",
    "oct": 1,
-   "vol": 1,
+   "vol": 3.1622776601683795,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -63,7 +63,7 @@
    "role": "perc",
    "inst": null,
    "oct": 0,
-   "vol": 1,
+   "vol": 3.1622776601683795,
    "R": "따",
    "L": "궁",
    "nong": false
@@ -93,7 +93,7 @@
    "role": "perc",
    "inst": null,
    "oct": 0,
-   "vol": 1,
+   "vol": 1.3536837106186015,
    "R": "북짧게",
    "L": "북녹음",
    "nong": false
